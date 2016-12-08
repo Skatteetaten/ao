@@ -3,6 +3,9 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/skatteetaten/aoc/openshift"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,8 +19,13 @@ var loginCmd = &cobra.Command{
 	Short: "Login to openshift clusters",
 	Long:  `This command will log in to all avilable clusters and store the tokens in the .aoc config file `,
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 1 {
+			fmt.Println("Please specify affiliation to log in to")
+			os.Exit(1)
+		}
+		affiliation := args[0]
 		var configLocation = viper.GetString("HOME") + "/.aoc.json"
-		openshift.Login(configLocation, userName)
+		openshift.Login(configLocation, userName, affiliation)
 	},
 }
 

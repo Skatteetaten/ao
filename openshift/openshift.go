@@ -17,8 +17,7 @@ import (
 )
 
 const (
-	urlPattern   = "https://%s-master.paas.skead.no:8443"
-	whoamiSuffix = "oapi/v1/users/~"
+	urlPattern = "https://%s-master.paas.skead.no:8443"
 )
 
 var (
@@ -43,15 +42,16 @@ type OpenshiftCluster struct {
 }
 
 type OpenshiftConfig struct {
-	ClusterPattern string              `json:"clusterPattern"`
-	APICluster     string              `json:"apiCluster"`
-	Clusters       []*OpenshiftCluster `json:"clusters"`
+	APICluster  string              `json:"apiCluster"`
+	Affiliation string              `json:"affiliation"`
+	Clusters    []*OpenshiftCluster `json:"clusters"`
 }
 
-func Login(configLocation string, userName string) {
+func Login(configLocation string, userName string, affiliation string) {
 
 	fmt.Println("Login in to all reachable cluster with userName", userName)
 	config, err := loadConfigFile(configLocation)
+	config.Affiliation = affiliation
 
 	if err != nil {
 		log.Fatal(err)
@@ -117,7 +117,7 @@ func (this *OpenshiftCluster) hasValidToken() bool {
 		return false
 	}
 
-	url := fmt.Sprintf("%s/%s", this.Url, whoamiSuffix)
+	url := fmt.Sprintf("%s/%s", this.Url, "oapi")
 
 	resp, err := getBearer(url, this.Token)
 	if err != nil {
