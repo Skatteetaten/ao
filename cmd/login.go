@@ -8,10 +8,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-const (
-	urlPattern = "https://%s-master.paas.skead.no:8443"
-)
-
 var userName string
 
 // loginCmd represents the login command
@@ -21,7 +17,7 @@ var loginCmd = &cobra.Command{
 	Long:  `This command will log in to all avilable clusters and store the tokens in the .aoc config file `,
 	Run: func(cmd *cobra.Command, args []string) {
 		var configLocation = viper.GetString("HOME") + "/.aoc.json"
-		openshift.LoginToAllCluster(configLocation, userName)
+		openshift.LoginToAllClusters(configLocation, userName)
 	},
 }
 

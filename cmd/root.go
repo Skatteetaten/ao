@@ -46,6 +46,6 @@ func initConfig() {
 	viper.BindEnv("HOME")
 
 	var configLocation = viper.GetString("HOME") + "/.aoc.json"
-	openshift.LoadOrInitiateConfig(configLocation)
+	openshift.LoadOrInitiateConfigFile(configLocation)
 
 }

@@ -1,3 +1,4 @@
+// Copyright © 2016 Skatteetaten <utvpaas@skatteetaten.no>
 package openshift
 
 import (
