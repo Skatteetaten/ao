@@ -28,7 +28,7 @@ func TestPing(t *testing.T) {
 				Get("/").
 				Reply(tc.statusCode)
 
-			result := Ping(url)
+			result := ping(url)
 			if result != tc.reachable {
 				t.Error(tc.message)
 			}
@@ -41,11 +41,10 @@ func TestPing(t *testing.T) {
 			Get("/").
 			ReplyError(errors.New("timed out"))
 
-		result := Ping(url)
+		result := ping(url)
 		if result {
 			t.Error("Should not be reachable if error in http client")
 		}
 
 	})
-
 }
