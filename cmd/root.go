@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/skatteetaten/aoc/openshift"
+	"github.com/Skatteetaten/aoc/openshift"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+//var cfgFile string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{

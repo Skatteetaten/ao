@@ -16,23 +16,49 @@ package cmd
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
+	"net/http"
+	//"net/url"
+	"log"
+	//"encoding/json"
+	//"bytes"
+	"bytes"
+	"io/ioutil"
 )
 
 // setupCmd represents the setup command
 var setupCmd = &cobra.Command{
-	Use:   "setup",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "setup <env>/<app>",
+	Short: "Deploys an application to OpenShift based upon local configuration files",
+	Long:  `Sends all your configuration files to Boober.  .`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
 		fmt.Println("setup called")
+
+		url := fmt.Sprintf("http://localhost:8080/api/setupMock/utv/myapp")
+		var jsonStr = []byte(`[{"File1.json": {"Config1" : "foo", "Config2" : "bar"}},{"File2.json": {"Config21" : "xhost", "Config22" : "yhost"}}]`)
+		req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonStr)) // bytes.NewBuffer(jsonStr)
+		req.Header.Set("Content-Type", "application/json")
+		if err != nil {
+			log.Fatal("NewRequest: ", err)
+			return
+		}
+
+		req.Header.Set("token", "mydirtysecret")
+		client := &http.Client{}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Fatal("Do: ", err)
+			return
+		}
+
+		defer resp.Body.Close()
+		fmt.Println("Response Status: ", resp.Status)
+		fmt.Println("Response Headers: ", resp.Header)
+		body, _ := ioutil.ReadAll(resp.Body)
+		fmt.Println("Response Body: ", string(body))
+
+		fmt.Println("setup finished")
 	},
 }
 

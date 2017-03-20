@@ -2,7 +2,7 @@
 
 package main
 
-import "github.com/skatteetaten/aoc/cmd"
+import "github.com/Skatteetaten/aoc/cmd"
 
 func main() {
 	cmd.Execute()
