@@ -35,7 +35,7 @@ var setupCmd = &cobra.Command{
 		fmt.Println("setup called")
 
 		url := fmt.Sprintf("http://localhost:8080/api/setupMock/utv/myapp")
-		var jsonStr = []byte(`[{"File1.json": {"Config1" : "foo", "Config2" : "bar"}},{"File2.json": {"Config21" : "xhost", "Config22" : "yhost"}}]`)
+		var jsonStr = []byte(`{"Files": {"File1.json": {"Config1" : "foo", "Config2" : "bar"},"File2.json": {"Config21" : "xhost", "Config22" : "yhost"}}, "Overrides": {"OverideFile1.json": {"OverrideConfig1" : "foobar", "OverrideConfig2" : "badekar"}}}`)
 		req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonStr)) // bytes.NewBuffer(jsonStr)
 		req.Header.Set("Content-Type", "application/json")
 		if err != nil {
