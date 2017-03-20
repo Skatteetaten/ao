@@ -5,10 +5,9 @@ package cmd
 import (
 	"fmt"
 	"os"
-
-	"github.com/skatteetaten/aoc/openshift"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/skatteetaten/aoc/openshift"
 )
 
 var userName string
