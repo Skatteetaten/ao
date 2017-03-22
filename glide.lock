@@ -1,0 +1,73 @@
+hash: b6f1409331a85913b24c1a02409edd33df437853e0cc0c13052e9391f38df3f8
+updated: 2017-03-22T13:46:20.599671939+01:00
+imports:
+- name: github.com/cpuguy83/go-md2man
+  version: 71acacd42f85e5e82f70a55327789582a5200a90
+  subpackages:
+  - md2man
+- name: github.com/fsnotify/fsnotify
+  version: 629574ca2a5df945712d3079857300b5e4da0236
+- name: github.com/hashicorp/hcl
+  version: 80e628d796135357b3d2e33a985c666b9f35eee1
+  subpackages:
+  - hcl/ast
+  - hcl/parser
+  - hcl/scanner
+  - hcl/strconv
+  - hcl/token
+  - json/parser
+  - json/scanner
+  - json/token
+- name: github.com/howeyc/gopass
+  version: 3ca23474a7c7203e0a0a070fd33508f6efdb9b3d
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/magiconair/properties
+  version: 9c47895dc1ce54302908ab8a43385d1f5df2c11c
+- name: github.com/mitchellh/mapstructure
+  version: 6acba421016d3da961e5ea77e18e2ed6e0aa4ee2
+- name: github.com/pelletier/go-buffruneio
+  version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
+- name: github.com/pelletier/go-toml
+  version: 439fbba1f887c286024370cb4f281ba815c4c7d7
+- name: github.com/russross/blackfriday
+  version: 8cec3a854e68dba10faabbe31c089abf4a3e57a6
+- name: github.com/shurcooL/sanitized_anchor_name
+  version: 244f5ac324cb97e1987ef901a0081a77bfd8e845
+- name: github.com/Skatteetaten/aoc
+  version: c7293d1f1e338c8e7a7fd6e68e4690cbf1dff414
+  subpackages:
+  - cmd
+  - openshift
+- name: github.com/spf13/afero
+  version: 90dd71edc4d0a8b3511dc12ea15d617d03be09e0
+  subpackages:
+  - mem
+- name: github.com/spf13/cast
+  version: 56a7ecbeb18dde53c6db4bd96b541fd9741b8d44
+- name: github.com/spf13/cobra
+  version: 1c44ec8d3f1552cac48999f9306da23c4d8a288b
+- name: github.com/spf13/jwalterweatherman
+  version: ef70f054fd0b4438ec4be55f2680b2a0f705675b
+- name: github.com/spf13/pflag
+  version: 5ccb023bc27df288a957c5e994cd44fd19619465
+- name: github.com/spf13/viper
+  version: 5ed0fc31f7f453625df314d8e66b9791e8d13003
+- name: golang.org/x/crypto
+  version: 1f22c0103821b9390939b6776727195525381532
+  subpackages:
+  - ssh/terminal
+- name: golang.org/x/sys
+  version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
+  subpackages:
+  - unix
+- name: golang.org/x/text
+  version: 2910a502d2bf9e43193af9d68ca516529614eed3
+  subpackages:
+  - transform
+  - unicode/norm
+- name: gopkg.in/yaml.v2
+  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
+testImports:
+- name: gopkg.in/h2non/gock.v1
+  version: 2897ffde93a71060ce86518f1e7317ec8433d2d6
