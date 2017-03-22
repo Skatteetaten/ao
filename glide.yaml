@@ -1,0 +1,12 @@
+package: github.com/skatteetaten/aoc
+import:
+- package: github.com/Skatteetaten/aoc
+  subpackages:
+  - cmd
+  - openshift
+- package: github.com/howeyc/gopass
+- package: github.com/spf13/cobra
+- package: github.com/spf13/viper
+testImport:
+- package: gopkg.in/h2non/gock.v1
+  version: v1.0.4
