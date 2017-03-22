@@ -104,7 +104,6 @@ func executeSetup(args []string) {
 	}
 
 	// Initialize JSON
-	var jsonStr string
 
 	var booberData BooberInferface
 	booberData.App = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
@@ -121,14 +120,13 @@ func executeSetup(args []string) {
 	if !(ok == nil) {
 		fmt.Println("Internal error in marshalling Boober data: " + ok.Error())
 	}
-	jsonStr = string(jsonByte)
 
+	jsonStr := string(jsonByte)
 	if dryRun {
 		fmt.Println(string(prettyPrintJson(jsonStr)))
 	} else {
 		callBoober(jsonStr)
 	}
-
 }
 
 func overrides2map(args []string) map[string]json.RawMessage {
