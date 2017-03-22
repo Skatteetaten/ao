@@ -35,6 +35,7 @@ const ERROR_READING_FILE = -6
 const BOOBER_ERROR = -7
 const ILLEGAL_FILE = -8
 const INTERNAL_ERROR = -9
+const FOLDER_SETUP_NOT_SUPPORTED = -10
 
 const SPEC_IS_FILE = 1
 const SPEC_IS_FOLDER = 2
@@ -92,7 +93,10 @@ func executeSetup(args []string) {
 	case SPEC_IS_FOLDER:
 		folder = absolutePath
 		envFile = ""
+		fmt.Println("Setup on a folder is not yet supported")
+		os.Exit(FOLDER_SETUP_NOT_SUPPORTED)
 	}
+
 	parentFolder = filepath.Dir(folder)
 	envFolder = filepath.Base(folder)
 
