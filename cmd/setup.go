@@ -108,7 +108,7 @@ func executeSetup(args []string) {
 	var booberData BooberInferface
 	booberData.App = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
 	booberData.Env = envFolder
-	booberData.Affiliation = envFolder
+	booberData.Affiliation = ""
 
 	var returnMap = folder2map(folder, envFolder+"/")
 	var returnMap2 = folder2map(parentFolder, "")
