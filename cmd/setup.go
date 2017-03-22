@@ -64,9 +64,10 @@ type BooberReturn struct {
 
 // setupCmd represents the setup command
 var setupCmd = &cobra.Command{
-	Use:   `setup folder | file [-f file 'JSON Configuration String]'`,
+	Use:   `setup folder | file [-f file 'JSON Configuration String']`,
 	Short: "Deploys an application to OpenShift based upon local configuration files",
-	Long:  `Usage: When used with a `,
+	Long: `When used with a .json file as an argument, it will deploy the application referred to in the
+file merged with about.json in the same folder, and about.json and aos-features.json in the parent folder`,
 	Run: func(cmd *cobra.Command, args []string) {
 		executeSetup(args)
 	},
