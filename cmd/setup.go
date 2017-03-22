@@ -75,9 +75,6 @@ file merged with about.json in the same folder, and about.json and aos-features.
 
 func executeSetup(args []string) {
 	validateCode := validateCommand(args)
-	if validateCode < 0 {
-		os.Exit(validateCode)
-	}
 
 	var absolutePath string
 
@@ -221,6 +218,7 @@ func validateCommand(args []string) int {
 
 	if returnCode < 0 {
 		fmt.Println(errorString)
+		os.Exit(returnCode)
 	}
 	return returnCode
 
