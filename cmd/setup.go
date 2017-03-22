@@ -15,7 +15,7 @@
 package cmd
 
 import (
-	"github.com/Skatteetaten/aoc/boober"
+	"github.com/skatteetaten/aoc/pkg/boober"
 	"github.com/spf13/cobra"
 )
 

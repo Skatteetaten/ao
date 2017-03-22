@@ -4,7 +4,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/Skatteetaten/aoc/openshift"
+	"github.com/skatteetaten/aoc/pkg/openshift"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
