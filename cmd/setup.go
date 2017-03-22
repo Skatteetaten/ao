@@ -59,6 +59,7 @@ type BooberReturn struct {
 	Sources json.RawMessage `json:"sources"`
 	Errors  []string        `json:"errors"`
 	Valid   bool            `json:"valid"`
+	Config  json.RawMessage `json:"config"`
 }
 
 // setupCmd represents the setup command
@@ -306,7 +307,7 @@ func callBoober(combindedJson string) {
 	}
 
 	if showConfig {
-		fmt.Println(prettyPrintJson(string(booberReturn.Sources)))
+		fmt.Println(prettyPrintJson(string(booberReturn.Config)))
 	}
 
 }
