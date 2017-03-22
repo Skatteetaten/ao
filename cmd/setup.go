@@ -35,6 +35,7 @@ const CONFIGURATION_FILE_IN_ROOT = -5
 const ERROR_READING_FILE = -6
 const BOOBER_ERROR = -7
 const ILLEGAL_FILE = -8
+const INTERNAL_ERROR = -9
 
 const SPEC_IS_FILE = 1
 const SPEC_IS_FOLDER = 2
@@ -117,6 +118,7 @@ func executeSetup(args []string) {
 	jsonByte, ok := json.Marshal(booberData)
 	if !(ok == nil) {
 		fmt.Println("Internal error in marshalling Boober data: " + ok.Error())
+		os.Exit(INTERNAL_ERROR)
 	}
 
 	jsonStr := string(jsonByte)
@@ -266,8 +268,8 @@ func callBoober(combindedJson string) {
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
-		log.Fatal("NewRequest: ", err)
-		return
+		fmt.Println("Internal error in NewRequest: ", err)
+		os.Exit(INTERNAL_ERROR)
 	}
 
 	req.Header.Set("Authentication", "mydirtysecret")
