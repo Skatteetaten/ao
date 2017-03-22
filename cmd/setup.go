@@ -321,5 +321,5 @@ func init() {
 		"d", false,
 		"Do not perform a setup, just collect and print the configuration files")
 	setupCmd.Flags().BoolVarP(&showConfig, "showconfig",
-		"s", false, "Send config to standard out")
+		"s", false, "Send merged config from Boober to standard out")
 }
