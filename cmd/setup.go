@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
