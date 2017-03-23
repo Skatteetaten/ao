@@ -21,9 +21,11 @@ const BOOBER_ERROR = -7
 const ILLEGAL_FILE = -8
 const INTERNAL_ERROR = -9
 const FOLDER_SETUP_NOT_SUPPORTED = -10
-
+const OPERATION_OK = 0
 const SPEC_IS_FILE = 1
 const SPEC_IS_FOLDER = 2
+
+const BOOBER_LOCAL_URL = "http://localhost:8080/setup"
 
 // Struct to represent data to the Boober interface
 type BooberInferface struct {
@@ -42,8 +44,11 @@ type BooberReturn struct {
 	Config  json.RawMessage `json:"config"`
 }
 
-func ExecuteSetup(args []string, dryRun bool, showConfig bool, overrideFiles []string) {
+func ExecuteSetup(args []string, dryRun bool, showConfig bool, overrideFiles []string) int {
 	validateCode := validateCommand(args, overrideFiles)
+	if validateCode < 0 {
+		return validateCode
+	}
 
 	var absolutePath string
 
@@ -62,7 +67,7 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, overrideFiles []s
 		folder = absolutePath
 		envFile = ""
 		fmt.Println("Setup on a folder is not yet supported")
-		os.Exit(FOLDER_SETUP_NOT_SUPPORTED)
+		return FOLDER_SETUP_NOT_SUPPORTED
 	}
 
 	parentFolder = filepath.Dir(folder)
@@ -70,7 +75,7 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, overrideFiles []s
 
 	if folder == parentFolder {
 		fmt.Println("Application configuration file cannot reside in root directory")
-		os.Exit(CONFIGURATION_FILE_IN_ROOT)
+		return CONFIGURATION_FILE_IN_ROOT
 	}
 
 	// Initialize JSON
@@ -80,24 +85,28 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, overrideFiles []s
 	booberData.Env = envFolder
 	booberData.Affiliation = ""
 
-	var returnMap = folder2map(folder, envFolder+"/")
-	var returnMap2 = folder2map(parentFolder, "")
+	var returnMap = Folder2Map(folder, envFolder+"/")
+	var returnMap2 = Folder2Map(parentFolder, "")
 
-	booberData.Files = combineMaps(returnMap, returnMap2)
+	booberData.Files = CombineMaps(returnMap, returnMap2)
 	booberData.Overrides = overrides2map(args, overrideFiles)
 
 	jsonByte, ok := json.Marshal(booberData)
 	if !(ok == nil) {
 		fmt.Println("Internal error in marshalling Boober data: " + ok.Error())
-		os.Exit(INTERNAL_ERROR)
+		return INTERNAL_ERROR
 	}
 
 	jsonStr := string(jsonByte)
 	if dryRun {
 		fmt.Println(string(PrettyPrintJson(jsonStr)))
 	} else {
-		callBoober(jsonStr, showConfig)
+		validateCode = CallBoober(jsonStr, showConfig, BOOBER_LOCAL_URL)
+		if validateCode < 0 {
+			return validateCode
+		}
 	}
+	return OPERATION_OK
 }
 
 func overrides2map(args []string, overrideFiles []string) map[string]json.RawMessage {
@@ -108,7 +117,7 @@ func overrides2map(args []string, overrideFiles []string) map[string]json.RawMes
 	return returnMap
 }
 
-func folder2map(folder string, prefix string) map[string]json.RawMessage {
+func Folder2Map(folder string, prefix string) map[string]json.RawMessage {
 	var returnMap = make(map[string]json.RawMessage)
 	var allFilesOK bool = true
 
@@ -116,7 +125,7 @@ func folder2map(folder string, prefix string) map[string]json.RawMessage {
 	var filesProcessed = 0
 	for _, f := range files {
 		absolutePath := filepath.Join(folder, f.Name())
-		if isLegalFileFolder(absolutePath) == SPEC_IS_FILE { // Ignore folders
+		if IsLegalFileFolder(absolutePath) == SPEC_IS_FILE { // Ignore folders
 			matched, _ := filepath.Match("*.json", strings.ToLower(f.Name()))
 			if matched {
 				fileJson, err := ioutil.ReadFile(absolutePath)
@@ -142,7 +151,7 @@ func folder2map(folder string, prefix string) map[string]json.RawMessage {
 	return returnMap
 }
 
-func combineMaps(map1 map[string]json.RawMessage, map2 map[string]json.RawMessage) map[string]json.RawMessage {
+func CombineMaps(map1 map[string]json.RawMessage, map2 map[string]json.RawMessage) map[string]json.RawMessage {
 	var returnMap = make(map[string]json.RawMessage)
 
 	for k, v := range map1 {
@@ -163,7 +172,7 @@ func validateCommand(args []string, overrideFiles []string) int {
 		errorString += "Missing file/folder "
 	} else {
 		// Chceck argument 0 for legal file / folder
-		returnCode = isLegalFileFolder(args[0])
+		returnCode = IsLegalFileFolder(args[0])
 		if returnCode < 0 {
 			errorString += "Illegal file / folder: " + args[0]
 			returnCode = ILLEGAL_FILE
@@ -191,13 +200,12 @@ func validateCommand(args []string, overrideFiles []string) int {
 
 	if returnCode < 0 {
 		fmt.Println(errorString)
-		os.Exit(returnCode)
 	}
 	return returnCode
 
 }
 
-func isLegalFileFolder(filespec string) int {
+func IsLegalFileFolder(filespec string) int {
 	var err error
 	var absolutePath string
 	var fi os.FileInfo
@@ -217,16 +225,15 @@ func isLegalFileFolder(filespec string) int {
 	return SPEC_ILLEGAL
 }
 
-func callBoober(combindedJson string, showConfig bool) {
-	//url := "http://localhost:8080/api/setupMock/env/app"
-	url := "http://localhost:8080/setup"
+func CallBoober(combindedJson string, showConfig bool, url string) int {
+
 	var jsonStr = []byte(combindedJson)
 
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		fmt.Println("Internal error in NewRequest: ", err)
-		os.Exit(INTERNAL_ERROR)
+		return INTERNAL_ERROR
 	}
 
 	req.Header.Set("Authentication", "mydirtysecret")
@@ -235,7 +242,7 @@ func callBoober(combindedJson string, showConfig bool) {
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Error connecting to the Boober service on "+url+": ", err)
-		os.Exit(BOOBER_ERROR)
+		return BOOBER_ERROR
 	}
 
 	defer resp.Body.Close()
@@ -243,7 +250,7 @@ func callBoober(combindedJson string, showConfig bool) {
 		fmt.Println("Error from the Boober service on " + url + ":")
 		body, _ := ioutil.ReadAll(resp.Body)
 		fmt.Println(string(body))
-		os.Exit(BOOBER_ERROR)
+		return BOOBER_ERROR
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
 
@@ -252,7 +259,7 @@ func callBoober(combindedJson string, showConfig bool) {
 	err = json.Unmarshal(body, &booberReturn)
 	if err != nil {
 		fmt.Println("Error unmashalling Boober return: " + err.Error())
-		os.Exit(BOOBER_ERROR)
+		return BOOBER_ERROR
 	}
 
 	if !(booberReturn.Valid) {
@@ -265,5 +272,5 @@ func callBoober(combindedJson string, showConfig bool) {
 	if showConfig {
 		fmt.Println(PrettyPrintJson(string(booberReturn.Config)))
 	}
-
+	return OPERATION_OK
 }

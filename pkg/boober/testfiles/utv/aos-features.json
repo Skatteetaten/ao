@@ -1,0 +1,11 @@
+{
+  "build": {
+    "VERSION": "1.0.6-SNAPSHOT"
+  },
+  "deploy": {
+    "DATABASE": "demo:5bfe8be8-cc73-4882-ab05-212ddbd10632"
+  },
+  "config": {
+    "DEMO_PROPERTY": "ELVIS LEVER!"
+  }
+}
