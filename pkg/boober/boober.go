@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	//"github.com/vbatts/gogololcat/lol"
 )
 
 const SPEC_ILLEGAL = -1
@@ -102,6 +103,7 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool,
 
 	jsonStr := string(jsonByte)
 	if dryRun {
+		//lol.Writer.Write(os.Stdout, []byte(PrettyPrintJson(jsonStr)))
 		fmt.Println(string(PrettyPrintJson(jsonStr)))
 	} else {
 		validateCode = CallBoober(jsonStr, showConfig, showObjects, false, localhost, verbose)
