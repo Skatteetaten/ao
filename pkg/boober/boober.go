@@ -205,7 +205,6 @@ func validateCommand(args []string, overrideFiles []string) int {
 		fmt.Println(errorString)
 	}
 	return returnCode
-
 }
 
 func IsLegalFileFolder(filespec string) int {
