@@ -1,4 +1,4 @@
-package boober
+package booberinterface
 
 import (
 	"bytes"
