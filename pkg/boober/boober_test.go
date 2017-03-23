@@ -1,4 +1,4 @@
-package booberinterface
+package boober
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 func TestCallBooberInstance(t *testing.T) {
 	var expected int = BOOBER_ERROR
 	var res int
-	const illegalUrl string = "https://westeros.skatteetaten.no/booberinterface"
+	const illegalUrl string = "https://westeros.skatteetaten.no/boober"
 
 	res = CallBooberInstance("{\"Game\": \"Thrones\"}", false,
 		illegalUrl)

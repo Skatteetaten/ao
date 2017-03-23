@@ -1,4 +1,4 @@
-package booberinterface
+package boober
 
 import (
 	"bytes"
@@ -44,7 +44,7 @@ type BooberReturn struct {
 	Config  json.RawMessage `json:"config"`
 }
 
-func ExecuteSetup(args []string, dryRun bool, showConfig bool, overrideFiles []string) int {
+func ExecuteSetup(args []string, dryRun bool, showConfig bool, localhost bool, overrideFiles []string) int {
 	validateCode := validateCommand(args, overrideFiles)
 	if validateCode < 0 {
 		return validateCode
@@ -101,7 +101,7 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, overrideFiles []s
 	if dryRun {
 		fmt.Println(string(PrettyPrintJson(jsonStr)))
 	} else {
-		validateCode = CallBoober(jsonStr, showConfig, false, false)
+		validateCode = CallBoober(jsonStr, showConfig, false, localhost)
 		if validateCode < 0 {
 			return validateCode
 		}
