@@ -7,12 +7,12 @@ import (
 	"testing"
 )
 
-func TestCallBoober(t *testing.T) {
+func TestCallBooberInstance(t *testing.T) {
 	var expected int = BOOBER_ERROR
 	var res int
 	const illegalUrl string = "https://westeros.skatteetaten.no/booberinterface"
 
-	res = CallBoober("{\"Game\": \"Thrones\"}", false,
+	res = CallBooberInstance("{\"Game\": \"Thrones\"}", false,
 		illegalUrl)
 	if res != expected {
 		t.Error("Did not detect illegal URL")

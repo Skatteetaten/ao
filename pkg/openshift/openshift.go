@@ -206,7 +206,6 @@ func ping(url string) bool {
 		return false
 	}
 	return true
-
 }
 
 func getBearer(url string, token string) (*http.Response, error) {
@@ -226,7 +225,6 @@ func getBasicAuth(url string, username string, password string) (*http.Response,
 	}
 	req.SetBasicAuth(username, password)
 	return client.Do(req)
-
 }
 
 func askForPassword() (string, error) {
@@ -255,7 +253,6 @@ func getToken(cluster string, username string, password string) (string, error) 
 		return "", err
 	}
 	return token, err
-
 }
 
 func oauthAuthorizeResult(location string) (string, error) {

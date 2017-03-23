@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/skatteetaten/aoc/pkg/openshift"
+	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -24,8 +26,6 @@ const FOLDER_SETUP_NOT_SUPPORTED = -10
 const OPERATION_OK = 0
 const SPEC_IS_FILE = 1
 const SPEC_IS_FOLDER = 2
-
-const BOOBER_LOCAL_URL = "http://localhost:8080/setup"
 
 // Struct to represent data to the Boober interface
 type BooberInferface struct {
@@ -101,7 +101,7 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, overrideFiles []s
 	if dryRun {
 		fmt.Println(string(PrettyPrintJson(jsonStr)))
 	} else {
-		validateCode = CallBoober(jsonStr, showConfig, BOOBER_LOCAL_URL)
+		validateCode = CallBoober(jsonStr, showConfig, false, false)
 		if validateCode < 0 {
 			return validateCode
 		}
@@ -225,7 +225,43 @@ func IsLegalFileFolder(filespec string) int {
 	return SPEC_ILLEGAL
 }
 
-func CallBoober(combindedJson string, showConfig bool, url string) int {
+func GetBooberAddress(clusterName string, localhost bool) string {
+	var booberAddress string
+
+	if localhost {
+		booberAddress = "http://localhost:8080"
+	} else {
+		booberAddress = "http://boober-mfp-boober." + clusterName + ".paas.skead.no"
+	}
+	return booberAddress
+}
+
+func GetBooberSetupUrl(clusterName string, localhost bool) string {
+	return GetBooberAddress(clusterName, localhost) + "/setup"
+}
+
+func CallBoober(combindedJson string, showConfig bool, api bool, localhost bool) int {
+	var openshiftConfig *openshift.OpenshiftConfig
+	var configLocation = viper.GetString("HOME") + "/.aoc.json"
+
+	openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configLocation)
+	if err != nil {
+		fmt.Println("Error in loading OpenShift configuration")
+		return INTERNAL_ERROR
+	}
+
+	for i := range openshiftConfig.Clusters {
+		if openshiftConfig.Clusters[i].Reachable {
+			if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
+				CallBooberInstance(combindedJson, false,
+					GetBooberSetupUrl(openshiftConfig.Clusters[i].Name, localhost))
+			}
+		}
+	}
+	return OPERATION_OK
+}
+
+func CallBooberInstance(combindedJson string, showConfig bool, url string) int {
 
 	var jsonStr = []byte(combindedJson)
 

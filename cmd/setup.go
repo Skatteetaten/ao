@@ -24,6 +24,8 @@ var overrideFiles []string
 var overrideValues []string
 var dryRun bool
 var showConfig bool
+var localhost bool
+var showObjects bool
 
 // setupCmd represents the setup command
 var setupCmd = &cobra.Command{
@@ -46,5 +48,9 @@ func init() {
 		"d", false,
 		"Do not perform a setup, just collect and print the configuration files")
 	setupCmd.Flags().BoolVarP(&showConfig, "showconfig",
-		"s", false, "Send merged config from Boober to standard out")
+		"s", false, "Print merged config from Boober to standard out")
+	setupCmd.Flags().BoolVarP(&showObjects, "showobjects",
+		"o", false, "Print object definitions from Boober to standard out")
+	setupCmd.Flags().BoolVarP(&localhost, "localhost",
+		"l", false, "Send setup to Boober on localhost")
 }

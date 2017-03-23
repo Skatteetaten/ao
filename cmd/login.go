@@ -14,7 +14,7 @@ var userName string
 
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
-	Use:   "login",
+	Use:   "login <Affiliation>",
 	Short: "Login to openshift clusters",
 	Long:  `This command will log in to all avilable clusters and store the tokens in the .aoc config file `,
 	Run: func(cmd *cobra.Command, args []string) {
