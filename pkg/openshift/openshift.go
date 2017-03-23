@@ -188,7 +188,6 @@ func collectOpenshiftClusters(num int, ch chan *OpenshiftCluster) *OpenshiftConf
 			}
 		}
 	}
-	return nil
 }
 
 var timeout = time.Duration(1 * time.Second)
