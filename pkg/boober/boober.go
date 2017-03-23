@@ -241,20 +241,25 @@ func GetBooberSetupUrl(clusterName string, localhost bool) string {
 }
 
 func CallBoober(combindedJson string, showConfig bool, api bool, localhost bool) int {
-	var openshiftConfig *openshift.OpenshiftConfig
+	//var openshiftConfig *openshift.OpenshiftConfig
 	var configLocation = viper.GetString("HOME") + "/.aoc.json"
 
-	openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configLocation)
-	if err != nil {
-		fmt.Println("Error in loading OpenShift configuration")
-		return INTERNAL_ERROR
-	}
+	if localhost {
+		CallBooberInstance(combindedJson, showConfig,
+			GetBooberSetupUrl("localhost", localhost))
+	} else {
+		openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configLocation)
+		if err != nil {
+			fmt.Println("Error in loading OpenShift configuration")
+			return INTERNAL_ERROR
+		}
 
-	for i := range openshiftConfig.Clusters {
-		if openshiftConfig.Clusters[i].Reachable {
-			if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
-				CallBooberInstance(combindedJson, false,
-					GetBooberSetupUrl(openshiftConfig.Clusters[i].Name, localhost))
+		for i := range openshiftConfig.Clusters {
+			if openshiftConfig.Clusters[i].Reachable {
+				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
+					CallBooberInstance(combindedJson, showConfig,
+						GetBooberSetupUrl(openshiftConfig.Clusters[i].Name, localhost))
+				}
 			}
 		}
 	}
