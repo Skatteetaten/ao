@@ -26,6 +26,7 @@ var dryRun bool
 var showConfig bool
 var localhost bool
 var showObjects bool
+var verbose bool
 
 // setupCmd represents the setup command
 var setupCmd = &cobra.Command{
@@ -34,7 +35,7 @@ var setupCmd = &cobra.Command{
 	Long: `When used with a .json file as an argument, it will deploy the application referred to in the
 file merged with about.json in the same folder, and about.json and aos-features.json in the parent folder`,
 	Run: func(cmd *cobra.Command, args []string) {
-		boober.ExecuteSetup(args, dryRun, showConfig, showObjects, localhost, overrideFiles)
+		boober.ExecuteSetup(args, dryRun, showConfig, showObjects, verbose, localhost, overrideFiles)
 	},
 }
 
@@ -51,6 +52,10 @@ func init() {
 		"s", false, "Print merged config from Boober to standard out")
 	setupCmd.Flags().BoolVarP(&showObjects, "showobjects",
 		"o", false, "Print object definitions from Boober to standard out")
+	setupCmd.Flags().BoolVarP(&verbose, "verbose",
+		"v", false, "Log progress to standard out")
 	setupCmd.Flags().BoolVarP(&localhost, "localhost",
 		"l", false, "Send setup to Boober on localhost")
+	setupCmd.Flags().MarkHidden("localhost")
+
 }

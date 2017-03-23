@@ -45,7 +45,7 @@ type BooberReturn struct {
 	OpenshiftObjects json.RawMessage `json:"openshiftObjects"`
 }
 
-func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool, localhost bool,
+func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool, verbose bool, localhost bool,
 	overrideFiles []string) int {
 
 	validateCode := validateCommand(args, overrideFiles)
@@ -104,7 +104,7 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool,
 	if dryRun {
 		fmt.Println(string(PrettyPrintJson(jsonStr)))
 	} else {
-		validateCode = CallBoober(jsonStr, showConfig, showObjects, false, localhost)
+		validateCode = CallBoober(jsonStr, showConfig, showObjects, false, localhost, verbose)
 		if validateCode < 0 {
 			return validateCode
 		}
@@ -242,12 +242,12 @@ func GetBooberSetupUrl(clusterName string, localhost bool) string {
 	return GetBooberAddress(clusterName, localhost) + "/setup"
 }
 
-func CallBoober(combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool) int {
+func CallBoober(combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool) int {
 	//var openshiftConfig *openshift.OpenshiftConfig
 	var configLocation = viper.GetString("HOME") + "/.aoc.json"
 
 	if localhost {
-		CallBooberInstance(combindedJson, showConfig, showObjects,
+		CallBooberInstance(combindedJson, showConfig, showObjects, verbose,
 			GetBooberSetupUrl("localhost", localhost))
 	} else {
 		openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configLocation)
@@ -259,7 +259,7 @@ func CallBoober(combindedJson string, showConfig bool, showObjects bool, api boo
 		for i := range openshiftConfig.Clusters {
 			if openshiftConfig.Clusters[i].Reachable {
 				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
-					CallBooberInstance(combindedJson, showConfig, showObjects,
+					CallBooberInstance(combindedJson, showConfig, showObjects, verbose,
 						GetBooberSetupUrl(openshiftConfig.Clusters[i].Name, localhost))
 				}
 			}
@@ -268,7 +268,11 @@ func CallBoober(combindedJson string, showConfig bool, showObjects bool, api boo
 	return OPERATION_OK
 }
 
-func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool, url string) int {
+func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool, verbose bool, url string) int {
+
+	if verbose {
+		fmt.Println("Sending config to Boober at " + url)
+	}
 
 	var jsonStr = []byte(combindedJson)
 
