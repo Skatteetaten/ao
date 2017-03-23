@@ -34,7 +34,7 @@ var setupCmd = &cobra.Command{
 	Long: `When used with a .json file as an argument, it will deploy the application referred to in the
 file merged with about.json in the same folder, and about.json and aos-features.json in the parent folder`,
 	Run: func(cmd *cobra.Command, args []string) {
-		boober.ExecuteSetup(args, dryRun, showConfig, localhost, overrideFiles)
+		boober.ExecuteSetup(args, dryRun, showConfig, showObjects, localhost, overrideFiles)
 	},
 }
 
