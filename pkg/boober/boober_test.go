@@ -8,13 +8,10 @@ import (
 )
 
 func TestCallBooberInstance(t *testing.T) {
-	var expected int = booberError
-	var res int
 	const illegalUrl string = "https://westeros.skatteetaten.no/boober"
 
-	res = CallBooberInstance("{\"Game\": \"Thrones\"}", false,
-		illegalUrl)
-	if res != expected {
+	_, err := CallBooberInstance("{\"Game\": \"Thrones\"}", false, false, false, illegalUrl, "")
+	if err == nil {
 		t.Error("Did not detect illegal URL")
 	}
 }
@@ -22,12 +19,16 @@ func TestCallBooberInstance(t *testing.T) {
 func TestFolder2Map(t *testing.T) {
 	var expected int = 2
 	var res map[string]json.RawMessage
-	res = Folder2Map("testfiles/utv", "")
-	if len(res) != expected {
-		t.Errorf("Returned map with length %v, expected %v", len(res), expected)
-	}
-	if res["about.json"] == nil {
-		t.Error("Did not map about.json file")
+	res, err := Folder2Map("testfiles/utv", "")
+	if err != nil {
+		t.Errorf("Folder2Map returned an error: %v", err.Error())
+	} else {
+		if len(res) != expected {
+			t.Errorf("Returned map with length %v, expected %v", len(res), expected)
+		}
+		if res["about.json"] == nil {
+			t.Error("Did not map about.json file")
+		}
 	}
 }
 
@@ -35,31 +36,29 @@ func TestExecuteSetup(t *testing.T) {
 	//var expected int = OPERATION_OKs
 	var args []string = make([]string, 1)
 	var overrideFiles []string
-	var res, expected int
+	var err error
 
 	args[0] = "testfiles/utv/about.json"
-	expected = operationOk
-	res = ExecuteSetup(args, true, false, overrideFiles)
-	if res != expected {
-		t.Errorf("Failed simple dryrun: %v", res)
+	_, err = ExecuteSetup(args, true, false, false, false, false, overrideFiles)
+	if err != nil {
+		t.Errorf("Failed simple dryrun: %v", err.Error())
 	}
 
 	args = make([]string, 2)
 	args[0] = "testfiles/utv/about.json"
 	args[1] = "{\"Game\": \"Thrones\"}"
-	expected = missingFileReference
-	res = ExecuteSetup(args, true, false, overrideFiles)
-	if res != expected {
-		t.Errorf("Did not detect missing file reference: %v", res)
+	_, err = ExecuteSetup(args, true, false, false, false, false, overrideFiles)
+	if err == nil {
+		t.Errorf("Did not detect missing file reference")
 	}
 
 	overrideFiles = make([]string, 2)
 	overrideFiles[0] = "File1"
 	overrideFiles[1] = "File2"
-	expected = missingConfiguration
-	res = ExecuteSetup(args, true, false, overrideFiles)
-	if res != expected {
-		t.Errorf("Did not detect missing configuration: %v", res)
+
+	_, err = ExecuteSetup(args, true, false, false, false, false, overrideFiles)
+	if err == nil {
+		t.Errorf("Did not detect missing configuration")
 	}
 }
 

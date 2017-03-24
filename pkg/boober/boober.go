@@ -15,12 +15,6 @@ import (
 )
 
 const specIllegal = -1
-const missingFileReference = -2
-const missingConfiguration = -3
-
-const booberError = -7
-
-const operationOk = 0
 const specIsFile = 1
 const specIsFolder = 2
 
@@ -56,13 +50,19 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool,
 	overrideFiles []string) (string, error) {
 
 	var output, errorString string
+	var affiliation string
+	var err error
 
 	if !dryRun {
 		if !validateLogin() {
 			return "", errors.New("Not logged in, please use aoc login")
 		}
+		affiliation, err = GetAffiliation()
+		if err != nil {
+			return "", err
+		}
 	}
-	err := validateCommand(args, overrideFiles)
+	err = validateCommand(args, overrideFiles)
 	if err != nil {
 		return "", err
 	}
@@ -94,7 +94,7 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool,
 	}
 
 	// Initialize JSON
-	jsonStr, err := generateJson(envFile, envFolder, folder, parentFolder, args, overrideFiles)
+	jsonStr, err := generateJson(envFile, envFolder, folder, parentFolder, args, overrideFiles, affiliation)
 	if err != nil {
 		return "", err
 	} else {
@@ -122,14 +122,10 @@ func validateLogin() bool {
 	return true
 }
 
-func generateJson(envFile string, envFolder string, folder string, parentFolder string, args []string, overrideFiles []string) (string, error) {
+func generateJson(envFile string, envFolder string, folder string, parentFolder string, args []string, overrideFiles []string, affiliation string) (string, error) {
 	var booberData BooberInferface
 	booberData.App = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
 	booberData.Env = envFolder
-	affiliation, err := GetAffiliation()
-	if err != nil {
-		return "", err
-	}
 
 	booberData.Affiliation = affiliation
 
