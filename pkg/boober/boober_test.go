@@ -8,7 +8,7 @@ import (
 )
 
 func TestCallBooberInstance(t *testing.T) {
-	var expected int = BOOBER_ERROR
+	var expected int = booberError
 	var res int
 	const illegalUrl string = "https://westeros.skatteetaten.no/boober"
 
@@ -38,7 +38,7 @@ func TestExecuteSetup(t *testing.T) {
 	var res, expected int
 
 	args[0] = "testfiles/utv/about.json"
-	expected = OPERATION_OK
+	expected = operationOk
 	res = ExecuteSetup(args, true, false, overrideFiles)
 	if res != expected {
 		t.Errorf("Failed simple dryrun: %v", res)
@@ -47,7 +47,7 @@ func TestExecuteSetup(t *testing.T) {
 	args = make([]string, 2)
 	args[0] = "testfiles/utv/about.json"
 	args[1] = "{\"Game\": \"Thrones\"}"
-	expected = MISSING_FILE_REFERENCE
+	expected = MissingFileReference
 	res = ExecuteSetup(args, true, false, overrideFiles)
 	if res != expected {
 		t.Errorf("Did not detect missing file reference: %v", res)
@@ -56,7 +56,7 @@ func TestExecuteSetup(t *testing.T) {
 	overrideFiles = make([]string, 2)
 	overrideFiles[0] = "File1"
 	overrideFiles[1] = "File2"
-	expected = MISSING_CONFIGURATION
+	expected = MissingConfiguration
 	res = ExecuteSetup(args, true, false, overrideFiles)
 	if res != expected {
 		t.Errorf("Did not detect missing configuration: %v", res)
@@ -85,7 +85,7 @@ func TestIsLegalFileFolder(t *testing.T) {
 	var expected, res int
 	var testfolder string
 
-	expected = SPEC_IS_FOLDER
+	expected = specIsFolder
 	if runtime.GOOS == "windows" {
 		testfolder = "C:\\Windows"
 	} else {
@@ -96,7 +96,7 @@ func TestIsLegalFileFolder(t *testing.T) {
 		t.Error("Failed to recognize bin/windows as folder")
 	}
 
-	expected = SPEC_IS_FILE
+	expected = specIsFile
 	if runtime.GOOS == "windows" {
 		testfolder = "C:\\Windows\\System32\\drivers\\etc\\hosts"
 	} else {
@@ -107,7 +107,7 @@ func TestIsLegalFileFolder(t *testing.T) {
 		t.Error("Failed to recognize hosts file as legal file")
 	}
 
-	expected = SPEC_ILLEGAL
+	expected = SpecIllegal
 	testfolder = "/Go/is/an/open/source/programming/language/that/makes/it/easy/to/build/" +
 		"simple/reliable/and/efficient/software."
 	res = IsLegalFileFolder(testfolder)
