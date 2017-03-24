@@ -63,7 +63,7 @@ func Login(configLocation string, userName string, affiliation string) {
 		if !cluster.Reachable {
 			continue
 		}
-		if cluster.hasValidToken() {
+		if cluster.HasValidToken() {
 			fmt.Println("Cluster ", cluster.Name, " has a valid token")
 			continue
 		}
@@ -112,7 +112,7 @@ func loadConfigFile(configLocation string) (*OpenshiftConfig, error) {
 
 }
 
-func (this *OpenshiftCluster) hasValidToken() bool {
+func (this *OpenshiftCluster) HasValidToken() bool {
 	if this.Token == "" {
 		return false
 	}
