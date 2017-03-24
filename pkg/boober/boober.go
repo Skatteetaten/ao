@@ -246,13 +246,33 @@ func GetBooberSetupUrl(clusterName string, localhost bool) string {
 	return GetBooberAddress(clusterName, localhost) + "/setup"
 }
 
+func GetApiCluster() *openshift.OpenshiftCluster {
+	var configLocation = viper.GetString("HOME") + "/.aoc.json"
+	openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configLocation)
+	if err != nil {
+		fmt.Println("Error in loading OpenShift configuration")
+		return nil
+	}
+	for i := range openshiftConfig.Clusters {
+		if openshiftConfig.Clusters[i].Reachable {
+			return openshiftConfig.Clusters[i]
+		}
+	}
+	return nil
+}
+
 func CallBoober(combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool) int {
 	//var openshiftConfig *openshift.OpenshiftConfig
 	var configLocation = viper.GetString("HOME") + "/.aoc.json"
 
 	if localhost {
+		var token string = ""
+		apiCluster := GetApiCluster()
+		if apiCluster != nil {
+			token = apiCluster.Token
+		}
 		CallBooberInstance(combindedJson, showConfig, showObjects, verbose,
-			GetBooberSetupUrl("localhost", localhost), "")
+			GetBooberSetupUrl("localhost", localhost), token)
 	} else {
 		openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configLocation)
 		if err != nil {
