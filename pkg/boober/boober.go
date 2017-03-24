@@ -28,6 +28,8 @@ const OPERATION_OK = 0
 const SPEC_IS_FILE = 1
 const SPEC_IS_FOLDER = 2
 
+const BOOBER_NOT_INSTALLED_RESPONSE = "Application is not available"
+
 // Struct to represent data to the Boober interface
 type BooberInferface struct {
 	Env         string                     `json:"env"`
@@ -37,13 +39,13 @@ type BooberInferface struct {
 	Overrides   map[string]json.RawMessage `json:"overrides"`
 }
 
-// Struct to represent return data from the Boober interface
+// Structs to represent return data from the Boober interface
 type BooberReturn struct {
-	Sources          json.RawMessage `json:"sources"`
-	Errors           []string        `json:"errors"`
-	Valid            bool            `json:"valid"`
-	Config           json.RawMessage `json:"config"`
-	OpenshiftObjects json.RawMessage `json:"openshiftObjects"`
+	Sources          json.RawMessage            `json:"sources"`
+	Errors           []string                   `json:"errors"`
+	Valid            bool                       `json:"valid"`
+	Config           json.RawMessage            `json:"config"`
+	OpenshiftObjects map[string]json.RawMessage `json:"openshiftObjects"`
 }
 
 func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool, verbose bool, localhost bool,
@@ -250,7 +252,7 @@ func CallBoober(combindedJson string, showConfig bool, showObjects bool, api boo
 
 	if localhost {
 		CallBooberInstance(combindedJson, showConfig, showObjects, verbose,
-			GetBooberSetupUrl("localhost", localhost))
+			GetBooberSetupUrl("localhost", localhost), "")
 	} else {
 		openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configLocation)
 		if err != nil {
@@ -262,7 +264,8 @@ func CallBoober(combindedJson string, showConfig bool, showObjects bool, api boo
 			if openshiftConfig.Clusters[i].Reachable {
 				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
 					CallBooberInstance(combindedJson, showConfig, showObjects, verbose,
-						GetBooberSetupUrl(openshiftConfig.Clusters[i].Name, localhost))
+						GetBooberSetupUrl(openshiftConfig.Clusters[i].Name, localhost),
+						openshiftConfig.Clusters[i].Token)
 				}
 			}
 		}
@@ -270,10 +273,10 @@ func CallBoober(combindedJson string, showConfig bool, showObjects bool, api boo
 	return OPERATION_OK
 }
 
-func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool, verbose bool, url string) int {
+func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool, verbose bool, url string, token string) int {
 
 	if verbose {
-		fmt.Println("Sending config to Boober at " + url)
+		fmt.Print("Sending config to Boober at " + url + "... ")
 	}
 
 	var jsonStr = []byte(combindedJson)
@@ -285,7 +288,7 @@ func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool,
 		return INTERNAL_ERROR
 	}
 
-	req.Header.Set("Authentication", "mydirtysecret")
+	req.Header.Set("Authentication", "Bearer: "+token)
 	client := &http.Client{}
 
 	resp, err := client.Do(req)
@@ -296,9 +299,11 @@ func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool,
 
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		fmt.Println("Error from the Boober service on " + url + ":")
 		body, _ := ioutil.ReadAll(resp.Body)
-		fmt.Println(string(body))
+		bodyStr := string(body)
+		if strings.Contains(bodyStr, BOOBER_NOT_INSTALLED_RESPONSE) {
+			fmt.Println("FAIL: Boober not available on " + url + ":")
+		}
 		return BOOBER_ERROR
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -316,6 +321,19 @@ func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool,
 		for _, message := range booberReturn.Errors {
 			fmt.Println("  " + message)
 		}
+	} else {
+		if verbose {
+			fmt.Print("OK ")
+			var countMap map[string]int = make(map[string]int)
+			for key := range booberReturn.OpenshiftObjects {
+				countMap[key]++
+			}
+			fmt.Print("(")
+			for key := range countMap {
+				fmt.Printf("%v: %v  ", key, countMap[key])
+			}
+			fmt.Println(")")
+		}
 	}
 
 	if showConfig {
@@ -323,7 +341,11 @@ func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool,
 	}
 
 	if showObjects {
-		fmt.Println(PrettyPrintJson(string(booberReturn.OpenshiftObjects)))
+		for key := range booberReturn.OpenshiftObjects {
+			fmt.Println(key)
+			fmt.Println(PrettyPrintJson(string(booberReturn.OpenshiftObjects[key])))
+		}
+		//fmt.Println(PrettyPrintJson(string(booberReturn.OpenshiftObjects)))
 	}
 
 	return OPERATION_OK

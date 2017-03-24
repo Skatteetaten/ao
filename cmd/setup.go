@@ -57,5 +57,4 @@ func init() {
 	setupCmd.Flags().BoolVarP(&localhost, "localhost",
 		"l", false, "Send setup to Boober on localhost")
 	setupCmd.Flags().MarkHidden("localhost")
-
 }
