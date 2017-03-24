@@ -14,9 +14,9 @@ import (
 	"strings"
 )
 
-const SpecIllegal = -1
-const MissingFileReference = -2
-const MissingConfiguration = -3
+const specIllegal = -1
+const missingFileReference = -2
+const missingConfiguration = -3
 
 const booberError = -7
 
@@ -57,6 +57,11 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool,
 
 	var output, errorString string
 
+	if !dryRun {
+		if !validateLogin() {
+			return "", errors.New("Not logged in, please use aoc login")
+		}
+	}
 	err := validateCommand(args, overrideFiles)
 	if err != nil {
 		return "", err
@@ -103,6 +108,18 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool,
 		}
 	}
 	return output, nil
+}
+
+// Check for valid login, that is we have a configuration with at least one reachable cluster
+func validateLogin() bool {
+	var openshiftCluster *openshift.OpenshiftCluster
+	openshiftCluster = GetApiCluster()
+	if openshiftCluster != nil {
+		if !openshiftCluster.HasValidToken() {
+			return false
+		}
+	}
+	return true
 }
 
 func generateJson(envFile string, envFolder string, folder string, parentFolder string, args []string, overrideFiles []string) (string, error) {
@@ -238,7 +255,7 @@ func IsLegalFileFolder(filespec string) int {
 	absolutePath, err = filepath.Abs(filespec)
 	fi, err = os.Stat(absolutePath)
 	if os.IsNotExist(err) {
-		return SpecIllegal
+		return specIllegal
 	} else {
 		switch mode := fi.Mode(); {
 		case mode.IsDir():
@@ -247,7 +264,7 @@ func IsLegalFileFolder(filespec string) int {
 			return specIsFile
 		}
 	}
-	return SpecIllegal
+	return specIllegal
 }
 
 func GetBooberAddress(clusterName string, localhost bool) string {
@@ -391,7 +408,7 @@ func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool,
 	var booberReturn BooberReturn
 	err = json.Unmarshal(body, &booberReturn)
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("Error unmashalling Boober return: %v\n", err.Error()))
+		return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return: %v\n", err.Error()))
 	}
 
 	if !(booberReturn.Valid) {
@@ -404,7 +421,7 @@ func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool,
 			var booberReturnObjects BooberReturnObjects
 			err = json.Unmarshal(body, &booberReturnObjects)
 			if err != nil {
-				return "", errors.New(fmt.Sprintf("Error unmashalling Boober return: %v\n", err.Error()))
+				return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return: %v\n", err.Error()))
 			}
 			var countMap map[string]int = make(map[string]int)
 			for key := range booberReturnObjects.OpenshiftObjects {

@@ -47,7 +47,7 @@ func TestExecuteSetup(t *testing.T) {
 	args = make([]string, 2)
 	args[0] = "testfiles/utv/about.json"
 	args[1] = "{\"Game\": \"Thrones\"}"
-	expected = MissingFileReference
+	expected = missingFileReference
 	res = ExecuteSetup(args, true, false, overrideFiles)
 	if res != expected {
 		t.Errorf("Did not detect missing file reference: %v", res)
@@ -56,7 +56,7 @@ func TestExecuteSetup(t *testing.T) {
 	overrideFiles = make([]string, 2)
 	overrideFiles[0] = "File1"
 	overrideFiles[1] = "File2"
-	expected = MissingConfiguration
+	expected = missingConfiguration
 	res = ExecuteSetup(args, true, false, overrideFiles)
 	if res != expected {
 		t.Errorf("Did not detect missing configuration: %v", res)
@@ -107,7 +107,7 @@ func TestIsLegalFileFolder(t *testing.T) {
 		t.Error("Failed to recognize hosts file as legal file")
 	}
 
-	expected = SpecIllegal
+	expected = specIllegal
 	testfolder = "/Go/is/an/open/source/programming/language/that/makes/it/easy/to/build/" +
 		"simple/reliable/and/efficient/software."
 	res = IsLegalFileFolder(testfolder)
