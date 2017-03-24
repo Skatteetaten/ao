@@ -40,7 +40,8 @@ file merged with about.json in the same folder, and about.json and aos-features.
 	Run: func(cmd *cobra.Command, args []string) {
 		output, err := boober.ExecuteSetup(args, dryRun, showConfig, showObjects, verbose, localhost, overrideFiles)
 		if err != nil {
-			log.Fatal(err.Error())
+			l := log.New(os.Stderr, "", 0)
+			l.Println(err.Error())
 			os.Exit(-1)
 		} else {
 			if output != "" {
