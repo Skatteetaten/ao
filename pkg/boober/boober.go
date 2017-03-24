@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	//"github.com/vbatts/gogololcat/lol"
 )
 
 const SPEC_ILLEGAL = -1
