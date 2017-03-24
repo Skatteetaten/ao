@@ -3,6 +3,7 @@ package boober
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/skatteetaten/aoc/pkg/openshift"
 	"github.com/spf13/viper"
@@ -13,21 +14,17 @@ import (
 	"strings"
 )
 
-const SPEC_ILLEGAL = -1
-const MISSING_FILE_REFERENCE = -2
-const MISSING_CONFIGURATION = -3
-const ILLEGAL_JSON_CONFIGURATION = -4
-const CONFIGURATION_FILE_IN_ROOT = -5
-const ERROR_READING_FILE = -6
-const BOOBER_ERROR = -7
-const ILLEGAL_FILE = -8
-const INTERNAL_ERROR = -9
-const FOLDER_SETUP_NOT_SUPPORTED = -10
-const OPERATION_OK = 0
-const SPEC_IS_FILE = 1
-const SPEC_IS_FOLDER = 2
+const SpecIllegal = -1
+const MissingFileReference = -2
+const MissingConfiguration = -3
 
-const BOOBER_NOT_INSTALLED_RESPONSE = "Application is not available"
+const booberError = -7
+
+const operationOk = 0
+const specIsFile = 1
+const specIsFolder = 2
+
+const booberNotInstalledResponse = "Application is not available"
 
 // Struct to represent data to the Boober interface
 type BooberInferface struct {
@@ -48,11 +45,13 @@ type BooberReturn struct {
 }
 
 func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool, verbose bool, localhost bool,
-	overrideFiles []string) int {
+	overrideFiles []string) (string, error) {
 
-	validateCode := validateCommand(args, overrideFiles)
-	if validateCode < 0 {
-		return validateCode
+	var output, errorString string
+
+	err := validateCommand(args, overrideFiles)
+	if err != nil {
+		return "", err
 	}
 
 	var absolutePath string
@@ -64,34 +63,59 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool,
 	var folder string       // Absolute path of folder
 	var parentFolder string // Absolute path of parent
 
-	switch validateCode {
-	case SPEC_IS_FILE:
+	switch IsLegalFileFolder(args[0]) {
+	case specIsFile:
 		folder = filepath.Dir(absolutePath)
 		envFile = filepath.Base(absolutePath)
-	case SPEC_IS_FOLDER:
+	case specIsFolder:
 		folder = absolutePath
 		envFile = ""
-		fmt.Println("Setup on a folder is not yet supported")
-		return FOLDER_SETUP_NOT_SUPPORTED
 	}
 
 	parentFolder = filepath.Dir(folder)
 	envFolder = filepath.Base(folder)
 
 	if folder == parentFolder {
-		fmt.Println("Application configuration file cannot reside in root directory")
-		return CONFIGURATION_FILE_IN_ROOT
+		errorString += fmt.Sprintf("Application configuration file cannot reside in root directory")
+		return "", errors.New(errorString)
 	}
 
 	// Initialize JSON
+	jsonStr, err := generateJson(envFile, envFolder, folder, parentFolder, args, overrideFiles)
+	if err != nil {
+		return "", err
+	} else {
+		if dryRun {
+			return fmt.Sprintf("%v", string(PrettyPrintJson(jsonStr))), nil
+		} else {
+			output, err = CallBoober(jsonStr, showConfig, showObjects, false, localhost, verbose)
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+	return output, nil
+}
 
+func generateJson(envFile string, envFolder string, folder string, parentFolder string, args []string, overrideFiles []string) (string, error) {
 	var booberData BooberInferface
 	booberData.App = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
 	booberData.Env = envFolder
-	booberData.Affiliation = ""
+	affiliation, err := GetAffiliation()
+	if err != nil {
+		return "", err
+	}
 
-	var returnMap = Folder2Map(folder, envFolder+"/")
-	var returnMap2 = Folder2Map(parentFolder, "")
+	booberData.Affiliation = affiliation
+
+	returnMap, err := Folder2Map(folder, envFolder+"/")
+	if err != nil {
+		return "", err
+	}
+	returnMap2, err := Folder2Map(parentFolder, "")
+	if err != nil {
+		return "", err
+	}
 
 	booberData.Files = CombineMaps(returnMap, returnMap2)
 	booberData.Overrides = overrides2map(args, overrideFiles)
@@ -99,20 +123,11 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool,
 	jsonByte, ok := json.Marshal(booberData)
 	if !(ok == nil) {
 		fmt.Println("Internal error in marshalling Boober data: " + ok.Error())
-		return INTERNAL_ERROR
+		return "", errors.New(fmt.Sprintf("Internal error in marshalling Boober data: %v\n", ok.Error()))
 	}
 
 	jsonStr := string(jsonByte)
-	if dryRun {
-		//lol.Writer.Write(os.Stdout, []byte(PrettyPrintJson(jsonStr)))
-		fmt.Println(string(PrettyPrintJson(jsonStr)))
-	} else {
-		validateCode = CallBoober(jsonStr, showConfig, showObjects, false, localhost, verbose)
-		if validateCode < 0 {
-			return validateCode
-		}
-	}
-	return OPERATION_OK
+	return jsonStr, nil
 }
 
 func overrides2map(args []string, overrideFiles []string) map[string]json.RawMessage {
@@ -123,38 +138,41 @@ func overrides2map(args []string, overrideFiles []string) map[string]json.RawMes
 	return returnMap
 }
 
-func Folder2Map(folder string, prefix string) map[string]json.RawMessage {
+func Folder2Map(folder string, prefix string) (map[string]json.RawMessage, error) {
 	var returnMap = make(map[string]json.RawMessage)
+
 	var allFilesOK bool = true
+	var output string
 
 	files, _ := ioutil.ReadDir(folder)
 	var filesProcessed = 0
 	for _, f := range files {
 		absolutePath := filepath.Join(folder, f.Name())
-		if IsLegalFileFolder(absolutePath) == SPEC_IS_FILE { // Ignore folders
+		if IsLegalFileFolder(absolutePath) == specIsFile { // Ignore folders
 			matched, _ := filepath.Match("*.json", strings.ToLower(f.Name()))
 			if matched {
 				fileJson, err := ioutil.ReadFile(absolutePath)
 				if err != nil {
-					fmt.Println("Error in reading file " + absolutePath)
-					os.Exit(ERROR_READING_FILE)
-				}
-				if IsLegalJson(string(fileJson)) {
-					filesProcessed++
-					returnMap[prefix+f.Name()] = fileJson
-				} else {
-					fmt.Println("Illegal JSON in configuration file " + absolutePath)
+					output += fmt.Sprintf("Error in reading file %v\n", absolutePath)
 					allFilesOK = false
+				} else {
+					if IsLegalJson(string(fileJson)) {
+						filesProcessed++
+						returnMap[prefix+f.Name()] = fileJson
+					} else {
+						output += fmt.Sprintf("Illegal JSON in configuration file %v\n", absolutePath)
+						allFilesOK = false
+					}
 				}
-				filesProcessed++
 			}
 		}
 
 	}
 	if !allFilesOK {
-		os.Exit(ILLEGAL_JSON_CONFIGURATION)
+		return nil, errors.New(output)
+	} else {
+		return returnMap, nil
 	}
-	return returnMap
 }
 
 func CombineMaps(map1 map[string]json.RawMessage, map2 map[string]json.RawMessage) map[string]json.RawMessage {
@@ -169,45 +187,40 @@ func CombineMaps(map1 map[string]json.RawMessage, map2 map[string]json.RawMessag
 	return returnMap
 }
 
-func validateCommand(args []string, overrideFiles []string) int {
+func validateCommand(args []string, overrideFiles []string) error {
 	var errorString = ""
-	var returnCode int
 
 	if len(args) == 0 {
-		returnCode = -1
 		errorString += "Missing file/folder "
 	} else {
 		// Chceck argument 0 for legal file / folder
-		returnCode = IsLegalFileFolder(args[0])
-		if returnCode < 0 {
-			errorString += "Illegal file / folder: " + args[0]
-			returnCode = ILLEGAL_FILE
+		validateCode := IsLegalFileFolder(args[0])
+		if validateCode < 0 {
+			errorString += fmt.Sprintf("Illegal file / folder: %v\n", args[0])
 		}
 
 		// We have at least one argument, now there should be a correlation between the number of args
 		// and the number of override (-f) flags
 		if len(overrideFiles) < (len(args) - 1) {
-			returnCode = MISSING_FILE_REFERENCE
-			errorString += "Configuration override specified without file reference flag "
+			errorString += fmt.Sprintf("Configuration override specified without file reference flag\n")
 		}
 		if len(overrideFiles) > (len(args) - 1) {
-			returnCode = MISSING_CONFIGURATION
-			errorString += "Configuration overide file reference flag specified without configuration "
+			errorString += fmt.Sprintf("Configuration overide file reference flag specified without configuration\n")
 		}
 
 		// Check for legal JSON argument for each overrideFiles flag
 		for i := 1; i < len(args); i++ {
 			if !IsLegalJson(args[i]) {
-				errorString = "Illegal JSON configuration override: " + args[i] + " "
-				returnCode = ILLEGAL_JSON_CONFIGURATION
+				errorString += fmt.Sprintf("Illegal JSON configuration override: %v\n", args[i])
 			}
 		}
 	}
 
-	if returnCode < 0 {
-		fmt.Println(errorString)
+	if errorString != "" {
+		return errors.New(errorString)
+	} else {
+		return nil
 	}
-	return returnCode
 }
 
 func IsLegalFileFolder(filespec string) int {
@@ -218,16 +231,16 @@ func IsLegalFileFolder(filespec string) int {
 	absolutePath, err = filepath.Abs(filespec)
 	fi, err = os.Stat(absolutePath)
 	if os.IsNotExist(err) {
-		return SPEC_ILLEGAL
+		return SpecIllegal
 	} else {
 		switch mode := fi.Mode(); {
 		case mode.IsDir():
-			return SPEC_IS_FOLDER
+			return specIsFolder
 		case mode.IsRegular():
-			return SPEC_IS_FILE
+			return specIsFile
 		}
 	}
-	return SPEC_ILLEGAL
+	return SpecIllegal
 }
 
 func GetBooberAddress(clusterName string, localhost bool) string {
@@ -260,9 +273,19 @@ func GetApiCluster() *openshift.OpenshiftCluster {
 	return nil
 }
 
-func CallBoober(combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool) int {
+func GetAffiliation() (string, error) {
+	var configLocation = viper.GetString("HOME") + "/.aoc.json"
+	openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configLocation)
+	if err != nil {
+		return "", errors.New("Error in loading OpenShift configuration")
+	}
+	return openshiftConfig.Affiliation, nil
+}
+
+func CallBoober(combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool) (string, error) {
 	//var openshiftConfig *openshift.OpenshiftConfig
 	var configLocation = viper.GetString("HOME") + "/.aoc.json"
+	var output string
 
 	if localhost {
 		var token string = ""
@@ -270,29 +293,37 @@ func CallBoober(combindedJson string, showConfig bool, showObjects bool, api boo
 		if apiCluster != nil {
 			token = apiCluster.Token
 		}
-		CallBooberInstance(combindedJson, showConfig, showObjects, verbose,
+		out, err := CallBooberInstance(combindedJson, showConfig, showObjects, verbose,
 			GetBooberSetupUrl("localhost", localhost), token)
+		if err != nil {
+			return out, err
+		} else {
+			output = out
+		}
 	} else {
 		openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configLocation)
 		if err != nil {
-			fmt.Println("Error in loading OpenShift configuration")
-			return INTERNAL_ERROR
+			return "", errors.New("Error in loading OpenShift configuration")
 		}
 
 		for i := range openshiftConfig.Clusters {
 			if openshiftConfig.Clusters[i].Reachable {
 				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
-					CallBooberInstance(combindedJson, showConfig, showObjects, verbose,
+					out, err := CallBooberInstance(combindedJson, showConfig, showObjects, verbose,
 						GetBooberSetupUrl(openshiftConfig.Clusters[i].Name, localhost),
 						openshiftConfig.Clusters[i].Token)
+					if err == nil {
+						output += fmt.Sprintf("%v\n", out)
+					}
 				}
 			}
 		}
 	}
-	return OPERATION_OK
+	return output, nil
 }
 
-func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool, verbose bool, url string, token string) int {
+func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool, verbose bool, url string, token string) (string, error) {
+	var output string
 
 	if verbose {
 		fmt.Print("Sending config to Boober at " + url + "... ")
@@ -303,8 +334,7 @@ func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool,
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
-		fmt.Println("Internal error in NewRequest: ", err)
-		return INTERNAL_ERROR
+		return "", errors.New(fmt.Sprintf("Internal error in NewRequest: %v", err))
 	}
 
 	req.Header.Set("Authentication", "Bearer: "+token)
@@ -312,18 +342,18 @@ func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool,
 
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error connecting to the Boober service on "+url+": ", err)
-		return BOOBER_ERROR
+		return "", errors.New(fmt.Sprintf("Error connecting to the Boober service on %v: %v", url, err))
 	}
 
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)
 		bodyStr := string(body)
-		if strings.Contains(bodyStr, BOOBER_NOT_INSTALLED_RESPONSE) {
-			fmt.Println("FAIL: Boober not available on " + url + ":")
+		if strings.Contains(bodyStr, booberNotInstalledResponse) {
+			return "", errors.New(fmt.Sprintf("Boober not available on %v", url))
+		} else {
+			return "", errors.New(fmt.Sprintf("Internal error"))
 		}
-		return BOOBER_ERROR
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
 
@@ -331,8 +361,7 @@ func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool,
 	var booberReturn BooberReturn
 	err = json.Unmarshal(body, &booberReturn)
 	if err != nil {
-		fmt.Println("Error unmashalling Boober return: " + err.Error())
-		return BOOBER_ERROR
+		return "", errors.New(fmt.Sprintf("Error unmashalling Boober return: %v\n", err.Error()))
 	}
 
 	if !(booberReturn.Valid) {
@@ -356,16 +385,15 @@ func CallBooberInstance(combindedJson string, showConfig bool, showObjects bool,
 	}
 
 	if showConfig {
-		fmt.Println(PrettyPrintJson(string(booberReturn.Config)))
+		output += PrettyPrintJson(string(booberReturn.Config))
 	}
 
 	if showObjects {
 		for key := range booberReturn.OpenshiftObjects {
-			fmt.Println(key)
-			fmt.Println(PrettyPrintJson(string(booberReturn.OpenshiftObjects[key])))
+			output += key + ":"
+			output += PrettyPrintJson(string(booberReturn.OpenshiftObjects[key]))
 		}
-		//fmt.Println(PrettyPrintJson(string(booberReturn.OpenshiftObjects)))
 	}
 
-	return OPERATION_OK
+	return output, nil
 }
