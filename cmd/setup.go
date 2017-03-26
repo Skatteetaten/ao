@@ -16,10 +16,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/aoc/pkg/boober"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
+	"github.com/skatteetaten/aoc/pkg/setup"
 )
 
 // Cobra Flag variables
@@ -38,7 +38,7 @@ var setupCmd = &cobra.Command{
 	Long: `When used with a .json file as an argument, it will deploy the application referred to in the
 file merged with about.json in the same folder, and about.json and aos-features.json in the parent folder`,
 	Run: func(cmd *cobra.Command, args []string) {
-		output, err := boober.ExecuteSetup(args, dryRun, showConfig, showObjects, verbose, localhost, overrideFiles)
+		output, err := setup.ExecuteSetup(args, dryRun, showConfig, showObjects, verbose, localhost, overrideFiles)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
