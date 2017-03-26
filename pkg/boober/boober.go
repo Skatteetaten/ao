@@ -47,24 +47,23 @@ type BooberReturn struct {
 }
 
 func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool, verbose bool, localhost bool,
-	overrideFiles []string) (string, error) {
+	overrideFiles []string) (output string, error error) {
 
-	var output, errorString string
+	var errorString string
 	var affiliation string
-	var err error
 
 	if !dryRun {
 		if !validateLogin() {
 			return "", errors.New("Not logged in, please use aoc login")
 		}
-		affiliation, err = GetAffiliation()
-		if err != nil {
-			return "", err
+		affiliation, error = GetAffiliation()
+		if error != nil {
+			return
 		}
 	}
-	err = validateCommand(args, overrideFiles)
-	if err != nil {
-		return "", err
+	error= validateCommand(args, overrideFiles)
+	if error != nil {
+		return
 	}
 
 	var absolutePath string
@@ -107,7 +106,7 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool,
 			}
 		}
 	}
-	return output, nil
+	return
 }
 
 // Check for valid login, that is we have a configuration with at least one reachable cluster
@@ -122,20 +121,23 @@ func validateLogin() bool {
 	return true
 }
 
-func generateJson(envFile string, envFolder string, folder string, parentFolder string, args []string, overrideFiles []string, affiliation string) (string, error) {
+func generateJson(envFile string, envFolder string, folder string, parentFolder string, args []string,
+	overrideFiles []string, affiliation string) (jsonStr string, error error) {
 	var booberData BooberInferface
+	var returnMap map[string]json.RawMessage
+	var returnMap2 map[string]json.RawMessage
 	booberData.App = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
 	booberData.Env = envFolder
 
 	booberData.Affiliation = affiliation
 
-	returnMap, err := Folder2Map(folder, envFolder+"/")
-	if err != nil {
-		return "", err
+	returnMap, error = Folder2Map(folder, envFolder+"/")
+	if error != nil {
+		return
 	}
-	returnMap2, err := Folder2Map(parentFolder, "")
-	if err != nil {
-		return "", err
+	returnMap2, error = Folder2Map(parentFolder, "")
+	if error != nil {
+		return
 	}
 
 	booberData.Files = CombineMaps(returnMap, returnMap2)
@@ -146,21 +148,20 @@ func generateJson(envFile string, envFolder string, folder string, parentFolder 
 		return "", errors.New(fmt.Sprintf("Internal error in marshalling Boober data: %v\n", ok.Error()))
 	}
 
-	jsonStr := string(jsonByte)
-	return jsonStr, nil
+	jsonStr = string(jsonByte)
+	return
 }
 
-func overrides2map(args []string, overrideFiles []string) map[string]json.RawMessage {
-	var returnMap = make(map[string]json.RawMessage)
+func overrides2map(args []string, overrideFiles []string) (returnMap map[string]json.RawMessage) {
+	returnMap = make(map[string]json.RawMessage)
 	for i := 0; i < len(overrideFiles); i++ {
 		returnMap[overrideFiles[i]] = json.RawMessage(args[i+1])
 	}
-	return returnMap
+	return
 }
 
-func Folder2Map(folder string, prefix string) (map[string]json.RawMessage, error) {
-	var returnMap = make(map[string]json.RawMessage)
-
+func Folder2Map(folder string, prefix string) (returnMap map[string]json.RawMessage, error error) {
+	returnMap = make(map[string]json.RawMessage)
 	var allFilesOK bool = true
 	var output string
 
@@ -189,14 +190,13 @@ func Folder2Map(folder string, prefix string) (map[string]json.RawMessage, error
 
 	}
 	if !allFilesOK {
-		return nil, errors.New(output)
-	} else {
-		return returnMap, nil
+		error = errors.New(output)
 	}
+	return
 }
 
-func CombineMaps(map1 map[string]json.RawMessage, map2 map[string]json.RawMessage) map[string]json.RawMessage {
-	var returnMap = make(map[string]json.RawMessage)
+func CombineMaps(map1 map[string]json.RawMessage, map2 map[string]json.RawMessage) (returnMap map[string]json.RawMessage) {
+	returnMap = make(map[string]json.RawMessage)
 
 	for k, v := range map1 {
 		returnMap[k] = v
@@ -204,10 +204,10 @@ func CombineMaps(map1 map[string]json.RawMessage, map2 map[string]json.RawMessag
 	for k, v := range map2 {
 		returnMap[k] = v
 	}
-	return returnMap
+	return
 }
 
-func validateCommand(args []string, overrideFiles []string) error {
+func validateCommand(args []string, overrideFiles []string) (error error) {
 	var errorString = ""
 
 	if len(args) == 0 {
@@ -237,10 +237,9 @@ func validateCommand(args []string, overrideFiles []string) error {
 	}
 
 	if errorString != "" {
-		return errors.New(errorString)
-	} else {
-		return nil
+		error = errors.New(errorString)
 	}
+	return
 }
 
 func IsLegalFileFolder(filespec string) int {
@@ -263,15 +262,13 @@ func IsLegalFileFolder(filespec string) int {
 	return specIllegal
 }
 
-func GetBooberAddress(clusterName string, localhost bool) string {
-	var booberAddress string
-
+func GetBooberAddress(clusterName string, localhost bool) (booberAddress string) {
 	if localhost {
 		booberAddress = "http://localhost:8080"
 	} else {
 		booberAddress = "http://boober-mfp-boober." + clusterName + ".paas.skead.no"
 	}
-	return booberAddress
+	return
 }
 
 func GetBooberSetupUrl(clusterName string, localhost bool) string {
