@@ -5,19 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/openshift"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"github.com/skatteetaten/aoc/pkg/jsonutil"
 )
 
-
-
 const booberNotInstalledResponse = "Application is not available"
-
-
 
 // Structs to represent return data from the Boober interface
 type BooberReturnObjects struct {
@@ -35,10 +31,6 @@ type BooberReturn struct {
 	Config           json.RawMessage `json:"config"`
 	OpenshiftObjects json.RawMessage `json:"openshiftObjects"`
 }
-
-
-
-
 
 func GetBooberAddress(clusterName string, localhost bool) (booberAddress string) {
 	if localhost {
@@ -79,7 +71,6 @@ func GetApiCluster() *openshift.OpenshiftCluster {
 	}
 	return nil
 }
-
 
 func CallBoober(combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool) (string, error) {
 	//var openshiftConfig *openshift.OpenshiftConfig

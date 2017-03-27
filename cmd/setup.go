@@ -16,10 +16,10 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/skatteetaten/aoc/pkg/setup"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
-	"github.com/skatteetaten/aoc/pkg/setup"
 )
 
 // Cobra Flag variables

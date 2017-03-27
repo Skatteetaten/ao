@@ -28,4 +28,3 @@ func IsLegalFileFolder(filespec string) int {
 	}
 	return SpecIllegal
 }
-

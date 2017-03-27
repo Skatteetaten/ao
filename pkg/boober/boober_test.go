@@ -10,6 +10,3 @@ func TestCallBooberInstance(t *testing.T) {
 		t.Error("Did not detect illegal URL")
 	}
 }
-
-
-

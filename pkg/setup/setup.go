@@ -2,13 +2,13 @@ package setup
 
 import (
 	"errors"
-	"path/filepath"
 	"fmt"
 	"github.com/skatteetaten/aoc/pkg/boober"
-	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
-	"github.com/spf13/viper"
+	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/openshift"
+	"github.com/spf13/viper"
+	"path/filepath"
 )
 
 func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool, verbose bool, localhost bool,
@@ -26,7 +26,7 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool,
 			return
 		}
 	}
-	error= validateCommand(args, overrideFiles)
+	error = validateCommand(args, overrideFiles)
 	if error != nil {
 		return
 	}
@@ -74,8 +74,6 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool,
 	return
 }
 
-
-
 func validateCommand(args []string, overrideFiles []string) (error error) {
 	var errorString = ""
 
@@ -110,7 +108,6 @@ func validateCommand(args []string, overrideFiles []string) (error error) {
 	}
 	return
 }
-
 
 func GetAffiliation() (string, error) {
 	var configLocation = viper.GetString("HOME") + "/.aoc.json"

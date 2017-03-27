@@ -1,9 +1,9 @@
 package jsonutil
 
 import (
-	"testing"
 	"encoding/json"
 	"reflect"
+	"testing"
 )
 
 func TestFolder2Map(t *testing.T) {
@@ -21,7 +21,6 @@ func TestFolder2Map(t *testing.T) {
 		}
 	}
 }
-
 
 func TestCombineMaps(t *testing.T) {
 	var expected map[string]json.RawMessage = make(map[string]json.RawMessage)

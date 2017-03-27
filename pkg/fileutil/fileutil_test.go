@@ -1,8 +1,8 @@
 package fileutil
 
 import (
-	"testing"
 	"runtime"
+	"testing"
 )
 
 func TestIsLegalFileFolder(t *testing.T) {
