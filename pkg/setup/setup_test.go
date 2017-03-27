@@ -1,9 +1,10 @@
 package setup
 
 import (
-	"testing"
+	"fmt"
 	"io/ioutil"
 	"strings"
+	"testing"
 	"unicode"
 )
 
@@ -19,8 +20,17 @@ func TestExecuteSetup(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed simple dryrun: %v", err.Error())
 	} else {
-		fileJson, _ := ioutil.ReadFile("testresult.json")
-		if strings.Compare(stripSpaces(out), stripSpaces(string(fileJson))) != 0 {
+		fileJson, err := ioutil.ReadFile("testresult.json")
+		if err != nil {
+			t.Errorf("Unable to read testresult.json")
+		}
+		fileJsonStr := stripSpaces(string(fileJson))
+		fmt.Println("Testresult:")
+		fmt.Println(fileJsonStr)
+		out := stripSpaces(out)
+		fmt.Println("Out:")
+		fmt.Println(out)
+		if strings.Compare(out, fileJsonStr) != 0 {
 			t.Errorf("Dryrun result different than expected")
 		}
 	}

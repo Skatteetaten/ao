@@ -1,14 +1,14 @@
 package jsonutil
 
 import (
-	"errors"
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
-	"fmt"
-	"github.com/skatteetaten/aoc/pkg/fileutil"
 )
 
 // Struct to represent data to the Boober interface
@@ -34,12 +34,19 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 	if error != nil {
 		return
 	}
+
+	for foo := range returnMap {
+		fmt.Println("DEBUG: Returmap: " + string(returnMap[foo]))
+	}
 	returnMap2, error = Folder2Map(parentFolder, "")
 	if error != nil {
 		return
 	}
 
 	booberData.Files = CombineMaps(returnMap, returnMap2)
+	for foo := range booberData.Files {
+		fmt.Println("DEBUG: Booberdata.files: " + string(booberData.Files[foo]))
+	}
 	booberData.Overrides = overrides2map(args, overrideFiles)
 
 	jsonByte, ok := json.Marshal(booberData)
@@ -48,6 +55,7 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 	}
 
 	jsonStr = string(jsonByte)
+	fmt.Println("DEBUG: Return value from GenerateJson: " + jsonStr)
 	return
 }
 
@@ -59,15 +67,16 @@ func overrides2map(args []string, overrideFiles []string) (returnMap map[string]
 	return
 }
 
-func Folder2Map(folder string, prefix string) (returnMap map[string]json.RawMessage, error error) {
-	returnMap = make(map[string]json.RawMessage)
+func Folder2Map(folder string, prefix string) (map[string]json.RawMessage, error) {
+	returnMap := make(map[string]json.RawMessage)
 	var allFilesOK bool = true
 	var output string
-
+	fmt.Println("DEBUG: Folder2Map called, folder: " + folder + ", prefix: " + prefix)
 	files, _ := ioutil.ReadDir(folder)
 	var filesProcessed = 0
 	for _, f := range files {
 		absolutePath := filepath.Join(folder, f.Name())
+		fmt.Println("DEBUG: absoultePath: " + absolutePath)
 		if fileutil.IsLegalFileFolder(absolutePath) == fileutil.SpecIsFile { // Ignore folders
 			matched, _ := filepath.Match("*.json", strings.ToLower(f.Name()))
 			if matched {
@@ -79,7 +88,9 @@ func Folder2Map(folder string, prefix string) (returnMap map[string]json.RawMess
 					if IsLegalJson(string(fileJson)) {
 						filesProcessed++
 						returnMap[prefix+f.Name()] = fileJson
+						fmt.Println("DEBUG: File read in Filder2Map: " + f.Name() + ":\n" + string(fileJson))
 					} else {
+						fmt.Println("DEBUG: Illegal JSON detected in Folder2Map")
 						output += fmt.Sprintf("Illegal JSON in configuration file %v\n", absolutePath)
 						allFilesOK = false
 					}
@@ -89,9 +100,9 @@ func Folder2Map(folder string, prefix string) (returnMap map[string]json.RawMess
 
 	}
 	if !allFilesOK {
-		error = errors.New(output)
+		return nil, errors.New(output)
 	}
-	return
+	return returnMap, nil
 }
 
 func CombineMaps(map1 map[string]json.RawMessage, map2 map[string]json.RawMessage) (returnMap map[string]json.RawMessage) {
