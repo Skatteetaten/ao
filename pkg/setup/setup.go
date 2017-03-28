@@ -3,16 +3,16 @@ package setup
 import (
 	"errors"
 	"fmt"
+	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/boober"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/openshift"
 	"github.com/spf13/viper"
 	"path/filepath"
-	"github.com/skatteetaten/aoc/cmd"
 )
 
-func ExecuteSetup(args []string, overrideFiles []string, persistentOptions *cmd.CommonCommandOptions) (
+func ExecuteSetup(args []string, overrideFiles []string, persistentOptions *cmdoptions.CommonCommandOptions) (
 	output string, error error) {
 
 	var errorString string

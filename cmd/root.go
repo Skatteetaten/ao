@@ -5,22 +5,15 @@ package cmd
 import (
 	"fmt"
 	"os"
-
+	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/openshift"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-type CommonCommandOptions struct {
-	Verbose     bool
-	Debug       bool
-	DryRun      bool
-	Localhost   bool
-	ShowConfig  bool
-	ShowObjects bool
-}
 
-var persistentOptions CommonCommandOptions
+
+var persistentOptions cmdoptions.CommonCommandOptions
 
 //var cfgFile string
 
