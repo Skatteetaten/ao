@@ -33,8 +33,8 @@ var setupCmd = &cobra.Command{
 	Long: `When used with a .json file as an argument, it will deploy the application referred to in the
 file merged with about.json in the same folder, and about.json and aos-features.json in the parent folder`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		output, err := setup.ExecuteSetup(args,
+		var setupObject setup.SetupClass
+		output, err := setupObject.ExecuteSetup(args,
 			overrideFiles, &persistentOptions)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)

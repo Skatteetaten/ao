@@ -12,19 +12,33 @@ import (
 	"path/filepath"
 )
 
-func ExecuteSetup(args []string, overrideFiles []string, persistentOptions *cmdoptions.CommonCommandOptions) (
+type SetupClass struct {
+	configLocation string
+	openshiftConfig *openshift.OpenshiftConfig
+	initDone bool
+}
+
+func (setupClass *SetupClass) init() (err error) {
+	if setupClass.initDone {
+		return
+	}
+	setupClass.configLocation = viper.GetString("HOME") + "/.aoc.json"
+	setupClass.openshiftConfig, err = openshift.LoadOrInitiateConfigFile(setupClass.configLocation)
+	if err != nil {
+		err = errors.New("Error in loading OpenShift configuration")
+	}
+	return
+}
+
+func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string, persistentOptions *cmdoptions.CommonCommandOptions) (
 	output string, error error) {
 
 	var errorString string
-	var affiliation string
 
+	setupClass.init()
 	if !persistentOptions.DryRun {
 		if !serverapi.ValidateLogin() {
 			return "", errors.New("Not logged in, please use aoc login")
-		}
-		affiliation, error = GetAffiliation()
-		if error != nil {
-			return
 		}
 	}
 	error = validateCommand(args, overrideFiles)
@@ -62,7 +76,7 @@ func ExecuteSetup(args []string, overrideFiles []string, persistentOptions *cmdo
 	}
 
 	// Initialize JSON
-	jsonStr, err := jsonutil.GenerateJson(envFile, envFolder, folder, parentFolder, overrideJson, overrideFiles, affiliation)
+	jsonStr, err := jsonutil.GenerateJson(envFile, envFolder, folder, parentFolder, overrideJson, overrideFiles, setupClass.openshiftConfig.Affiliation)
 	if err != nil {
 		return "", err
 	} else {
@@ -113,13 +127,4 @@ func validateCommand(args []string, overrideFiles []string) (error error) {
 		error = errors.New(errorString)
 	}
 	return
-}
-
-func GetAffiliation() (string, error) {
-	var configLocation = viper.GetString("HOME") + "/.aoc.json"
-	openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configLocation)
-	if err != nil {
-		return "", errors.New("Error in loading OpenShift configuration")
-	}
-	return openshiftConfig.Affiliation, nil
 }
