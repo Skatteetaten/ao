@@ -41,7 +41,7 @@ func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string
 			return "", errors.New("Not logged in, please use aoc login")
 		}
 	}
-	error = validateCommand(args, overrideFiles)
+	error = setupClass.validateCommand(args, overrideFiles)
 	if error != nil {
 		return
 	}
@@ -94,7 +94,7 @@ func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string
 	return
 }
 
-func validateCommand(args []string, overrideFiles []string) (error error) {
+func (setupClass *SetupClass) validateCommand(args []string, overrideFiles []string) (error error) {
 	var errorString = ""
 
 	if len(args) == 0 {
