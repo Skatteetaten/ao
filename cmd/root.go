@@ -11,6 +11,18 @@ import (
 	"github.com/spf13/viper"
 )
 
+type CommonCommandOptions struct {
+	verbose bool
+	debug bool
+	dryRun bool
+	localhost bool
+	showConfig bool
+	showObjects bool
+}
+
+var persistentOptions CommonCommandOptions
+
+
 //var cfgFile string
 
 // RootCmd represents the base command when called without any subcommands
@@ -32,10 +44,28 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
+
 }
 
 func init() {
 	cobra.OnInitialize(initConfig)
+
+	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.verbose, "verbose",
+		"v", false, "Log progress to standard out")
+	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.debug, "debug",
+		"", false, "Show debug information")
+	RootCmd.PersistentFlags().MarkHidden("debug")
+	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.dryRun, "dryrun",
+		"d", false,
+		"Do not perform a setup, just collect and print the configuration files")
+	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.localhost, "localhost",
+		"l", false, "Send setup to Boober on localhost")
+	RootCmd.PersistentFlags().MarkHidden("localhost")
+	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.showConfig, "showconfig",
+		"s", false, "Print merged config from Boober to standard out")
+	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.showObjects, "showobjects",
+		"o", false, "Print object definitions from Boober to standard out")
+
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -47,6 +77,7 @@ func initConfig() {
 
 	var configLocation = viper.GetString("HOME") + "/.aoc.json"
 	openshift.LoadOrInitiateConfigFile(configLocation)
+
 
 
 }

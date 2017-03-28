@@ -25,11 +25,7 @@ import (
 // Cobra Flag variables
 var overrideFiles []string
 var overrideValues []string
-var dryRun bool
-var showConfig bool
-var localhost bool
-var showObjects bool
-var verbose bool
+
 
 // setupCmd represents the setup command
 var setupCmd = &cobra.Command{
@@ -38,7 +34,9 @@ var setupCmd = &cobra.Command{
 	Long: `When used with a .json file as an argument, it will deploy the application referred to in the
 file merged with about.json in the same folder, and about.json and aos-features.json in the parent folder`,
 	Run: func(cmd *cobra.Command, args []string) {
-		output, err := setup.ExecuteSetup(args, dryRun, showConfig, showObjects, verbose, localhost, overrideFiles)
+		output, err := setup.ExecuteSetup(args, persistentOptions.dryRun, persistentOptions.showConfig,
+			persistentOptions.showObjects, persistentOptions.verbose, persistentOptions.localhost,
+			overrideFiles)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -57,26 +55,8 @@ func init() {
 	// File flag, supports multiple instances of the flag
 	setupCmd.Flags().StringArrayVarP(&overrideFiles, "file",
 		"f", overrideValues, "File to override")
-	//setupCmd.Flags().BoolVarP(&dryRun, "dryrun",
-	//	"d", false,
-	//	"Do not perform a setup, just collect and print the configuration files")
-	setupCmd.Flags().BoolVarP(&showConfig, "showconfig",
-		"s", false, "Print merged config from Boober to standard out")
-	setupCmd.Flags().BoolVarP(&showObjects, "showobjects",
-		"o", false, "Print object definitions from Boober to standard out")
-	setupCmd.Flags().BoolVarP(&verbose, "verbose",
-		"v", false, "Log progress to standard out")
-	//setupCmd.Flags().BoolVarP(&localhost, "localhost",
-	//	"l", false, "Send setup to Boober on localhost")
-	//setupCmd.Flags().MarkHidden("localhost")
 
-	setupCmd.PersistentFlags().BoolVarP(&dryRun, "dryrun",
-		"d", false,
-		"Do not perform a setup, just collect and print the configuration files")
-	//setupCmd.PersistentFlags().BoolVarP(&verbose, "verbose",
-	//	"v", false, "Log progress to standard out")
-	setupCmd.PersistentFlags().BoolVarP(&localhost, "localhost",
-		"l", false, "Send setup to Boober on localhost")
-	setupCmd.PersistentFlags().MarkHidden("localhost")
+
+
 
 }
