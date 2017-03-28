@@ -15,8 +15,8 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/skatteetaten/aoc/pkg/deploy"
+	"github.com/spf13/cobra"
 )
 
 // deployCmd represents the deploy command

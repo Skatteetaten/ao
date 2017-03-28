@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 )
 
-func ExecuteSetup(args[] string, overrideFiles []string, persistentOptions *cmdoptions.CommonCommandOptions) (
+func ExecuteSetup(args []string, overrideFiles []string, persistentOptions *cmdoptions.CommonCommandOptions) (
 	output string, error error) {
 
 	var errorString string

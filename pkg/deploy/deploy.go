@@ -1,8 +1,8 @@
 package deploy
 
 import (
-	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"fmt"
+	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 )
 
 func ExecuteDeploy(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (
