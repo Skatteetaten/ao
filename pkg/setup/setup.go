@@ -3,11 +3,11 @@ package setup
 import (
 	"errors"
 	"fmt"
-	"github.com/skatteetaten/aoc/pkg/serverapi"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/openshift"
+	"github.com/skatteetaten/aoc/pkg/serverapi"
 	"github.com/spf13/viper"
 	"path/filepath"
 )
