@@ -66,7 +66,7 @@ func ExecuteSetup(args []string, overrideFiles []string, persistentOptions *cmdo
 		if persistentOptions.DryRun {
 			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 		} else {
-			output, err = serverapi.CallBoober(jsonStr, persistentOptions.ShowConfig,
+			output, err = serverapi.CallApi(jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
 				persistentOptions.Verbose)
 			if err != nil {

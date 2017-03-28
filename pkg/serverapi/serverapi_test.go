@@ -2,8 +2,8 @@ package serverapi
 
 import "testing"
 
-func TestGetBooberAddress(t *testing.T) {
-	booberAddress := GetBooberAddress("foobar", true)
+func TestGetApiAddress(t *testing.T) {
+	booberAddress := GetApiAddress("foobar", true)
 	if booberAddress == "" {
 		t.Error("Boober Address for localhost blank")
 	} else {
@@ -14,10 +14,10 @@ func TestGetBooberAddress(t *testing.T) {
 
 }
 
-func TestCallBooberInstance(t *testing.T) {
+func TestCallApiInstance(t *testing.T) {
 	const illegalUrl string = "https://westeros.skatteetaten.no/serverapi"
 
-	_, err := callBooberInstance("{\"Game\": \"Thrones\"}", false, false, false, illegalUrl, "")
+	_, err := callApiInstance("{\"Game\": \"Thrones\"}", false, false, false, illegalUrl, "")
 	if err == nil {
 		t.Error("Did not detect illegal URL")
 	}

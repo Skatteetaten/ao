@@ -13,10 +13,10 @@ import (
 	"strings"
 )
 
-const booberNotInstalledResponse = "Application is not available"
+const apiNotInstalledResponse = "Application is not available"
 
-// Structs to represent return data from the Boober interface
-type BooberReturnObjects struct {
+// Structs to represent return data from the API interface
+type ApiReturnObjects struct {
 	Sources          json.RawMessage            `json:"sources"`
 	Errors           []string                   `json:"errors"`
 	Valid            bool                       `json:"valid"`
@@ -24,7 +24,7 @@ type BooberReturnObjects struct {
 	OpenshiftObjects map[string]json.RawMessage `json:"openshiftObjects"`
 }
 
-type BooberReturn struct {
+type ApiReturn struct {
 	Sources          json.RawMessage `json:"sources"`
 	Errors           []string        `json:"errors"`
 	Valid            bool            `json:"valid"`
@@ -32,11 +32,11 @@ type BooberReturn struct {
 	OpenshiftObjects json.RawMessage `json:"openshiftObjects"`
 }
 
-func GetBooberAddress(clusterName string, localhost bool) (booberAddress string) {
+func GetApiAddress(clusterName string, localhost bool) (apiAddress string) {
 	if localhost {
-		booberAddress = "http://localhost:8080"
+		apiAddress = "http://localhost:8080"
 	} else {
-		booberAddress = "http://serverapi-mfp-serverapi." + clusterName + ".paas.skead.no"
+		apiAddress = "http://serverapi-mfp-serverapi." + clusterName + ".paas.skead.no"
 	}
 	return
 }
@@ -53,8 +53,8 @@ func ValidateLogin() bool {
 	return true
 }
 
-func GetBooberSetupUrl(clusterName string, localhost bool) string {
-	return GetBooberAddress(clusterName, localhost) + "/setup"
+func GetApiSetupUrl(clusterName string, localhost bool) string {
+	return GetApiAddress(clusterName, localhost) + "/setup"
 }
 
 func GetApiCluster() *openshift.OpenshiftCluster {
@@ -72,7 +72,7 @@ func GetApiCluster() *openshift.OpenshiftCluster {
 	return nil
 }
 
-func CallBoober(combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool) (string, error) {
+func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool) (string, error) {
 	//var openshiftConfig *openshift.OpenshiftConfig
 	var configLocation = viper.GetString("HOME") + "/.aoc.json"
 	var output string
@@ -83,8 +83,8 @@ func CallBoober(combindedJson string, showConfig bool, showObjects bool, api boo
 		if apiCluster != nil {
 			token = apiCluster.Token
 		}
-		out, err := callBooberInstance(combindedJson, showConfig, showObjects, verbose,
-			GetBooberSetupUrl("localhost", localhost), token)
+		out, err := callApiInstance(combindedJson, showConfig, showObjects, verbose,
+			GetApiSetupUrl("localhost", localhost), token)
 		if err != nil {
 			return out, err
 		} else {
@@ -101,8 +101,8 @@ func CallBoober(combindedJson string, showConfig bool, showObjects bool, api boo
 		for i := range openshiftConfig.Clusters {
 			if openshiftConfig.Clusters[i].Reachable {
 				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
-					out, err := callBooberInstance(combindedJson, showConfig, showObjects, verbose,
-						GetBooberSetupUrl(openshiftConfig.Clusters[i].Name, localhost),
+					out, err := callApiInstance(combindedJson, showConfig, showObjects, verbose,
+						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, localhost),
 						openshiftConfig.Clusters[i].Token)
 					if err == nil {
 						output += fmt.Sprintf("%v\n", out)
@@ -122,7 +122,7 @@ func CallBoober(combindedJson string, showConfig bool, showObjects bool, api boo
 	return output, nil
 }
 
-func callBooberInstance(combindedJson string, showConfig bool, showObjects bool, verbose bool, url string, token string) (string, error) {
+func callApiInstance(combindedJson string, showConfig bool, showObjects bool, verbose bool, url string, token string) (string, error) {
 	var output string
 
 	if verbose {
@@ -153,13 +153,13 @@ func callBooberInstance(combindedJson string, showConfig bool, showObjects bool,
 		body, _ := ioutil.ReadAll(resp.Body)
 		bodyStr := string(body)
 		var errorstring string
-		if strings.Contains(bodyStr, booberNotInstalledResponse) {
+		if strings.Contains(bodyStr, apiNotInstalledResponse) {
 			errorstring = fmt.Sprintf("Boober not available on %v", url)
 		} else {
 			errorstring = fmt.Sprintf("Internal error")
 		}
 		if verbose {
-			if strings.Contains(bodyStr, booberNotInstalledResponse) {
+			if strings.Contains(bodyStr, apiNotInstalledResponse) {
 				fmt.Println("FAIL.  Boober not available")
 			} else {
 				fmt.Println("FAIL.  Internal error")
@@ -171,7 +171,7 @@ func callBooberInstance(combindedJson string, showConfig bool, showObjects bool,
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	// Check return for error
-	var booberReturn BooberReturn
+	var booberReturn ApiReturn
 	err = json.Unmarshal(body, &booberReturn)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return: %v\n", err.Error()))
@@ -187,13 +187,13 @@ func callBooberInstance(combindedJson string, showConfig bool, showObjects bool,
 		}
 	} else {
 		if verbose {
-			var booberReturnObjects BooberReturnObjects
-			err = json.Unmarshal(body, &booberReturnObjects)
+			var apiReturnObjects ApiReturnObjects
+			err = json.Unmarshal(body, &apiReturnObjects)
 			if err != nil {
 				return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return: %v\n", err.Error()))
 			}
 			var countMap map[string]int = make(map[string]int)
-			for key := range booberReturnObjects.OpenshiftObjects {
+			for key := range apiReturnObjects.OpenshiftObjects {
 				countMap[key]++
 			}
 
