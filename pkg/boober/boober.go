@@ -177,6 +177,9 @@ func callBooberInstance(combindedJson string, showConfig bool, showObjects bool,
 		return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return: %v\n", err.Error()))
 	}
 
+	for _, message := range booberReturn.Errors {
+		fmt.Println("DEBUG: Error from Boober:  " + message)
+	}
 	if !(booberReturn.Valid) {
 		fmt.Println("Error in configuration: ")
 		for _, message := range booberReturn.Errors {

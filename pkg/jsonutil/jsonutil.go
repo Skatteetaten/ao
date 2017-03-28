@@ -35,18 +35,12 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 		return
 	}
 
-	for foo := range returnMap {
-		fmt.Println("DEBUG: Returmap: " + string(returnMap[foo]))
-	}
 	returnMap2, error = Folder2Map(parentFolder, "")
 	if error != nil {
 		return
 	}
 
 	booberData.Files = CombineMaps(returnMap, returnMap2)
-	for foo := range booberData.Files {
-		fmt.Println("DEBUG: Booberdata.files: " + string(booberData.Files[foo]))
-	}
 	booberData.Overrides = overrides2map(args, overrideFiles)
 
 	jsonByte, ok := json.Marshal(booberData)
@@ -55,7 +49,6 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 	}
 
 	jsonStr = string(jsonByte)
-	fmt.Println("DEBUG: Return value from GenerateJson: " + jsonStr)
 	return
 }
 
@@ -71,12 +64,10 @@ func Folder2Map(folder string, prefix string) (map[string]json.RawMessage, error
 	returnMap := make(map[string]json.RawMessage)
 	var allFilesOK bool = true
 	var output string
-	fmt.Println("DEBUG: Folder2Map called, folder: " + folder + ", prefix: " + prefix)
 	files, _ := ioutil.ReadDir(folder)
 	var filesProcessed = 0
 	for _, f := range files {
 		absolutePath := filepath.Join(folder, f.Name())
-		fmt.Println("DEBUG: absoultePath: " + absolutePath)
 		if fileutil.IsLegalFileFolder(absolutePath) == fileutil.SpecIsFile { // Ignore folders
 			matched, _ := filepath.Match("*.json", strings.ToLower(f.Name()))
 			if matched {
@@ -88,9 +79,7 @@ func Folder2Map(folder string, prefix string) (map[string]json.RawMessage, error
 					if IsLegalJson(string(fileJson)) {
 						filesProcessed++
 						returnMap[prefix+f.Name()] = fileJson
-						fmt.Println("DEBUG: File read in Filder2Map: " + f.Name() + ":\n" + string(fileJson))
 					} else {
-						fmt.Println("DEBUG: Illegal JSON detected in Folder2Map")
 						output += fmt.Sprintf("Illegal JSON in configuration file %v\n", absolutePath)
 						allFilesOK = false
 					}

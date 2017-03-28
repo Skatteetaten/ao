@@ -57,17 +57,26 @@ func init() {
 	// File flag, supports multiple instances of the flag
 	setupCmd.Flags().StringArrayVarP(&overrideFiles, "file",
 		"f", overrideValues, "File to override")
-	setupCmd.Flags().BoolVarP(&dryRun, "dryrun",
-		"d", false,
-		"Do not perform a setup, just collect and print the configuration files")
+	//setupCmd.Flags().BoolVarP(&dryRun, "dryrun",
+	//	"d", false,
+	//	"Do not perform a setup, just collect and print the configuration files")
 	setupCmd.Flags().BoolVarP(&showConfig, "showconfig",
 		"s", false, "Print merged config from Boober to standard out")
 	setupCmd.Flags().BoolVarP(&showObjects, "showobjects",
 		"o", false, "Print object definitions from Boober to standard out")
 	setupCmd.Flags().BoolVarP(&verbose, "verbose",
 		"v", false, "Log progress to standard out")
-	setupCmd.Flags().BoolVarP(&localhost, "localhost",
-		"l", false, "Send setup to Boober on localhost")
-	setupCmd.Flags().MarkHidden("localhost")
-}
+	//setupCmd.Flags().BoolVarP(&localhost, "localhost",
+	//	"l", false, "Send setup to Boober on localhost")
+	//setupCmd.Flags().MarkHidden("localhost")
 
+	setupCmd.PersistentFlags().BoolVarP(&dryRun, "dryrun",
+		"d", false,
+		"Do not perform a setup, just collect and print the configuration files")
+	//setupCmd.PersistentFlags().BoolVarP(&verbose, "verbose",
+	//	"v", false, "Log progress to standard out")
+	setupCmd.PersistentFlags().BoolVarP(&localhost, "localhost",
+		"l", false, "Send setup to Boober on localhost")
+	setupCmd.PersistentFlags().MarkHidden("localhost")
+
+}
