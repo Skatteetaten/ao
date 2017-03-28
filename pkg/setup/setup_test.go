@@ -2,11 +2,11 @@ package setup
 
 import (
 	"fmt"
+	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"io/ioutil"
 	"strings"
 	"testing"
 	"unicode"
-	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 )
 
 func TestExecuteSetup(t *testing.T) {

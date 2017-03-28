@@ -4,14 +4,12 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/openshift"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"os"
 )
-
-
 
 var persistentOptions cmdoptions.CommonCommandOptions
 
