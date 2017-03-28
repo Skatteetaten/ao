@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 )
 
-func ExecuteSetup(args []string, overrideFiles []string, persistentOptions *cmdoptions.CommonCommandOptions) (
+func ExecuteSetup(args[] string, overrideFiles []string, persistentOptions *cmdoptions.CommonCommandOptions) (
 	output string, error error) {
 
 	var errorString string
@@ -32,16 +32,19 @@ func ExecuteSetup(args []string, overrideFiles []string, persistentOptions *cmdo
 		return
 	}
 
+	var env = args[0]
+	var overrideJson []string = args[1:]
+
 	var absolutePath string
 
-	absolutePath, _ = filepath.Abs(args[0])
+	absolutePath, _ = filepath.Abs(env)
 
 	var envFile string      // Filename for app
 	var envFolder string    // Short folder name (Env)
 	var folder string       // Absolute path of folder
 	var parentFolder string // Absolute path of parent
 
-	switch fileutil.IsLegalFileFolder(args[0]) {
+	switch fileutil.IsLegalFileFolder(env) {
 	case fileutil.SpecIsFile:
 		folder = filepath.Dir(absolutePath)
 		envFile = filepath.Base(absolutePath)
@@ -59,7 +62,7 @@ func ExecuteSetup(args []string, overrideFiles []string, persistentOptions *cmdo
 	}
 
 	// Initialize JSON
-	jsonStr, err := jsonutil.GenerateJson(envFile, envFolder, folder, parentFolder, args, overrideFiles, affiliation)
+	jsonStr, err := jsonutil.GenerateJson(envFile, envFolder, folder, parentFolder, overrideJson, overrideFiles, affiliation)
 	if err != nil {
 		return "", err
 	} else {

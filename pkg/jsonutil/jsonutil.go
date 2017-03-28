@@ -20,7 +20,7 @@ type booberInferface struct {
 	Overrides   map[string]json.RawMessage `json:"overrides"`
 }
 
-func GenerateJson(envFile string, envFolder string, folder string, parentFolder string, args []string,
+func GenerateJson(envFile string, envFolder string, folder string, parentFolder string, overrideJson []string,
 	overrideFiles []string, affiliation string) (jsonStr string, error error) {
 	var booberData booberInferface
 	var returnMap map[string]json.RawMessage
@@ -41,7 +41,7 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 	}
 
 	booberData.Files = CombineMaps(returnMap, returnMap2)
-	booberData.Overrides = overrides2map(args, overrideFiles)
+	booberData.Overrides = overrides2map(overrideJson, overrideFiles)
 
 	jsonByte, ok := json.Marshal(booberData)
 	if !(ok == nil) {
@@ -52,10 +52,10 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 	return
 }
 
-func overrides2map(args []string, overrideFiles []string) (returnMap map[string]json.RawMessage) {
+func overrides2map(overrideJson []string, overrideFiles []string) (returnMap map[string]json.RawMessage) {
 	returnMap = make(map[string]json.RawMessage)
 	for i := 0; i < len(overrideFiles); i++ {
-		returnMap[overrideFiles[i]] = json.RawMessage(args[i+1])
+		returnMap[overrideFiles[i]] = json.RawMessage(overrideJson[i])
 	}
 	return
 }
