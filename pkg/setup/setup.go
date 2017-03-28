@@ -77,13 +77,6 @@ func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string
 	}
 
 	// Initialize JSON
-	fmt.Println("DEBUG: " + envFile)
-	fmt.Println("DEBUG: " + envFolder)
-	fmt.Println("DEBUG: " + folder)
-	fmt.Println("DEBUG: " + parentFolder)
-	fmt.Println("DEBUG: " + string(len(args)))
-	fmt.Println("DEBUG: " + string(len(overrideFiles)))
-	fmt.Println("DEBUG: " + setupClass.getAffiliation())
 
 	jsonStr, err := jsonutil.GenerateJson(envFile, envFolder, folder, parentFolder, args, overrideFiles, setupClass.getAffiliation())
 	if err != nil {
