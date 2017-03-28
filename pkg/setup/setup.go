@@ -9,15 +9,16 @@ import (
 	"github.com/skatteetaten/aoc/pkg/openshift"
 	"github.com/spf13/viper"
 	"path/filepath"
+	"github.com/skatteetaten/aoc/cmd"
 )
 
-func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool, verbose bool, localhost bool,
-	overrideFiles []string) (output string, error error) {
+func ExecuteSetup(args []string, overrideFiles []string, persistentOptions *cmd.CommonCommandOptions) (
+	output string, error error) {
 
 	var errorString string
 	var affiliation string
 
-	if !dryRun {
+	if !persistentOptions.DryRun {
 		if !boober.ValidateLogin() {
 			return "", errors.New("Not logged in, please use aoc login")
 		}
@@ -62,10 +63,12 @@ func ExecuteSetup(args []string, dryRun bool, showConfig bool, showObjects bool,
 	if err != nil {
 		return "", err
 	} else {
-		if dryRun {
+		if persistentOptions.DryRun {
 			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 		} else {
-			output, err = boober.CallBoober(jsonStr, showConfig, showObjects, false, localhost, verbose)
+			output, err = boober.CallBoober(jsonStr, persistentOptions.ShowConfig,
+				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
+				persistentOptions.Verbose)
 			if err != nil {
 				return "", err
 			}
