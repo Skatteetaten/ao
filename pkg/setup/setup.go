@@ -13,9 +13,9 @@ import (
 )
 
 type SetupClass struct {
-	configLocation string
+	configLocation  string
 	openshiftConfig *openshift.OpenshiftConfig
-	initDone bool
+	initDone        bool
 }
 
 func (setupClass *SetupClass) init() (err error) {
@@ -27,6 +27,7 @@ func (setupClass *SetupClass) init() (err error) {
 	if err != nil {
 		err = errors.New("Error in loading OpenShift configuration")
 	}
+	setupClass.initDone = true
 	return
 }
 
@@ -47,7 +48,7 @@ func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string
 	}
 
 	var env = args[0]
-	var overrideJson []string = args[1:]
+	//var overrideJson []string = args[1:]
 
 	var absolutePath string
 
@@ -76,7 +77,15 @@ func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string
 	}
 
 	// Initialize JSON
-	jsonStr, err := jsonutil.GenerateJson(envFile, envFolder, folder, parentFolder, overrideJson, overrideFiles, setupClass.openshiftConfig.Affiliation)
+	fmt.Println("DEBUG: " + envFile)
+	fmt.Println("DEBUG: " + envFolder)
+	fmt.Println("DEBUG: " + folder)
+	fmt.Println("DEBUG: " + parentFolder)
+	fmt.Println("DEBUG: " + string(len(args)))
+	fmt.Println("DEBUG: " + string(len(overrideFiles)))
+	fmt.Println("DEBUG: " + setupClass.getAffiliation())
+
+	jsonStr, err := jsonutil.GenerateJson(envFile, envFolder, folder, parentFolder, args, overrideFiles, setupClass.getAffiliation())
 	if err != nil {
 		return "", err
 	} else {
@@ -125,6 +134,13 @@ func (setupClass *SetupClass) validateCommand(args []string, overrideFiles []str
 
 	if errorString != "" {
 		error = errors.New(errorString)
+	}
+	return
+}
+
+func (setupClass *SetupClass) getAffiliation() (affiliation string) {
+	if setupClass.openshiftConfig != nil {
+		affiliation = setupClass.openshiftConfig.Affiliation
 	}
 	return
 }
