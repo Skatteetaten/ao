@@ -12,16 +12,15 @@ import (
 )
 
 type CommonCommandOptions struct {
-	verbose bool
-	debug bool
-	dryRun bool
-	localhost bool
-	showConfig bool
+	verbose     bool
+	debug       bool
+	dryRun      bool
+	localhost   bool
+	showConfig  bool
 	showObjects bool
 }
 
 var persistentOptions CommonCommandOptions
-
 
 //var cfgFile string
 
@@ -77,7 +76,5 @@ func initConfig() {
 
 	var configLocation = viper.GetString("HOME") + "/.aoc.json"
 	openshift.LoadOrInitiateConfigFile(configLocation)
-
-
 
 }

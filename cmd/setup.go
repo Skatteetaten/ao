@@ -26,7 +26,6 @@ import (
 var overrideFiles []string
 var overrideValues []string
 
-
 // setupCmd represents the setup command
 var setupCmd = &cobra.Command{
 	Use:   `setup folder | file [-f file 'JSON Configuration String']`,
@@ -55,8 +54,5 @@ func init() {
 	// File flag, supports multiple instances of the flag
 	setupCmd.Flags().StringArrayVarP(&overrideFiles, "file",
 		"f", overrideValues, "File to override")
-
-
-
 
 }
