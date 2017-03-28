@@ -1,4 +1,4 @@
-package boober
+package serverapi
 
 import "testing"
 
@@ -15,7 +15,7 @@ func TestGetBooberAddress(t *testing.T) {
 }
 
 func TestCallBooberInstance(t *testing.T) {
-	const illegalUrl string = "https://westeros.skatteetaten.no/boober"
+	const illegalUrl string = "https://westeros.skatteetaten.no/serverapi"
 
 	_, err := callBooberInstance("{\"Game\": \"Thrones\"}", false, false, false, illegalUrl, "")
 	if err == nil {

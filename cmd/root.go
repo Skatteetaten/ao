@@ -19,7 +19,7 @@ var persistentOptions cmdoptions.CommonCommandOptions
 var RootCmd = &cobra.Command{
 	Use:   "aoc",
 	Short: "Aurora Openshift CLI",
-	Long: `A command line interface that interacts with boober
+	Long: `A command line interface that interacts with serverapi
 
 This application has two main parts.
 1. manage the aoc configuration via cli

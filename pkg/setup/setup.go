@@ -3,7 +3,7 @@ package setup
 import (
 	"errors"
 	"fmt"
-	"github.com/skatteetaten/aoc/pkg/boober"
+	"github.com/skatteetaten/aoc/pkg/serverapi"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
@@ -19,7 +19,7 @@ func ExecuteSetup(args []string, overrideFiles []string, persistentOptions *cmdo
 	var affiliation string
 
 	if !persistentOptions.DryRun {
-		if !boober.ValidateLogin() {
+		if !serverapi.ValidateLogin() {
 			return "", errors.New("Not logged in, please use aoc login")
 		}
 		affiliation, error = GetAffiliation()
@@ -66,7 +66,7 @@ func ExecuteSetup(args []string, overrideFiles []string, persistentOptions *cmdo
 		if persistentOptions.DryRun {
 			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 		} else {
-			output, err = boober.CallBoober(jsonStr, persistentOptions.ShowConfig,
+			output, err = serverapi.CallBoober(jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
 				persistentOptions.Verbose)
 			if err != nil {

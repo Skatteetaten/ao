@@ -1,4 +1,4 @@
-package boober
+package serverapi
 
 import (
 	"bytes"
@@ -36,7 +36,7 @@ func GetBooberAddress(clusterName string, localhost bool) (booberAddress string)
 	if localhost {
 		booberAddress = "http://localhost:8080"
 	} else {
-		booberAddress = "http://boober-mfp-boober." + clusterName + ".paas.skead.no"
+		booberAddress = "http://serverapi-mfp-serverapi." + clusterName + ".paas.skead.no"
 	}
 	return
 }
