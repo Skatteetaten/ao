@@ -16,10 +16,11 @@ func TestExecuteSetup(t *testing.T) {
 	var err error
 	var out string
 	var persistentOptions cmdoptions.CommonCommandOptions
+	var setupClass SetupClass
 
 	args[0] = "testfiles/utv/about.json"
 	persistentOptions.DryRun = true
-	out, err = ExecuteSetup(args, overrideFiles, &persistentOptions)
+	out, err = setupClass.ExecuteSetup(args, overrideFiles, &persistentOptions)
 	if err != nil {
 		t.Errorf("Failed simple dryrun: %v", err.Error())
 	} else {
@@ -41,7 +42,7 @@ func TestExecuteSetup(t *testing.T) {
 	args = make([]string, 2)
 	args[0] = "testfiles/utv/about.json"
 	args[1] = "{\"Game\": \"Thrones\"}"
-	_, err = ExecuteSetup(args, overrideFiles, &persistentOptions)
+	_, err = setupClass.ExecuteSetup(args, overrideFiles, &persistentOptions)
 	if err == nil {
 		t.Errorf("Did not detect missing file reference")
 	}
@@ -50,7 +51,7 @@ func TestExecuteSetup(t *testing.T) {
 	overrideFiles[0] = "File1"
 	overrideFiles[1] = "File2"
 
-	_, err = ExecuteSetup(args, overrideFiles, &persistentOptions)
+	_, err = setupClass.ExecuteSetup(args, overrideFiles, &persistentOptions)
 	if err == nil {
 		t.Errorf("Did not detect missing configuration")
 	}
