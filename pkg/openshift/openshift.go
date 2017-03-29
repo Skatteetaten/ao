@@ -6,14 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/howeyc/gopass"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
-
-	"github.com/howeyc/gopass"
 )
 
 const (
@@ -112,6 +111,17 @@ func loadConfigFile(configLocation string) (*OpenshiftConfig, error) {
 
 }
 
+func (openshiftConfig *OpenshiftConfig) GetApiCluster() (cluster *OpenshiftCluster, err error) {
+	for clusterIndex := range openshiftConfig.Clusters {
+		if openshiftConfig.Clusters[clusterIndex].Name == openshiftConfig.APICluster {
+			cluster = openshiftConfig.Clusters[clusterIndex]
+			return
+		}
+	}
+	err = errors.New("No API cluster defined")
+	return
+}
+
 func (this *OpenshiftCluster) HasValidToken() bool {
 	if this.Token == "" {
 		return false
@@ -183,7 +193,7 @@ func collectOpenshiftClusters(num int, ch chan *OpenshiftCluster) *OpenshiftConf
 				return config
 			}
 			if apiCluster == "" && c.Reachable {
-				fmt.Println(c.Name, " is the BooberAPI that will be used")
+				//fmt.Println(c.Name, " is the BooberAPI that will be used")
 				apiCluster = c.Name
 			}
 		}

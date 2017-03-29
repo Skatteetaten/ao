@@ -15,6 +15,7 @@ import (
 type SetupClass struct {
 	configLocation  string
 	openshiftConfig *openshift.OpenshiftConfig
+	apiClusterIndex int
 	initDone        bool
 }
 
@@ -27,18 +28,43 @@ func (setupClass *SetupClass) init() (err error) {
 	if err != nil {
 		err = errors.New("Error in loading OpenShift configuration")
 	}
+	// Find index for API cluster,that is the first reachable cluster
+	if setupClass.openshiftConfig != nil {
+		for i := range setupClass.openshiftConfig.Clusters {
+			if setupClass.openshiftConfig.Clusters[i].Reachable {
+				setupClass.apiClusterIndex = i
+				break
+			}
+		}
+	}
 	setupClass.initDone = true
 	return
 }
 
-func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string, persistentOptions *cmdoptions.CommonCommandOptions) (
+func (setupClass *SetupClass) getApiCluster() *openshift.OpenshiftCluster {
+	var configLocation = viper.GetString("HOME") + "/.aoc.json"
+	openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configLocation)
+	if err != nil {
+		fmt.Println("Error in loading OpenShift configuration")
+		return nil
+	}
+	for i := range openshiftConfig.Clusters {
+		if openshiftConfig.Clusters[i].Reachable {
+			return openshiftConfig.Clusters[i]
+		}
+	}
+	return nil
+}
+
+func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string,
+	persistentOptions *cmdoptions.CommonCommandOptions) (
 	output string, error error) {
 
 	var errorString string
 
 	setupClass.init()
 	if !persistentOptions.DryRun {
-		if !serverapi.ValidateLogin() {
+		if !serverapi.ValidateLogin(setupClass.openshiftConfig) {
 			return "", errors.New("Not logged in, please use aoc login")
 		}
 	}
@@ -87,7 +113,7 @@ func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string
 		} else {
 			output, err = serverapi.CallApi(jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
-				persistentOptions.Verbose)
+				persistentOptions.Verbose, setupClass.openshiftConfig)
 			if err != nil {
 				return "", err
 			}

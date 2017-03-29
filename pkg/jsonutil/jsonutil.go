@@ -12,7 +12,7 @@ import (
 )
 
 // Struct to represent data to the Boober interface
-type booberInferface struct {
+type apiInferface struct {
 	Env         string                     `json:"env"`
 	App         string                     `json:"app"`
 	Affiliation string                     `json:"affiliation"`
@@ -22,13 +22,13 @@ type booberInferface struct {
 
 func GenerateJson(envFile string, envFolder string, folder string, parentFolder string, overrideJson []string,
 	overrideFiles []string, affiliation string) (jsonStr string, error error) {
-	var booberData booberInferface
+	var apiData apiInferface
 	var returnMap map[string]json.RawMessage
 	var returnMap2 map[string]json.RawMessage
-	booberData.App = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
-	booberData.Env = envFolder
+	apiData.App = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
+	apiData.Env = envFolder
 
-	booberData.Affiliation = affiliation
+	apiData.Affiliation = affiliation
 
 	returnMap, error = Folder2Map(folder, envFolder+"/")
 	if error != nil {
@@ -40,10 +40,10 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 		return
 	}
 
-	booberData.Files = CombineMaps(returnMap, returnMap2)
-	booberData.Overrides = overrides2map(overrideJson, overrideFiles)
+	apiData.Files = CombineMaps(returnMap, returnMap2)
+	apiData.Overrides = overrides2map(overrideJson, overrideFiles)
 
-	jsonByte, ok := json.Marshal(booberData)
+	jsonByte, ok := json.Marshal(apiData)
 	if !(ok == nil) {
 		return "", errors.New(fmt.Sprintf("Internal error in marshalling Boober data: %v\n", ok.Error()))
 	}

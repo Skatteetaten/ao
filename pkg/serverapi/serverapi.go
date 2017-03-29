@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/openshift"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -36,15 +35,15 @@ func GetApiAddress(clusterName string, localhost bool) (apiAddress string) {
 	if localhost {
 		apiAddress = "http://localhost:8080"
 	} else {
-		apiAddress = "http://serverapi-mfp-serverapi." + clusterName + ".paas.skead.no"
+		apiAddress = "http://boober-mfp-boober." + clusterName + ".paas.skead.no"
 	}
 	return
 }
 
 // Check for valid login, that is we have a configuration with at least one reachable cluster
-func ValidateLogin() bool {
+func ValidateLogin(openshiftConfig *openshift.OpenshiftConfig) (output bool) {
 	var openshiftCluster *openshift.OpenshiftCluster
-	openshiftCluster = GetApiCluster()
+	openshiftCluster, _ = openshiftConfig.GetApiCluster()
 	if openshiftCluster != nil {
 		if !openshiftCluster.HasValidToken() {
 			return false
@@ -57,45 +56,23 @@ func GetApiSetupUrl(clusterName string, localhost bool) string {
 	return GetApiAddress(clusterName, localhost) + "/setup"
 }
 
-func GetApiCluster() *openshift.OpenshiftCluster {
-	var configLocation = viper.GetString("HOME") + "/.aoc.json"
-	openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configLocation)
-	if err != nil {
-		fmt.Println("Error in loading OpenShift configuration")
-		return nil
-	}
-	for i := range openshiftConfig.Clusters {
-		if openshiftConfig.Clusters[i].Reachable {
-			return openshiftConfig.Clusters[i]
-		}
-	}
-	return nil
-}
-
-func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool) (string, error) {
+func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
+	openshiftConfig *openshift.OpenshiftConfig) (output string, err error) {
 	//var openshiftConfig *openshift.OpenshiftConfig
-	var configLocation = viper.GetString("HOME") + "/.aoc.json"
-	var output string
+	var apiCluster *openshift.OpenshiftCluster
 
 	if localhost {
 		var token string = ""
-		apiCluster := GetApiCluster()
+		apiCluster, err = openshiftConfig.GetApiCluster()
 		if apiCluster != nil {
 			token = apiCluster.Token
 		}
-		out, err := callApiInstance(combindedJson, showConfig, showObjects, verbose,
+		output, err = callApiInstance(combindedJson, showConfig, showObjects, verbose,
 			GetApiSetupUrl("localhost", localhost), token)
 		if err != nil {
-			return out, err
-		} else {
-			output = out
+			return
 		}
 	} else {
-		openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configLocation)
-		if err != nil {
-			return "", errors.New("Error in loading OpenShift configuration")
-		}
-
 		var errorString string
 		var newline string
 		for i := range openshiftConfig.Clusters {
