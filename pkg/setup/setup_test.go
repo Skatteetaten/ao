@@ -3,10 +3,10 @@ package setup
 import (
 	"fmt"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
+	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"io/ioutil"
 	"strings"
 	"testing"
-	"unicode"
 )
 
 func TestExecuteSetup(t *testing.T) {
@@ -28,10 +28,10 @@ func TestExecuteSetup(t *testing.T) {
 		if err != nil {
 			t.Errorf("Unable to read testresult.json")
 		}
-		fileJsonStr := stripSpaces(string(fileJson))
+		fileJsonStr := jsonutil.StripSpaces(string(fileJson))
 		fmt.Println("Testresult:")
 		fmt.Println(fileJsonStr)
-		out := stripSpaces(out)
+		out := jsonutil.StripSpaces(out)
 		fmt.Println("Out:")
 		fmt.Println(out)
 		if strings.Compare(out, fileJsonStr) != 0 {
@@ -55,15 +55,4 @@ func TestExecuteSetup(t *testing.T) {
 	if err == nil {
 		t.Errorf("Did not detect missing configuration")
 	}
-}
-
-func stripSpaces(str string) string {
-	return strings.Map(func(r rune) rune {
-		if unicode.IsSpace(r) {
-			// if the character is a space, drop it
-			return -1
-		}
-		// else keep it in the string
-		return r
-	}, str)
 }
