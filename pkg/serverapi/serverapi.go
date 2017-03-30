@@ -35,7 +35,7 @@ func GetApiAddress(clusterName string, localhost bool) (apiAddress string) {
 	if localhost {
 		apiAddress = "http://localhost:8080"
 	} else {
-		apiAddress = "http://boober-mfp-boober." + clusterName + ".paas.skead.no"
+		apiAddress = "http://boober-aos-bas-dev." + clusterName + ".paas.skead.no"
 	}
 	return
 }
@@ -57,7 +57,7 @@ func GetApiSetupUrl(clusterName string, localhost bool) string {
 }
 
 func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
-	openshiftConfig *openshift.OpenshiftConfig) (output string, err error) {
+	openshiftConfig *openshift.OpenshiftConfig, dryRun bool) (output string, err error) {
 	//var openshiftConfig *openshift.OpenshiftConfig
 	var apiCluster *openshift.OpenshiftCluster
 
@@ -68,7 +68,7 @@ func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, 
 			token = apiCluster.Token
 		}
 		output, err = callApiInstance(combindedJson, showConfig, showObjects, verbose,
-			GetApiSetupUrl("localhost", localhost), token)
+			GetApiSetupUrl("localhost", localhost), token, dryRun)
 		if err != nil {
 			return
 		}
@@ -80,7 +80,7 @@ func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, 
 				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
 					out, err := callApiInstance(combindedJson, showConfig, showObjects, verbose,
 						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, localhost),
-						openshiftConfig.Clusters[i].Token)
+						openshiftConfig.Clusters[i].Token, dryRun)
 					if err == nil {
 						output += fmt.Sprintf("%v\n", out)
 					} else {
@@ -99,7 +99,7 @@ func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, 
 	return output, nil
 }
 
-func callApiInstance(combindedJson string, showConfig bool, showObjects bool, verbose bool, url string, token string) (string, error) {
+func callApiInstance(combindedJson string, showConfig bool, showObjects bool, verbose bool, url string, token string, dryRun bool) (string, error) {
 	var output string
 
 	if verbose {
@@ -115,6 +115,7 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 	}
 
 	req.Header.Set("Authentication", "Bearer: "+token)
+	req.Header.Add("dryrun", fmt.Sprintf("%v", dryRun))
 	client := &http.Client{}
 
 	resp, err := client.Do(req)
@@ -126,18 +127,19 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 	}
 
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		body, _ := ioutil.ReadAll(resp.Body)
-		bodyStr := string(body)
+	body, _ := ioutil.ReadAll(resp.Body)
+	bodyStr := string(body)
+
+	//fmt.Println("HTTP Status code: " + strconv.Itoa(resp.StatusCode))
+	if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusBadRequest) {
+		//fmt.Println("Not StatusOK and not StatusBadRequest")
 		var errorstring string
-		if strings.Contains(bodyStr, apiNotInstalledResponse) {
-			errorstring = fmt.Sprintf("Boober not available on %v", url)
-		} else {
-			errorstring = fmt.Sprintf("Internal error")
+		if !strings.Contains(bodyStr, apiNotInstalledResponse) {
+			errorstring = fmt.Sprintf("Internal error on %v: %v", url, bodyStr)
 		}
 		if verbose {
 			if strings.Contains(bodyStr, apiNotInstalledResponse) {
-				fmt.Println("FAIL.  Boober not available")
+				fmt.Println("WARN.  Boober not available")
 			} else {
 				fmt.Println("FAIL.  Internal error")
 			}
@@ -145,15 +147,20 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 		return "", errors.New(fmt.Sprintf(errorstring))
 	}
 
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	// Check return for error
 	var booberReturn ApiReturn
+
+	if resp.StatusCode == http.StatusBadRequest {
+		// We have a validation situation, give error
+		if verbose {
+			fmt.Println("FAIL.  Error in configuration")
+		}
+		return "", errors.New(fmt.Sprintf(bodyStr))
+	}
+
 	err = json.Unmarshal(body, &booberReturn)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return: %v\n", err.Error()))
 	}
-
 	for _, message := range booberReturn.Errors {
 		fmt.Println("DEBUG: Error from Boober:  " + message)
 	}

@@ -48,7 +48,7 @@ type OpenshiftConfig struct {
 
 func Login(configLocation string, userName string, affiliation string) {
 
-	fmt.Println("Login in to all reachable cluster with userName", userName)
+	//fmt.Println("Login in to all reachable cluster with userName", userName)
 	config, err := loadConfigFile(configLocation)
 	config.Affiliation = affiliation
 
@@ -63,7 +63,7 @@ func Login(configLocation string, userName string, affiliation string) {
 			continue
 		}
 		if cluster.HasValidToken() {
-			fmt.Println("Cluster ", cluster.Name, " has a valid token")
+			//fmt.Println("Cluster ", cluster.Name, " has a valid token")
 			continue
 		}
 		if password == "" {
@@ -86,7 +86,7 @@ func LoadOrInitiateConfigFile(configLocation string) (*OpenshiftConfig, error) {
 	config, err := loadConfigFile(configLocation)
 
 	if err != nil {
-		fmt.Println("No config file found, initializing new config")
+		//fmt.Println("No config file found, initializing new config")
 		config := newConfig()
 		if err := config.write(configLocation); err != nil {
 			return nil, err
@@ -112,10 +112,12 @@ func loadConfigFile(configLocation string) (*OpenshiftConfig, error) {
 }
 
 func (openshiftConfig *OpenshiftConfig) GetApiCluster() (cluster *OpenshiftCluster, err error) {
-	for clusterIndex := range openshiftConfig.Clusters {
-		if openshiftConfig.Clusters[clusterIndex].Name == openshiftConfig.APICluster {
-			cluster = openshiftConfig.Clusters[clusterIndex]
-			return
+	if openshiftConfig != nil {
+		for clusterIndex := range openshiftConfig.Clusters {
+			if openshiftConfig.Clusters[clusterIndex].Name == openshiftConfig.APICluster {
+				cluster = openshiftConfig.Clusters[clusterIndex]
+				return
+			}
 		}
 	}
 	err = errors.New("No API cluster defined")
@@ -154,7 +156,7 @@ func (this *OpenshiftConfig) write(configLocation string) error {
 }
 
 func newConfig() *OpenshiftConfig {
-	fmt.Println("Pinging all clusters and noting which clusters are active in this profile")
+	//fmt.Println("Pinging all clusters and noting which clusters are active in this profile")
 	ch := make(chan *OpenshiftCluster)
 	clusters := []string{"utv", "test", "prod", "utv-relay", "test-relay", "prod-relay"}
 	for _, c := range clusters {

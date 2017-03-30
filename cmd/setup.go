@@ -25,6 +25,7 @@ import (
 // Cobra Flag variables
 var overrideFiles []string
 var overrideValues []string
+var localDryRun bool
 
 // setupCmd represents the setup command
 var setupCmd = &cobra.Command{
@@ -35,7 +36,7 @@ file merged with about.json in the same folder, and about.json and aos-features.
 	Run: func(cmd *cobra.Command, args []string) {
 		var setupObject setup.SetupClass
 		output, err := setupObject.ExecuteSetup(args,
-			overrideFiles, &persistentOptions)
+			overrideFiles, &persistentOptions, localDryRun)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -54,5 +55,7 @@ func init() {
 	// File flag, supports multiple instances of the flag
 	setupCmd.Flags().StringArrayVarP(&overrideFiles, "file",
 		"f", overrideValues, "File to override")
-
+	setupCmd.Flags().BoolVarP(&localDryRun, "localdryrun",
+		"z", false, "Does not initiate API, just prints collected files")
+	setupCmd.Flags().MarkHidden("localdryrun")
 }

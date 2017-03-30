@@ -13,7 +13,7 @@ import (
 )
 
 // Struct to represent data to the Boober interface
-type apiInferface struct {
+type ApiInferface struct {
 	Env         string                     `json:"env"`
 	App         string                     `json:"app"`
 	Affiliation string                     `json:"affiliation"`
@@ -23,7 +23,7 @@ type apiInferface struct {
 
 func GenerateJson(envFile string, envFolder string, folder string, parentFolder string, overrideJson []string,
 	overrideFiles []string, affiliation string) (jsonStr string, error error) {
-	var apiData apiInferface
+	var apiData ApiInferface
 	var returnMap map[string]json.RawMessage
 	var returnMap2 map[string]json.RawMessage
 	apiData.App = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile

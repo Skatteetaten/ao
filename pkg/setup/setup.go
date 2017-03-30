@@ -57,13 +57,13 @@ func (setupClass *SetupClass) getApiCluster() *openshift.OpenshiftCluster {
 }
 
 func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string,
-	persistentOptions *cmdoptions.CommonCommandOptions) (
+	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool) (
 	output string, error error) {
 
 	var errorString string
 
 	setupClass.init()
-	if !persistentOptions.DryRun {
+	if !localDryRun {
 		if !serverapi.ValidateLogin(setupClass.openshiftConfig) {
 			return "", errors.New("Not logged in, please use aoc login")
 		}
@@ -108,12 +108,12 @@ func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string
 	if err != nil {
 		return "", err
 	} else {
-		if persistentOptions.DryRun {
+		if localDryRun {
 			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 		} else {
 			output, err = serverapi.CallApi(jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
-				persistentOptions.Verbose, setupClass.openshiftConfig)
+				persistentOptions.Verbose, setupClass.openshiftConfig, persistentOptions.DryRun)
 			if err != nil {
 				return "", err
 			}

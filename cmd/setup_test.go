@@ -10,7 +10,11 @@ import (
 )
 
 func TestSetup(t *testing.T) {
-	cmd := exec.Command("../bin/amd64/aoc", "setup", "../pkg/setup/testfiles/utv/about.json", "-d")
+	testLocalDryRun(t)
+}
+
+func testLocalDryRun(t *testing.T) {
+	cmd := exec.Command("../bin/amd64/aoc", "setup", "../pkg/setup/testfiles/utv/about.json", "-z")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
@@ -19,7 +23,7 @@ func TestSetup(t *testing.T) {
 	}
 	outputStr := out.String()
 	if len(outputStr) == 0 {
-		t.Error("No output of dryrun")
+		t.Error("No output of local dryrun")
 	}
 	//t.Error(outputStr)
 
@@ -31,6 +35,6 @@ func TestSetup(t *testing.T) {
 
 	outputStr = jsonutil.StripSpaces(outputStr)
 	if !strings.Contains(outputStr, testresultStr) {
-		t.Errorf("Output does not contain expected test result: \n%v\n%v", outputStr, testresultStr)
+		t.Errorf("Output of local dryrun does not contain expected test result: \n%v\n%v", outputStr, testresultStr)
 	}
 }

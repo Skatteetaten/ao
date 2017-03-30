@@ -17,7 +17,7 @@ func TestGetApiAddress(t *testing.T) {
 func TestCallApiInstance(t *testing.T) {
 	const illegalUrl string = "https://westeros.skatteetaten.no/serverapi"
 
-	_, err := callApiInstance("{\"Game\": \"Thrones\"}", false, false, false, illegalUrl, "")
+	_, err := callApiInstance("{\"Game\": \"Thrones\"}", false, false, false, illegalUrl, "", false)
 	if err == nil {
 		t.Error("Did not detect illegal URL")
 	}
