@@ -164,35 +164,28 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 	for _, message := range booberReturn.Errors {
 		fmt.Println("DEBUG: Error from Boober:  " + message)
 	}
-	if !(booberReturn.Valid) {
-		fmt.Println("Error in configuration: ")
-		for _, message := range booberReturn.Errors {
-			fmt.Println("  " + message)
+	if verbose {
+		var apiReturnObjects ApiReturnObjects
+		err = json.Unmarshal(body, &apiReturnObjects)
+		if err != nil {
+			return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return: %v\n", err.Error()))
 		}
-	} else {
-		if verbose {
-			var apiReturnObjects ApiReturnObjects
-			err = json.Unmarshal(body, &apiReturnObjects)
-			if err != nil {
-				return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return: %v\n", err.Error()))
-			}
-			var countMap map[string]int = make(map[string]int)
-			for key := range apiReturnObjects.OpenshiftObjects {
-				countMap[key]++
-			}
+		var countMap map[string]int = make(map[string]int)
+		for key := range apiReturnObjects.OpenshiftObjects {
+			countMap[key]++
+		}
 
-			var space string
-			var count int
-			var out string
-			for key := range countMap {
-				out += fmt.Sprintf("%v%v: %v", space, key, countMap[key])
-				space = "  "
-				count++
-			}
-			if count > 0 {
-				output := fmt.Sprintf("OK.  Objects: %v  (%v)", count, out)
-				fmt.Println(output)
-			}
+		var space string
+		var count int
+		var out string
+		for key := range countMap {
+			out += fmt.Sprintf("%v%v: %v", space, key, countMap[key])
+			space = "  "
+			count++
+		}
+		if count > 0 {
+			output := fmt.Sprintf("OK.  Objects: %v  (%v)", count, out)
+			fmt.Println(output)
 		}
 	}
 
