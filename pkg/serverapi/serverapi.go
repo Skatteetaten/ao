@@ -165,6 +165,11 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 		fmt.Println("DEBUG: Error from Boober:  " + message)
 	}
 	if verbose {
+		var prettyJSON bytes.Buffer
+		json.Indent(&prettyJSON, body, "", "\t")
+		fmt.Println("")
+		fmt.Println(string(prettyJSON.Bytes()))
+
 		var apiReturnObjects ApiReturnObjects
 		err = json.Unmarshal(body, &apiReturnObjects)
 		if err != nil {
