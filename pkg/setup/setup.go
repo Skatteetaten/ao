@@ -113,7 +113,7 @@ func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string
 		} else {
 			output, err = serverapi.CallApi(jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
-				persistentOptions.Verbose, setupClass.openshiftConfig, persistentOptions.DryRun)
+				persistentOptions.Verbose, setupClass.openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug)
 			if err != nil {
 				return "", err
 			}

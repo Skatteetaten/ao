@@ -57,7 +57,7 @@ func GetApiSetupUrl(clusterName string, localhost bool) string {
 }
 
 func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
-	openshiftConfig *openshift.OpenshiftConfig, dryRun bool) (output string, err error) {
+	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool) (output string, err error) {
 	//var openshiftConfig *openshift.OpenshiftConfig
 	var apiCluster *openshift.OpenshiftCluster
 
@@ -68,7 +68,7 @@ func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, 
 			token = apiCluster.Token
 		}
 		output, err = callApiInstance(combindedJson, showConfig, showObjects, verbose,
-			GetApiSetupUrl("localhost", localhost), token, dryRun)
+			GetApiSetupUrl("localhost", localhost), token, dryRun, debug)
 		if err != nil {
 			return
 		}
@@ -80,7 +80,7 @@ func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, 
 				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
 					out, err := callApiInstance(combindedJson, showConfig, showObjects, verbose,
 						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, localhost),
-						openshiftConfig.Clusters[i].Token, dryRun)
+						openshiftConfig.Clusters[i].Token, dryRun, debug)
 					if err == nil {
 						output += fmt.Sprintf("%v\n", out)
 					} else {
@@ -99,8 +99,12 @@ func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, 
 	return output, nil
 }
 
-func callApiInstance(combindedJson string, showConfig bool, showObjects bool, verbose bool, url string, token string, dryRun bool) (string, error) {
+func callApiInstance(combindedJson string, showConfig bool, showObjects bool, verbose bool, url string, token string, dryRun bool, debug bool) (string, error) {
 	var output string
+
+	if showConfig {
+		output += jsonutil.PrettyPrintJson(string(combindedJson))
+	}
 
 	if verbose {
 		fmt.Print("Sending config to Boober at " + url + "... ")
@@ -130,6 +134,10 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 	body, _ := ioutil.ReadAll(resp.Body)
 	bodyStr := string(body)
 
+	if debug {
+		fmt.Println("DEBUG: Response body: ")
+		fmt.Println(jsonutil.PrettyPrintJson(bodyStr))
+	}
 	//fmt.Println("HTTP Status code: " + strconv.Itoa(resp.StatusCode))
 	if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusBadRequest) {
 		//fmt.Println("Not StatusOK and not StatusBadRequest")
@@ -189,13 +197,9 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 			count++
 		}
 		if count > 0 {
-			output := fmt.Sprintf("OK.  Objects: %v  (%v)", count, out)
+			output += fmt.Sprintf("OK.  Objects: %v  (%v)", count, out)
 			fmt.Println(output)
 		}
-	}
-
-	if showConfig {
-		output += jsonutil.PrettyPrintJson(string(booberReturn.Config))
 	}
 
 	if showObjects {
