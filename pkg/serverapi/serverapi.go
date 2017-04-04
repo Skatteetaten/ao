@@ -85,7 +85,9 @@ func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, 
 						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, localhost),
 						openshiftConfig.Clusters[i].Token, dryRun, debug)
 					if err == nil {
-						output += fmt.Sprintf("%v\n", out)
+						if out != "" {
+							output += fmt.Sprintf("%v\n", out)
+						}
 					} else {
 						if err.Error() != "" {
 							errorString += newline + err.Error()
