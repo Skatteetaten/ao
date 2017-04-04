@@ -66,6 +66,9 @@ func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, 
 		apiCluster, err = openshiftConfig.GetApiCluster()
 		if apiCluster != nil {
 			token = apiCluster.Token
+			if debug {
+				fmt.Println("DEBUG: Token to Localhost: " + token)
+			}
 		}
 		output, err = callApiInstance(combindedJson, showConfig, showObjects, verbose,
 			GetApiSetupUrl("localhost", localhost), token, dryRun, debug)
@@ -118,7 +121,7 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 		return "", errors.New(fmt.Sprintf("Internal error in NewRequest: %v", err))
 	}
 
-	req.Header.Set("Authentication", "Bearer: "+token)
+	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Add("dryrun", fmt.Sprintf("%v", dryRun))
 	client := &http.Client{}
 

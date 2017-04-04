@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -194,8 +195,8 @@ func collectOpenshiftClusters(num int, ch chan *OpenshiftCluster) *OpenshiftConf
 
 				return config
 			}
-			if apiCluster == "" && c.Reachable {
-				//fmt.Println(c.Name, " is the BooberAPI that will be used")
+			if apiCluster == "" && c.Reachable && !strings.Contains(c.Name, "-relay") {
+				fmt.Println(c.Name, " is the BooberAPI that will be used")
 				apiCluster = c.Name
 			}
 		}
