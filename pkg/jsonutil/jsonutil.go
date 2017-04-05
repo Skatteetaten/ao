@@ -19,6 +19,7 @@ type ApiInferface struct {
 	Affiliation string                     `json:"affiliation"`
 	Files       map[string]json.RawMessage `json:"files"`
 	Overrides   map[string]json.RawMessage `json:"overrides"`
+	SecretFiles map[string]json.RawMessage `json:"secretFiles"`
 }
 
 func GenerateJson(envFile string, envFolder string, folder string, parentFolder string, overrideJson []string,
@@ -26,6 +27,8 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 	var apiData ApiInferface
 	var returnMap map[string]json.RawMessage
 	var returnMap2 map[string]json.RawMessage
+	var secretMap map[string]json.RawMessage = make(map[string]json.RawMessage)
+
 	apiData.App = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
 	apiData.Env = envFolder
 
@@ -43,6 +46,17 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 
 	apiData.Files = CombineMaps(returnMap, returnMap2)
 	apiData.Overrides = overrides2map(overrideJson, overrideFiles)
+	apiData.SecretFiles = secretMap
+
+	for fileKey := range apiData.Files {
+		secret, err := json2secretFolder(apiData.Files[fileKey])
+		if err != nil {
+			return "", err
+		}
+		if secret != "" {
+			fmt.Println("DEBUG: Found secret in " + fileKey + ": " + secret)
+		}
+	}
 
 	jsonByte, ok := json.Marshal(apiData)
 	if !(ok == nil) {
@@ -51,6 +65,19 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 
 	jsonStr = string(jsonByte)
 	return
+}
+
+// Search a json string for a secretFolder attribute
+func json2secretFolder(jsonMessage json.RawMessage) (string, error) {
+	type FileStruct struct {
+		SecretFolder string `json:"secretFolder"`
+	}
+	var fileStruct FileStruct
+	err := json.Unmarshal(jsonMessage, &fileStruct)
+	if err != nil {
+		return "", err
+	}
+	return fileStruct.SecretFolder, nil
 }
 
 func overrides2map(overrideJson []string, overrideFiles []string) (returnMap map[string]json.RawMessage) {
