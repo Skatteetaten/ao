@@ -15,7 +15,7 @@ import (
 const apiNotInstalledResponse = "Application is not available"
 
 // Structs to represent return data from the API interface
-type ApiReturnObjects struct {
+/*type ApiReturnObjects struct {
 	Sources          json.RawMessage            `json:"sources"`
 	Errors           []string                   `json:"errors"`
 	Valid            bool                       `json:"valid"`
@@ -29,6 +29,38 @@ type ApiReturn struct {
 	Valid            bool            `json:"valid"`
 	Config           json.RawMessage `json:"config"`
 	OpenshiftObjects json.RawMessage `json:"openshiftObjects"`
+}*/
+
+type OpenShiftResponse struct {
+	OperationType string `json:"operationType"` // CREATED eller NONE
+	Payload       struct {
+		Kind string `json:"kind"`
+	} `json:"payload"`
+}
+
+type AuroraDc struct {
+	Affiliation          string `json:"affiliation"`
+	EnvName              string `json:"envName"`
+	Cluster              string `json:"cluster"`
+	DeploymentDescriptor struct {
+		ArtifactId string `json:"artifactId"`
+		GroupId    string `json:"groupId"`
+		Version    string `json:"version"`
+	} `json:"deployDescriptor"`
+}
+
+type ApiReturnItem struct {
+	ApplicationID struct {
+		EnvironmentName string `json:"environmentName"`
+		ApplicationName string `json:"applicationName"`
+	} `json:"applicationID"`
+	AuroraDc           AuroraDc            `json:"auroraDc"`
+	OpenShiftResponses []OpenShiftResponse `json:"openShiftResponses"`
+}
+type ApiReturn struct {
+	Success bool            `json:"success"`
+	Message string          `json:"message"`
+	Items   []ApiReturnItem `json:"items"`
 }
 
 func GetApiAddress(clusterName string, localhost bool) (apiAddress string) {
@@ -77,7 +109,7 @@ func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, 
 		}
 	} else {
 		var errorString string
-		var newline string
+		var newlineErr, newlineOut string
 		for i := range openshiftConfig.Clusters {
 			if openshiftConfig.Clusters[i].Reachable {
 				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
@@ -86,12 +118,13 @@ func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, 
 						openshiftConfig.Clusters[i].Token, dryRun, debug)
 					if err == nil {
 						if out != "" {
-							output += fmt.Sprintf("%v\n", out)
+							output += fmt.Sprintf("%v %v", out, newlineOut)
+							newlineOut = "\n"
 						}
 					} else {
 						if err.Error() != "" {
-							errorString += newline + err.Error()
-							newline = "\n"
+							errorString += newlineErr + err.Error()
+							newlineErr = "\n"
 						}
 					}
 				}
@@ -160,7 +193,7 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 		return "", errors.New(fmt.Sprintf(errorstring))
 	}
 
-	var booberReturn ApiReturn
+	var apiReturn ApiReturn
 
 	if resp.StatusCode == http.StatusBadRequest {
 		// We have a validation situation, give error
@@ -170,24 +203,44 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 		return "", errors.New(fmt.Sprintf(bodyStr))
 	}
 
-	err = json.Unmarshal(body, &booberReturn)
+	err = json.Unmarshal(body, &apiReturn)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return: %v\n", err.Error()))
 	}
-	for _, message := range booberReturn.Errors {
-		fmt.Println("DEBUG: Error from Boober:  " + message)
-	}
-	if verbose {
-		var prettyJSON bytes.Buffer
-		json.Indent(&prettyJSON, body, "", "\t")
-		fmt.Println("")
-		fmt.Println(string(prettyJSON.Bytes()))
 
-		var apiReturnObjects ApiReturnObjects
-		err = json.Unmarshal(body, &apiReturnObjects)
-		if err != nil {
-			return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return: %v\n", err.Error()))
+	output += ""
+
+	var countMap map[string]int = make(map[string]int)
+	for itemKey := range apiReturn.Items {
+		// Loop through the applications created
+		output += "Application " + apiReturn.Items[itemKey].AuroraDc.DeploymentDescriptor.GroupId + "." +
+			apiReturn.Items[itemKey].AuroraDc.DeploymentDescriptor.ArtifactId + "." +
+			apiReturn.Items[itemKey].AuroraDc.DeploymentDescriptor.Version +
+			" deployed " +
+			apiReturn.Message + " on cluster " + apiReturn.Items[itemKey].AuroraDc.Cluster + "/" +
+			apiReturn.Items[itemKey].AuroraDc.Affiliation + "-" +
+			apiReturn.Items[itemKey].AuroraDc.EnvName
+		for osKey := range apiReturn.Items[itemKey].OpenShiftResponses {
+			if apiReturn.Items[itemKey].OpenShiftResponses[osKey].OperationType == "CREATED" {
+				countMap[apiReturn.Items[itemKey].OpenShiftResponses[osKey].Payload.Kind]++
+			}
 		}
+		var space string
+		var count int
+		var out string
+		for key := range countMap {
+			out += fmt.Sprintf("%v%v: %v", space, key, countMap[key])
+			space = "  "
+			count++
+		}
+		if out != "" {
+			output += " (" + out + ")"
+		} else {
+			output += ", no objects updated"
+		}
+	}
+
+	/*if showObjects {
 		var countMap map[string]int = make(map[string]int)
 		for key := range apiReturnObjects.OpenshiftObjects {
 			countMap[key]++
@@ -205,11 +258,9 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 			output += fmt.Sprintf("OK.  Objects: %v  (%v)", count, out)
 			fmt.Println(output)
 		}
-	}
 
-	if showObjects {
 		output += jsonutil.PrettyPrintJson(string(booberReturn.OpenshiftObjects))
-	}
+	}*/
 
 	return output, nil
 }
