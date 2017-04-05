@@ -16,11 +16,16 @@ Yb,_,dP       `8b, `Y8b,,__,,d8P'   `Yba,,_____,
  #Build?
  
  ```
- make # Build the stuff
- make test # Test the stuff
+{go} is your GOPATH, default /home/<user>/go
+
+mkdir -p {go}/src/github.com/skatteetaten
+cd {go}/src/github.com/skatteetaten
+git clone https://github.com/Skatteetaten/aoc.git
+cd aoc
+go get
+go build
  
  ```
- Testing will also run go vet and gofmt
  
  
  #Dependencies?

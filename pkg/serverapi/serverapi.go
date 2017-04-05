@@ -15,22 +15,6 @@ import (
 const apiNotInstalledResponse = "Application is not available"
 
 // Structs to represent return data from the API interface
-/*type ApiReturnObjects struct {
-	Sources          json.RawMessage            `json:"sources"`
-	Errors           []string                   `json:"errors"`
-	Valid            bool                       `json:"valid"`
-	Config           json.RawMessage            `json:"config"`
-	OpenshiftObjects map[string]json.RawMessage `json:"openshiftObjects"`
-}
-
-type ApiReturn struct {
-	Sources          json.RawMessage `json:"sources"`
-	Errors           []string        `json:"errors"`
-	Valid            bool            `json:"valid"`
-	Config           json.RawMessage `json:"config"`
-	OpenshiftObjects json.RawMessage `json:"openshiftObjects"`
-}*/
-
 type OpenShiftResponse struct {
 	OperationType string `json:"operationType"` // CREATED eller NONE
 	Payload       struct {
@@ -84,8 +68,12 @@ func ValidateLogin(openshiftConfig *openshift.OpenshiftConfig) (output bool) {
 	return true
 }
 
-func GetApiSetupUrl(clusterName string, localhost bool) string {
-	return GetApiAddress(clusterName, localhost) + "/setup"
+func GetApiSetupUrl(clusterName string, localhost bool, dryrun bool) string {
+	var endpoint string = "/setup"
+	if dryrun {
+		endpoint = "/setup-dryrun"
+	}
+	return GetApiAddress(clusterName, localhost) + endpoint
 }
 
 func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
@@ -103,7 +91,7 @@ func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, 
 			}
 		}
 		output, err = callApiInstance(combindedJson, showConfig, showObjects, verbose,
-			GetApiSetupUrl("localhost", localhost), token, dryRun, debug)
+			GetApiSetupUrl("localhost", localhost, dryRun), token, dryRun, debug)
 		if err != nil {
 			return
 		}
@@ -114,7 +102,7 @@ func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, 
 			if openshiftConfig.Clusters[i].Reachable {
 				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
 					out, err := callApiInstance(combindedJson, showConfig, showObjects, verbose,
-						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, localhost),
+						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, localhost, dryRun),
 						openshiftConfig.Clusters[i].Token, dryRun, debug)
 					if err == nil {
 						if out != "" {
@@ -209,6 +197,10 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 	}
 
 	output += ""
+
+	if verbose {
+		fmt.Println(apiReturn.Message)
+	}
 
 	var countMap map[string]int = make(map[string]int)
 	for itemKey := range apiReturn.Items {
