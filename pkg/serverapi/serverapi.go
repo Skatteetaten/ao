@@ -20,6 +20,7 @@ type OpenShiftResponse struct {
 	Payload       struct {
 		Kind string `json:"kind"`
 	} `json:"payload"`
+	ResponseBody json.RawMessage `json:"responseBody"`
 }
 
 type AuroraDc struct {
@@ -45,6 +46,26 @@ type ApiReturn struct {
 	Success bool            `json:"success"`
 	Message string          `json:"message"`
 	Items   []ApiReturnItem `json:"items"`
+}
+
+// Struct to list payload and response only
+type ApiReturnDcPayloadResponse struct {
+	Items []struct {
+		AuroraDc           json.RawMessage `json:"auroraDc"`
+		OpenShiftResponses []struct {
+			OperationType string          `json:"operationType"` // CREATED eller NONE
+			Payload       json.RawMessage `json:"payload"`
+			ResponseBody  json.RawMessage `json:"responseBody"`
+		} `json:"openShiftResponses"`
+	} `json:"items"`
+}
+
+type ApiReturnPayload struct {
+	Items []struct {
+		OpenShiftResponses []struct {
+			Payload json.RawMessage `json:"payload"`
+		} `json:"openShiftResponses"`
+	} `json:"items"`
 }
 
 func GetApiAddress(clusterName string, localhost bool) (apiAddress string) {
@@ -205,13 +226,17 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 	var countMap map[string]int = make(map[string]int)
 	for itemKey := range apiReturn.Items {
 		// Loop through the applications created
-		output += "Application " + apiReturn.Items[itemKey].AuroraDc.DeploymentDescriptor.GroupId + "." +
-			apiReturn.Items[itemKey].AuroraDc.DeploymentDescriptor.ArtifactId + "." +
-			apiReturn.Items[itemKey].AuroraDc.DeploymentDescriptor.Version +
-			" deployed " +
-			apiReturn.Message + " on cluster " + apiReturn.Items[itemKey].AuroraDc.Cluster + "/" +
-			apiReturn.Items[itemKey].AuroraDc.Affiliation + "-" +
-			apiReturn.Items[itemKey].AuroraDc.EnvName
+		if dryRun {
+			output += "Dryrun completed"
+		} else {
+			output += "Application " + apiReturn.Items[itemKey].AuroraDc.DeploymentDescriptor.GroupId + "." +
+				apiReturn.Items[itemKey].AuroraDc.DeploymentDescriptor.ArtifactId + "." +
+				apiReturn.Items[itemKey].AuroraDc.DeploymentDescriptor.Version +
+				" deployed " +
+				apiReturn.Message + " on cluster " + apiReturn.Items[itemKey].AuroraDc.Cluster + "/" +
+				apiReturn.Items[itemKey].AuroraDc.Affiliation + "-" +
+				apiReturn.Items[itemKey].AuroraDc.EnvName
+		}
 		for osKey := range apiReturn.Items[itemKey].OpenShiftResponses {
 			if apiReturn.Items[itemKey].OpenShiftResponses[osKey].OperationType == "CREATED" {
 				countMap[apiReturn.Items[itemKey].OpenShiftResponses[osKey].Payload.Kind]++
@@ -228,8 +253,50 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 		if out != "" {
 			output += " (" + out + ")"
 		} else {
-			output += ", no objects updated"
+			output += ". No objects updated"
 		}
+	}
+
+	var jsonResponse ApiReturnDcPayloadResponse
+	err = json.Unmarshal(body, &jsonResponse)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return json Response: %v\n", err.Error()))
+	}
+
+	if showObjects {
+		for itemKey := range jsonResponse.Items {
+			for osKey := range jsonResponse.Items[itemKey].OpenShiftResponses {
+				if jsonResponse.Items[itemKey].OpenShiftResponses[osKey].OperationType == "CREATED" {
+					out := jsonutil.PrettyPrintJson(string(jsonResponse.Items[itemKey].OpenShiftResponses[osKey].Payload))
+					if out != "" {
+						output += "\n" + out
+					}
+				}
+			}
+		}
+	}
+
+	/*if showObjects {
+		var parse ApiReturnPayload
+		err = json.Unmarshal(body, &parse)
+		if err != nil {
+			return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return json Response: %v\n", err.Error()))
+		}
+		out, err := json.Marshal(parse)
+		if err != nil {
+			return "", errors.New(fmt.Sprintf("Error marshalling Boober return json Response: %v\n", err.Error()))
+		}
+		output += "\n" + jsonutil.PrettyPrintJson(string(out))
+	}*/
+
+	if showConfig {
+		for itemKey := range jsonResponse.Items {
+			out := jsonutil.PrettyPrintJson(string(jsonResponse.Items[itemKey].AuroraDc))
+			if out != "" {
+				output += "\n" + out
+			}
+		}
+
 	}
 
 	/*if showObjects {
