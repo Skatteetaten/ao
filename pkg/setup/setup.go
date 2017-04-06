@@ -74,7 +74,7 @@ func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string
 	}
 
 	var env = args[0]
-	//var overrideJson []string = args[1:]
+	var overrideJson []string = args[1:]
 
 	var absolutePath string
 
@@ -104,7 +104,7 @@ func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string
 
 	// Initialize JSON
 
-	jsonStr, err := jsonutil.GenerateJson(envFile, envFolder, folder, parentFolder, args, overrideFiles, setupClass.getAffiliation())
+	jsonStr, err := jsonutil.GenerateJson(envFile, envFolder, folder, parentFolder, overrideJson, overrideFiles, setupClass.getAffiliation())
 	if err != nil {
 		return "", err
 	} else {

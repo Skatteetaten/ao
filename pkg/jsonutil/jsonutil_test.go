@@ -9,9 +9,9 @@ import (
 func TestFolder2Map(t *testing.T) {
 	var expected int = 2
 	var res map[string]json.RawMessage
-	res, err := Folder2Map("testfiles/utv", "")
+	res, err := JsonFolder2Map("testfiles/utv", "")
 	if err != nil {
-		t.Errorf("Folder2Map returned an error: %v", err.Error())
+		t.Errorf("JsonFolder2Map returned an error: %v", err.Error())
 	} else {
 		if len(res) != expected {
 			t.Errorf("Returned map with length %v, expected %v", len(res), expected)
@@ -34,7 +34,7 @@ func TestCombineMaps(t *testing.T) {
 	expected["File1"] = json.RawMessage("{\"Game\": \"Thrones\"}")
 	expected["File2"] = json.RawMessage("{\"Kingslayer\": \"Jamie Lannister\"}")
 
-	res = CombineMaps(map1, map2)
+	res = CombineJsonMaps(map1, map2)
 	if !reflect.DeepEqual(res, expected) {
 		t.Error("Failed to combine maps")
 	}
