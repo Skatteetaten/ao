@@ -105,8 +105,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	var apiInterface jsonutil.ApiInferface
 
 	apiInterface.Affiliation = "foobar"
-	apiInterface.Env = "myenv"
-	apiInterface.App = "myapp"
+	apiInterface.Envs = make([]string, 1)
+
+	apiInterface.Envs[0] = "myenv"
+	apiInterface.Apps = make([]string, 1)
+	apiInterface.Apps[0] = "myapp"
+
 	js, err := json.Marshal(apiInterface)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
