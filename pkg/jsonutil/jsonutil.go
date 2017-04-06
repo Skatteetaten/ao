@@ -8,10 +8,13 @@ import (
 	"fmt"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
 )
+
+const maxSecretFileSize int64 = 10 * 1024
 
 // Struct to represent data to the Boober interface
 type ApiInferface struct {
@@ -138,7 +141,7 @@ func JsonFolder2Map(folder string, prefix string) (map[string]json.RawMessage, e
 
 	}
 	if !allFilesOK {
-		return nil, errors.New(output)
+		return nil, errors.New(output + "Error in processing configuration files")
 	}
 	return returnMap, nil
 }
@@ -152,6 +155,15 @@ func SecretFolder2Map(folder string) (map[string]string, error) {
 	for _, f := range files {
 		absolutePath := filepath.Join(folder, f.Name())
 		if fileutil.IsLegalFileFolder(absolutePath) == fileutil.SpecIsFile { // Ignore folders
+
+			fileSize, err := getFileSize(absolutePath)
+			if err != nil {
+				return nil, err
+			}
+			if fileSize > maxSecretFileSize {
+				output += fmt.Sprintf("This secret is just too big: %v\n", absolutePath)
+				allFilesOK = false
+			}
 			fileText, err := ioutil.ReadFile(absolutePath)
 			fileTextBase64 := base64.StdEncoding.EncodeToString(fileText)
 			if err != nil {
@@ -163,9 +175,17 @@ func SecretFolder2Map(folder string) (map[string]string, error) {
 		}
 	}
 	if !allFilesOK {
-		return nil, errors.New(output)
+		return nil, errors.New(output + "Error in processing Secret files")
 	}
 	return returnMap, nil
+}
+
+func getFileSize(absolutePath string) (int64, error) {
+	fileInfo, err := os.Stat(absolutePath)
+	if err != nil {
+		return 0, err
+	}
+	return fileInfo.Size(), nil
 }
 
 func CombineJsonMaps(map1 map[string]json.RawMessage, map2 map[string]json.RawMessage) (returnMap map[string]json.RawMessage) {
