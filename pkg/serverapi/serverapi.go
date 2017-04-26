@@ -91,9 +91,9 @@ func ValidateLogin(openshiftConfig *openshift.OpenshiftConfig) (output bool) {
 
 func GetApiSetupUrl(clusterName string, localhost bool, dryrun bool) string {
 	var endpoint string = "/setup"
-	if dryrun {
+	/*	if dryrun {
 		endpoint = "/setup-dryrun"
-	}
+	}*/
 	return GetApiAddress(clusterName, localhost) + endpoint
 }
 

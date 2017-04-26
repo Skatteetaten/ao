@@ -17,28 +17,55 @@ import (
 const maxSecretFileSize int64 = 10 * 1024
 
 // Struct to represent data to the Boober interface
-type ApiInferface struct {
+/*type ApiInferface struct {
 	Envs        []string                   `json:"envs"`
 	Apps        []string                   `json:"apps"`
 	Affiliation string                     `json:"affiliation"`
 	Files       map[string]json.RawMessage `json:"files"`
 	Overrides   map[string]json.RawMessage `json:"overrides"`
 	SecretFiles map[string]string          `json:"secretFiles"`
+}*/
+
+type AuroraConfigPayload struct {
+	Files   map[string]json.RawMessage `json:"files"`
+	Secrets map[string]string          `json:"secrets"`
+}
+
+type SetupParamsPayload struct {
+	Envs      []string                   `json:"envs"`
+	Apps      []string                   `json:"apps"`
+	Overrides map[string]json.RawMessage `json:"overrides"`
+	DryRun    bool                       `json:"dryRun"`
+}
+
+type SetupCommand struct {
+	Affiliation  string              `json:"affiliation"`
+	AuroraConfig AuroraConfigPayload `json:"auroraConfig"`
+	SetupParams  SetupParamsPayload  `json:"setupParams"`
 }
 
 func GenerateJson(envFile string, envFolder string, folder string, parentFolder string, overrideJson []string,
-	overrideFiles []string, affiliation string) (jsonStr string, error error) {
-	var apiData ApiInferface
+	overrideFiles []string, affiliation string, dryRun bool) (jsonStr string, error error) {
+	//var apiData ApiInferface
+	var setupCommand SetupCommand
+
 	var returnMap map[string]json.RawMessage
 	var returnMap2 map[string]json.RawMessage
 	var secretMap map[string]string = make(map[string]string)
 
-	apiData.Apps = make([]string, 1)
-	apiData.Envs = make([]string, 1)
-	apiData.Apps[0] = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
-	apiData.Envs[0] = envFolder
+	setupCommand.SetupParams.Apps = make([]string, 1)
+	//apiData.Apps = make([]string, 1)
+	setupCommand.SetupParams.Envs = make([]string, 1)
+	//apiData.Envs = make([]string, 1)
+	setupCommand.SetupParams.Apps[0] = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
+	//apiData.Apps[0] = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
+	setupCommand.SetupParams.Envs[0] = envFolder
+	//apiData.Envs[0] = envFolder
 
-	apiData.Affiliation = affiliation
+	setupCommand.Affiliation = affiliation
+	//apiData.Affiliation = affiliation
+
+	setupCommand.SetupParams.DryRun = dryRun
 
 	returnMap, error = JsonFolder2Map(folder, envFolder+"/")
 	if error != nil {
@@ -50,12 +77,15 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 		return
 	}
 
-	apiData.Files = CombineJsonMaps(returnMap, returnMap2)
-	apiData.Overrides = overrides2map(overrideJson, overrideFiles)
-	apiData.SecretFiles = secretMap
+	setupCommand.AuroraConfig.Files = CombineJsonMaps(returnMap, returnMap2)
+	//apiData.Files = CombineJsonMaps(returnMap, returnMap2)
+	setupCommand.SetupParams.Overrides = overrides2map(overrideJson, overrideFiles)
+	//apiData.Overrides = overrides2map(overrideJson, overrideFiles)
+	setupCommand.AuroraConfig.Secrets = secretMap
+	//apiData.SecretFiles = secretMap
 
-	for fileKey := range apiData.Files {
-		secret, err := json2secretFolder(apiData.Files[fileKey])
+	for fileKey := range setupCommand.AuroraConfig.Files {
+		secret, err := json2secretFolder(setupCommand.AuroraConfig.Files[fileKey])
 		if err != nil {
 			return "", err
 		}
@@ -64,12 +94,12 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 			if err != nil {
 				return "", err
 			}
-			apiData.SecretFiles = CombineTextMaps(apiData.SecretFiles, secretMap)
+			setupCommand.AuroraConfig.Secrets = CombineTextMaps(setupCommand.AuroraConfig.Secrets, secretMap)
 		}
 	}
 
-	for overrideKey := range apiData.Overrides {
-		secret, err := json2secretFolder(apiData.Overrides[overrideKey])
+	for overrideKey := range setupCommand.SetupParams.Overrides {
+		secret, err := json2secretFolder(setupCommand.SetupParams.Overrides[overrideKey])
 		if err != nil {
 			return "", err
 		}
@@ -78,13 +108,13 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 			if err != nil {
 				return "", err
 			}
-			apiData.SecretFiles = CombineTextMaps(apiData.SecretFiles, secretMap)
+			setupCommand.AuroraConfig.Secrets = CombineTextMaps(setupCommand.AuroraConfig.Secrets, secretMap)
 		}
 	}
 
-	jsonByte, ok := json.Marshal(apiData)
+	jsonByte, ok := json.Marshal(setupCommand)
 	if !(ok == nil) {
-		return "", errors.New(fmt.Sprintf("Internal error in marshalling Boober data: %v\n", ok.Error()))
+		return "", errors.New(fmt.Sprintf("Internal error in marshalling SetupCommand: %v\n", ok.Error()))
 	}
 
 	jsonStr = string(jsonByte)

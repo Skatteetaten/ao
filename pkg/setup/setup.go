@@ -104,7 +104,7 @@ func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string
 
 	// Initialize JSON
 
-	jsonStr, err := jsonutil.GenerateJson(envFile, envFolder, folder, parentFolder, overrideJson, overrideFiles, setupClass.getAffiliation())
+	jsonStr, err := jsonutil.GenerateJson(envFile, envFolder, folder, parentFolder, overrideJson, overrideFiles, setupClass.getAffiliation(), persistentOptions.DryRun)
 	if err != nil {
 		return "", err
 	} else {
