@@ -56,6 +56,13 @@ func (setupClass *SetupClass) getApiCluster() *openshift.OpenshiftCluster {
 	return nil
 }
 
+func (setupClass *SetupClass) ExecuteImport(args []string,
+	persistentOptions *cmdoptions.CommonCommandOptions) (
+	output string, error error) {
+
+	return
+}
+
 func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string,
 	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool) (
 	output string, error error) {
