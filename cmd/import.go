@@ -17,8 +17,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/skatteetaten/aoc/pkg/setup"
+	"github.com/spf13/cobra"
 	"log"
 	"os"
 )
@@ -32,7 +32,8 @@ file merged with about.json in the same folder, and about.json and aos-features.
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Work your own magic here
 		var setupObject setup.SetupClass
-		output, err := setupObject.ExecuteImport(args, &persistentOptions)
+		output, err := setupObject.ExecuteSetupImport(args,
+			nil, &persistentOptions, localDryRun, false)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -57,5 +58,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// importCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
+	importCmd.Flags().BoolVarP(&localDryRun, "localdryrun",
+		"z", false, "Does not initiate API, just prints collected files")
 }

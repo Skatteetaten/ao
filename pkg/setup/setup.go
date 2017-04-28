@@ -56,15 +56,21 @@ func (setupClass *SetupClass) getApiCluster() *openshift.OpenshiftCluster {
 	return nil
 }
 
-func (setupClass *SetupClass) ExecuteImport(args []string,
-	persistentOptions *cmdoptions.CommonCommandOptions) (
-	output string, error error) {
+func (setupClass *SetupClass) validateImportCommand(args []string) (error error) {
+	error = setupClass.validateFileFolderArg(args)
+	if error != nil {
+		return
+	}
 
+	if len(args) > 1 {
+		error = errors.New("Usage: aoc import file | folder")
+		return
+	}
 	return
 }
 
-func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string,
-	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool) (
+func (setupClass *SetupClass) ExecuteSetupImport(args []string, overrideFiles []string,
+	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool, doSetup bool) (
 	output string, error error) {
 
 	var errorString string
@@ -75,9 +81,21 @@ func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string
 			return "", errors.New("Not logged in, please use aoc login")
 		}
 	}
-	error = setupClass.validateCommand(args, overrideFiles)
+
+	if doSetup {
+		error = setupClass.validateSetupCommand(args, overrideFiles)
+	} else {
+		error = setupClass.validateImportCommand(args)
+	}
 	if error != nil {
 		return
+	}
+
+	var apiEndpoint string
+	if doSetup {
+		apiEndpoint = "/setup"
+	} else {
+		apiEndpoint = "/auroraconfig/" + setupClass.getAffiliation()
 	}
 
 	var env = args[0]
@@ -111,14 +129,15 @@ func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string
 
 	// Initialize JSON
 
-	jsonStr, err := jsonutil.GenerateJson(envFile, envFolder, folder, parentFolder, overrideJson, overrideFiles, setupClass.getAffiliation(), persistentOptions.DryRun)
+	jsonStr, err := jsonutil.GenerateJson(envFile, envFolder, folder, parentFolder, overrideJson, overrideFiles,
+		setupClass.getAffiliation(), persistentOptions.DryRun, doSetup)
 	if err != nil {
 		return "", err
 	} else {
 		if localDryRun {
 			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 		} else {
-			output, err = serverapi.CallApi(jsonStr, persistentOptions.ShowConfig,
+			output, err = serverapi.CallApi(apiEndpoint, jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
 				persistentOptions.Verbose, setupClass.openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug)
 			if err != nil {
@@ -129,8 +148,38 @@ func (setupClass *SetupClass) ExecuteSetup(args []string, overrideFiles []string
 	return
 }
 
-func (setupClass *SetupClass) validateCommand(args []string, overrideFiles []string) (error error) {
+func (setupClass *SetupClass) validateSetupCommand(args []string, overrideFiles []string) (error error) {
 	var errorString = ""
+
+	error = setupClass.validateFileFolderArg(args)
+	if error != nil {
+		return
+	}
+
+	// We have at least one argument, now there should be a correlation between the number of args
+	// and the number of override (-f) flags
+	if len(overrideFiles) < (len(args) - 1) {
+		errorString += fmt.Sprintf("Configuration override specified without file reference flag\n")
+	}
+	if len(overrideFiles) > (len(args) - 1) {
+		errorString += fmt.Sprintf("Configuration overide file reference flag specified without configuration\n")
+	}
+
+	// Check for legal JSON argument for each overrideFiles flag
+	for i := 1; i < len(args); i++ {
+		if !jsonutil.IsLegalJson(args[i]) {
+			errorString += fmt.Sprintf("Illegal JSON configuration override: %v\n", args[i])
+		}
+	}
+
+	if errorString != "" {
+		error = errors.New(errorString)
+	}
+	return
+}
+
+func (SetupClass *SetupClass) validateFileFolderArg(args []string) (error error) {
+	var errorString string
 
 	if len(args) == 0 {
 		errorString += "Missing file/folder "
@@ -141,27 +190,13 @@ func (setupClass *SetupClass) validateCommand(args []string, overrideFiles []str
 			errorString += fmt.Sprintf("Illegal file / folder: %v\n", args[0])
 		}
 
-		// We have at least one argument, now there should be a correlation between the number of args
-		// and the number of override (-f) flags
-		if len(overrideFiles) < (len(args) - 1) {
-			errorString += fmt.Sprintf("Configuration override specified without file reference flag\n")
-		}
-		if len(overrideFiles) > (len(args) - 1) {
-			errorString += fmt.Sprintf("Configuration overide file reference flag specified without configuration\n")
-		}
-
-		// Check for legal JSON argument for each overrideFiles flag
-		for i := 1; i < len(args); i++ {
-			if !jsonutil.IsLegalJson(args[i]) {
-				errorString += fmt.Sprintf("Illegal JSON configuration override: %v\n", args[i])
-			}
-		}
 	}
 
 	if errorString != "" {
-		error = errors.New(errorString)
+		return errors.New(errorString)
 	}
 	return
+
 }
 
 func (setupClass *SetupClass) getAffiliation() (affiliation string) {

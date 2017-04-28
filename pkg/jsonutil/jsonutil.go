@@ -45,27 +45,25 @@ type SetupCommand struct {
 }
 
 func GenerateJson(envFile string, envFolder string, folder string, parentFolder string, overrideJson []string,
-	overrideFiles []string, affiliation string, dryRun bool) (jsonStr string, error error) {
+	overrideFiles []string, affiliation string, dryRun bool, includeSetupParams bool) (jsonStr string, error error) {
 	//var apiData ApiInferface
 	var setupCommand SetupCommand
+	var auroraConfigPayload AuroraConfigPayload
 
 	var returnMap map[string]json.RawMessage
 	var returnMap2 map[string]json.RawMessage
 	var secretMap map[string]string = make(map[string]string)
 
-	setupCommand.SetupParams.Apps = make([]string, 1)
-	//apiData.Apps = make([]string, 1)
-	setupCommand.SetupParams.Envs = make([]string, 1)
-	//apiData.Envs = make([]string, 1)
-	setupCommand.SetupParams.Apps[0] = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
-	//apiData.Apps[0] = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
-	setupCommand.SetupParams.Envs[0] = envFolder
-	//apiData.Envs[0] = envFolder
+	if includeSetupParams {
+		setupCommand.SetupParams.Apps = make([]string, 1)
+		setupCommand.SetupParams.Envs = make([]string, 1)
+		setupCommand.SetupParams.Apps[0] = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
+		setupCommand.SetupParams.Envs[0] = envFolder
+		setupCommand.SetupParams.DryRun = dryRun
+		setupCommand.SetupParams.Overrides = overrides2map(overrideJson, overrideFiles)
+	}
 
 	setupCommand.Affiliation = affiliation
-	//apiData.Affiliation = affiliation
-
-	setupCommand.SetupParams.DryRun = dryRun
 
 	returnMap, error = JsonFolder2Map(folder, envFolder+"/")
 	if error != nil {
@@ -78,11 +76,7 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 	}
 
 	setupCommand.AuroraConfig.Files = CombineJsonMaps(returnMap, returnMap2)
-	//apiData.Files = CombineJsonMaps(returnMap, returnMap2)
-	setupCommand.SetupParams.Overrides = overrides2map(overrideJson, overrideFiles)
-	//apiData.Overrides = overrides2map(overrideJson, overrideFiles)
 	setupCommand.AuroraConfig.Secrets = secretMap
-	//apiData.SecretFiles = secretMap
 
 	for fileKey := range setupCommand.AuroraConfig.Files {
 		secret, err := json2secretFolder(setupCommand.AuroraConfig.Files[fileKey])
@@ -98,23 +92,33 @@ func GenerateJson(envFile string, envFolder string, folder string, parentFolder 
 		}
 	}
 
-	for overrideKey := range setupCommand.SetupParams.Overrides {
-		secret, err := json2secretFolder(setupCommand.SetupParams.Overrides[overrideKey])
-		if err != nil {
-			return "", err
-		}
-		if secret != "" {
-			secretMap, err = SecretFolder2Map(secret)
+	if includeSetupParams {
+		for overrideKey := range setupCommand.SetupParams.Overrides {
+			secret, err := json2secretFolder(setupCommand.SetupParams.Overrides[overrideKey])
 			if err != nil {
 				return "", err
 			}
-			setupCommand.AuroraConfig.Secrets = CombineTextMaps(setupCommand.AuroraConfig.Secrets, secretMap)
+			if secret != "" {
+				secretMap, err = SecretFolder2Map(secret)
+				if err != nil {
+					return "", err
+				}
+				setupCommand.AuroraConfig.Secrets = CombineTextMaps(setupCommand.AuroraConfig.Secrets, secretMap)
+			}
 		}
 	}
 
-	jsonByte, ok := json.Marshal(setupCommand)
-	if !(ok == nil) {
-		return "", errors.New(fmt.Sprintf("Internal error in marshalling SetupCommand: %v\n", ok.Error()))
+	var jsonByte []byte
+
+	if includeSetupParams {
+		jsonByte, error = json.Marshal(setupCommand)
+	} else {
+		auroraConfigPayload.Files = setupCommand.AuroraConfig.Files
+		auroraConfigPayload.Secrets = setupCommand.AuroraConfig.Secrets
+		jsonByte, error = json.Marshal(auroraConfigPayload)
+	}
+	if !(error == nil) {
+		return "", errors.New(fmt.Sprintf("Internal error in marshalling SetupCommand: %v\n", error.Error()))
 	}
 
 	jsonStr = string(jsonByte)

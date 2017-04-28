@@ -26,7 +26,7 @@ var versionCmd = &cobra.Command{
 	Short: "Shows the version of the aoc client",
 	Long:  `Shows the version of the aoc client application`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Aurora OC version 4.0 alpha 6")
+		fmt.Println("Aurora OC version 5.0.0 alpha 7")
 	},
 }
 

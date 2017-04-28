@@ -89,15 +89,11 @@ func ValidateLogin(openshiftConfig *openshift.OpenshiftConfig) (output bool) {
 	return true
 }
 
-func GetApiSetupUrl(clusterName string, localhost bool, dryrun bool) string {
-	var endpoint string = "/setup"
-	/*	if dryrun {
-		endpoint = "/setup-dryrun"
-	}*/
-	return GetApiAddress(clusterName, localhost) + endpoint
+func GetApiSetupUrl(clusterName string, apiEndpont string, localhost bool, dryrun bool) string {
+	return GetApiAddress(clusterName, localhost) + apiEndpont
 }
 
-func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
+func CallApi(apiEndpoint string, combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
 	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool) (output string, err error) {
 	//var openshiftConfig *openshift.OpenshiftConfig
 	var apiCluster *openshift.OpenshiftCluster
@@ -112,7 +108,7 @@ func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, 
 			}
 		}
 		output, err = callApiInstance(combindedJson, showConfig, showObjects, verbose,
-			GetApiSetupUrl("localhost", localhost, dryRun), token, dryRun, debug)
+			GetApiSetupUrl("localhost", apiEndpoint, localhost, dryRun), token, dryRun, debug)
 		if err != nil {
 			return
 		}
@@ -123,7 +119,7 @@ func CallApi(combindedJson string, showConfig bool, showObjects bool, api bool, 
 			if openshiftConfig.Clusters[i].Reachable {
 				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
 					out, err := callApiInstance(combindedJson, showConfig, showObjects, verbose,
-						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, localhost, dryRun),
+						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, apiEndpoint, localhost, dryRun),
 						openshiftConfig.Clusters[i].Token, dryRun, debug)
 					if err == nil {
 						if out != "" {

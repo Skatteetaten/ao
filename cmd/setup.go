@@ -35,8 +35,8 @@ var setupCmd = &cobra.Command{
 file merged with about.json in the same folder, and about.json and aos-features.json in the parent folder`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var setupObject setup.SetupClass
-		output, err := setupObject.ExecuteSetup(args,
-			overrideFiles, &persistentOptions, localDryRun)
+		output, err := setupObject.ExecuteSetupImport(args,
+			overrideFiles, &persistentOptions, localDryRun, true)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
