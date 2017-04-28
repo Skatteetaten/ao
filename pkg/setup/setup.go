@@ -178,6 +178,30 @@ func (setupClass *SetupClass) validateSetupCommand(args []string, overrideFiles 
 	return
 }
 
+func (setupClass *SetupClass) ExecuteDeploy(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (
+	output string, error error) {
+
+	error = validateDeploy(args)
+	if error != nil {
+		return
+	}
+
+	setupClass.init()
+	if !serverapi.ValidateLogin(setupClass.openshiftConfig) {
+		return "", errors.New("Not logged in, please use aoc login")
+	}
+
+	return
+}
+
+func validateDeploy(args []string) (error error) {
+	if len(args) != 0 {
+		error = errors.New("Usage: aoc deploy")
+	}
+
+	return
+}
+
 func (SetupClass *SetupClass) validateFileFolderArg(args []string) (error error) {
 	var errorString string
 

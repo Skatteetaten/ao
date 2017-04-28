@@ -15,8 +15,11 @@
 package cmd
 
 import (
-	"github.com/skatteetaten/aoc/pkg/deploy"
+	"fmt"
+	"github.com/skatteetaten/aoc/pkg/setup"
 	"github.com/spf13/cobra"
+	"log"
+	"os"
 )
 
 // deployCmd represents the deploy command
@@ -30,7 +33,17 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		deploy.ExecuteDeploy(args, &persistentOptions)
+		var setupObject setup.SetupClass
+		output, err := setupObject.ExecuteDeploy(args, &persistentOptions)
+		if err != nil {
+			l := log.New(os.Stderr, "", 0)
+			l.Println(err.Error())
+			os.Exit(-1)
+		} else {
+			if output != "" {
+				fmt.Println(output)
+			}
+		}
 	},
 }
 
