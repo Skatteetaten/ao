@@ -194,6 +194,7 @@ func (setupClass *SetupClass) ExecuteDeploy(args []string, persistentOptions *cm
 	// Line of code from Mac
 	// Line of code from VDI
 
+	l
 	return
 }
 
