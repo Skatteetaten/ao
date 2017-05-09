@@ -284,3 +284,29 @@ func StripSpaces(str string) string {
 		return r
 	}, str)
 }
+
+func ValidateOverrides(args []string, overrideFiles []string) (error error) {
+	var errorString = ""
+
+
+	// We have at least one argument, now there should be a correlation between the number of args
+	// and the number of override (-f) flags
+	if len(overrideFiles) < (len(args) - 1) {
+		errorString += fmt.Sprintf("Configuration override specified without file reference flag\n")
+	}
+	if len(overrideFiles) > (len(args) - 1) {
+		errorString += fmt.Sprintf("Configuration overide file reference flag specified without configuration\n")
+	}
+
+	// Check for legal JSON argument for each overrideFiles flag
+	for i := 1; i < len(args); i++ {
+		if !IsLegalJson(args[i]) {
+			errorString += fmt.Sprintf("Illegal JSON configuration override: %v\n", args[i])
+		}
+	}
+
+	if errorString != "" {
+		error = errors.New(errorString)
+	}
+	return
+}

@@ -16,7 +16,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/aoc/pkg/setup"
+	"github.com/skatteetaten/aoc/pkg/deploy"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
@@ -33,8 +33,10 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var setupObject setup.SetupClass
-		output, err := setupObject.ExecuteDeploy(args, &persistentOptions)
+		var deployObject deploy.DeployClass
+
+		deployObject.Init()
+		output, err := deployObject.ExecuteDeploy(args, overrideFiles, &persistentOptions)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -49,6 +51,9 @@ to quickly create a Cobra application.`,
 
 func init() {
 	RootCmd.AddCommand(deployCmd)
+
+	deployCmd.Flags().StringArrayVarP(&overrideFiles, "file",
+		"f", overrideValues, "File to override")
 
 	// Here you will define your flags and configuration settings.
 

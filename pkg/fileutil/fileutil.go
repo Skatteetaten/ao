@@ -1,6 +1,8 @@
 package fileutil
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -27,4 +29,24 @@ func IsLegalFileFolder(filespec string) int {
 		}
 	}
 	return SpecIllegal
+}
+
+func ValidateFileFolderArg(args []string) (error error) {
+	var errorString string
+
+	if len(args) == 0 {
+		errorString += "Missing file/folder "
+	} else {
+		// Chceck argument 0 for legal file / folder
+		validateCode := IsLegalFileFolder(args[0])
+		if validateCode < 0 {
+			errorString += fmt.Sprintf("Illegal file / folder: %v\n", args[0])
+		}
+
+	}
+
+	if errorString != "" {
+		return errors.New(errorString)
+	}
+	return
 }

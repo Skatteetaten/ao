@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
+	"github.com/skatteetaten/aoc/pkg/configuration"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/openshift"
@@ -13,29 +14,13 @@ import (
 )
 
 type SetupClass struct {
-	configLocation  string
-	openshiftConfig *openshift.OpenshiftConfig
-	apiClusterIndex int
-	initDone        bool
+	configuration configuration.ConfigurationClass
+	initDone      bool
 }
 
 func (setupClass *SetupClass) init() (err error) {
 	if setupClass.initDone {
 		return
-	}
-	setupClass.configLocation = viper.GetString("HOME") + "/.aoc.json"
-	setupClass.openshiftConfig, err = openshift.LoadOrInitiateConfigFile(setupClass.configLocation)
-	if err != nil {
-		err = errors.New("Error in loading OpenShift configuration")
-	}
-	// Find index for API cluster,that is the first reachable cluster
-	if setupClass.openshiftConfig != nil {
-		for i := range setupClass.openshiftConfig.Clusters {
-			if setupClass.openshiftConfig.Clusters[i].Reachable {
-				setupClass.apiClusterIndex = i
-				break
-			}
-		}
 	}
 	setupClass.initDone = true
 	return
@@ -57,11 +42,6 @@ func (setupClass *SetupClass) getApiCluster() *openshift.OpenshiftCluster {
 }
 
 func (setupClass *SetupClass) validateImportCommand(args []string) (error error) {
-	error = setupClass.validateFileFolderArg(args)
-	if error != nil {
-		return
-	}
-
 	if len(args) > 1 {
 		error = errors.New("Usage: aoc import file | folder")
 		return
@@ -77,13 +57,18 @@ func (setupClass *SetupClass) ExecuteSetupImport(args []string, overrideFiles []
 
 	setupClass.init()
 	if !localDryRun {
-		if !serverapi.ValidateLogin(setupClass.openshiftConfig) {
+		if !serverapi.ValidateLogin(setupClass.configuration.GetOpenshiftConfig()) {
 			return "", errors.New("Not logged in, please use aoc login")
 		}
 	}
 
+	error = fileutil.ValidateFileFolderArg(args)
+	if error != nil {
+		return
+	}
+
 	if doSetup {
-		error = setupClass.validateSetupCommand(args, overrideFiles)
+		error = jsonutil.ValidateOverrides(args, overrideFiles)
 	} else {
 		error = setupClass.validateImportCommand(args)
 	}
@@ -139,41 +124,11 @@ func (setupClass *SetupClass) ExecuteSetupImport(args []string, overrideFiles []
 		} else {
 			output, err = serverapi.CallApi(apiEndpoint, jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
-				persistentOptions.Verbose, setupClass.openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug)
+				persistentOptions.Verbose, setupClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug)
 			if err != nil {
 				return "", err
 			}
 		}
-	}
-	return
-}
-
-func (setupClass *SetupClass) validateSetupCommand(args []string, overrideFiles []string) (error error) {
-	var errorString = ""
-
-	error = setupClass.validateFileFolderArg(args)
-	if error != nil {
-		return
-	}
-
-	// We have at least one argument, now there should be a correlation between the number of args
-	// and the number of override (-f) flags
-	if len(overrideFiles) < (len(args) - 1) {
-		errorString += fmt.Sprintf("Configuration override specified without file reference flag\n")
-	}
-	if len(overrideFiles) > (len(args) - 1) {
-		errorString += fmt.Sprintf("Configuration overide file reference flag specified without configuration\n")
-	}
-
-	// Check for legal JSON argument for each overrideFiles flag
-	for i := 1; i < len(args); i++ {
-		if !jsonutil.IsLegalJson(args[i]) {
-			errorString += fmt.Sprintf("Illegal JSON configuration override: %v\n", args[i])
-		}
-	}
-
-	if errorString != "" {
-		error = errors.New(errorString)
 	}
 	return
 }
@@ -187,7 +142,7 @@ func (setupClass *SetupClass) ExecuteDeploy(args []string, persistentOptions *cm
 	}
 
 	setupClass.init()
-	if !serverapi.ValidateLogin(setupClass.openshiftConfig) {
+	if !serverapi.ValidateLogin(setupClass.configuration.GetOpenshiftConfig()) {
 		return "", errors.New("Not logged in, please use aoc login")
 	}
 
@@ -205,30 +160,9 @@ func validateDeploy(args []string) (error error) {
 	return
 }
 
-func (SetupClass *SetupClass) validateFileFolderArg(args []string) (error error) {
-	var errorString string
-
-	if len(args) == 0 {
-		errorString += "Missing file/folder "
-	} else {
-		// Chceck argument 0 for legal file / folder
-		validateCode := fileutil.IsLegalFileFolder(args[0])
-		if validateCode < 0 {
-			errorString += fmt.Sprintf("Illegal file / folder: %v\n", args[0])
-		}
-
-	}
-
-	if errorString != "" {
-		return errors.New(errorString)
-	}
-	return
-
-}
-
 func (setupClass *SetupClass) getAffiliation() (affiliation string) {
-	if setupClass.openshiftConfig != nil {
-		affiliation = setupClass.openshiftConfig.Affiliation
+	if setupClass.configuration.GetOpenshiftConfig() != nil {
+		affiliation = setupClass.configuration.GetOpenshiftConfig().Affiliation
 	}
 	return
 }
