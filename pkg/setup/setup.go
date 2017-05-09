@@ -93,9 +93,9 @@ func (setupClass *SetupClass) ExecuteSetupImport(args []string, overrideFiles []
 
 	var apiEndpoint string
 	if doSetup {
-		apiEndpoint = "/setup"
+		apiEndpoint = "/affiliation/" + setupClass.getAffiliation() + "/setup"
 	} else {
-		apiEndpoint = "/auroraconfig/" + setupClass.getAffiliation()
+		apiEndpoint = "/affiliation/" + setupClass.getAffiliation() + "/auroraconfig"
 	}
 
 	var env = args[0]
@@ -194,7 +194,6 @@ func (setupClass *SetupClass) ExecuteDeploy(args []string, persistentOptions *cm
 	// Line of code from Mac
 	// Line of code from VDI
 
-	l
 	return
 }
 

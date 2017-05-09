@@ -208,15 +208,19 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 		return "", errors.New(fmt.Sprintf(bodyStr))
 	}
 
-	err = json.Unmarshal(body, &apiReturn)
-	if err != nil {
-		return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return: %v\n", err.Error()))
+	var verboseMessage string = "OK"
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &apiReturn)
+		if err != nil {
+			return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return: %v\n", err.Error()))
+		}
+		verboseMessage = apiReturn.Message
 	}
 
 	output += ""
 
 	if verbose {
-		fmt.Println(apiReturn.Message)
+		fmt.Println(verboseMessage)
 	}
 
 	var countMap map[string]int = make(map[string]int)
@@ -254,18 +258,20 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 	}
 
 	var jsonResponse ApiReturnDcPayloadResponse
-	err = json.Unmarshal(body, &jsonResponse)
-	if err != nil {
-		return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return json Response: %v\n", err.Error()))
-	}
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &jsonResponse)
+		if err != nil {
+			return "", errors.New(fmt.Sprintf("Error unmarshalling Boober return json Response: %v\n", err.Error()))
+		}
 
-	if showObjects {
-		for itemKey := range jsonResponse.Items {
-			for osKey := range jsonResponse.Items[itemKey].OpenShiftResponses {
-				if jsonResponse.Items[itemKey].OpenShiftResponses[osKey].OperationType == "CREATED" {
-					out := jsonutil.PrettyPrintJson(string(jsonResponse.Items[itemKey].OpenShiftResponses[osKey].Payload))
-					if out != "" {
-						output += "\n" + out
+		if showObjects {
+			for itemKey := range jsonResponse.Items {
+				for osKey := range jsonResponse.Items[itemKey].OpenShiftResponses {
+					if jsonResponse.Items[itemKey].OpenShiftResponses[osKey].OperationType == "CREATED" {
+						out := jsonutil.PrettyPrintJson(string(jsonResponse.Items[itemKey].OpenShiftResponses[osKey].Payload))
+						if out != "" {
+							output += "\n" + out
+						}
 					}
 				}
 			}
