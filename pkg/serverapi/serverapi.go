@@ -39,6 +39,7 @@ type ApiReturnItem struct {
 		EnvironmentName string `json:"environmentName"`
 		ApplicationName string `json:"applicationName"`
 	} `json:"applicationID"`
+	Messages           []string            `json:"messages"`
 	AuroraDc           AuroraDc            `json:"auroraDc"`
 	OpenShiftResponses []OpenShiftResponse `json:"openShiftResponses"`
 }
@@ -46,6 +47,7 @@ type ApiReturn struct {
 	Success bool            `json:"success"`
 	Message string          `json:"message"`
 	Items   []ApiReturnItem `json:"items"`
+	Count   int             `json:"count"`
 }
 
 // Struct to list payload and response only
@@ -205,7 +207,22 @@ func callApiInstance(combindedJson string, showConfig bool, showObjects bool, ve
 		if verbose {
 			fmt.Println("FAIL.  Error in configuration")
 		}
-		return "", errors.New(fmt.Sprintf(bodyStr))
+		var output string = bodyStr
+		if len(body) > 0 {
+			err = json.Unmarshal(body, &apiReturn)
+			output = apiReturn.Message
+			for i := range apiReturn.Items {
+				output += "\n"
+				output += apiReturn.Items[i].ApplicationID.EnvironmentName + "/" + apiReturn.Items[i].ApplicationID.ApplicationName + ": "
+				var separator string = ""
+				for j := range apiReturn.Items[i].Messages {
+					output += separator + apiReturn.Items[i].Messages[j]
+					separator = ", "
+				}
+			}
+		}
+
+		return "", errors.New(fmt.Sprintf(output))
 	}
 
 	var verboseMessage string = "OK"
