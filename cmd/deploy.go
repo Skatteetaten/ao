@@ -36,7 +36,7 @@ to quickly create a Cobra application.`,
 		var deployObject deploy.DeployClass
 
 		deployObject.Init()
-		output, err := deployObject.ExecuteDeploy(args, overrideFiles, &persistentOptions)
+		output, err := deployObject.ExecuteDeploy(args, overrideFiles, &persistentOptions, localDryRun)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -54,7 +54,8 @@ func init() {
 
 	deployCmd.Flags().StringArrayVarP(&overrideFiles, "file",
 		"f", overrideValues, "File to override")
-
+	deployCmd.Flags().BoolVarP(&localDryRun, "localdryrun",
+		"z", false, "Does not initiate API, just prints collected files")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
