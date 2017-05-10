@@ -22,10 +22,7 @@ import (
 	"os"
 )
 
-// Cobra Flag variables
-var overrideFiles []string
-var overrideValues []string
-var localDryRun bool
+
 
 // setupCmd represents the setup command
 var setupCmd = &cobra.Command{

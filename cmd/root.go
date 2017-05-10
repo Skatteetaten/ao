@@ -11,7 +11,11 @@ import (
 	"os"
 )
 
+// Cobra Flag variables
 var persistentOptions cmdoptions.CommonCommandOptions
+var overrideFiles []string
+var overrideValues []string
+var localDryRun bool
 
 //var cfgFile string
 
@@ -40,19 +44,31 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
+	//Verbose     bool
+	//Debug       bool
+	//DryRun      bool
+	//Localhost   bool
+	//ShowConfig  bool
+	//ShowObjects bool
+
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Verbose, "verbose",
 		"v", false, "Log progress to standard out")
+
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Debug, "debug",
 		"", false, "Show debug information")
 	RootCmd.PersistentFlags().MarkHidden("debug")
+
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.DryRun, "dryrun",
 		"d", false,
 		"Do not perform a setup, just collect and print the configuration files")
+
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Localhost, "localhost",
 		"l", false, "Send setup to Boober on localhost")
 	RootCmd.PersistentFlags().MarkHidden("localhost")
+
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowConfig, "showconfig",
 		"s", false, "Print merged config from Boober to standard out")
+
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowObjects, "showobjects",
 		"o", false, "Print object definitions from Boober to standard out")
 	// test

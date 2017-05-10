@@ -35,7 +35,7 @@ func (deployClass *DeployClass) getAffiliation() (affiliation string) {
 	return
 }
 
-func (deployClass *DeployClass) ExecuteDeploy(args []string, overrideFiles []string,
+func (deployClass *DeployClass) ExecuteDeploy(args []string, overrideFiles []string, applist []string, envList []string,
 	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool) (output string, err error) {
 
 	error := validateDeploy(args)
@@ -47,12 +47,10 @@ func (deployClass *DeployClass) ExecuteDeploy(args []string, overrideFiles []str
 		return "", errors.New("Not logged in, please use aoc login")
 	}
 
-	var env string = args[0]
-	var overrideJson []string = args[1:]
-
-	json, error := generateJson(env, "", overrideJson, overrideFiles, "sat", persistentOptions.DryRun)
+	var overrideJson []string // = args[1:]
 
 	var affiliation = deployClass.getAffiliation()
+	json, error := generateJson(envList, applist, overrideJson, overrideFiles, affiliation, persistentOptions.DryRun)
 
 	var apiEndpoint string = "/affiliation/" + affiliation + "/deploy"
 	if error != nil {
@@ -74,27 +72,25 @@ func (deployClass *DeployClass) ExecuteDeploy(args []string, overrideFiles []str
 }
 
 func validateDeploy(args []string) (error error) {
-	if len(args) != 1 {
+	if len(args) != 0 {
 		error = errors.New("Usage: aoc deploy <env>")
 	}
 
 	return
 }
 
-func generateJson(env string, app string, overrideJson []string,
+func generateJson(envList []string, appList []string, overrideJson []string,
 	overrideFiles []string, affiliation string, dryRun bool) (jsonStr string, error error) {
 	//var apiData ApiInferface
 	var setupCommand DeployCommand
 
-	if app != "" {
-		setupCommand.SetupParams.Apps = make([]string, 1)
-		setupCommand.SetupParams.Apps[0] = app
+	if len(appList) != 0 {
+		setupCommand.SetupParams.Apps = appList
 	} else {
 		setupCommand.SetupParams.Apps = make([]string, 0)
 	}
-	if env != "" {
-		setupCommand.SetupParams.Envs = make([]string, 1)
-		setupCommand.SetupParams.Envs[0] = env
+	if len(envList) != 0 {
+		setupCommand.SetupParams.Envs = envList
 	} else {
 		setupCommand.SetupParams.Envs = make([]string, 0)
 	}

@@ -22,6 +22,9 @@ import (
 	"os"
 )
 
+var appList []string
+var envList []string
+
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
 	Use:   "deploy env [-a app]",
@@ -36,7 +39,7 @@ to quickly create a Cobra application.`,
 		var deployObject deploy.DeployClass
 
 		deployObject.Init()
-		output, err := deployObject.ExecuteDeploy(args, overrideFiles, &persistentOptions, localDryRun)
+		output, err := deployObject.ExecuteDeploy(args, overrideFiles, appList, envList, &persistentOptions, localDryRun)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -54,8 +57,17 @@ func init() {
 
 	deployCmd.Flags().StringArrayVarP(&overrideFiles, "file",
 		"f", overrideValues, "File to override")
+
 	deployCmd.Flags().BoolVarP(&localDryRun, "localdryrun",
 		"z", false, "Does not initiate API, just prints collected files")
+	deployCmd.Flags().MarkHidden("localdryrun")
+
+	deployCmd.Flags().StringArrayVarP(&appList, "app",
+		"a", nil, "Only deploy specified application")
+
+	deployCmd.Flags().StringArrayVarP(&envList, "env",
+		"e", nil, "Only deploy specified environment")
+
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
