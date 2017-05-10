@@ -20,13 +20,27 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var version = "5"
+var buildstamp = ""
+var githash = ""
+var buildnumber = ""
+
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Shows the version of the aoc client",
 	Long:  `Shows the version of the aoc client application`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Aurora OC version 5.0.0 alpha 7")
+		if buildnumber != "" {
+			version = version + " (" + buildnumber + ")"
+		}
+		fmt.Println("Aurora OC version " + version)
+		if githash != "" {
+			fmt.Println("Git Commit Hash: " + githash)
+		}
+		if buildstamp != "" {
+			fmt.Println("Build Time: " + buildstamp)
+		}
 	},
 }
 
