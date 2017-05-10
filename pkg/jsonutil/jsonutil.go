@@ -44,89 +44,9 @@ type SetupCommand struct {
 	SetupParams  SetupParamsPayload  `json:"setupParams"`
 }
 
-func GenerateJson(envFile string, envFolder string, folder string, parentFolder string, overrideJson []string,
-	overrideFiles []string, affiliation string, dryRun bool, includeSetupParams bool) (jsonStr string, error error) {
-	//var apiData ApiInferface
-	var setupCommand SetupCommand
-	var auroraConfigPayload AuroraConfigPayload
-
-	var returnMap map[string]json.RawMessage
-	var returnMap2 map[string]json.RawMessage
-	var secretMap map[string]string = make(map[string]string)
-
-	if includeSetupParams {
-		setupCommand.SetupParams.Apps = make([]string, 1)
-		setupCommand.SetupParams.Envs = make([]string, 1)
-		setupCommand.SetupParams.Apps[0] = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
-		setupCommand.SetupParams.Envs[0] = envFolder
-		setupCommand.SetupParams.DryRun = dryRun
-		setupCommand.SetupParams.Overrides = overrides2map(overrideJson, overrideFiles)
-	}
-
-	setupCommand.Affiliation = affiliation
-
-	returnMap, error = JsonFolder2Map(folder, envFolder+"/")
-	if error != nil {
-		return
-	}
-
-	returnMap2, error = JsonFolder2Map(parentFolder, "")
-	if error != nil {
-		return
-	}
-
-	setupCommand.AuroraConfig.Files = CombineJsonMaps(returnMap, returnMap2)
-	setupCommand.AuroraConfig.Secrets = secretMap
-
-	for fileKey := range setupCommand.AuroraConfig.Files {
-		secret, err := json2secretFolder(setupCommand.AuroraConfig.Files[fileKey])
-		if err != nil {
-			return "", err
-		}
-		if secret != "" {
-			secretMap, err = SecretFolder2Map(secret)
-			if err != nil {
-				return "", err
-			}
-			setupCommand.AuroraConfig.Secrets = CombineTextMaps(setupCommand.AuroraConfig.Secrets, secretMap)
-		}
-	}
-
-	if includeSetupParams {
-		for overrideKey := range setupCommand.SetupParams.Overrides {
-			secret, err := json2secretFolder(setupCommand.SetupParams.Overrides[overrideKey])
-			if err != nil {
-				return "", err
-			}
-			if secret != "" {
-				secretMap, err = SecretFolder2Map(secret)
-				if err != nil {
-					return "", err
-				}
-				setupCommand.AuroraConfig.Secrets = CombineTextMaps(setupCommand.AuroraConfig.Secrets, secretMap)
-			}
-		}
-	}
-
-	var jsonByte []byte
-
-	if includeSetupParams {
-		jsonByte, error = json.Marshal(setupCommand)
-	} else {
-		auroraConfigPayload.Files = setupCommand.AuroraConfig.Files
-		auroraConfigPayload.Secrets = setupCommand.AuroraConfig.Secrets
-		jsonByte, error = json.Marshal(auroraConfigPayload)
-	}
-	if !(error == nil) {
-		return "", errors.New(fmt.Sprintf("Internal error in marshalling SetupCommand: %v\n", error.Error()))
-	}
-
-	jsonStr = string(jsonByte)
-	return
-}
 
 // Search a json string for a secretFolder attribute
-func json2secretFolder(jsonMessage json.RawMessage) (string, error) {
+func Json2secretFolder(jsonMessage json.RawMessage) (string, error) {
 	type FileStruct struct {
 		SecretFolder string `json:"secretFolder"`
 	}
@@ -138,7 +58,7 @@ func json2secretFolder(jsonMessage json.RawMessage) (string, error) {
 	return fileStruct.SecretFolder, nil
 }
 
-func overrides2map(overrideJson []string, overrideFiles []string) (returnMap map[string]json.RawMessage) {
+func Overrides2map(overrideJson []string, overrideFiles []string) (returnMap map[string]json.RawMessage) {
 	returnMap = make(map[string]json.RawMessage)
 	for i := 0; i < len(overrideFiles); i++ {
 		returnMap[overrideFiles[i]] = json.RawMessage(overrideJson[i])

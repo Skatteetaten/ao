@@ -36,7 +36,7 @@ file merged with about.json in the same folder, and about.json and aos-features.
 	Run: func(cmd *cobra.Command, args []string) {
 		var setupObject setup.SetupClass
 		output, err := setupObject.ExecuteSetupImport(args,
-			overrideFiles, &persistentOptions, localDryRun, true)
+			overrideFiles, &persistentOptions, localDryRun)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())

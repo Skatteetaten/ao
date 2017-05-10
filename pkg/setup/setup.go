@@ -1,16 +1,16 @@
 package setup
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
-	"github.com/skatteetaten/aoc/pkg/openshift"
 	"github.com/skatteetaten/aoc/pkg/serverapi"
-	"github.com/spf13/viper"
 	"path/filepath"
+	"strings"
 )
 
 type SetupClass struct {
@@ -18,44 +18,21 @@ type SetupClass struct {
 	initDone      bool
 }
 
-func (setupClass *SetupClass) init() (err error) {
+/*func (setupClass *SetupClass) init() (err error) {
 	if setupClass.initDone {
 		return
 	}
 	setupClass.initDone = true
 	return
-}
-
-func (setupClass *SetupClass) getApiCluster() *openshift.OpenshiftCluster {
-	var configLocation = viper.GetString("HOME") + "/.aoc.json"
-	openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configLocation)
-	if err != nil {
-		fmt.Println("Error in loading OpenShift configuration")
-		return nil
-	}
-	for i := range openshiftConfig.Clusters {
-		if openshiftConfig.Clusters[i].Reachable {
-			return openshiftConfig.Clusters[i]
-		}
-	}
-	return nil
-}
-
-func (setupClass *SetupClass) validateImportCommand(args []string) (error error) {
-	if len(args) > 1 {
-		error = errors.New("Usage: aoc import file | folder")
-		return
-	}
-	return
-}
+}*/
 
 func (setupClass *SetupClass) ExecuteSetupImport(args []string, overrideFiles []string,
-	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool, doSetup bool) (
+	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool) (
 	output string, error error) {
 
 	var errorString string
 
-	setupClass.init()
+	//setupClass.init()
 	if !localDryRun {
 		if !serverapi.ValidateLogin(setupClass.configuration.GetOpenshiftConfig()) {
 			return "", errors.New("Not logged in, please use aoc login")
@@ -67,21 +44,13 @@ func (setupClass *SetupClass) ExecuteSetupImport(args []string, overrideFiles []
 		return
 	}
 
-	if doSetup {
-		error = jsonutil.ValidateOverrides(args, overrideFiles)
-	} else {
-		error = setupClass.validateImportCommand(args)
-	}
+	error = jsonutil.ValidateOverrides(args, overrideFiles)
 	if error != nil {
 		return
 	}
 
 	var apiEndpoint string
-	if doSetup {
-		apiEndpoint = "/affiliation/" + setupClass.getAffiliation() + "/setup"
-	} else {
-		apiEndpoint = "/affiliation/" + setupClass.getAffiliation() + "/auroraconfig"
-	}
+	apiEndpoint = "/affiliation/" + setupClass.getAffiliation() + "/setup"
 
 	var env = args[0]
 	var overrideJson []string = args[1:]
@@ -114,8 +83,8 @@ func (setupClass *SetupClass) ExecuteSetupImport(args []string, overrideFiles []
 
 	// Initialize JSON
 
-	jsonStr, err := jsonutil.GenerateJson(envFile, envFolder, folder, parentFolder, overrideJson, overrideFiles,
-		setupClass.getAffiliation(), persistentOptions.DryRun, doSetup)
+	jsonStr, err := generateJson(envFile, envFolder, folder, parentFolder, overrideJson, overrideFiles,
+		setupClass.getAffiliation(), persistentOptions.DryRun)
 	if err != nil {
 		return "", err
 	} else {
@@ -133,36 +102,84 @@ func (setupClass *SetupClass) ExecuteSetupImport(args []string, overrideFiles []
 	return
 }
 
-func (setupClass *SetupClass) ExecuteDeploy(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (
-	output string, error error) {
-
-	error = validateDeploy(args)
-	if error != nil {
-		return
-	}
-
-	setupClass.init()
-	if !serverapi.ValidateLogin(setupClass.configuration.GetOpenshiftConfig()) {
-		return "", errors.New("Not logged in, please use aoc login")
-	}
-
-	// Line of code from Mac
-	// Line of code from VDI
-
-	return
-}
-
-func validateDeploy(args []string) (error error) {
-	if len(args) != 0 {
-		error = errors.New("Usage: aoc deploy")
-	}
-
-	return
-}
-
 func (setupClass *SetupClass) getAffiliation() (affiliation string) {
 	if setupClass.configuration.GetOpenshiftConfig() != nil {
 		affiliation = setupClass.configuration.GetOpenshiftConfig().Affiliation
 	}
+	return
+}
+
+func generateJson(envFile string, envFolder string, folder string, parentFolder string, overrideJson []string,
+	overrideFiles []string, affiliation string, dryRun bool) (jsonStr string, error error) {
+	//var apiData ApiInferface
+	var setupCommand jsonutil.SetupCommand
+
+	var returnMap map[string]json.RawMessage
+	var returnMap2 map[string]json.RawMessage
+	var secretMap map[string]string = make(map[string]string)
+
+	setupCommand.SetupParams.Apps = make([]string, 1)
+	setupCommand.SetupParams.Envs = make([]string, 1)
+	setupCommand.SetupParams.Apps[0] = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
+	setupCommand.SetupParams.Envs[0] = envFolder
+	setupCommand.SetupParams.DryRun = dryRun
+	setupCommand.SetupParams.Overrides = jsonutil.Overrides2map(overrideJson, overrideFiles)
+
+	setupCommand.Affiliation = affiliation
+
+	if envFolder != "" {
+		returnMap, error = jsonutil.JsonFolder2Map(folder, envFolder+"/")
+		if error != nil {
+			return
+		}
+	} else {
+		// Import all folders
+
+	}
+
+	returnMap2, error = jsonutil.JsonFolder2Map(parentFolder, "")
+	if error != nil {
+		return
+	}
+
+	setupCommand.AuroraConfig.Files = jsonutil.CombineJsonMaps(returnMap, returnMap2)
+	setupCommand.AuroraConfig.Secrets = secretMap
+
+	for fileKey := range setupCommand.AuroraConfig.Files {
+		secret, err := jsonutil.Json2secretFolder(setupCommand.AuroraConfig.Files[fileKey])
+		if err != nil {
+			return "", err
+		}
+		if secret != "" {
+			secretMap, err = jsonutil.SecretFolder2Map(secret)
+			if err != nil {
+				return "", err
+			}
+			setupCommand.AuroraConfig.Secrets = jsonutil.CombineTextMaps(setupCommand.AuroraConfig.Secrets, secretMap)
+		}
+	}
+
+	for overrideKey := range setupCommand.SetupParams.Overrides {
+		secret, err := jsonutil.Json2secretFolder(setupCommand.SetupParams.Overrides[overrideKey])
+		if err != nil {
+			return "", err
+		}
+		if secret != "" {
+			secretMap, err = jsonutil.SecretFolder2Map(secret)
+			if err != nil {
+				return "", err
+			}
+			setupCommand.AuroraConfig.Secrets = jsonutil.CombineTextMaps(setupCommand.AuroraConfig.Secrets, secretMap)
+		}
+	}
+
+	var jsonByte []byte
+
+	jsonByte, error = json.Marshal(setupCommand)
+	if !(error == nil) {
+		return "", errors.New(fmt.Sprintf("Internal error in marshalling SetupCommand: %v\n", error.Error()))
+	}
+
+	jsonStr = string(jsonByte)
 	return
 }

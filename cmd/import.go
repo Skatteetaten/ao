@@ -16,8 +16,7 @@ package cmd
 
 import (
 	"fmt"
-
-	"github.com/skatteetaten/aoc/pkg/setup"
+	"github.com/skatteetaten/aoc/pkg/importcmd"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
@@ -31,9 +30,8 @@ var importCmd = &cobra.Command{
 file merged with about.json in the same folder, and about.json and aos-features.json in the parent folder.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Work your own magic here
-		var setupObject setup.SetupClass
-		output, err := setupObject.ExecuteSetupImport(args,
-			nil, &persistentOptions, localDryRun, false)
+		var importObject importcmd.ImportClass
+		output, err := importObject.ExecuteImport(args, &persistentOptions, localDryRun)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())

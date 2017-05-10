@@ -13,7 +13,7 @@ type ConfigurationClass struct {
 	initDone        bool
 }
 
-func (configurationClass *ConfigurationClass) Init() (err error) {
+func (configurationClass *ConfigurationClass) init() (err error) {
 	if configurationClass.initDone {
 		return
 	}
@@ -36,11 +36,11 @@ func (configurationClass *ConfigurationClass) Init() (err error) {
 }
 
 func (ConfigurationClass *ConfigurationClass) GetOpenshiftConfig() *openshift.OpenshiftConfig {
-	ConfigurationClass.Init()
+	ConfigurationClass.init()
 	return ConfigurationClass.openshiftConfig
 }
 
 func (ConfigurationClass *ConfigurationClass) GetApiClusterIndex() int {
-	ConfigurationClass.Init()
+	ConfigurationClass.init()
 	return ConfigurationClass.apiClusterIndex
 }
