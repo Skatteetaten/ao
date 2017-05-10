@@ -22,8 +22,6 @@ import (
 	"os"
 )
 
-
-
 // setupCmd represents the setup command
 var setupCmd = &cobra.Command{
 	Use:   `setup folder | file [-f file 'JSON Configuration String']`,
