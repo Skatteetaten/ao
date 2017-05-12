@@ -16,46 +16,44 @@ package cmd
 
 import (
 	"fmt"
-
+	"github.com/skatteetaten/aoc/pkg/editcmd"
 	"github.com/spf13/cobra"
+	"log"
+	"os"
 )
 
-var version = "5"
-var buildstamp = ""
-var githash = ""
-var buildnumber = ""
-var branch = ""
-
-// versionCmd represents the version command
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Shows the version of the aoc client",
-	Long:  `Shows the version of the aoc client application`,
+// editCmd represents the edit command
+var editCmd = &cobra.Command{
+	Use:   "edit [env/]file",
+	Short: "Edit a single configuration file",
+	Long:  `Edit a single configuration file.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if buildnumber != "" {
-			version = version + "." + buildnumber
+		var editcmdObject editcmd.EditcmdClass
+		output, err := editcmdObject.EditFile(args)
+		if err != nil {
+			l := log.New(os.Stderr, "", 0)
+			l.Println(err.Error())
+			os.Exit(-1)
+		} else {
+			if output != "" {
+				fmt.Println(output)
+			}
 		}
-		fmt.Println("Aurora OC version " + version)
-		if githash != "" {
-			fmt.Println("Branch: " + branch + " (" + githash + ")")
-		}
-		if buildstamp != "" {
-			fmt.Println("Build Time: " + buildstamp)
-		}
+
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(versionCmd)
+	RootCmd.AddCommand(editCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// versionCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// editCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// versionCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// editCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 }

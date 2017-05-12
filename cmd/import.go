@@ -24,10 +24,9 @@ import (
 
 // importCmd represents the import command
 var importCmd = &cobra.Command{
-	Use:   "import folder | file",
+	Use:   "import <folder>",
 	Short: "Imports a set of configuration files to the central store.",
-	Long: `When used with a .json file as an argument, it will import the application referred to in the
-file merged with about.json in the same folder, and about.json and aos-features.json in the parent folder.`,
+	Long:  `Imports a set of configuration files to the central store..`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Work your own magic here
 		var importObject importcmd.ImportClass
@@ -58,4 +57,5 @@ func init() {
 	// importCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	importCmd.Flags().BoolVarP(&localDryRun, "localdryrun",
 		"z", false, "Does not initiate API, just prints collected files")
+	importCmd.Flags().MarkHidden("localdryrun")
 }

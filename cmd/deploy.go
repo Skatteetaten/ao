@@ -27,14 +27,19 @@ var envList []string
 
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
-	Use:   "deploy env [-a app]",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "deploy",
+	Short: "Deploy applications in the current affiliation",
+	Long: `Deploy applications in the current affiliation.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+A Deploy will compare the stored configuration with the running projects in OpenShift, and update the OpenShift
+environment to match the specifications in the stored configuration.
+
+If no changes is detected, no updates to OpenShift will be done (except for an update of the resourceVersion in the BuildConfig).
+
+As per default, all applications in all environments will be deployed.
+Using the -e flag, it is possible to limit the deploy to the specified environment.
+Using the -a flag, it is possible to limit the deploy to the specified application.
+Both flags can be uses to limit the deploy to a specific application in a specific environment.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var deployObject deploy.DeployClass
 
@@ -56,7 +61,7 @@ func init() {
 	RootCmd.AddCommand(deployCmd)
 
 	deployCmd.Flags().StringArrayVarP(&overrideFiles, "file",
-		"f", overrideValues, "File to override")
+		"f", overrideValues, "Override in the form [env/]file:{<json override>}")
 
 	deployCmd.Flags().BoolVarP(&localDryRun, "localdryrun",
 		"z", false, "Does not initiate API, just prints collected files")
