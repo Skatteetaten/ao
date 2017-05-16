@@ -7,7 +7,7 @@ import (
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
-	"github.com/skatteetaten/aoc/pkg/serverapi"
+	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
 )
 
 type DeployCommand struct {
@@ -43,7 +43,7 @@ func (deployClass *DeployClass) ExecuteDeploy(args []string, overrideFiles []str
 		return
 	}
 	deployClass.Init()
-	if !serverapi.ValidateLogin(deployClass.configuration.GetOpenshiftConfig()) {
+	if !serverapi_v2.ValidateLogin(deployClass.configuration.GetOpenshiftConfig()) {
 		return "", errors.New("Not logged in, please use aoc login")
 	}
 
@@ -59,7 +59,7 @@ func (deployClass *DeployClass) ExecuteDeploy(args []string, overrideFiles []str
 		if localDryRun {
 			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(json))), nil
 		} else {
-			output, err = serverapi.CallApi(apiEndpoint, json, persistentOptions.ShowConfig,
+			_, err = serverapi_v2.CallApi(apiEndpoint, json, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
 				persistentOptions.Verbose, deployClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug)
 			if err != nil {
