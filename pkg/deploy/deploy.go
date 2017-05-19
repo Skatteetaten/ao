@@ -7,7 +7,7 @@ import (
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
-	"github.com/skatteetaten/aoc/pkg/serverapi"
+	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
 )
 
 type DeployCommand struct {
@@ -43,7 +43,7 @@ func (deployClass *DeployClass) ExecuteDeploy(args []string, overrideFiles []str
 		return
 	}
 	deployClass.Init()
-	if !serverapi.ValidateLogin(deployClass.configuration.GetOpenshiftConfig()) {
+	if !serverapi_v2.ValidateLogin(deployClass.configuration.GetOpenshiftConfig()) {
 		return "", errors.New("Not logged in, please use aoc login")
 	}
 
@@ -53,18 +53,47 @@ func (deployClass *DeployClass) ExecuteDeploy(args []string, overrideFiles []str
 	json, error := generateJson(envList, applist, overrideJson, overrideFiles, affiliation, persistentOptions.DryRun)
 
 	var apiEndpoint string = "/affiliation/" + affiliation + "/deploy"
+	var responses map[string]string
+	var applicationResults []serverapi_v2.ApplicationResult
+
 	if error != nil {
 		return
 	} else {
 		if localDryRun {
 			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(json))), nil
 		} else {
-			output, err = serverapi.CallApi(apiEndpoint, json, persistentOptions.ShowConfig,
+			responses, err = serverapi_v2.CallApi(apiEndpoint, json, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
 				persistentOptions.Verbose, deployClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug)
 			if err != nil {
-				return "", err
+				for server := range responses {
+					response, err := serverapi_v2.ParseResponse(responses[server])
+					if err != nil {
+						return "", err
+					}
+					if !response.Success {
+						output, err = serverapi_v2.ResponsItems2MessageString(response)
+					}
+				}
+				return output, nil
 			}
+			for server := range responses {
+				response, err := serverapi_v2.ParseResponse(responses[server])
+				if err != nil {
+					return "", err
+				}
+				if response.Success {
+					applicationResults, err = serverapi_v2.ResponseItems2ApplicationResults(response)
+				}
+				for applicationResultIndex := range applicationResults {
+					out, err := serverapi_v2.ApplicationResult2MessageString(applicationResults[applicationResultIndex])
+					if err != nil {
+						return out, err
+					}
+					output += out
+				}
+			}
+
 		}
 	}
 
