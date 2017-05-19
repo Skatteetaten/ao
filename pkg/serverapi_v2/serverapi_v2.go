@@ -108,10 +108,10 @@ func ResponseItems2ApplicationResults(response Response) (applicationResults []A
 
 func ApplicationResult2MessageString(applicationResult ApplicationResult) (output string, err error) {
 
-	output += "\n" +
+	output +=
 		//applicationResult.ApplicationId.ApplicationName +
 		applicationResult.AuroraDc.GroupId + "/" + applicationResult.AuroraDc.ArtifactId + "-" + applicationResult.AuroraDc.Version +
-		" deployed in " + applicationResult.AuroraDc.Cluster + "/" + applicationResult.AuroraDc.EnvName
+			" deployed in " + applicationResult.AuroraDc.Cluster + "/" + applicationResult.AuroraDc.EnvName
 	return
 }
 
@@ -269,7 +269,7 @@ func callApiInstance(combindedJson string, verbose bool, url string, token strin
 	}
 
 	if verbose {
-		fmt.Print("OK")
+		fmt.Println("OK")
 	}
 	return
 }
