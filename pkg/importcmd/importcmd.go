@@ -9,6 +9,7 @@ import (
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/serverapi"
+	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
 	"io/ioutil"
 	"path/filepath"
 )
@@ -60,6 +61,7 @@ func (importClass *ImportClass) ExecuteImport(args []string,
 	var repo = args[0]
 
 	var absolutePath string
+	var responses map[string]string
 
 	absolutePath, _ = filepath.Abs(repo)
 
@@ -73,11 +75,20 @@ func (importClass *ImportClass) ExecuteImport(args []string,
 		if localDryRun {
 			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 		} else {
-			output, err = serverapi.CallApi(apiEndpoint, jsonStr, persistentOptions.ShowConfig,
+			responses, err = serverapi_v2.CallApi(apiEndpoint, jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
 				persistentOptions.Verbose, importClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug)
 			if err != nil {
-				return "", err
+				for server := range responses {
+					response, err := serverapi_v2.ParseResponse(responses[server])
+					if err != nil {
+						return "", err
+					}
+					if !response.Success {
+						output, err = serverapi_v2.ResponsItems2MessageString(response)
+					}
+				}
+				return output, nil
 			}
 		}
 	}
