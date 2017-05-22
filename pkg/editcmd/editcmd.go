@@ -67,10 +67,6 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 		}
 		modifiedContent = stripComments(modifiedContent)
 
-		/*if modifiedContent == content {
-			editCycleDone = true
-		}*/
-
 		if jsonutil.IsLegalJson(modifiedContent) {
 			validationMessages, err := editcmdClass.putContent(filename, modifiedContent, persistentOptions)
 			if err != nil {
@@ -213,20 +209,6 @@ func (editcmdClass *EditcmdClass) putContent(filename string, content string, pe
 }
 
 func editString(content string) (modifiedContent string, err error) {
-
-	/*const tmpFilePrefix = ".aoc_edit_file_"
-	var tmpDir = os.TempDir()
-	tmpFile, err := ioutil.TempFile(tmpDir, tmpFilePrefix)
-	if err != nil {
-		return "", errors.New("Unable to create temporary file: " + err.Error())
-	}
-	if fileutil.IsLegalFileFolder(tmpFile.Name()) != fileutil.SpecIsFile {
-		err = errors.New("Internal error: Illegal temp file name: " + tmpFile.Name())
-	}
-	err = ioutil.WriteFile(tmpFile.Name(), []byte(content), 0700)
-	if err != nil {
-		return
-	}*/
 
 	filename, err := createTempFile(content)
 
