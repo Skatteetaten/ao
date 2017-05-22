@@ -19,6 +19,11 @@ import (
 
 const invalidConfigurationError = "Invalid configuration"
 const commentString = "# "
+const editMessage = `# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+`
 
 type EditcmdClass struct {
 	configuration configuration.ConfigurationClass
@@ -210,7 +215,7 @@ func (editcmdClass *EditcmdClass) putContent(filename string, content string, pe
 
 func editString(content string) (modifiedContent string, err error) {
 
-	filename, err := createTempFile(content)
+	filename, err := createTempFile(editMessage + content)
 
 	fileutil.EditFile(filename)
 
