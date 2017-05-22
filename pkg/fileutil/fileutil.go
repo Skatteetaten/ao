@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -48,5 +49,23 @@ func ValidateFileFolderArg(args []string) (error error) {
 	if errorString != "" {
 		return errors.New(errorString)
 	}
+	return
+}
+
+func EditFile(filename string) (err error) {
+	const vi = "vim"
+	path, err := exec.LookPath(vi)
+	if err != nil {
+		return
+	}
+	cmd := exec.Command(path, filename)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Start()
+	if err != nil {
+		return
+	}
+	err = cmd.Wait()
 	return
 }

@@ -29,7 +29,7 @@ var editCmd = &cobra.Command{
 	Long:  `Edit a single configuration file.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var editcmdObject editcmd.EditcmdClass
-		output, err := editcmdObject.EditFile(args)
+		output, err := editcmdObject.EditFile(args, &persistentOptions)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())

@@ -8,6 +8,7 @@ import (
 	"github.com/skatteetaten/aoc/pkg/configuration"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
+	"net/http"
 )
 
 type DeployCommand struct {
@@ -62,7 +63,7 @@ func (deployClass *DeployClass) ExecuteDeploy(args []string, overrideFiles []str
 		if localDryRun {
 			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(json))), nil
 		} else {
-			responses, err = serverapi_v2.CallApi(apiEndpoint, json, persistentOptions.ShowConfig,
+			responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, json, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
 				persistentOptions.Verbose, deployClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug)
 			if err != nil {
