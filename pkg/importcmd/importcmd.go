@@ -11,6 +11,7 @@ import (
 	"github.com/skatteetaten/aoc/pkg/serverapi"
 	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
 	"io/ioutil"
+	"net/http"
 	"path/filepath"
 )
 
@@ -75,7 +76,7 @@ func (importClass *ImportClass) ExecuteImport(args []string,
 		if localDryRun {
 			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 		} else {
-			responses, err = serverapi_v2.CallApi(apiEndpoint, jsonStr, persistentOptions.ShowConfig,
+			responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
 				persistentOptions.Verbose, importClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug)
 			if err != nil {

@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/openshift"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -82,6 +84,11 @@ type ResponeItemError struct {
 	Messages      []string      `json:"messages"`
 }
 
+type AuroraConfig struct {
+	Files   map[string]json.RawMessage `json:"files"`
+	Secrets map[string]json.RawMessage `json:"secrets"`
+}
+
 const apiNotInstalledResponse = "Application is not available"
 const localhostAddress = "localhost"
 const localhostPort = "8080"
@@ -106,12 +113,24 @@ func ResponseItems2ApplicationResults(response Response) (applicationResults []A
 	return
 }
 
+func ResponseItems2AuroraConfig(response Response) (auroraConfig AuroraConfig, err error) {
+
+	if response.Count > 1 {
+		err = errors.New("Internal error: Multiple items not supported in AOC")
+		return
+	}
+	for item := range response.Items {
+		err = json.Unmarshal([]byte(response.Items[item]), &auroraConfig)
+	}
+	return
+}
+
 func ApplicationResult2MessageString(applicationResult ApplicationResult) (output string, err error) {
 
-	output += "\n" +
+	output +=
 		//applicationResult.ApplicationId.ApplicationName +
 		applicationResult.AuroraDc.GroupId + "/" + applicationResult.AuroraDc.ArtifactId + "-" + applicationResult.AuroraDc.Version +
-		" deployed in " + applicationResult.AuroraDc.Cluster + "/" + applicationResult.AuroraDc.EnvName
+			" deployed in " + applicationResult.AuroraDc.Cluster + "/" + applicationResult.AuroraDc.EnvName
 	return
 }
 
@@ -160,7 +179,7 @@ func GetApiSetupUrl(clusterName string, apiEndpont string, localhost bool, dryru
 	return GetApiAddress(clusterName, localhost) + apiEndpont
 }
 
-func CallApi(apiEndpoint string, combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
+func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
 	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool) (outputMap map[string]string, err error) {
 	//var openshiftConfig *openshift.OpenshiftConfig
 	var apiCluster *openshift.OpenshiftCluster
@@ -172,7 +191,7 @@ func CallApi(apiEndpoint string, combindedJson string, showConfig bool, showObje
 		if apiCluster != nil {
 			token = apiCluster.Token
 		}
-		output, err := callApiInstance(combindedJson, verbose,
+		output, err := callApiInstance(httpMethod, combindedJson, verbose,
 			GetApiSetupUrl(localhostAddress, apiEndpoint, localhost, dryRun), token, dryRun, debug)
 		outputMap[openshiftConfig.Clusters[0].Name] = output
 		if err != nil {
@@ -185,11 +204,11 @@ func CallApi(apiEndpoint string, combindedJson string, showConfig bool, showObje
 		for i := range openshiftConfig.Clusters {
 			if openshiftConfig.Clusters[i].Reachable {
 				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
-					output, err := callApiInstance(combindedJson, verbose,
+					output, err := callApiInstance(httpMethod, combindedJson, verbose,
 						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, apiEndpoint, localhost, dryRun),
 						openshiftConfig.Clusters[i].Token, dryRun, debug)
 					if output != "" {
-						//fmt.Println("Debug: Setting outputMap: " + openshiftConfig.Clusters[i].Name + ":" + output)
+						fmt.Println("Debug: Setting outputMap: " + openshiftConfig.Clusters[i].Name + ":" + output)
 						outputMap[openshiftConfig.Clusters[i].Name] = output
 
 						if err != nil {
@@ -202,13 +221,14 @@ func CallApi(apiEndpoint string, combindedJson string, showConfig bool, showObje
 		}
 		if errorString != "" {
 			err = errors.New(errorString)
+			fmt.Println("ERROR: " + errorString)
 			return
 		}
 	}
 	return
 }
 
-func callApiInstance(combindedJson string, verbose bool, url string, token string, dryRun bool, debug bool) (output string, err error) {
+func callApiInstance(httpMethod string, combindedJson string, verbose bool, url string, token string, dryRun bool, debug bool) (output string, err error) {
 
 	if verbose {
 		fmt.Print("Sending config to Boober at " + url + "... ")
@@ -216,7 +236,10 @@ func callApiInstance(combindedJson string, verbose bool, url string, token strin
 
 	var jsonStr = []byte(combindedJson)
 
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest(httpMethod, url, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		return
+	}
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Internal error in NewRequest: %v", err))
@@ -238,7 +261,12 @@ func callApiInstance(combindedJson string, verbose bool, url string, token strin
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	output = string(body)
-	//fmt.Println("Debug output: " + jsonutil.PrettyPrintJson(output))
+
+	if debug {
+		fmt.Println("Response status: " + strconv.Itoa(resp.StatusCode))
+		//fmt.Println(output)
+		fmt.Println(jsonutil.PrettyPrintJson(output))
+	}
 
 	if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusBadRequest) {
 
@@ -269,7 +297,8 @@ func callApiInstance(combindedJson string, verbose bool, url string, token strin
 	}
 
 	if verbose {
-		fmt.Print("OK")
+		fmt.Println("OK")
 	}
+
 	return
 }

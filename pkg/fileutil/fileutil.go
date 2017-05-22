@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -48,5 +49,28 @@ func ValidateFileFolderArg(args []string) (error error) {
 	if errorString != "" {
 		return errors.New(errorString)
 	}
+	return
+}
+
+func EditFile(filename string) (err error) {
+	const vi = "vim"
+	var editor = os.Getenv("EDITOR")
+	if editor == "" {
+		editor = vi
+	}
+	path, err := exec.LookPath(editor)
+	if err != nil {
+		return errors.New("ERROR: Editor \"" + editor + "\" specified in environment variable $EDITOR is not a valid program")
+	}
+
+	cmd := exec.Command(path, filename)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Start()
+	if err != nil {
+		return
+	}
+	err = cmd.Wait()
 	return
 }
