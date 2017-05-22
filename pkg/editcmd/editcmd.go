@@ -217,7 +217,10 @@ func editString(content string) (modifiedContent string, err error) {
 
 	filename, err := createTempFile(editMessage + content)
 
-	fileutil.EditFile(filename)
+	err = fileutil.EditFile(filename)
+	if err != nil {
+		return
+	}
 
 	fileText, err := ioutil.ReadFile(filename)
 	if err != nil {

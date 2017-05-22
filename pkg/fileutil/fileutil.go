@@ -54,10 +54,15 @@ func ValidateFileFolderArg(args []string) (error error) {
 
 func EditFile(filename string) (err error) {
 	const vi = "vim"
-	path, err := exec.LookPath(vi)
-	if err != nil {
-		return
+	var editor = os.Getenv("EDITOR")
+	if editor == "" {
+		editor = vi
 	}
+	path, err := exec.LookPath(editor)
+	if err != nil {
+		return errors.New("ERROR: Editor \"" + editor + "\" specified in environment variable $EDITOR is not a valid program")
+	}
+
 	cmd := exec.Command(path, filename)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
