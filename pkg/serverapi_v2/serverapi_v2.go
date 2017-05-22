@@ -261,7 +261,6 @@ func callApiInstance(httpMethod string, combindedJson string, verbose bool, url 
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	output = string(body)
-	//fmt.Println("Debug output: " + jsonutil.PrettyPrintJson(output))
 
 	if debug {
 		fmt.Println("Response status: " + strconv.Itoa(resp.StatusCode))
