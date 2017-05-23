@@ -24,6 +24,7 @@ import (
 
 var appList []string
 var envList []string
+var overrideJson []string
 
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
@@ -44,7 +45,7 @@ Both flags can be uses to limit the deploy to a specific application in a specif
 		var deployObject deploy.DeployClass
 
 		deployObject.Init()
-		output, err := deployObject.ExecuteDeploy(args, overrideFiles, appList, envList, &persistentOptions, localDryRun)
+		output, err := deployObject.ExecuteDeploy(args, overrideJson, appList, envList, &persistentOptions, localDryRun)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -60,8 +61,8 @@ Both flags can be uses to limit the deploy to a specific application in a specif
 func init() {
 	RootCmd.AddCommand(deployCmd)
 
-	deployCmd.Flags().StringArrayVarP(&overrideFiles, "file",
-		"f", overrideValues, "Override in the form [env/]file:{<json override>}")
+	deployCmd.Flags().StringArrayVarP(&overrideJson, "file",
+		"o", overrideValues, "Override in the form [env/]file:{<json override>}")
 
 	deployCmd.Flags().BoolVarP(&localDryRun, "localdryrun",
 		"z", false, "Does not initiate API, just prints collected files")

@@ -36,7 +36,7 @@ func (deployClass *DeployClass) getAffiliation() (affiliation string) {
 	return
 }
 
-func (deployClass *DeployClass) ExecuteDeploy(args []string, overrideFiles []string, applist []string, envList []string,
+func (deployClass *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, applist []string, envList []string,
 	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool) (output string, err error) {
 
 	error := validateDeploy(args)
@@ -48,11 +48,11 @@ func (deployClass *DeployClass) ExecuteDeploy(args []string, overrideFiles []str
 		return "", errors.New("Not logged in, please use aoc login")
 	}
 
-	var overrideJson []string // = args[1:]
-
 	var affiliation = deployClass.getAffiliation()
-	json, error := generateJson(envList, applist, overrideJson, overrideFiles, affiliation, persistentOptions.DryRun)
-
+	json, err := generateJson(envList, applist, overrideJsons, affiliation, persistentOptions.DryRun)
+	if err != nil {
+		return "", err
+	}
 	var apiEndpoint string = "/affiliation/" + affiliation + "/deploy"
 	var responses map[string]string
 	var applicationResults []serverapi_v2.ApplicationResult
@@ -109,8 +109,8 @@ func validateDeploy(args []string) (error error) {
 	return
 }
 
-func generateJson(envList []string, appList []string, overrideJson []string,
-	overrideFiles []string, affiliation string, dryRun bool) (jsonStr string, error error) {
+func generateJson(envList []string, appList []string, overrideJsons []string,
+	affiliation string, dryRun bool) (jsonStr string, err error) {
 	//var apiData ApiInferface
 	var setupCommand DeployCommand
 
@@ -126,15 +126,17 @@ func generateJson(envList []string, appList []string, overrideJson []string,
 	}
 
 	setupCommand.SetupParams.DryRun = dryRun
-	//setupCommand.SetupParams.Overrides = jsonutil.Overrides2map(overrideJson, overrideFiles)
-	setupCommand.SetupParams.Overrides = make(map[string]json.RawMessage, 0)
+	setupCommand.SetupParams.Overrides, err = jsonutil.OverrideJsons2map(overrideJsons)
+	if err != nil {
+		return "", err
+	}
 	setupCommand.Affiliation = affiliation
 
 	var jsonByte []byte
 
-	jsonByte, error = json.Marshal(setupCommand)
-	if !(error == nil) {
-		return "", errors.New(fmt.Sprintf("Internal error in marshalling SetupCommand: %v\n", error.Error()))
+	jsonByte, err = json.Marshal(setupCommand)
+	if !(err == nil) {
+		return "", errors.New(fmt.Sprintf("Internal error in marshalling SetupCommand: %v\n", err.Error()))
 	}
 
 	jsonStr = string(jsonByte)

@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -44,6 +45,9 @@ type SetupCommand struct {
 	SetupParams  SetupParamsPayload  `json:"setupParams"`
 }
 
+type OverrideJson struct {
+	Override map[string]json.RawMessage `json:"override"`
+}
 
 // Search a json string for a secretFolder attribute
 func Json2secretFolder(jsonMessage json.RawMessage) (string, error) {
@@ -64,6 +68,33 @@ func Overrides2map(overrideJson []string, overrideFiles []string) (returnMap map
 		returnMap[overrideFiles[i]] = json.RawMessage(overrideJson[i])
 	}
 	return
+}
+
+func OverrideJsons2map(OverrideJsons []string) (returnMap map[string]json.RawMessage, err error) {
+	returnMap = make(map[string]json.RawMessage)
+
+	for i := 0; i < len(OverrideJsons); i++ {
+		fmt.Println("DEBUG: Override: " + OverrideJsons[i])
+
+		/*overrideParts := strings.SplitN(OverrideJsons[i], ":", 2)
+		for foo := range overrideParts {
+			fmt.Println("  DEBUG: Part: " + overrideParts[foo])
+		}
+		if len(overrideParts) < 2 {
+			err = errors.New("Illegal override")
+			return nil, err
+		}
+		filename := overrideParts[0]
+		jsonOverride := overrideParts[1]*/
+		indexByte := strings.IndexByte(OverrideJsons[i], ':')
+		fmt.Println("  IndexByte: " + strconv.Itoa(indexByte))
+		filename := OverrideJsons[i][:indexByte]
+		fmt.Println("  Filename: " + filename)
+		jsonOverride := OverrideJsons[i][indexByte+1:]
+		fmt.Println("  JSON: " + jsonOverride)
+		returnMap[filename] = json.RawMessage(jsonOverride)
+	}
+	return returnMap, err
 }
 
 func JsonFolder2Map(folder string, prefix string) (map[string]json.RawMessage, error) {
@@ -207,7 +238,6 @@ func StripSpaces(str string) string {
 
 func ValidateOverrides(args []string, overrideFiles []string) (error error) {
 	var errorString = ""
-
 
 	// We have at least one argument, now there should be a correlation between the number of args
 	// and the number of override (-f) flags
