@@ -59,8 +59,8 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 		if err != nil {
 			return "", err
 		}
-		if (modifiedContent == contentBeforeEdit) || stripComments(modifiedContent) == content {
-			if stripComments(modifiedContent) != content {
+		if (stripComments(modifiedContent) == stripComments(contentBeforeEdit)) || stripComments(modifiedContent) == stripComments(content) {
+			if stripComments(modifiedContent) != stripComments(content) {
 				tempfile, err := createTempFile(stripComments(modifiedContent))
 				if err != nil {
 					return "", nil
