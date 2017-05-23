@@ -24,7 +24,7 @@ import (
 
 // getCmd represents the get command
 var getCmd = &cobra.Command{
-	Use:   "Usage: aoc get files | file [env/]<filename> | adc",
+	Use:   "get files | file [env/]<filename> | adc",
 	Short: "Retrieves information from the repository",
 	Long:  `Can be uses to retrieve one file or all the files from the respository.`,
 	Run: func(cmd *cobra.Command, args []string) {

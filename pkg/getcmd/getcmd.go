@@ -22,11 +22,41 @@ func (getcmdClass *GetcmdClass) getAffiliation() (affiliation string) {
 	return
 }
 
+func (getcmdClass *GetcmdClass) getFiles(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+
+	return
+}
+
+func (getcmdClass *GetcmdClass) getFile(filename string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+	return
+}
+
+func (getcmdClass *GetcmdClass) getAdc(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+	return
+}
+
 func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 	err = validateEditcmd(args)
 	if err != nil {
 		return
 	}
+
+	var commandStr = args[0]
+	switch commandStr {
+	case "files":
+		{
+			output, err = getcmdClass.getFiles(persistentOptions)
+		}
+	case "file":
+		{
+			output, err = getcmdClass.getFile(args[0], persistentOptions)
+		}
+	case "adc":
+		{
+			output, err = getcmdClass.getAdc(persistentOptions)
+		}
+	}
+
 	return
 }
 

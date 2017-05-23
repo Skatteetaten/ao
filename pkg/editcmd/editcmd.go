@@ -4,20 +4,20 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/skatteetaten/aoc/pkg/auroraconfig"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/serverapi"
-	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
+	//"github.com/skatteetaten/aoc/pkg/serverapi_v2"
 	"io/ioutil"
-	"net/http"
+	//"net/http"
 	"os"
-	"strconv"
+	//"strconv"
 	"strings"
 )
 
-const invalidConfigurationError = "Invalid configuration"
 const commentString = "# "
 const editMessage = `# Please edit the object below. Lines beginning with a '#' will be ignored,
 # and an empty file will abort the edit. If an error occurs while saving this file will be
@@ -48,7 +48,7 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 	var filename string = args[0]
 	var content string
 
-	content, err = editcmdClass.getContent(filename, persistentOptions)
+	content, err = auroraconfig.GetContent(filename, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
 	content = jsonutil.PrettyPrintJson(content)
 
 	var editCycleDone bool
@@ -73,9 +73,9 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 		modifiedContent = stripComments(modifiedContent)
 
 		if jsonutil.IsLegalJson(modifiedContent) {
-			validationMessages, err := editcmdClass.putContent(filename, modifiedContent, persistentOptions)
+			validationMessages, err := auroraconfig.PutContent(filename, modifiedContent, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
 			if err != nil {
-				if err.Error() == invalidConfigurationError {
+				if err.Error() == auroraconfig.InvalidConfigurationError {
 					modifiedContent, _ = addComments(modifiedContent, validationMessages)
 				} else {
 					editCycleDone = true
@@ -134,7 +134,7 @@ func contentToLines(content string) (contentLines []string, err error) {
 	return
 }
 
-func (editcmdClass *EditcmdClass) getContent(filename string, persistentOptions *cmdoptions.CommonCommandOptions) (content string, err error) {
+/*func (editcmdClass *EditcmdClass) getContent(filename string, persistentOptions *cmdoptions.CommonCommandOptions) (content string, err error) {
 	var affiliation = editcmdClass.getAffiliation()
 	var apiEndpoint string = "/affiliation/" + affiliation + "/auroraconfig"
 	var responses map[string]string
@@ -205,13 +205,13 @@ func (editcmdClass *EditcmdClass) putContent(filename string, content string, pe
 			}
 			if !response.Success {
 				validationMessages, _ := serverapi_v2.ResponsItems2MessageString(response)
-				return validationMessages, errors.New(invalidConfigurationError)
+				return validationMessages, errors.New(auroraconfig.InvalidConfigurationError)
 			}
 		}
 
 	}
 	return
-}
+}*/
 
 func editString(content string) (modifiedContent string, err error) {
 
