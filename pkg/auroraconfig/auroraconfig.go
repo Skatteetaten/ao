@@ -31,6 +31,20 @@ func GetContent(filename string, persistentOptions *cmdoptions.CommonCommandOpti
 
 }
 
+func GetAllContent(outputFile string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (output string, err error) {
+	auroraConfig, err := GetAuroraConfig(persistentOptions, affiliation, openshiftConfig)
+	if err != nil {
+		return
+	}
+	var content string
+	for filename := range auroraConfig.Files {
+		content = string(auroraConfig.Files[filename])
+		output += filename + ":\n" + content
+	}
+	return output, err
+
+}
+
 func GetFileList(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (filenames []string, err error) {
 	auroraConfig, err := GetAuroraConfig(persistentOptions, affiliation, openshiftConfig)
 	if err != nil {
