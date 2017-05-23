@@ -11,6 +11,57 @@ import (
 
 const InvalidConfigurationError = "Invalid configuration"
 
+func GetFileList(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (filenames []string, err error) {
+	var apiEndpoint string = "/affiliation/" + affiliation + "/auroraconfig"
+	var responses map[string]string
+	var auroraConfig serverapi_v2.AuroraConfig
+
+	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", persistentOptions.ShowConfig,
+		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
+		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug)
+	if err != nil {
+		for server := range responses {
+			response, err := serverapi_v2.ParseResponse(responses[server])
+			if err != nil {
+				return nil, err
+			}
+			if !response.Success {
+				output, err := serverapi_v2.ResponsItems2MessageString(response)
+				if err != nil {
+					return nil, err
+				}
+				return nil, errors.New(output)
+
+			}
+		}
+
+		return nil, err
+	}
+
+	if len(responses) != 1 {
+		err = errors.New("Internal error in GetFileList: Response from " + strconv.Itoa(len(responses)))
+		return
+	}
+
+	for server := range responses {
+		response, err := serverapi_v2.ParseResponse(responses[server])
+		if err != nil {
+			return nil, err
+		}
+		auroraConfig, err = serverapi_v2.ResponseItems2AuroraConfig(response)
+		filenames = make([]string, len(auroraConfig.Files))
+
+		var filenameIndex = 0
+		for filename := range auroraConfig.Files {
+			filenames[filenameIndex] = filename
+			filenameIndex++
+		}
+
+	}
+
+	return filenames, nil
+}
+
 func GetContent(filename string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (content string, err error) {
 	var apiEndpoint string = "/affiliation/" + affiliation + "/auroraconfig"
 	var responses map[string]string
@@ -39,7 +90,7 @@ func GetContent(filename string, persistentOptions *cmdoptions.CommonCommandOpti
 	}
 
 	if len(responses) != 1 {
-		err = errors.New("Internal error in getContent: Response from " + strconv.Itoa(len(responses)))
+		err = errors.New("Internal error in GetContent: Response from " + strconv.Itoa(len(responses)))
 		return
 	}
 

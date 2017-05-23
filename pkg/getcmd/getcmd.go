@@ -2,8 +2,10 @@ package getcmd
 
 import (
 	"errors"
+	"github.com/skatteetaten/aoc/pkg/auroraconfig"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
+	"github.com/skatteetaten/aoc/pkg/jsonutil"
 )
 
 const UsageString = "Usage: aoc get files | file [env/]<filename> | adc"
@@ -23,11 +25,24 @@ func (getcmdClass *GetcmdClass) getAffiliation() (affiliation string) {
 }
 
 func (getcmdClass *GetcmdClass) getFiles(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+	var files []string
+	files, err = auroraconfig.GetFileList(persistentOptions, getcmdClass.getAffiliation(), getcmdClass.configuration.GetOpenshiftConfig())
 
+	output = "NAME"
+	for fileindex := range files {
+		output += "\n" + files[fileindex]
+	}
 	return
 }
 
 func (getcmdClass *GetcmdClass) getFile(filename string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+	content, err := auroraconfig.GetContent(filename, persistentOptions, getcmdClass.getAffiliation(), getcmdClass.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return
+	}
+
+	output = jsonutil.PrettyPrintJson(content)
+
 	return
 }
 
@@ -49,7 +64,7 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 		}
 	case "file":
 		{
-			output, err = getcmdClass.getFile(args[0], persistentOptions)
+			output, err = getcmdClass.getFile(args[1], persistentOptions)
 		}
 	case "adc":
 		{
