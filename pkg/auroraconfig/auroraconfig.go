@@ -1,8 +1,11 @@
 package auroraconfig
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
+	"github.com/skatteetaten/aoc/pkg/fileutil"
+	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/openshift"
 	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
 	"net/http"
@@ -31,16 +34,30 @@ func GetContent(filename string, persistentOptions *cmdoptions.CommonCommandOpti
 
 }
 
-func GetAllContent(outputFile string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (output string, err error) {
+func GetAllContent(outputFolder string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (output string, err error) {
 	auroraConfig, err := GetAuroraConfig(persistentOptions, affiliation, openshiftConfig)
 	if err != nil {
 		return
 	}
-	var content string
-	for filename := range auroraConfig.Files {
-		content = string(auroraConfig.Files[filename])
-		output += filename + ":\n" + content
+
+	if outputFolder != "" {
+		if fileutil.IsLegalFileFolder(outputFolder) == fileutil.SpecIllegal {
+			err = errors.New("Illegal file/folder")
+			return "", err
+
+		}
+		var content string
+		for filename := range auroraConfig.Files {
+			content = jsonutil.PrettyPrintJson(string(auroraConfig.Files[filename]))
+			err = fileutil.WriteFile(outputFolder, filename, content)
+			if err != nil {
+				return "", err
+			}
+		}
 	}
+
+	outputBytes, err := json.Marshal(auroraConfig)
+	output = jsonutil.PrettyPrintJson(string(outputBytes))
 	return output, err
 
 }

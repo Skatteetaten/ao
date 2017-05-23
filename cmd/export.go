@@ -22,6 +22,8 @@ import (
 	"os"
 )
 
+var outputFolder string
+
 // exportCmd represents the export command
 var exportCmd = &cobra.Command{
 	Use:   "export",
@@ -34,7 +36,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var exportcmdObject exportcmd.ExportcmdClass
-		output, err := exportcmdObject.ExportObject(args, &persistentOptions, outputFormat)
+		output, err := exportcmdObject.ExportObject(args, &persistentOptions, outputFormat, outputFolder)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -59,4 +61,10 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// exportCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	exportCmd.Flags().StringVarP(&outputFormat, "output",
+		"o", "", "Output format. One of: json|yaml")
+
+	exportCmd.Flags().StringVarP(&outputFolder, "output-folder",
+		"f", "", "Folder to write the export files to")
 }

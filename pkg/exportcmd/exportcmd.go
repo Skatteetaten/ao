@@ -25,7 +25,7 @@ func (exportcmdClass *ExportcmdClass) getAffiliation() (affiliation string) {
 	return
 }
 
-func (exportcmdClass *ExportcmdClass) exportFiles(outputFoldername string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (exportcmdClass *ExportcmdClass) exportFiles(outputFoldername string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
 
 	output, err = auroraconfig.GetAllContent(outputFoldername, persistentOptions, exportcmdClass.getAffiliation(), exportcmdClass.configuration.GetOpenshiftConfig())
 	if err != nil {
@@ -47,24 +47,7 @@ func (exportcmdClass *ExportcmdClass) exportFile(filename string, persistentOpti
 			output = jsonutil.PrettyPrintJson(content)
 			return output, err
 		}
-	case "":
-		{
-			var files []string
-			files, err = auroraconfig.GetFileList(persistentOptions, exportcmdClass.getAffiliation(), exportcmdClass.configuration.GetOpenshiftConfig())
-			output = "NAME"
-			var fileFound bool
-			for fileindex := range files {
-				if files[fileindex] == filename {
-					output += "\n" + files[fileindex]
-					fileFound = true
-				}
-			}
-			if !fileFound {
-				err = errors.New("Error: file \"" + filename + "\" not found")
-				return "", err
-			}
-			return output, nil
-		}
+
 	case "yaml":
 		{
 			err = errors.New(notYetImplemented)
@@ -84,17 +67,21 @@ func (exportcmdClass *ExportcmdClass) getAdc(persistentOptions *cmdoptions.Commo
 	return
 }
 
-func (exportcmdClass *ExportcmdClass) ExportObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+func (exportcmdClass *ExportcmdClass) ExportObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string, outputFolder string) (output string, err error) {
 	err = validateExportcmd(args)
 	if err != nil {
 		return
 	}
 
 	var commandStr = args[0]
+	if outputFormat == "" {
+		outputFormat = "json"
+	}
+
 	switch commandStr {
 	case "files":
 		{
-			output, err = exportcmdClass.exportFiles("", persistentOptions)
+			output, err = exportcmdClass.exportFiles(outputFolder, persistentOptions, outputFormat)
 		}
 	case "file":
 		{

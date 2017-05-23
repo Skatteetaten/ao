@@ -3,6 +3,7 @@ package fileutil
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -72,5 +73,27 @@ func EditFile(filename string) (err error) {
 		return
 	}
 	err = cmd.Wait()
+	return
+}
+
+func WriteFile(folder string, filename string, content string) (err error) {
+	if IsLegalFileFolder(folder) != SpecIsFolder {
+		err = errors.New("Illegal folder")
+		return err
+	}
+
+	absolutePath := filepath.Join(folder, filename)
+	parentFolder := filepath.Dir(absolutePath)
+	if IsLegalFileFolder(parentFolder) != SpecIsFolder {
+		err = os.MkdirAll(parentFolder, 0755)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = ioutil.WriteFile(absolutePath, []byte(content), 0750)
+	if err != nil {
+		return err
+	}
 	return
 }
