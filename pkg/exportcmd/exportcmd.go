@@ -31,7 +31,9 @@ func (exportcmdClass *ExportcmdClass) exportFiles(outputFoldername string, persi
 	if err != nil {
 		return
 	}
-
+	if outputFoldername != "" {
+		output = "Files are exported to " + outputFoldername
+	}
 	return output, err
 }
 
