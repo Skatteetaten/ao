@@ -74,24 +74,9 @@ func OverrideJsons2map(OverrideJsons []string) (returnMap map[string]json.RawMes
 	returnMap = make(map[string]json.RawMessage)
 
 	for i := 0; i < len(OverrideJsons); i++ {
-		fmt.Println("DEBUG: Override: " + OverrideJsons[i])
-
-		/*overrideParts := strings.SplitN(OverrideJsons[i], ":", 2)
-		for foo := range overrideParts {
-			fmt.Println("  DEBUG: Part: " + overrideParts[foo])
-		}
-		if len(overrideParts) < 2 {
-			err = errors.New("Illegal override")
-			return nil, err
-		}
-		filename := overrideParts[0]
-		jsonOverride := overrideParts[1]*/
 		indexByte := strings.IndexByte(OverrideJsons[i], ':')
-		fmt.Println("  IndexByte: " + strconv.Itoa(indexByte))
 		filename := OverrideJsons[i][:indexByte]
-		fmt.Println("  Filename: " + filename)
 		jsonOverride := OverrideJsons[i][indexByte+1:]
-		fmt.Println("  JSON: " + jsonOverride)
 		returnMap[filename] = json.RawMessage(jsonOverride)
 	}
 	return returnMap, err
