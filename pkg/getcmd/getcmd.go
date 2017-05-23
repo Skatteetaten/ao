@@ -47,6 +47,7 @@ func (getcmdClass *GetcmdClass) getFile(filename string, persistentOptions *cmdo
 }
 
 func (getcmdClass *GetcmdClass) getAdc(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+	output += "Not supported yet"
 	return
 }
 
