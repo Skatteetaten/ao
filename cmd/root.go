@@ -70,7 +70,7 @@ func init() {
 		"s", false, "Print merged config from Boober to standard out")
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowObjects, "showobjects",
-		"o", false, "Print object definitions from Boober to standard out")
+		"", false, "Print object definitions from Boober to standard out")
 	// test
 
 }

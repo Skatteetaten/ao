@@ -22,6 +22,8 @@ import (
 	"os"
 )
 
+var outputFormat string
+
 // getCmd represents the get command
 var getCmd = &cobra.Command{
 	Use:   "get files | file [env/]<filename> | adc",
@@ -29,7 +31,7 @@ var getCmd = &cobra.Command{
 	Long:  `Can be uses to retrieve one file or all the files from the respository.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var getcmdObject getcmd.GetcmdClass
-		output, err := getcmdObject.GetObject(args, &persistentOptions)
+		output, err := getcmdObject.GetObject(args, &persistentOptions, outputFormat)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -54,5 +56,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// getCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
+	getCmd.Flags().StringVarP(&outputFormat, "output",
+		"o", "", "Output format. One of: json|yaml")
 }

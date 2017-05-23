@@ -12,6 +12,7 @@ const UsageString = "Usage: aoc get files | file [env/]<filename> | adc"
 const filesUsageString = "Usage: aoc get files"
 const fileUseageString = "Usage: aoc get file [env/]<filename>"
 const adcUsageString = "Usage: aoc get adc"
+const notYetImplemented = "Not supported yet"
 
 type GetcmdClass struct {
 	configuration configuration.ConfigurationClass
@@ -35,23 +36,56 @@ func (getcmdClass *GetcmdClass) getFiles(persistentOptions *cmdoptions.CommonCom
 	return
 }
 
-func (getcmdClass *GetcmdClass) getFile(filename string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
-	content, err := auroraconfig.GetContent(filename, persistentOptions, getcmdClass.getAffiliation(), getcmdClass.configuration.GetOpenshiftConfig())
-	if err != nil {
-		return
-	}
+func (getcmdClass *GetcmdClass) getFile(filename string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
 
-	output = jsonutil.PrettyPrintJson(content)
+	switch outputFormat {
+	case "json":
+		{
+			content, err := auroraconfig.GetContent(filename, persistentOptions, getcmdClass.getAffiliation(), getcmdClass.configuration.GetOpenshiftConfig())
+			if err != nil {
+				return "", err
+			}
+			output = jsonutil.PrettyPrintJson(content)
+			return output, err
+		}
+	case "":
+		{
+			var files []string
+			files, err = auroraconfig.GetFileList(persistentOptions, getcmdClass.getAffiliation(), getcmdClass.configuration.GetOpenshiftConfig())
+			output = "NAME"
+			var fileFound bool
+			for fileindex := range files {
+				if files[fileindex] == filename {
+					output += "\n" + files[fileindex]
+					fileFound = true
+				}
+			}
+			if !fileFound {
+				err = errors.New("Error: file \"" + filename + "\" not found")
+				return "", err
+			}
+			return output, nil
+		}
+	case "yaml":
+		{
+			err = errors.New(notYetImplemented)
+			return "", err
+		}
+	default:
+		{
+			err = errors.New("Illegal format.  Legal values are json, yaml.")
+		}
+	}
 
 	return
 }
 
 func (getcmdClass *GetcmdClass) getAdc(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
-	output += "Not supported yet"
+	output += notYetImplemented
 	return
 }
 
-func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
 	err = validateEditcmd(args)
 	if err != nil {
 		return
@@ -65,7 +99,7 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 		}
 	case "file":
 		{
-			output, err = getcmdClass.getFile(args[1], persistentOptions)
+			output, err = getcmdClass.getFile(args[1], persistentOptions, outputFormat)
 		}
 	case "adc":
 		{
