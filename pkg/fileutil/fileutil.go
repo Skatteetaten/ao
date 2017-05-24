@@ -97,3 +97,21 @@ func WriteFile(folder string, filename string, content string) (err error) {
 	}
 	return
 }
+
+func repeatString(str string, n int) (output string) {
+	for i := 0; i < n; i++ {
+		output += str
+	}
+	return
+}
+
+func RightPad(str string, length int) (output string) {
+	const pad = " "
+	if len(str) >= length {
+		output = str[:length]
+	} else {
+		output = str + repeatString(pad, length-len(str))
+	}
+
+	return
+}

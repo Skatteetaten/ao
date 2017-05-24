@@ -2,10 +2,10 @@ package getcmd
 
 import (
 	"errors"
-	"fmt"
 	"github.com/skatteetaten/aoc/pkg/auroraconfig"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
+	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 )
 
@@ -86,26 +86,29 @@ func (getcmdClass *GetcmdClass) getAdc(persistentOptions *cmdoptions.CommonComma
 	return
 }
 
-func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.CommonCommandOptions, allClusters bool) (output string, err error) {
-	var clusterName string
-	const tab = "\t"
+func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.CommonCommandOptions, clusterName string, allClusters bool) (output string, err error) {
+	var displayClusterName string
+	const tab = " "
 
 	openshiftConfig := getcmdClass.configuration.GetOpenshiftConfig()
-	output = "CLUSTER NAME\tREACHABLE\tAPI\tURL"
+	output = "CLUSTER NAME         REACHABLE  API  URL"
 	for i := range openshiftConfig.Clusters {
 		if openshiftConfig.Clusters[i].Reachable || allClusters {
-			clusterName = openshiftConfig.Clusters[i].Name
-			var apiColumn = "  "
-			if clusterName == openshiftConfig.APICluster {
-				apiColumn = "* "
+			displayClusterName = openshiftConfig.Clusters[i].Name
+			if displayClusterName == clusterName || clusterName == "" {
+				var apiColumn = fileutil.RightPad("", 4)
+				if clusterName == openshiftConfig.APICluster {
+					apiColumn = fileutil.RightPad("Yes", 4)
+				}
+				var reachableColumn = fileutil.RightPad("", 10)
+				if openshiftConfig.Clusters[i].Reachable {
+					reachableColumn = fileutil.RightPad("Yes", 10)
+				}
+				var urlColumn = ""
+				displayClusterName = fileutil.RightPad(displayClusterName, 20)
+				urlColumn = openshiftConfig.Clusters[i].Url
+				output += "\n" + displayClusterName + tab + reachableColumn + tab + apiColumn + tab + urlColumn
 			}
-			var reachableColumn = "         "
-			if openshiftConfig.Clusters[i].Reachable {
-				reachableColumn = "Yes      "
-			}
-			var urlColumn = ""
-			urlColumn = openshiftConfig.Clusters[i].Url
-			fmt.Println(clusterName + tab + reachableColumn + tab + apiColumn + tab + urlColumn)
 		}
 
 	}
@@ -135,7 +138,11 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 		}
 	case "cluster", "clusters":
 		{
-			output, err = getcmdClass.getClusters(persistentOptions, allClusters)
+			var clusterName = ""
+			if len(args) > 1 {
+				clusterName = args[1]
+			}
+			output, err = getcmdClass.getClusters(persistentOptions, clusterName, allClusters)
 		}
 	}
 

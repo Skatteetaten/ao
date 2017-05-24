@@ -1,10 +1,9 @@
 package pingcmd
 
 import (
-	"github.com/skatteetaten/aoc/pkg/configuration"
-
 	"errors"
 	"fmt"
+	"github.com/skatteetaten/aoc/pkg/configuration"
 )
 
 const usageString = "Usage: aoc ping <address> -p <port> -c <cluster>"
@@ -19,11 +18,9 @@ func (pingcmdClass *PingcmdClass) PingAddress(args []string, pingPort string, pi
 		return
 	}
 
-	var clusterName string
 	openshiftConfig := pingcmdClass.configuration.GetOpenshiftConfig()
 	apiCluster := openshiftConfig.APICluster
-
-
+	fmt.Println("Ping: " + apiCluster)
 	return
 }
 
