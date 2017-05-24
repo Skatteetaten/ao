@@ -29,17 +29,6 @@ type OpenShiftResponse struct {
 	ResponseBody json.RawMessage `json:"responseBody"`
 }
 
-/*type AuroraDc struct {
-	Affiliation          string `json:"affiliation"`
-	EnvName              string `json:"envName"`
-	Cluster              string `json:"cluster"`
-	DeploymentDescriptor struct {
-		ArtifactId string `json:"artifactId"`
-		GroupId    string `json:"groupId"`
-		Version    string `json:"version"`
-	} `json:"deployDescriptor"`
-}*/
-
 type DeploymentDescriptor struct {
 	TemplateFile string            `json:"templateFile"`
 	Template     string            `json:"template"`
@@ -170,6 +159,59 @@ func GetApiAddress(clusterName string, localhost bool) (apiAddress string) {
 	} else {
 		apiAddress = "http://boober-aos-bas-dev." + clusterName + ".paas.skead.no"
 	}
+	return
+}
+
+func getConsoleAddress(clusterName string) (consoleAddress string) {
+	consoleAddress = "http://console-aurora." + clusterName + ".paas.skead.no"
+	return
+}
+
+func CallConsole(apiEndpoint string, arguments string, verbose bool, debug bool, openshiftConfig *openshift.OpenshiftConfig) (result json.RawMessage, err error) {
+	apiCluster, err := openshiftConfig.GetApiCluster()
+	consoleAddress := getConsoleAddress(apiCluster.Name)
+	token := apiCluster.Token
+
+	url := consoleAddress + "/api/" + apiEndpoint
+	if arguments != "" {
+		url += "?" + arguments
+	}
+	if verbose {
+		fmt.Print("Sending request to Console at " + url + "...")
+	}
+	req, err := http.NewRequest(http.MethodPut, url, nil)
+	if err != nil {
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		if verbose {
+			fmt.Println("FAIL.  Error connecting to Boober service")
+		}
+		err = errors.New(fmt.Sprintf("Error connecting to the Console service on %v: %v", url, err))
+		return
+	}
+
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	output := string(body)
+
+	if verbose {
+		fmt.Println("OK")
+		fmt.Println("Response status: " + strconv.Itoa(resp.StatusCode))
+	}
+
+	if debug {
+
+		fmt.Println(output)
+		//fmt.Println(jsonutil.PrettyPrintJson(output))
+	}
+	result = json.RawMessage(output)
 	return
 }
 
