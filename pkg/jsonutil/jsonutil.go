@@ -16,16 +16,6 @@ import (
 
 const maxSecretFileSize int64 = 10 * 1024
 
-// Struct to represent data to the Boober interface
-/*type ApiInferface struct {
-	Envs        []string                   `json:"envs"`
-	Apps        []string                   `json:"apps"`
-	Affiliation string                     `json:"affiliation"`
-	Files       map[string]json.RawMessage `json:"files"`
-	Overrides   map[string]json.RawMessage `json:"overrides"`
-	SecretFiles map[string]string          `json:"secretFiles"`
-}*/
-
 type AuroraConfigPayload struct {
 	Files   map[string]json.RawMessage `json:"files"`
 	Secrets map[string]string          `json:"secrets"`

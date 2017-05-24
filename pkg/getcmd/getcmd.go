@@ -2,6 +2,7 @@ package getcmd
 
 import (
 	"errors"
+	"fmt"
 	"github.com/skatteetaten/aoc/pkg/auroraconfig"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
@@ -85,6 +86,25 @@ func (getcmdClass *GetcmdClass) getAdc(persistentOptions *cmdoptions.CommonComma
 	return
 }
 
+func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+	var clusterName string
+	openshiftConfig := getcmdClass.configuration.GetOpenshiftConfig()
+	output = "API\tCLUSTER NAME"
+	for i := range openshiftConfig.Clusters {
+		if openshiftConfig.Clusters[i].Reachable {
+			clusterName = openshiftConfig.Clusters[i].Name
+			var apiColumn = " \t"
+			if clusterName == openshiftConfig.APICluster {
+				apiColumn = "*\t"
+			}
+			fmt.Println(apiColumn + clusterName)
+		}
+
+	}
+
+	return
+}
+
 func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
 	err = validateEditcmd(args)
 	if err != nil {
@@ -104,6 +124,10 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 	case "adc":
 		{
 			output, err = getcmdClass.getAdc(persistentOptions)
+		}
+	case "cluster", "clusters":
+		{
+			output, err = getcmdClass.getClusters(persistentOptions)
 		}
 	}
 
@@ -138,6 +162,10 @@ func validateEditcmd(args []string) (err error) {
 				err = errors.New(adcUsageString)
 				return
 			}
+		}
+	default:
+		{
+			return
 		}
 
 	}

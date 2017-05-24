@@ -79,9 +79,17 @@ type Response struct {
 	Count   int               `json:"count"`
 }
 
-type ResponeItemError struct {
-	ApplicationId ApplicationId `json:"applicationId"`
-	Messages      []string      `json:"messages"`
+type ResponseItemError struct {
+	Application string `json:"application"`
+	Environment string `json:"environment"`
+	Messages    []struct {
+		Message string `json:"message"`
+		Field   struct {
+			Path   string `json:"path"`
+			Value  string `json:"value"`
+			Source string `json:"source"`
+		} `json:"field"`
+	} `json:"messages"`
 }
 
 type AuroraConfig struct {
@@ -140,15 +148,17 @@ func ResponsItems2MessageString(response Response) (output string, err error) {
 	}
 
 	for item := range response.Items {
-		var responseItemError ResponeItemError
+		var responseItemError ResponseItemError
 		err = json.Unmarshal([]byte(response.Items[item]), &responseItemError)
 		if err != nil {
 			return
 		}
-		output = output + "\n\t" + responseItemError.ApplicationId.EnvironmentName + "/" + responseItemError.ApplicationId.ApplicationName + ":"
+		output = output + "\n\t" + responseItemError.Environment + "/" + responseItemError.Application + ":"
 
 		for message := range responseItemError.Messages {
-			output = output + "\n\t\t" + responseItemError.Messages[message]
+			output = output + "\n\t\t" + responseItemError.Messages[message].Field.Path + " (" +
+				responseItemError.Messages[message].Field.Value + ") in " + responseItemError.Messages[message].Field.Source
+			output = output + "\n\t\t\t" + responseItemError.Messages[message].Message
 		}
 	}
 	return
