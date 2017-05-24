@@ -86,18 +86,26 @@ func (getcmdClass *GetcmdClass) getAdc(persistentOptions *cmdoptions.CommonComma
 	return
 }
 
-func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.CommonCommandOptions, allClusters bool) (output string, err error) {
 	var clusterName string
+	const tab = "\t"
+
 	openshiftConfig := getcmdClass.configuration.GetOpenshiftConfig()
-	output = "API\tCLUSTER NAME"
+	output = "CLUSTER NAME\tREACHABLE\tAPI\tURL"
 	for i := range openshiftConfig.Clusters {
-		if openshiftConfig.Clusters[i].Reachable {
+		if openshiftConfig.Clusters[i].Reachable || allClusters {
 			clusterName = openshiftConfig.Clusters[i].Name
-			var apiColumn = " \t"
+			var apiColumn = "  "
 			if clusterName == openshiftConfig.APICluster {
-				apiColumn = "*\t"
+				apiColumn = "* "
 			}
-			fmt.Println(apiColumn + clusterName)
+			var reachableColumn = "         "
+			if openshiftConfig.Clusters[i].Reachable {
+				reachableColumn = "Yes      "
+			}
+			var urlColumn = ""
+			urlColumn = openshiftConfig.Clusters[i].Url
+			fmt.Println(clusterName + tab + reachableColumn + tab + apiColumn + tab + urlColumn)
 		}
 
 	}
@@ -105,7 +113,7 @@ func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.Common
 	return
 }
 
-func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string, allClusters bool) (output string, err error) {
 	err = validateEditcmd(args)
 	if err != nil {
 		return
@@ -127,7 +135,7 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 		}
 	case "cluster", "clusters":
 		{
-			output, err = getcmdClass.getClusters(persistentOptions)
+			output, err = getcmdClass.getClusters(persistentOptions, allClusters)
 		}
 	}
 

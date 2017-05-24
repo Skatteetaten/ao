@@ -23,6 +23,7 @@ import (
 )
 
 var outputFormat string
+var allClusters bool
 
 // getCmd represents the get command
 var getCmd = &cobra.Command{
@@ -31,7 +32,7 @@ var getCmd = &cobra.Command{
 	Long:  `Can be uses to retrieve one file or all the files from the respository.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var getcmdObject getcmd.GetcmdClass
-		output, err := getcmdObject.GetObject(args, &persistentOptions, outputFormat)
+		output, err := getcmdObject.GetObject(args, &persistentOptions, outputFormat, allClusters)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -58,4 +59,6 @@ func init() {
 	// getCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	getCmd.Flags().StringVarP(&outputFormat, "output",
 		"o", "", "Output format. One of: json|yaml")
+	getCmd.Flags().BoolVarP(&allClusters, "all",
+		"a", false, "Show all clusters, not just the reachable ones")
 }
