@@ -21,17 +21,8 @@ func (pingcmdClass *PingcmdClass) PingAddress(args []string, pingPort string, pi
 
 	var clusterName string
 	openshiftConfig := pingcmdClass.configuration.GetOpenshiftConfig()
-	for i := range openshiftConfig.Clusters {
-		if openshiftConfig.Clusters[i].Reachable {
-			clusterName = openshiftConfig.Clusters[i].Name
-			var apiColumn = "  "
-			if clusterName == openshiftConfig.APICluster {
-				apiColumn = "* "
-			}
-			fmt.Println(apiColumn + clusterName)
-		}
+	apiCluster := openshiftConfig.APICluster
 
-	}
 
 	return
 }
