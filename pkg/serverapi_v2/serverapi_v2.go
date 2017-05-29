@@ -86,9 +86,35 @@ type AuroraConfig struct {
 	Secrets map[string]json.RawMessage `json:"secrets"`
 }
 
+type PingResult struct {
+	Items []struct {
+		Result struct {
+			Status     string `json:"status"`
+			Dnsname    string `json:"dnsname"`
+			ResolvedIp string `json:"resolvedIp"`
+			Port       string `json:"port"`
+			Message    string `json:"message"`
+		} `json:"result"`
+		PodIp  string `json:"podIp"`
+		HostIp string `json:"hostIp"`
+		HostName string
+	} `json:"items"`
+}
+
 const apiNotInstalledResponse = "Application is not available"
 const localhostAddress = "localhost"
 const localhostPort = "8080"
+
+func ParsePingResult(responseString string) (PingResult PingResult, err error) {
+	var responseData []byte
+	responseData = []byte(responseString)
+	err = json.Unmarshal(responseData, &PingResult)
+	if err != nil {
+		return
+	}
+
+	return
+}
 
 func ParseResponse(responseString string) (response Response, err error) {
 	var responseData []byte
@@ -163,7 +189,8 @@ func GetApiAddress(clusterName string, localhost bool) (apiAddress string) {
 }
 
 func getConsoleAddress(clusterName string) (consoleAddress string) {
-	consoleAddress = "http://console-aurora." + clusterName + ".paas.skead.no"
+	//consoleAddress = "http://console-aurora." + clusterName + ".paas.skead.no"
+	consoleAddress = "http://console-paas-espen-dev." + clusterName + ".paas.skead.no"
 	return
 }
 
@@ -172,11 +199,11 @@ func CallConsole(apiEndpoint string, arguments string, verbose bool, debug bool,
 	consoleAddress := getConsoleAddress(apiCluster.Name)
 	token := apiCluster.Token
 
-	url := consoleAddress + "/api/" + apiEndpoint
+	url := consoleAddress + "/public/" + apiEndpoint
 	if arguments != "" {
 		url += "?" + arguments
 	}
-	if verbose {
+	if debug {
 		fmt.Print("Sending request to Console at " + url + "...")
 	}
 	req, err := http.NewRequest(http.MethodPut, url, nil)
@@ -191,7 +218,7 @@ func CallConsole(apiEndpoint string, arguments string, verbose bool, debug bool,
 	resp, err := client.Do(req)
 	if err != nil {
 		if verbose {
-			fmt.Println("FAIL.  Error connecting to Boober service")
+			fmt.Println("FAIL.  Error connecting to Console service")
 		}
 		err = errors.New(fmt.Sprintf("Error connecting to the Console service on %v: %v", url, err))
 		return
@@ -201,15 +228,29 @@ func CallConsole(apiEndpoint string, arguments string, verbose bool, debug bool,
 	body, _ := ioutil.ReadAll(resp.Body)
 	output := string(body)
 
-	if verbose {
-		fmt.Println("OK")
-		fmt.Println("Response status: " + strconv.Itoa(resp.StatusCode))
+	if resp.StatusCode == http.StatusOK {
+		if debug {
+			fmt.Println("OK")
+		}
+	} else {
+		if debug {
+			fmt.Println("ERROR: " + resp.Status)
+		}
+		if resp.StatusCode == http.StatusGatewayTimeout {
+			return nil, errors.New("Ping request timed out")
+		} else {
+			return nil, errors.New(resp.Status)
+		}
 	}
 
 	if debug {
+		fmt.Println("Response status: " + strconv.Itoa(resp.StatusCode))
+		if jsonutil.IsLegalJson(output) {
+			fmt.Println(jsonutil.PrettyPrintJson(output))
+		} else {
+			fmt.Println(output)
+		}
 
-		fmt.Println(output)
-		//fmt.Println(jsonutil.PrettyPrintJson(output))
 	}
 	result = json.RawMessage(output)
 	return
@@ -249,7 +290,6 @@ func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showCo
 		if err != nil {
 			return outputMap, err
 		}
-		//outputMap["localhost"] = output
 	} else {
 		var errorString string
 		var newlineErr string
@@ -316,8 +356,12 @@ func callApiInstance(httpMethod string, combindedJson string, verbose bool, url 
 
 	if debug {
 		fmt.Println("Response status: " + strconv.Itoa(resp.StatusCode))
-		//fmt.Println(output)
-		fmt.Println(jsonutil.PrettyPrintJson(output))
+		if jsonutil.IsLegalJson(output) {
+			fmt.Println(jsonutil.PrettyPrintJson(output))
+		} else {
+			fmt.Println(output)
+		}
+
 	}
 
 	if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusBadRequest) {

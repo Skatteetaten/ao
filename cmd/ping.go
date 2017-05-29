@@ -62,6 +62,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// pingCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	pingCmd.Flags().StringVarP(&pingPort, "port", "p", "8080", "Port to ping")
+	pingCmd.Flags().StringVarP(&pingPort, "port", "p", "80", "Port to ping")
 	pingCmd.Flags().StringVarP(&pingCluster, "cluster", "c", "", "OpenShift source cluster")
 }
