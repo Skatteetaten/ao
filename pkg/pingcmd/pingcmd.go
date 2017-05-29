@@ -73,10 +73,12 @@ func (pingcmdClass *PingcmdClass) PingAddress(args []string, pingPort string, pi
 			pingResult.Items[hostIndex].HostName = hostName
 		}
 	}
-	for hostIndex := range pingResult.Items {
-		output += "\n\tHost: " + fileutil.RightPad(pingResult.Items[hostIndex].HostName, maxHostNameLength+1) +
-			fileutil.RightPad("("+pingResult.Items[hostIndex].HostIp+")", 17) + ": " +
-			pingResult.Items[hostIndex].Result.Status
+	if persistentOptions.Verbose {
+		for hostIndex := range pingResult.Items {
+			output += "\n\tHost: " + fileutil.RightPad(pingResult.Items[hostIndex].HostName, maxHostNameLength+1) +
+				fileutil.RightPad("("+pingResult.Items[hostIndex].HostIp+")", 17) + ": " +
+				pingResult.Items[hostIndex].Result.Status
+		}
 	}
 
 	var clusterStatus string
