@@ -7,6 +7,7 @@ import (
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
 	"net"
+	"sort"
 	"strconv"
 )
 
@@ -63,7 +64,7 @@ func (pingcmdClass *PingcmdClass) PingAddress(args []string, pingPort string, pi
 			}
 			var hostName string
 			if len(hostNames) == 0 {
-				hostName = "Unknown"
+				hostName = pingResult.Items[hostIndex].HostIp
 			} else {
 				hostName = hostNames[0][:len(hostNames[0])-1]
 			}
@@ -74,11 +75,20 @@ func (pingcmdClass *PingcmdClass) PingAddress(args []string, pingPort string, pi
 		}
 	}
 	if persistentOptions.Verbose {
+		var hosts []string
 		for hostIndex := range pingResult.Items {
-			output += "\n\tHost: " + fileutil.RightPad(pingResult.Items[hostIndex].HostName, maxHostNameLength+1) +
-				fileutil.RightPad("("+pingResult.Items[hostIndex].HostIp+")", 17) + ": " +
-				pingResult.Items[hostIndex].Result.Status
+			hosts = append(hosts, pingResult.Items[hostIndex].HostName)
 		}
+		sort.Strings(hosts)
+		for sortedHostIndex := range hosts {
+			for hostIndex := range pingResult.Items {
+				if pingResult.Items[hostIndex].HostName == hosts[sortedHostIndex] {
+					output += "\n\tHost: " + fileutil.RightPad(pingResult.Items[hostIndex].HostName+": ", maxHostNameLength+3) +
+						pingResult.Items[hostIndex].Result.Status
+				}
+			}
+		}
+
 	}
 
 	var clusterStatus string
@@ -95,9 +105,7 @@ func (pingcmdClass *PingcmdClass) PingAddress(args []string, pingPort string, pi
 	output = address + ":" + pingPort + " is " + clusterStatus + " (reachable by " + strconv.Itoa(numberOfOpenHosts) +
 		" of " + strconv.Itoa(numberOfOpenHosts+numberOfClosedHosts) + " hosts)" + output
 
-	/*fmt.Println(jsonutil.PrettyPrintJson(resultStr))
-	fmt.Println("DEBUG")
-	fmt.Println(string(result))*/
+
 	return
 }
 
