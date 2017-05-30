@@ -122,7 +122,7 @@ func generateJson(envFile string, envFolder string, folder string, parentFolder 
 	setupCommand.SetupParams.Envs = make([]string, 1)
 	setupCommand.SetupParams.Apps[0] = strings.TrimSuffix(envFile, filepath.Ext(envFile)) //envFile
 	setupCommand.SetupParams.Envs[0] = envFolder
-	setupCommand.SetupParams.DryRun = dryRun
+	//setupCommand.SetupParams.DryRun = dryRun
 	setupCommand.SetupParams.Overrides = jsonutil.Overrides2map(overrideJson, overrideFiles)
 
 	setupCommand.Affiliation = affiliation

@@ -125,7 +125,7 @@ func generateJson(envList []string, appList []string, overrideJsons []string,
 		setupCommand.SetupParams.Envs = make([]string, 0)
 	}
 
-	setupCommand.SetupParams.DryRun = dryRun
+	//setupCommand.SetupParams.DryRun = dryRun
 	setupCommand.SetupParams.Overrides, err = jsonutil.OverrideJsons2map(overrideJsons)
 	if err != nil {
 		return "", err
