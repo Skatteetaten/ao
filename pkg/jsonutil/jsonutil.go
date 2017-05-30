@@ -25,7 +25,7 @@ type SetupParamsPayload struct {
 	Envs      []string                   `json:"envs"`
 	Apps      []string                   `json:"apps"`
 	Overrides map[string]json.RawMessage `json:"overrides"`
-	DryRun    bool                       `json:"dryRun"`
+	//DryRun    bool                       `json:"dryRun"`
 }
 
 type SetupCommand struct {
