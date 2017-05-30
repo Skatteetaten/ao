@@ -95,8 +95,8 @@ type PingResult struct {
 			Port       string `json:"port"`
 			Message    string `json:"message"`
 		} `json:"result"`
-		PodIp  string `json:"podIp"`
-		HostIp string `json:"hostIp"`
+		PodIp    string `json:"podIp"`
+		HostIp   string `json:"hostIp"`
 		HostName string
 	} `json:"items"`
 }
@@ -175,15 +175,6 @@ func ResponsItems2MessageString(response Response) (output string, err error) {
 				responseItemError.Messages[message].Field.Value + ") in " + responseItemError.Messages[message].Field.Source
 			output = output + "\n\t\t\t" + responseItemError.Messages[message].Message
 		}
-	}
-	return
-}
-
-func GetApiAddress(clusterName string, localhost bool) (apiAddress string) {
-	if localhost {
-		apiAddress = "http://" + localhostAddress + ":" + localhostPort
-	} else {
-		apiAddress = "http://boober-aos-bas-dev." + clusterName + ".paas.skead.no"
 	}
 	return
 }
@@ -268,24 +259,38 @@ func ValidateLogin(openshiftConfig *openshift.OpenshiftConfig) (output bool) {
 	return true
 }
 
-func GetApiSetupUrl(clusterName string, apiEndpont string, localhost bool, dryrun bool) string {
-	return GetApiAddress(clusterName, localhost) + apiEndpont
+func GetApiAddress(clusterName string, localhost bool) (apiAddress string) {
+	if localhost {
+		apiAddress = "http://" + localhostAddress + ":" + localhostPort
+	} else {
+		apiAddress = "http://boober-aos-bas-dev." + clusterName + ".paas.skead.no"
+	}
+	return
+}
+func GetApiSetupUrl(clusterName string, apiEndpont string, localhost bool, dryrun bool, apiAddress string) string {
+	if apiAddress == "" {
+		apiAddress = GetApiAddress(clusterName, localhost)
+	}
+	return apiAddress + apiEndpont
 }
 
 func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
-	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool) (outputMap map[string]string, err error) {
+	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string) (outputMap map[string]string, err error) {
 	//var openshiftConfig *openshift.OpenshiftConfig
 	var apiCluster *openshift.OpenshiftCluster
 
 	outputMap = make(map[string]string)
 	if localhost {
+		apiAddress = GetApiAddress("", true)
+	}
+	if apiAddress != "" {
 		var token string = ""
 		apiCluster, err = openshiftConfig.GetApiCluster()
 		if apiCluster != nil {
 			token = apiCluster.Token
 		}
 		output, err := callApiInstance(httpMethod, combindedJson, verbose,
-			GetApiSetupUrl(localhostAddress, apiEndpoint, localhost, dryRun), token, dryRun, debug)
+			GetApiSetupUrl(apiAddress, apiEndpoint, localhost, dryRun, apiAddress), token, dryRun, debug)
 		outputMap[openshiftConfig.Clusters[0].Name] = output
 		if err != nil {
 			return outputMap, err
@@ -297,10 +302,9 @@ func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showCo
 			if openshiftConfig.Clusters[i].Reachable {
 				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
 					output, err := callApiInstance(httpMethod, combindedJson, verbose,
-						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, apiEndpoint, localhost, dryRun),
+						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, apiEndpoint, localhost, dryRun, apiAddress),
 						openshiftConfig.Clusters[i].Token, dryRun, debug)
 					if output != "" {
-						fmt.Println("Debug: Setting outputMap: " + openshiftConfig.Clusters[i].Name + ":" + output)
 						outputMap[openshiftConfig.Clusters[i].Name] = output
 
 						if err != nil {
