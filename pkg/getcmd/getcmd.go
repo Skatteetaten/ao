@@ -9,7 +9,7 @@ import (
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 )
 
-const UsageString = "Usage: aoc get files | file [env/]<filename> | adc"
+const UsageString = "Usage: aoc get files | file [env/]<filename> | adc | secrets | secret <secretname>"
 const filesUsageString = "Usage: aoc get files"
 const fileUseageString = "Usage: aoc get file [env/]<filename>"
 const adcUsageString = "Usage: aoc get adc"
