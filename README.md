@@ -12,7 +12,7 @@ Yb,_,dP       `8b, `Y8b,,__,,d8P'   `Yba,,_____,
  
  ```
  
- #What is it?
+ # What is it?
  AOC is short for Aurora OC.  Just as OC is a CLI for OpenShift, AOC is a CLI for Boober.  
  
  _(Boober is our take on how to handle the `wall of yaml` challenge of Kubernetes. It reads configuration files with a given
@@ -30,10 +30,10 @@ Yb,_,dP       `8b, `Y8b,,__,,d8P'   `Yba,,_____,
  aoc deploy -a my-app -e my-test-env
  ```
  
- #License
+ # License
  AOC is licensed under the Apache License Version 2.0
  
- #Build?
+ # Build?
  {go} is your GOPATH, default /home/\<user>/go
  
  ```
@@ -47,7 +47,7 @@ glide install
  ```
  
  
- #Dependencies?
+ # Dependencies?
  
  ```
  glide up # Update dependencies. Only run when you change something in glide.yaml

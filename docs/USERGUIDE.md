@@ -40,12 +40,22 @@ is targeted to its specific cluster.
 It is possible to override the url by using either the -l or --localhost flag, or by using 
 the --serverapi argument.
 
-# Command Reference
-###Common options
+# Commands
+The AOC commands are shaped after the pattern of the OC commands.
+ 
+All the commands have a --help option to explain the usage and the parameters.
+
+### Common options
 --serverapi <http://\<server>:port>   // Address of the boober service
 
-### Login
-Format: 
 ````
-aoc login <affiliation>
+  deploy      Deploy applications in the current affiliation
+  edit        Edit a single configuration file
+  export      A brief description of your command
+  get         Retrieves information from the repository
+  import      Imports a set of configuration files to the central store.
+  login       Login to openshift clusters
+  ping        A brief description of your command
+  setup       Deploys an application to OpenShift based upon local configuration files
+  version     Shows the version of the aoc client
 ````
