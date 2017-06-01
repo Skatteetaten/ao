@@ -12,18 +12,37 @@ Yb,_,dP       `8b, `Y8b,,__,,d8P'   `Yba,,_____,
  
  ```
  
+ #What is it?
+ AOC is short for Aurora OC.  Just as OC is a CLI for OpenShift, AOC is a CLI for Boober.  
  
- #Build?
+ _(Boober is our take on how to handle the `wall of yaml` challenge of Kubernetes. It reads configuration files with a given
+ schemaVersion from a git repo (AuroraConfig) and transforms it into Openshift Objects via a AuroraDeploymentConfiguration. 
+ More info in the Boober project on https://github.com/Skatteetaten/boober)_
+ 
+ AOC lets you manipulate Boober configuration files, and initiate deploys to OpenShift.
+ 
+ Example:
  
  ```
-{go} is your GOPATH, default /home/<user>/go
-
+ aoc login my-project
+ aoc import my-project-folder
+ aoc edit my-test-env/my-app.json
+ aoc deploy -a my-app -e my-test-env
+ ```
+ 
+ #License
+ AOC is licensed under the Apache License Version 2.0
+ 
+ #Build?
+ {go} is your GOPATH, default /home/\<user>/go
+ 
+ ```
 mkdir -p {go}/src/github.com/skatteetaten
 cd {go}/src/github.com/skatteetaten
 git clone https://github.com/Skatteetaten/aoc.git
 cd aoc
-go get
-go build
+glide install
+./build.sh
  
  ```
  

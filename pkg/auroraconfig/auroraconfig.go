@@ -77,13 +77,28 @@ func GetFileList(persistentOptions *cmdoptions.CommonCommandOptions, affiliation
 	return filenames, nil
 }
 
+func GetSecretList(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (secretnames []string, err error) {
+	auroraConfig, err := GetAuroraConfig(persistentOptions, affiliation, openshiftConfig)
+	if err != nil {
+		return
+	}
+	secretnames = make([]string, len(auroraConfig.Secrets))
+
+	var secretnameIndex = 0
+	for secretname := range auroraConfig.Secrets {
+		secretnames[secretnameIndex] = secretname
+		secretnameIndex++
+	}
+	return secretnames, nil
+}
+
 func GetAuroraConfig(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (auroraConfig serverapi_v2.AuroraConfig, err error) {
 	var apiEndpoint string = "/affiliation/" + affiliation + "/auroraconfig"
 	var responses map[string]string
 
 	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", persistentOptions.ShowConfig,
 		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
-		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug)
+		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi)
 	if err != nil {
 		for server := range responses {
 			response, err := serverapi_v2.ParseResponse(responses[server])
@@ -126,7 +141,7 @@ func PutContent(filename string, content string, persistentOptions *cmdoptions.C
 	var responses map[string]string
 	responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, content, persistentOptions.ShowConfig,
 		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
-		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug)
+		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi)
 	if err != nil {
 		for server := range responses {
 			response, err := serverapi_v2.ParseResponse(responses[server])

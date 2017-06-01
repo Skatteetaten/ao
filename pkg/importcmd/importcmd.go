@@ -78,7 +78,7 @@ func (importClass *ImportClass) ExecuteImport(args []string,
 		} else {
 			responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
-				persistentOptions.Verbose, importClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug)
+				persistentOptions.Verbose, importClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi)
 			if err != nil {
 				for server := range responses {
 					response, err := serverapi_v2.ParseResponse(responses[server])
@@ -96,7 +96,7 @@ func (importClass *ImportClass) ExecuteImport(args []string,
 	return
 }
 
-func generateJson(folder string, affiliation string, dryRun bool) (jsonStr string, error error) {
+func generateJson(folder string, affiliation string, dryRun bool) (jsonStr string, err error) {
 
 	var setupCommand jsonutil.SetupCommand
 	var auroraConfigPayload jsonutil.AuroraConfigPayload
@@ -107,8 +107,8 @@ func generateJson(folder string, affiliation string, dryRun bool) (jsonStr strin
 
 	setupCommand.Affiliation = affiliation
 
-	returnMap, error = jsonutil.JsonFolder2Map(folder, "")
-	if error != nil {
+	returnMap, err = jsonutil.JsonFolder2Map(folder, "")
+	if err != nil {
 		return
 	}
 
@@ -117,7 +117,10 @@ func generateJson(folder string, affiliation string, dryRun bool) (jsonStr strin
 	for _, f := range files {
 		absolutePath := filepath.Join(folder, f.Name())
 		if fileutil.IsLegalFileFolder(absolutePath) == fileutil.SpecIsFolder { // Ignore files
-			returnMap2, error = jsonutil.JsonFolder2Map(absolutePath, f.Name()+"/")
+			returnMap2, err = jsonutil.JsonFolder2Map(absolutePath, f.Name()+"/")
+			if err != nil {
+				return "", err
+			}
 			returnMap = jsonutil.CombineJsonMaps(returnMap, returnMap2)
 		}
 	}
@@ -143,9 +146,9 @@ func generateJson(folder string, affiliation string, dryRun bool) (jsonStr strin
 
 	auroraConfigPayload.Files = setupCommand.AuroraConfig.Files
 	auroraConfigPayload.Secrets = setupCommand.AuroraConfig.Secrets
-	jsonByte, error = json.Marshal(auroraConfigPayload)
-	if !(error == nil) {
-		return "", errors.New(fmt.Sprintf("Internal error in marshalling SetupCommand: %v\n", error.Error()))
+	jsonByte, err = json.Marshal(auroraConfigPayload)
+	if !(err == nil) {
+		return "", errors.New(fmt.Sprintf("Internal error in marshalling SetupCommand: %v\n", err.Error()))
 	}
 
 	jsonStr = string(jsonByte)
