@@ -42,7 +42,12 @@ func UpdateSelf(args []string) (output string, err error) {
 	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	err = ioutil.WriteFile(executablePath, []byte(body), 0750)
+	err = ioutil.WriteFile(executablePath + "_tmp", []byte(body), 0750)
+
+	err = os.Rename(executablePath + "_tmp", executablePath)
+	if err != nil {
+		return
+	}
 
 	return
 }
