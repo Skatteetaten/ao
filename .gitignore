@@ -26,3 +26,5 @@ aoc
 vendor
 .idea
 .go/
+buildnumber.txt
+bin/
