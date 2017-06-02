@@ -66,6 +66,10 @@ func init() {
 		"l", false, "Send setup to Boober on localhost")
 	RootCmd.PersistentFlags().MarkHidden("localhost")
 
+	RootCmd.PersistentFlags().StringVarP(&persistentOptions.ServerApi, "serverapi",
+		"", "", "Override default server API address")
+	//RootCmd.PersistentFlags().MarkHidden("serverurl")
+
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowConfig, "showconfig",
 		"s", false, "Print merged config from Boober to standard out")
 

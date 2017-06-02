@@ -9,7 +9,7 @@ import (
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 )
 
-const UsageString = "Usage: aoc get files | file [env/]<filename> | adc"
+const UsageString = "Usage: aoc get files | file [env/]<filename> | adc | secrets | secret <secretname>"
 const filesUsageString = "Usage: aoc get files"
 const fileUseageString = "Usage: aoc get file [env/]<filename>"
 const adcUsageString = "Usage: aoc get adc"
@@ -116,6 +116,19 @@ func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.Common
 	return
 }
 
+func (getcmdClass *GetcmdClass) getSecrets(persistentOptions *cmdoptions.CommonCommandOptions, secretName string) (output string, err error) {
+	var secrets []string
+	secrets, err = auroraconfig.GetSecretList(persistentOptions, getcmdClass.getAffiliation(), getcmdClass.configuration.GetOpenshiftConfig())
+
+	output = "NAME"
+	for secretindex := range secrets {
+		if secretName == "" || secrets[secretindex] == secretName {
+			output += "\n" + secrets[secretindex]
+		}
+	}
+	return
+}
+
 func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string, allClusters bool) (output string, err error) {
 	err = validateEditcmd(args)
 	if err != nil {
@@ -143,6 +156,14 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 				clusterName = args[1]
 			}
 			output, err = getcmdClass.getClusters(persistentOptions, clusterName, allClusters)
+		}
+	case "secret", "secrets":
+		{
+			var secretName = ""
+			if len(args) > 1 {
+				secretName = args[1]
+			}
+			output, err = getcmdClass.getSecrets(persistentOptions, secretName)
 		}
 	}
 
