@@ -15,12 +15,23 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
-
 	"github.com/spf13/cobra"
-)
+	"os"
+l)
+
+type VersionStruct struct {
+	MajorVersion string
+	MinorVersion string
+	BuildNumber  string
+	Version      string
+	Branch       string
+}
 
 var version = "5"
+var majorVersion = "5"
+var minorVersion = "0"
 var buildstamp = ""
 var githash = ""
 var buildnumber = ""
@@ -32,17 +43,49 @@ var versionCmd = &cobra.Command{
 	Short: "Shows the version of the aoc client",
 	Long:  `Shows the version of the aoc client application`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if buildnumber != "" {
-			version = version + "." + buildnumber
+		var output string
+		var err error
+		if outputFormat == "json" {
+			output, err = version2Json()
+		} else {
+			output, err = version2Text()
 		}
-		fmt.Println("Aurora OC version " + version)
-		if githash != "" {
-			fmt.Println("Branch: " + branch + " (" + githash + ")")
+		if err != nil {
+			fmt.Print(err.Error())
+			os.Exit(-1)
 		}
-		if buildstamp != "" {
-			fmt.Println("Build Time: " + buildstamp)
-		}
+		fmt.Println(output)
 	},
+}
+
+func version2Text() (output string, err error) {
+	if buildnumber != "" {
+		version = version + "." + buildnumber
+	}
+	output = "Aurora OC version " + majorVersion + "." + minorVersion + "." + buildnumber
+	if githash != "" {
+		output += "\nBranch: " + branch + " (" + githash + ")"
+	}
+	if buildstamp != "" {
+		output += "\nBuild Time: " + buildstamp
+	}
+	return
+}
+
+func version2Json() (output string, err error) {
+
+	var versionStruct VersionStruct
+	versionStruct.MajorVersion = majorVersion
+	versionStruct.MinorVersion = minorVersion
+	versionStruct.BuildNumber = buildnumber
+	versionStruct.Version = majorVersion + "." + minorVersion + "." + buildnumber
+	versionStruct.Branch = branch
+	outputBytes, err := json.Marshal(versionStruct)
+	if err != nil {
+		return
+	}
+	output = string(outputBytes)
+	return
 }
 
 func init() {
@@ -58,4 +101,5 @@ func init() {
 	// is called directly, e.g.:
 	// versionCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
+	versionCmd.Flags().StringVarP(&outputFormat, "output-format", "o", "text", "text | json")
 }
