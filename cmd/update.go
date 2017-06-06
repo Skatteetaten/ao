@@ -21,6 +21,8 @@ import (
 	"os"
 )
 
+var simulate bool
+
 // updateCmd represents the update command
 var updateCmd = &cobra.Command{
 	Use:   "update",
@@ -57,4 +59,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// updateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	updateCmd.Flags().BoolVarP(&simulate, "simulate", "s", false,
+		"No action, just checks for avaliable update.")
 }

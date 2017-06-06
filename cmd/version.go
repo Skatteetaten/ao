@@ -15,21 +15,13 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/skatteetaten/aoc/pkg/jsonutil"
+	"github.com/skatteetaten/aoc/pkg/versionutil"
 	"github.com/spf13/cobra"
 	"os"
 )
 
-type VersionStruct struct {
-	MajorVersion string
-	MinorVersion string
-	BuildNumber  string
-	Version      string
-	Branch       string
-}
-
-var version = "5"
 var majorVersion = "5"
 var minorVersion = "0"
 var buildstamp = ""
@@ -45,10 +37,25 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var output string
 		var err error
-		if outputFormat == "json" {
-			output, err = version2Json()
-		} else {
-			output, err = version2Text()
+		switch outputFormat {
+
+		case "json":
+			{
+				output, err = versionutil.Version2Json(majorVersion, minorVersion, buildnumber, githash, branch, buildstamp)
+				output = jsonutil.PrettyPrintJson(output)
+			}
+		case "filename":
+			{
+				output = "aoc_" + majorVersion + "." + minorVersion + "." + buildnumber
+			}
+		case "branch":
+			{
+				output = branch
+			}
+		default:
+			{
+				output, err = versionutil.Version2Text(majorVersion, minorVersion, buildnumber, githash, branch, buildstamp)
+			}
 		}
 		if err != nil {
 			fmt.Print(err.Error())
@@ -56,36 +63,6 @@ var versionCmd = &cobra.Command{
 		}
 		fmt.Println(output)
 	},
-}
-
-func version2Text() (output string, err error) {
-	if buildnumber != "" {
-		version = version + "." + buildnumber
-	}
-	output = "Aurora OC version " + majorVersion + "." + minorVersion + "." + buildnumber
-	if githash != "" {
-		output += "\nBranch: " + branch + " (" + githash + ")"
-	}
-	if buildstamp != "" {
-		output += "\nBuild Time: " + buildstamp
-	}
-	return
-}
-
-func version2Json() (output string, err error) {
-
-	var versionStruct VersionStruct
-	versionStruct.MajorVersion = majorVersion
-	versionStruct.MinorVersion = minorVersion
-	versionStruct.BuildNumber = buildnumber
-	versionStruct.Version = majorVersion + "." + minorVersion + "." + buildnumber
-	versionStruct.Branch = branch
-	outputBytes, err := json.Marshal(versionStruct)
-	if err != nil {
-		return
-	}
-	output = string(outputBytes)
-	return
 }
 
 func init() {
@@ -101,5 +78,5 @@ func init() {
 	// is called directly, e.g.:
 	// versionCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	versionCmd.Flags().StringVarP(&outputFormat, "output-format", "o", "text", "text | json")
+	versionCmd.Flags().StringVarP(&outputFormat, "output-format", "o", "text", "filename | json | text")
 }

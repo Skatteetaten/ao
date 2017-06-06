@@ -71,7 +71,7 @@ func init() {
 	//RootCmd.PersistentFlags().MarkHidden("serverurl")
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowConfig, "showconfig",
-		"s", false, "Print merged config from Boober to standard out")
+		"", false, "Print merged config from Boober to standard out")
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowObjects, "showobjects",
 		"", false, "Print object definitions from Boober to standard out")
