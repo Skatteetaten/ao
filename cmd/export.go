@@ -26,14 +26,11 @@ var outputFolder string
 
 // exportCmd represents the export command
 var exportCmd = &cobra.Command{
-	Use:   "export",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "export files | file [env/]<filename> | adc",
+	Short: "Exports auroraconf to one or more configuration files",
+	Long: `Exports the entire affiliation or a specific file to a set of configuration files.
+The files will be printed to standard out, but can also be stored individually in a folder structure
+by using the output-folder option.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var exportcmdObject exportcmd.ExportcmdClass
 		output, err := exportcmdObject.ExportObject(args, &persistentOptions, outputFormat, outputFolder)
