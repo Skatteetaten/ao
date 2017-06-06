@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
-l)
+)
 
 type VersionStruct struct {
 	MajorVersion string
