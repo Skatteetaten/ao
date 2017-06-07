@@ -28,7 +28,7 @@ Example:
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) <= 0 {
-			fmt.Println(fmt.Errorf("error: no secrets specified"))
+			fmt.Println("error: no secrets specified")
 			fmt.Println(cmd.Example)
 			os.Exit(1)
 		}
