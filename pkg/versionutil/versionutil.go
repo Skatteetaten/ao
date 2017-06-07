@@ -15,6 +15,13 @@ type VersionStruct struct {
 	Githash      string `json:"githash"`
 }
 
+var majorVersion = ""
+var minorVersion = ""
+var buildnumber = ""
+var buildstamp = ""
+var branch = ""
+var githash = ""
+
 func (versionStruct *VersionStruct) Version2Text() (output string, err error) {
 	var version string
 	if versionStruct.BuildNumber != "" {
@@ -30,7 +37,7 @@ func (versionStruct *VersionStruct) Version2Text() (output string, err error) {
 	return
 }
 
-func (versionStruct *VersionStruct) Init(majorVersion string, minorVersion string, buildnumber string, buildstamp string, branch string, githash string) {
+func (versionStruct *VersionStruct) Init() { // majorVersion string, minorVersion string, buildnumber string, buildstamp string, branch string, githash string
 	versionStruct.MajorVersion = majorVersion
 	versionStruct.MinorVersion = minorVersion
 	versionStruct.BuildNumber = buildnumber

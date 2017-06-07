@@ -13,6 +13,10 @@ import (
 const aoc5Url = "http://uil0map-hkldev-app01/aoc-v5"
 
 func UpdateSelf(args []string) (output string, err error) {
+	fmt.Println("UpdateSelf called")
+	var versionStruct versionutil.VersionStruct
+	versionStruct.Init()
+
 	executableDirectory := filepath.Dir(os.Args[0]) //
 	executablePath, err := filepath.Abs(os.Args[0])
 	if err != nil {
@@ -30,9 +34,9 @@ func UpdateSelf(args []string) (output string, err error) {
 		return
 	}
 	fmt.Println(string(releaseinfo))
-	versionStruct, err := versionutil.Json2Version(releaseinfo)
+	releaseVersionStruct, err := versionutil.Json2Version(releaseinfo)
 
-	fmt.Println(versionStruct.BuildStamp)
+	fmt.Println(releaseVersionStruct.BuildStamp)
 
 	//body, err := getFile(aoc5Url)
 	//err = ioutil.WriteFile(executablePath, []byte(body), 0750)

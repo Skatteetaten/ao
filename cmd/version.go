@@ -22,12 +22,7 @@ import (
 	"os"
 )
 
-var majorVersion = "5"
-var minorVersion = "0"
-var buildnumber = ""
-var buildstamp = ""
-var branch = ""
-var githash = ""
+
 
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
@@ -38,7 +33,7 @@ var versionCmd = &cobra.Command{
 		var output string
 		var err error
 		var versionStruct versionutil.VersionStruct
-		versionStruct.Init(majorVersion, minorVersion, buildnumber, buildstamp, branch, githash)
+		versionStruct.Init()
 		switch outputFormat {
 
 		case "json":
