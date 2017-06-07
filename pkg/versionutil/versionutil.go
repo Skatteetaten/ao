@@ -21,6 +21,7 @@ var buildnumber = ""
 var buildstamp = ""
 var branch = ""
 var githash = ""
+var version = ""
 
 func (versionStruct *VersionStruct) Version2Text() (output string, err error) {
 	var version string
