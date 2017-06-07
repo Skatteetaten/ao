@@ -57,45 +57,41 @@ func (deployClass *DeployClass) ExecuteDeploy(args []string, overrideJsons []str
 	var responses map[string]string
 	var applicationResults []serverapi_v2.ApplicationResult
 
-	if error != nil {
-		return
+	if localDryRun {
+		return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(json))), nil
 	} else {
-		if localDryRun {
-			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(json))), nil
-		} else {
-			responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, json, persistentOptions.ShowConfig,
-				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
-				persistentOptions.Verbose, deployClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi)
-			if err != nil {
-				for server := range responses {
-					response, err := serverapi_v2.ParseResponse(responses[server])
-					if err != nil {
-						return "", err
-					}
-					if !response.Success {
-						output, err = serverapi_v2.ResponsItems2MessageString(response)
-					}
-				}
-				return output, nil
-			}
+		responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, json, persistentOptions.ShowConfig,
+			persistentOptions.ShowObjects, false, persistentOptions.Localhost,
+			persistentOptions.Verbose, deployClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi)
+		if err != nil {
 			for server := range responses {
 				response, err := serverapi_v2.ParseResponse(responses[server])
 				if err != nil {
 					return "", err
 				}
-				if response.Success {
-					applicationResults, err = serverapi_v2.ResponseItems2ApplicationResults(response)
-				}
-				for applicationResultIndex := range applicationResults {
-					out, err := serverapi_v2.ApplicationResult2MessageString(applicationResults[applicationResultIndex])
-					if err != nil {
-						return out, err
-					}
-					output += out
+				if !response.Success {
+					output, err = serverapi_v2.ResponsItems2MessageString(response)
 				}
 			}
-
+			return output, nil
 		}
+		for server := range responses {
+			response, err := serverapi_v2.ParseResponse(responses[server])
+			if err != nil {
+				return "", err
+			}
+			if response.Success {
+				applicationResults, err = serverapi_v2.ResponseItems2ApplicationResults(response)
+			}
+			for applicationResultIndex := range applicationResults {
+				out, err := serverapi_v2.ApplicationResult2MessageString(applicationResults[applicationResultIndex])
+				if err != nil {
+					return out, err
+				}
+				output += out
+			}
+		}
+
 	}
 
 	return

@@ -36,8 +36,10 @@ func UpdateSelf(args []string, simulate bool, forceVersion string) (output strin
 			if err != nil {
 				return
 			}
-			output += "/nAOC updated sucessfully"
+			output += "\nAOC updated sucessfully"
 		}
+	} else {
+		output += "No update available"
 	}
 
 	return

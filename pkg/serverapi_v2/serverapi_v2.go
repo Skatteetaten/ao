@@ -132,6 +132,9 @@ func ResponseItems2ApplicationResults(response Response) (applicationResults []A
 
 	for item := range response.Items {
 		err = json.Unmarshal([]byte(response.Items[item]), &applicationResults[item])
+		if err != nil {
+			return
+		}
 	}
 	return
 }
@@ -144,6 +147,9 @@ func ResponseItems2AuroraConfig(response Response) (auroraConfig AuroraConfig, e
 	}
 	for item := range response.Items {
 		err = json.Unmarshal([]byte(response.Items[item]), &auroraConfig)
+		if err != nil {
+			return
+		}
 	}
 	return
 }
@@ -181,7 +187,7 @@ func ResponsItems2MessageString(response Response) (output string, err error) {
 
 func getConsoleAddress(clusterName string) (consoleAddress string) {
 	//consoleAddress = "http://console-aurora." + clusterName + ".paas.skead.no"
-	consoleAddress = "http://console-paas-espen-dev." + clusterName + ".paas.skead.no"
+	consoleAddress = "http://aoc onsole-paas-espen-dev." + clusterName + ".paas.skead.no"
 	return
 }
 
@@ -350,7 +356,6 @@ func callApiInstance(httpMethod string, combindedJson string, verbose bool, url 
 		if verbose {
 			fmt.Println("FAIL.  Error connecting to Boober service")
 		}
-		fmt.Println("Debug: Error in client.Do")
 		return "", errors.New(fmt.Sprintf("Error connecting to the Boober service on %v: %v", url, err))
 	}
 

@@ -3,6 +3,7 @@ package auroraconfig
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
@@ -139,6 +140,9 @@ func GetAuroraConfig(persistentOptions *cmdoptions.CommonCommandOptions, affilia
 func PutContent(filename string, content string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
 	var apiEndpoint = "/affiliation/" + affiliation + "/auroraconfig/" + filename
 	var responses map[string]string
+	fmt.Println(apiEndpoint)
+	fmt.Println(content)
+
 	responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, content, persistentOptions.ShowConfig,
 		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
 		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi)
