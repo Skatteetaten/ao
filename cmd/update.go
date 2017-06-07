@@ -22,6 +22,7 @@ import (
 )
 
 var simulate bool
+var forceVersion string
 
 // updateCmd represents the update command
 var updateCmd = &cobra.Command{
@@ -34,7 +35,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		output, err := updatecmd.UpdateSelf(args)
+		output, err := updatecmd.UpdateSelf(args, simulate, forceVersion)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -62,4 +63,5 @@ func init() {
 
 	updateCmd.Flags().BoolVarP(&simulate, "simulate", "s", false,
 		"No action, just checks for avaliable update.")
+	updateCmd.Flags().StringVarP(&forceVersion, "force-version", "", "","Force download of a specific version")
 }

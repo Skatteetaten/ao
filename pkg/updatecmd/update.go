@@ -12,23 +12,56 @@ import (
 
 const aoc5Url = "http://uil0map-hkldev-app01/aoc-v5"
 
-func UpdateSelf(args []string) (output string, err error) {
-	fmt.Println("UpdateSelf called")
-	var versionStruct versionutil.VersionStruct
-	versionStruct.Init()
-
-	executableDirectory := filepath.Dir(os.Args[0]) //
-	executablePath, err := filepath.Abs(os.Args[0])
+func UpdateSelf(args []string, simulate bool, forceVersion string) (output string, err error) {
+	var releaseVersion string
 	if err != nil {
 		return
 	}
 
+	if forceVersion == "" {
+		releaseVersion, err = getReleaseVersion()
+		if err != nil {
+			return
+		}
+	} else {
+		releaseVersion = forceVersion
+	}
+
+	myVersion, err := getMyVersion()
+
+	if myVersion != releaseVersion {
+		fmt.Println("DEBUG: New version detected")
+		if simulate {
+			output = "Update to " + releaseVersion
+		} else {
+			doUpdate(releaseVersion)
+		}
+	}
+	
+	return
+}
+
+func doUpdate (version string) (err error) {
+	releaseFilename := "aoc_" + version
+	releaseUrl := aoc5Url + "/" + releaseFilename
+
+	executablePath, err := filepath.Abs(os.Args[0])
+	releasePath := executablePath + "_" + version
+
+	body, err := getFile(releaseUrl)
+	err = ioutil.WriteFile(releasePath, []byte(body), 0750)
+	if err != nil {
+		return
+	}
+	err = os.Rename(releasePath, executablePath)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func getReleaseVersion() (version string, err error) {
 	releaseinfoUrl := aoc5Url + "/releaseinfo.json"
-
-	fmt.Println(executableDirectory)
-	fmt.Println(executablePath)
-	fmt.Println(releaseinfoUrl)
-
 	releaseinfo, err := getFile(releaseinfoUrl)
 	if err != nil {
 		return
@@ -36,15 +69,15 @@ func UpdateSelf(args []string) (output string, err error) {
 	fmt.Println(string(releaseinfo))
 	releaseVersionStruct, err := versionutil.Json2Version(releaseinfo)
 
-	fmt.Println(releaseVersionStruct.BuildStamp)
-
-	//body, err := getFile(aoc5Url)
-	//err = ioutil.WriteFile(executablePath, []byte(body), 0750)
-
+	version = releaseVersionStruct.Version
 	return
 }
 
-func getReleaseVersion() (versionStruct versionutil.VersionStruct, err error) {
+func getMyVersion() (version string, err error) {
+	var versionStruct versionutil.VersionStruct
+	versionStruct.Init()
+
+	version = versionStruct.Version
 	return
 }
 
