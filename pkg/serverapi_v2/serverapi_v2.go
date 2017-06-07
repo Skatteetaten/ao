@@ -263,7 +263,7 @@ func GetApiAddress(clusterName string, localhost bool) (apiAddress string) {
 	if localhost {
 		apiAddress = "http://" + localhostAddress + ":" + localhostPort
 	} else {
-		apiAddress = "http://boober-aos-bas-dev." + clusterName + ".paas.skead.no"
+		apiAddress = "http://boober-aurora." + clusterName + ".paas.skead.no"
 	}
 	return
 }

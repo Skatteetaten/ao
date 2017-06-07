@@ -30,18 +30,20 @@ func UpdateSelf(args []string, simulate bool, forceVersion string) (output strin
 	myVersion, err := getMyVersion()
 
 	if myVersion != releaseVersion {
-		fmt.Println("DEBUG: New version detected")
-		if simulate {
-			output = "Update to " + releaseVersion
-		} else {
-			doUpdate(releaseVersion)
+		output += "New version detected: Current version: " + myVersion + ".  Available version: " + releaseVersion
+		if !simulate {
+			err = doUpdate(releaseVersion)
+			if err != nil {
+				return
+			}
+			output += "/nAOC updated sucessfully"
 		}
 	}
-	
+
 	return
 }
 
-func doUpdate (version string) (err error) {
+func doUpdate(version string) (err error) {
 	releaseFilename := "aoc_" + version
 	releaseUrl := aoc5Url + "/" + releaseFilename
 
@@ -66,7 +68,6 @@ func getReleaseVersion() (version string, err error) {
 	if err != nil {
 		return
 	}
-	fmt.Println(string(releaseinfo))
 	releaseVersionStruct, err := versionutil.Json2Version(releaseinfo)
 
 	version = releaseVersionStruct.Version
