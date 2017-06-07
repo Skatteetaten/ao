@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/skatteetaten/aoc/pkg/cmdoptions"
+	"github.com/skatteetaten/aoc/pkg/configuration"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/openshift"
 	"io/ioutil"
@@ -23,7 +25,7 @@ type ApplicationId struct {
 type OpenShiftResponse struct {
 	Kind          string `json:"kind"`
 	OperationType string `json:"operationType"` // CREATED, UPDATE eller NONE
-	Payload       struct {
+	Payload struct {
 		Kind string `json:"payload"`
 	} `json:"payload"`
 	ResponseBody json.RawMessage `json:"responseBody"`
@@ -71,9 +73,9 @@ type Response struct {
 type ResponseItemError struct {
 	Application string `json:"application"`
 	Environment string `json:"environment"`
-	Messages    []struct {
+	Messages []struct {
 		Message string `json:"message"`
-		Field   struct {
+		Field struct {
 			Path   string `json:"path"`
 			Value  string `json:"value"`
 			Source string `json:"source"`
@@ -151,7 +153,7 @@ func ResponseItems2AuroraConfig(response Response) (auroraConfig AuroraConfig, e
 func ApplicationResult2MessageString(applicationResult ApplicationResult) (output string, err error) {
 
 	output +=
-		//applicationResult.ApplicationId.ApplicationName +
+	//applicationResult.ApplicationId.ApplicationName +
 		applicationResult.AuroraDc.GroupId + "/" + applicationResult.AuroraDc.ArtifactId + "-" + applicationResult.AuroraDc.Version +
 			" deployed in " + applicationResult.AuroraDc.Cluster + "/" + applicationResult.AuroraDc.EnvName
 	return
@@ -272,6 +274,26 @@ func GetApiSetupUrl(clusterName string, apiEndpont string, localhost bool, dryru
 		apiAddress = GetApiAddress(clusterName, localhost)
 	}
 	return apiAddress + apiEndpont
+}
+
+func CallApiShort(httpMethod string, apiEndpoint string, jsonRequestBody string, persistentOptions *cmdoptions.CommonCommandOptions) (map[string]string, error) {
+
+	var config configuration.ConfigurationClass
+
+	return CallApi(
+		httpMethod,
+		apiEndpoint,
+		jsonRequestBody,
+		persistentOptions.ShowConfig,
+		persistentOptions.ShowObjects,
+		false,
+		persistentOptions.Localhost,
+		persistentOptions.Verbose,
+		config.GetOpenshiftConfig(),
+		persistentOptions.DryRun,
+		persistentOptions.Debug,
+		persistentOptions.ServerApi,
+	)
 }
 
 func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
