@@ -24,10 +24,10 @@ import (
 
 var majorVersion = "5"
 var minorVersion = "0"
-var buildstamp = ""
-var githash = ""
 var buildnumber = ""
+var buildstamp = ""
 var branch = ""
+var githash = ""
 
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
@@ -37,28 +37,30 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var output string
 		var err error
+		var versionStruct versionutil.VersionStruct
+		versionStruct.Init(majorVersion, minorVersion, buildnumber, buildstamp, branch, githash)
 		switch outputFormat {
 
 		case "json":
 			{
-				output, err = versionutil.Version2Json(majorVersion, minorVersion, buildnumber, githash, branch, buildstamp)
+				output, err = versionStruct.Version2Json()
 				output = jsonutil.PrettyPrintJson(output)
 			}
 		case "filename":
 			{
-				output = "aoc_" + majorVersion + "." + minorVersion + "." + buildnumber
+				output, err = versionStruct.Version2Filename()
 			}
 		case "branch":
 			{
-				output = branch
+				output, err = versionStruct.Version2Branch()
 			}
 		default:
 			{
-				output, err = versionutil.Version2Text(majorVersion, minorVersion, buildnumber, githash, branch, buildstamp)
+				output, err = versionStruct.Version2Text()
 			}
 		}
 		if err != nil {
-			fmt.Print(err.Error())
+			fmt.Println(err.Error())
 			os.Exit(-1)
 		}
 		fmt.Println(output)

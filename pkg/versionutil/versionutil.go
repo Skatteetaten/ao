@@ -1,6 +1,9 @@
 package versionutil
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+)
 
 type VersionStruct struct {
 	MajorVersion string `json:"majorVersion"`
@@ -9,37 +12,60 @@ type VersionStruct struct {
 	Version      string `json:"version"`
 	BuildStamp   string `json:"buildStamp"`
 	Branch       string `json:"branch"`
+	Githash      string `json:"githash"`
 }
 
-func Version2Text(majorVersion string, minorVersion string, buildnumber string, githash string, branch string, buildstamp string) (output string, err error) {
+func (versionStruct *VersionStruct) Version2Text() (output string, err error) {
 	var version string
-	if buildnumber != "" {
-		version = version + "." + buildnumber
+	if versionStruct.BuildNumber != "" {
+		version = version + "." + versionStruct.BuildNumber
 	}
-	output = "Aurora OC version " + majorVersion + "." + minorVersion + "." + buildnumber
-	if githash != "" {
-		output += "\nBranch: " + branch + " (" + githash + ")"
+	output = "Aurora OC version " + versionStruct.MajorVersion + "." + versionStruct.MinorVersion + "." + versionStruct.BuildNumber
+	if versionStruct.Githash != "" {
+		output += "\nBranch: " + versionStruct.Branch + " (" + versionStruct.Githash + ")"
 	}
-	if buildstamp != "" {
-		output += "\nBuild Time: " + buildstamp
+	if versionStruct.BuildStamp != "" {
+		output += "\nBuild Time: " + versionStruct.BuildStamp
 	}
 	return
 }
 
-func Version2Json(majorVersion string, minorVersion string, buildnumber string, githash string, branch string, buildstamp string) (output string, err error) {
-
-	var versionStruct VersionStruct
+func (versionStruct *VersionStruct) Init(majorVersion string, minorVersion string, buildnumber string, buildstamp string, branch string, githash string) {
 	versionStruct.MajorVersion = majorVersion
 	versionStruct.MinorVersion = minorVersion
 	versionStruct.BuildNumber = buildnumber
 	versionStruct.Version = majorVersion + "." + minorVersion + "." + buildnumber
 	versionStruct.BuildStamp = buildstamp
 	versionStruct.Branch = branch
+	versionStruct.Githash = githash
+}
+
+func (versionStruct *VersionStruct) Version2Json() (output string, err error) {
+
 	outputBytes, err := json.Marshal(versionStruct)
 	if err != nil {
 		return
 	}
 	output = string(outputBytes)
+	return
+}
+
+func (versionStruct *VersionStruct) Version2Filename() (output string, err error) {
+	output = versionStruct.MajorVersion + "." + versionStruct.MinorVersion + "." + versionStruct.BuildNumber
+	if output == ".." {
+		err = errors.New("No version injected")
+		return
+	}
+	output = "aoc_" + output
+	return
+}
+
+func (versionStruct *VersionStruct) Version2Branch() (output string, err error) {
+	output = versionStruct.Branch
+	if output == "" {
+		err = errors.New("No branch injected")
+		return
+	}
 	return
 }
 
