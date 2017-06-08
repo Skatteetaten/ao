@@ -314,8 +314,10 @@ func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showCo
 	if apiAddress != "" {
 		var token string = ""
 		apiCluster, err = openshiftConfig.GetApiCluster()
-		if apiCluster != nil {
-			token = apiCluster.Token
+		if token == "" {
+			if apiCluster != nil {
+				token = apiCluster.Token
+			}
 		}
 		output, err := callApiInstance(httpMethod, combindedJson, verbose,
 			GetApiSetupUrl(apiAddress, apiEndpoint, localhost, dryRun, apiAddress), token, dryRun, debug)
