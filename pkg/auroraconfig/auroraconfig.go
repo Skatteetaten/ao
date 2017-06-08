@@ -138,7 +138,7 @@ func GetAuroraConfig(persistentOptions *cmdoptions.CommonCommandOptions, affilia
 }
 
 func PutContent(filename string, content string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
-	var apiEndpoint = "/affiliation/" + affiliation + "/auroraconfig/" + filename
+	var apiEndpoint = "/affiliation/" + affiliation + "/auroraconfigfile/" + filename
 	var responses map[string]string
 	fmt.Println(apiEndpoint)
 	fmt.Println(content)
