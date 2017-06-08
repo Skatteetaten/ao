@@ -69,6 +69,8 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&persistentOptions.ServerApi, "serverapi",
 		"", "", "Override default server API address")
 	//RootCmd.PersistentFlags().MarkHidden("serverurl")
+	RootCmd.PersistentFlags().StringVarP(&persistentOptions.Token, "token",
+		"", "", "Token to be used for serverapi connections")
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowConfig, "showconfig",
 		"", false, "Print merged config from Boober to standard out")

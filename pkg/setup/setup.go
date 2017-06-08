@@ -93,7 +93,7 @@ func (setupClass *SetupClass) ExecuteSetupImport(args []string, overrideFiles []
 		} else {
 			output, err = serverapi.CallApi(apiEndpoint, jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
-				persistentOptions.Verbose, setupClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug)
+				persistentOptions.Verbose, setupClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
 			if err != nil {
 				return "", err
 			}

@@ -96,15 +96,19 @@ func GetApiSetupUrl(clusterName string, apiEndpont string, localhost bool, dryru
 }
 
 func CallApi(apiEndpoint string, combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
-	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool) (output string, err error) {
+	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (output string, err error) {
 	//var openshiftConfig *openshift.OpenshiftConfig
 	var apiCluster *openshift.OpenshiftCluster
 
 	if localhost {
-		var token string = ""
+		apiAddress = GetApiAddress("", true)
+	}
+	if apiAddress != "" {
 		apiCluster, err = openshiftConfig.GetApiCluster()
 		if apiCluster != nil {
-			token = apiCluster.Token
+			if token == "" {
+				token = apiCluster.Token
+			}
 			if debug {
 				fmt.Println("DEBUG: Token to Localhost: " + token)
 			}

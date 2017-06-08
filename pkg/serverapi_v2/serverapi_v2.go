@@ -25,7 +25,7 @@ type ApplicationId struct {
 type OpenShiftResponse struct {
 	Kind          string `json:"kind"`
 	OperationType string `json:"operationType"` // CREATED, UPDATE eller NONE
-	Payload struct {
+	Payload       struct {
 		Kind string `json:"payload"`
 	} `json:"payload"`
 	ResponseBody json.RawMessage `json:"responseBody"`
@@ -73,9 +73,9 @@ type Response struct {
 type ResponseItemError struct {
 	Application string `json:"application"`
 	Environment string `json:"environment"`
-	Messages []struct {
+	Messages    []struct {
 		Message string `json:"message"`
-		Field struct {
+		Field   struct {
 			Path   string `json:"path"`
 			Value  string `json:"value"`
 			Source string `json:"source"`
@@ -159,7 +159,7 @@ func ResponseItems2AuroraConfig(response Response) (auroraConfig AuroraConfig, e
 func ApplicationResult2MessageString(applicationResult ApplicationResult) (output string, err error) {
 
 	output +=
-	//applicationResult.ApplicationId.ApplicationName +
+		//applicationResult.ApplicationId.ApplicationName +
 		applicationResult.AuroraDc.GroupId + "/" + applicationResult.AuroraDc.ArtifactId + "-" + applicationResult.AuroraDc.Version +
 			" deployed in " + applicationResult.AuroraDc.Cluster + "/" + applicationResult.AuroraDc.EnvName
 	return
@@ -299,11 +299,11 @@ func CallApiShort(httpMethod string, apiEndpoint string, jsonRequestBody string,
 		persistentOptions.DryRun,
 		persistentOptions.Debug,
 		persistentOptions.ServerApi,
-	)
+		persistentOptions.Token)
 }
 
 func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
-	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string) (outputMap map[string]string, err error) {
+	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (outputMap map[string]string, err error) {
 	//var openshiftConfig *openshift.OpenshiftConfig
 	var apiCluster *openshift.OpenshiftCluster
 

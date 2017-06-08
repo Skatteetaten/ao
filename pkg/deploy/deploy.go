@@ -62,7 +62,7 @@ func (deployClass *DeployClass) ExecuteDeploy(args []string, overrideJsons []str
 	} else {
 		responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, json, persistentOptions.ShowConfig,
 			persistentOptions.ShowObjects, false, persistentOptions.Localhost,
-			persistentOptions.Verbose, deployClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi)
+			persistentOptions.Verbose, deployClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, "")
 		if err != nil {
 			for server := range responses {
 				response, err := serverapi_v2.ParseResponse(responses[server])

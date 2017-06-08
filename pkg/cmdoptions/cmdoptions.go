@@ -1,6 +1,8 @@
 package cmdoptions
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type CommonCommandOptions struct {
 	Verbose     bool
@@ -10,6 +12,7 @@ type CommonCommandOptions struct {
 	ShowConfig  bool
 	ShowObjects bool
 	ServerApi   string
+	Token       string
 }
 
 func (opt *CommonCommandOptions) ListOptions() (output string) {

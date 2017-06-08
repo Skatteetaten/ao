@@ -78,7 +78,7 @@ func (importClass *ImportClass) ExecuteImport(args []string,
 		} else {
 			responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
-				persistentOptions.Verbose, importClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi)
+				persistentOptions.Verbose, importClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, "")
 			if err != nil {
 				for server := range responses {
 					response, err := serverapi_v2.ParseResponse(responses[server])
