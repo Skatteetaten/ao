@@ -1,0 +1,292 @@
+{
+    "kind": "List",
+    "apiVersion": "v1",
+    "metadata": {},
+    "items": [
+            {
+            "kind": "PersistentVolumeClaim",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "aoc-update-htdocs"
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteMany"
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": "15Gi"
+                    }
+                }
+            }
+        },
+        {
+            "kind": "DeploymentConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "aoc-update-service-10",
+                "generation": 1,
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "aoc-update-service-10"
+                }
+            },
+            "spec": {
+                "strategy": {
+                    "type": "Rolling",
+                    "rollingParams": {
+                        "updatePeriodSeconds": 1,
+                        "intervalSeconds": 1,
+                        "timeoutSeconds": 600,
+                        "maxUnavailable": "25%",
+                        "maxSurge": "25%"
+                    },
+                    "resources": {},
+                    "activeDeadlineSeconds": 21600
+                },
+                "triggers": [
+                    {
+                        "type": "ConfigChange"
+                    },
+                    {
+                        "type": "ImageChange",
+                        "imageChangeParams": {
+                            "automatic": true,
+                            "containerNames": [
+                                "aoc-update-service-10"
+                            ],
+                            "from": {
+                                "kind": "ImageStreamTag",
+                                "namespace": "paas-aoc-update",
+                                "name": "s2i-httpd-server:latest"
+                            }
+                        }
+                    }
+                ],
+                "replicas": 1,
+                "test": false,
+                "selector": {
+                    "app": "aoc-update-service-10",
+                    "deploymentconfig": "aoc-update-service-10"
+                },
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "app": "aoc-update-service-10",
+                            "deploymentconfig": "aoc-update-service-10"
+                        }
+                    },
+                    "spec": {
+                        "volumes": [
+                            {
+                                "name": "volume-va8p1",
+                                "persistentVolumeClaim": {
+                                    "claimName": "aoc-update-htdocs"
+                                }
+                            }
+                        ],
+                        "containers": [
+                            {
+                                "name": "aoc-update-service-10",
+                                "image": "getwarped/s2i-httpd-server",
+                                "ports": [
+                                    {
+                                        "containerPort": 8080,
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "resources": {},
+                                "volumeMounts": [
+                                    {
+                                        "name": "volume-va8p1",
+                                        "mountPath": "/opt/app-root/htdocs"
+                                    }
+                                ],
+  
+                        "livenessProbe": {
+                            "httpGet": {
+                                "path": "/",
+                                "port": 8080,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 5,
+                            "timeoutSeconds": 1,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "failureThreshold": 3
+                        },
+                        "readinessProbe": {
+                            "httpGet": {
+                                "path": "/",
+                                "port": 8080,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 5,
+                            "timeoutSeconds": 1,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "failureThreshold": 3
+                        },
+
+                                "terminationMessagePath": "/dev/termination-log",
+                                "imagePullPolicy": "Always"
+                            }
+                        ],
+                        "restartPolicy": "Always",
+                        "terminationGracePeriodSeconds": 30,
+                        "dnsPolicy": "ClusterFirst",
+                        "securityContext": {}
+                    }
+                }
+            }
+        },
+        {
+            "kind": "ReplicationController",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "aoc-update-service-10",
+                "generation": 1,
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "aoc-update-service-10",
+                    "openshift.io/deployment-config.name": "aoc-update-service-10"
+                },
+                "annotations": {
+                    "openshift.io/deployer-pod.name": "aoc-update-service-10-deploy",
+                    "openshift.io/deployment-config.latest-version": "2",
+                    "openshift.io/deployment-config.name": "aoc-update-service-10",
+                    "openshift.io/deployment.phase": "Complete",
+                    "openshift.io/deployment.replicas": "",
+                    "openshift.io/deployment.status-reason": "config change"
+                }
+            },
+            "spec": {
+                "replicas": 1,
+                "selector": {
+                    "app": "aoc-update-service-10",
+                    "deployment": "aoc-update-service-10",
+                    "deploymentconfig": "aoc-update-service-10"
+                },
+                "template": {
+                    "metadata": {
+                        "creationTimestamp": null,
+                        "labels": {
+                            "app": "aoc-update-service-10",
+                            "deployment": "aoc-update-service-10",
+                            "deploymentconfig": "aoc-update-service-10"
+                        },
+                        "annotations": {
+                            "openshift.io/deployment-config.latest-version": "2",
+                            "openshift.io/deployment-config.name": "aoc-update-service-10",
+                            "openshift.io/deployment.name": "aoc-update-service-10",
+                            "openshift.io/generated-by": "OpenShiftWebConsole"
+                        }
+                    },
+                    "spec": {
+                        "volumes": [
+                            {
+                                "name": "volume-va8p1",
+                                "persistentVolumeClaim": {
+                                    "claimName": "aoc-update-htdocs"
+                                }
+                            }
+                        ],
+                        "containers": [
+                            {
+                                "name": "aoc-update-service-10",
+                                "image": "getwarped/s2i-httpd-server",
+                                "ports": [
+                                    {
+                                        "containerPort": 8080,
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "resources": {},
+                                "volumeMounts": [
+                                    {
+                                        "name": "volume-va8p1",
+                                        "mountPath": "/opt/app-root/htdocs"
+                                    }
+                                ],
+                                "terminationMessagePath": "/dev/termination-log",
+                                "imagePullPolicy": "Always"
+                            }
+                        ],
+                        "restartPolicy": "Always",
+                        "terminationGracePeriodSeconds": 30,
+                        "dnsPolicy": "ClusterFirst",
+                        "securityContext": {}
+                    }
+                }
+            },
+            "status": {
+                "replicas": 0
+            }
+        },
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "aoc-update-service",
+                "creationTimestamp": null
+            },
+            "spec": {
+                "to": {
+                    "kind": "Service",
+                    "name": "aoc-update-service-10",
+                    "weight": 100
+                },
+                "port": {
+                    "targetPort": "8080-tcp"
+                },
+                "wildcardPolicy": "None"
+            },
+            "status": {
+                "ingress": [
+                    {
+                        "routerName": "router",
+                        "conditions": [
+                            {
+                                "type": "Admitted",
+                                "status": "True"
+                            }
+                        ],
+                        "wildcardPolicy": "None"
+                    }
+                ]
+            }
+        },
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "aoc-update-service-10",
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "aoc-update-service-10"
+                },
+                "annotations": {
+                    "openshift.io/generated-by": "OpenShiftWebConsole"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "8080-tcp",
+                        "protocol": "TCP",
+                        "port": 8080,
+                        "targetPort": 8080
+                    }
+                ],
+                "selector": {
+                    "deploymentconfig": "aoc-update-service-10"
+                },
+                "type": "ClusterIP",
+                "sessionAffinity": "None"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        }
+    ]
+}
