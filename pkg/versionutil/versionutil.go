@@ -24,17 +24,18 @@ var githash = ""
 var version = ""
 
 func (versionStruct *VersionStruct) Version2Text() (output string, err error) {
-	var version string
+
 	if versionStruct.BuildNumber != "" {
 		version = version + "." + versionStruct.BuildNumber
 	}
-	output = "Aurora OC version " + versionStruct.MajorVersion + "." + versionStruct.MinorVersion + "." + versionStruct.BuildNumber
+	output = "Aurora OC version " + versionStruct.Version //MajorVersion + "." + versionStruct.MinorVersion + "." + versionStruct.BuildNumber
 	if versionStruct.Githash != "" {
 		output += "\nBranch: " + versionStruct.Branch + " (" + versionStruct.Githash + ")"
 	}
 	if versionStruct.BuildStamp != "" {
 		output += "\nBuild Time: " + versionStruct.BuildStamp
 	}
+
 	return
 }
 
@@ -42,7 +43,7 @@ func (versionStruct *VersionStruct) Init() { // majorVersion string, minorVersio
 	versionStruct.MajorVersion = majorVersion
 	versionStruct.MinorVersion = minorVersion
 	versionStruct.BuildNumber = buildnumber
-	versionStruct.Version = majorVersion + "." + minorVersion + "." + buildnumber
+	versionStruct.Version = version //majorVersion + "." + minorVersion + "." + buildnumber
 	versionStruct.BuildStamp = buildstamp
 	versionStruct.Branch = branch
 	versionStruct.Githash = githash
@@ -59,7 +60,7 @@ func (versionStruct *VersionStruct) Version2Json() (output string, err error) {
 }
 
 func (versionStruct *VersionStruct) Version2Filename() (output string, err error) {
-	output = versionStruct.MajorVersion + "." + versionStruct.MinorVersion + "." + versionStruct.BuildNumber
+	output = versionStruct.Version //MajorVersion + "." + versionStruct.MinorVersion + "." + versionStruct.BuildNumber
 	if output == ".." {
 		err = errors.New("No version injected")
 		return

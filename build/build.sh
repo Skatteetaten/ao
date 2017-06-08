@@ -42,6 +42,6 @@ export GOARCH="${ARCH}"
 PACKAGES=$(go list ./... | grep "aoc/cmd\|aoc/pkg\|aoc$" | xargs echo)
 go install                                                         \
     -installsuffix "static"                                        \
-    -ldflags "-X ${PKG}/pkg/version.VERSION=${VERSION}" \
+    -ldflags "-X ${PKG}/pkg/versionutil.version=${VERSION} -X ${PKG}/pkg/versionutil.branch=${BRANCH} -X ${PKG}/pkg/versionutil.buildstamp=${BUILDSTAMP} -X ${PKG}/pkg/versionutil.githash=${GITHASH}" \
     ${PACKAGES}
 

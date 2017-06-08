@@ -30,6 +30,10 @@ VERSION := $(shell git describe --tags --always --dirty)
 # This version-strategy uses a manual value to set the version string
 #VERSION := 1.2.3
 
+BRANCH := $(shell git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+BUILDSTAMP := $(shell date '+%Y-%m-%d_%H:%M:%S%p')
+GITHASH := $(shell git rev-parse HEAD)
+
 ###
 ### These variables should not need tweaking.
 ###
@@ -93,6 +97,9 @@ bin/$(ARCH)/$(BIN): build-dirs
 	    /bin/sh -c "                                                       \
 	        ARCH=$(ARCH)                                                   \
 	        VERSION=$(VERSION)                                             \
+	        BRANCH=$(BRANCH)                                               \
+	        BUILDSTAMP=$(BUILDSTAMP)                                       \
+	        GITHASH=$(GITHASH)                                             \
 	        PKG=$(PKG)                                                     \
 	        ./build/build.sh                                               \
 	    "
