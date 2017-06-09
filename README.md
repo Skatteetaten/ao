@@ -36,7 +36,7 @@ Yb,_,dP       `8b, `Y8b,,__,,d8P'   `Yba,,_____,
  #Build?
  {go} is your GOPATH, default /home/\<user>/go
  Make requires docker
- Alterntively, use versionbuild.sh
+
  
  ```
 mkdir -p {go}/src/github.com/skatteetaten
