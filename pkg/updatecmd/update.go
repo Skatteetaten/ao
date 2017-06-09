@@ -7,12 +7,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path/filepath"
 )
 
-const aoc5Url = "http://uil0map-hkldev-app01/aoc-v5"
+const aoc5Url = "http://aoc-update-service-paas-aoc-update.utv.paas.skead.no" //"http://uil0map-hkldev-app01/aoc-v5"
 
-func UpdateSelf(args []string, simulate bool, forceVersion string) (output string, err error) {
+func UpdateSelf(args []string, simulate bool, forceVersion string, forceUpdate bool) (output string, err error) {
 	var releaseVersion string
 	if err != nil {
 		return
@@ -29,7 +28,7 @@ func UpdateSelf(args []string, simulate bool, forceVersion string) (output strin
 
 	myVersion, err := getMyVersion()
 
-	if myVersion != releaseVersion {
+	if myVersion != releaseVersion || forceUpdate {
 		output += "New version detected: Current version: " + myVersion + ".  Available version: " + releaseVersion
 		if !simulate {
 			err = doUpdate(releaseVersion)
@@ -49,9 +48,14 @@ func doUpdate(version string) (err error) {
 	releaseFilename := "aoc_" + version
 	releaseUrl := aoc5Url + "/" + releaseFilename
 
-	executablePath, err := filepath.Abs(os.Args[0])
-	releasePath := executablePath + "_" + version
+	executablePath, err := os.Executable()
+	if err != nil {
+		return
+	}
 
+	releasePath := executablePath + "_" + version
+	fmt.Println("DEBUG: Executable path: " + executablePath)
+	fmt.Println("DEBUG: Release path: " + releasePath)
 	body, err := getFile(releaseUrl)
 	err = ioutil.WriteFile(releasePath, []byte(body), 0750)
 	if err != nil {

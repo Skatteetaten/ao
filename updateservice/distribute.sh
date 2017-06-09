@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 #
+# Usage: ./distribute <persistent-volume-name>
+#
+# Copy a release version of aoc to a Persistent Volume bound to a Persistent Volume Claim used by
+# the aoc-update-service apache http server.
+# The script checks that the given persistent-volume-name is actually bounded to the update service
+#
+# Prerequisites:
+#   ssh login to an OpenShift node where the correct Perstent Volume is mounted
+#   sudo privileges on the OpenShift node to be able to copy the files to the volume
+#   oc login to a user with access to the OpenShift project runnint the aoc-update-service
+#   The OpenShift user must be named the same as the logged-in linux user
+#
 # Check parameters
 #
 pv=$1
