@@ -26,7 +26,7 @@ import (
 var importCmd = &cobra.Command{
 	Use:   "import <folder>",
 	Short: "Imports a set of configuration files to the central store.",
-	Long:  `Imports a set of configuration files to the central store..`,
+	Long:  `Imports a set of configuration files to the central store.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Work your own magic here
 		var importObject importcmd.ImportClass

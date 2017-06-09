@@ -29,7 +29,7 @@ var allClusters bool
 var getCmd = &cobra.Command{
 	Use:   "get files | file [env/]<filename> | adc",
 	Short: "Retrieves information from the repository",
-	Long:  `Can be uses to retrieve one file or all the files from the respository.`,
+	Long:  `Can be used to retrieve one file or all the files from the respository.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var getcmdObject getcmd.GetcmdClass
 		output, err := getcmdObject.GetObject(args, &persistentOptions, outputFormat, allClusters)

@@ -40,7 +40,7 @@ If no changes is detected, no updates to OpenShift will be done (except for an u
 As per default, all applications in all environments will be deployed.
 Using the -e flag, it is possible to limit the deploy to the specified environment.
 Using the -a flag, it is possible to limit the deploy to the specified application.
-Both flags can be uses to limit the deploy to a specific application in a specific environment.`,
+Both flags can be used to limit the deploy to a specific application in a specific environment.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var deployObject deploy.DeployClass
 

@@ -28,13 +28,9 @@ var pingCluster string
 // pingCmd represents the ping command
 var pingCmd = &cobra.Command{
 	Use:   "ping",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Checks for open connectivity from all nodes in the cluster to a specific ip address and port. ",
+	Long: `Invokes the network debug service in the Aurora Console
+to ping the specified address and port from each node.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var pingObject pingcmd.PingcmdClass
 		output, err := pingObject.PingAddress(args, pingPort, pingCluster, &persistentOptions)

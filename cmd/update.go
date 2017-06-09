@@ -28,13 +28,8 @@ var forceUpdate bool
 // updateCmd represents the update command
 var updateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Check for available updates for the aoc client, and downloads the update if available.",
+	Long:  `Available updates are searced for using a service in the OpenShift cluster.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		output, err := updatecmd.UpdateSelf(args, simulate, forceVersion, forceUpdate)
 		if err != nil {

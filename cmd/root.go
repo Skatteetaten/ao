@@ -23,7 +23,9 @@ var localDryRun bool
 var RootCmd = &cobra.Command{
 	Use:   "aoc",
 	Short: "Aurora Openshift CLI",
-	Long: `A command line interface that interacts with serverapi
+	Long: `A command line interface that interacts with the Boober serverapi
+to enable the user to manipulate the Aurora Config for an affiliation, and to
+ deploy one or more application.
 
 This application has two main parts.
 1. manage the aoc configuration via cli
