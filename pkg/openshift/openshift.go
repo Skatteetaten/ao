@@ -47,6 +47,25 @@ type OpenshiftConfig struct {
 	Clusters    []*OpenshiftCluster `json:"clusters"`
 }
 
+func Logout(configLocation string) (err error) {
+	config, err := loadConfigFile(configLocation)
+	if err != nil {
+		return
+	}
+
+	for idx := range config.Clusters {
+		config.Clusters[idx].Token = ""
+	}
+
+	config.Affiliation = ""
+	err = config.write(configLocation)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 func Login(configLocation string, userName string, affiliation string) {
 
 	//fmt.Println("Login in to all reachable cluster with userName", userName)
@@ -156,15 +175,29 @@ func (this *OpenshiftConfig) write(configLocation string) error {
 	return nil
 }
 
-func newConfig() *OpenshiftConfig {
+func newConfig() (config *OpenshiftConfig) {
 	//fmt.Println("Pinging all clusters and noting which clusters are active in this profile")
 	ch := make(chan *OpenshiftCluster)
-	clusters := []string{"utv", "test", "prod", "utv-relay", "test-relay", "prod-relay"}
+	clusters := []string{"xutv", "test", "prod", "xutv-relay", "test-relay", "prod-relay"}
 	for _, c := range clusters {
 		go newOpenshiftCluster(c, ch)
 	}
 
-	return collectOpenshiftClusters(len(clusters), ch)
+	config = collectOpenshiftClusters(len(clusters), ch)
+
+	var taxNorwayClusterFound = false
+	for i := range config.Clusters {
+		if config.Clusters[i].Reachable {
+			taxNorwayClusterFound = true
+		}
+	}
+	if taxNorwayClusterFound {
+		fmt.Println("Running in a Norwegian Tax Compliant environment; default cluster config created")
+	} else {
+		config.Clusters = nil
+	}
+
+	return
 }
 
 func newOpenshiftCluster(name string, ch chan *OpenshiftCluster) {

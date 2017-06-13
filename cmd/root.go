@@ -60,9 +60,9 @@ func init() {
 		"", false, "Show debug information")
 	RootCmd.PersistentFlags().MarkHidden("debug")
 
-	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.DryRun, "dryrun",
-		"d", false,
-		"Do not perform a setup, just collect and print the configuration files")
+	//RootCmd.PersistentFlags().BoolVarP(&persistentOptions.DryRun, "dryrun",
+	//	"d", false,
+	//	"Do not perform a setup, just collect and print the configuration files")
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Localhost, "localhost",
 		"l", false, "Send setup to Boober on localhost")
@@ -74,11 +74,11 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&persistentOptions.Token, "token",
 		"", "", "Token to be used for serverapi connections")
 
-	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowConfig, "showconfig",
-		"", false, "Print merged config from Boober to standard out")
+	//RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowConfig, "showconfig",
+	//	"", false, "Print merged config from Boober to standard out")
 
-	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowObjects, "showobjects",
-		"", false, "Print object definitions from Boober to standard out")
+	//RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowObjects, "showobjects",
+	//	"", false, "Print object definitions from Boober to standard out")
 	// test
 
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/skatteetaten/aoc/pkg/configuration"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
+	"github.com/skatteetaten/aoc/pkg/kubernetes"
 )
 
 const UsageString = "Usage: aoc get files | file [env/]<filename> | adc | secrets | secret <secretname>"
@@ -91,13 +92,13 @@ func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.Common
 	const tab = " "
 
 	openshiftConfig := getcmdClass.configuration.GetOpenshiftConfig()
-	output = "CLUSTER NAME         REACHABLE  API  URL"
+	output = "CLUSTER NAME         REACHABLE  LOGGED IN  API  URL"
 	for i := range openshiftConfig.Clusters {
 		if openshiftConfig.Clusters[i].Reachable || allClusters {
 			displayClusterName = openshiftConfig.Clusters[i].Name
 			if displayClusterName == clusterName || clusterName == "" {
 				var apiColumn = fileutil.RightPad("", 4)
-				if clusterName == openshiftConfig.APICluster {
+				if displayClusterName == openshiftConfig.APICluster {
 					apiColumn = fileutil.RightPad("Yes", 4)
 				}
 				var reachableColumn = fileutil.RightPad("", 10)
@@ -107,7 +108,12 @@ func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.Common
 				var urlColumn = ""
 				displayClusterName = fileutil.RightPad(displayClusterName, 20)
 				urlColumn = openshiftConfig.Clusters[i].Url
-				output += "\n" + displayClusterName + tab + reachableColumn + tab + apiColumn + tab + urlColumn
+
+				loggedInColumn := "   "
+				if openshiftConfig.Clusters[i].HasValidToken() {
+					loggedInColumn = "YES"
+				}
+				output += "\n" + displayClusterName + tab + reachableColumn + tab + loggedInColumn + tab + apiColumn + tab + urlColumn
 			}
 		}
 
@@ -125,6 +131,30 @@ func (getcmdClass *GetcmdClass) getSecrets(persistentOptions *cmdoptions.CommonC
 		if secretName == "" || secrets[secretindex] == secretName {
 			output += "\n" + secrets[secretindex]
 		}
+	}
+	return
+}
+
+func (getcmdClass *GetcmdClass) getKubeConfig(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+	var kubeConfig kubernetes.KubeConfig
+	err = kubeConfig.GetConfig()
+	output += "Current Context: " + kubeConfig.CurrentContext
+	output += "\nClusters:"
+	for i := range kubeConfig.Clusters {
+		output += "\n\tName: " + kubeConfig.Clusters[i].Name
+		output += "\n\t\tServer: " + kubeConfig.Clusters[i].Cluster.Server
+	}
+	output += "\nContexts:"
+	for i := range kubeConfig.Contexts {
+		output += "\n\tName: " + kubeConfig.Contexts[i].Name
+		output += "\n\t\tCluster: " + kubeConfig.Contexts[i].Context.Cluster
+		output += "\n\t\tNamespace: " + kubeConfig.Contexts[i].Context.Namespace
+		output += "\n\t\tUser: " + kubeConfig.Contexts[i].Context.User
+	}
+	output += "\nUsers:"
+	for i := range kubeConfig.Users {
+		output += "\n\tName: " + kubeConfig.Users[i].Name
+		output += "\n\t\tToken: " + kubeConfig.Users[i].User.Token
 	}
 	return
 }
@@ -164,6 +194,10 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 				secretName = args[1]
 			}
 			output, err = getcmdClass.getSecrets(persistentOptions, secretName)
+		}
+	case "kubeconfig":
+		{
+			output, err = getcmdClass.getKubeConfig(persistentOptions)
 		}
 	}
 

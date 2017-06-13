@@ -11,6 +11,7 @@ import (
 )
 
 var userName string
+var tokenFile string
 
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
@@ -32,5 +33,6 @@ func init() {
 	RootCmd.AddCommand(loginCmd)
 	viper.BindEnv("USER")
 	viper.BindEnv("HOME")
-	loginCmd.LocalFlags().StringVarP(&userName, "username", "u", viper.GetString("USER"), "the username to log in with, standard is $USER")
+	loginCmd.Flags().StringVarP(&userName, "username", "u", viper.GetString("USER"), "the username to log in with, standard is $USER")
+	loginCmd.Flags().StringVarP(&tokenFile, "tokenfile", "", "", "Read OC token from this file")
 }
