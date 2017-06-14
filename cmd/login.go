@@ -12,6 +12,7 @@ import (
 
 var userName string
 var tokenFile string
+var recreateConfig bool
 
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
@@ -25,6 +26,14 @@ var loginCmd = &cobra.Command{
 		}
 		affiliation := args[0]
 		var configLocation = viper.GetString("HOME") + "/.aoc.json"
+		if recreateConfig {
+			err := os.Remove(configLocation)
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
+		}
+		initConfig()
 		openshift.Login(configLocation, userName, affiliation)
 	},
 }
@@ -35,4 +44,5 @@ func init() {
 	viper.BindEnv("HOME")
 	loginCmd.Flags().StringVarP(&userName, "username", "u", viper.GetString("USER"), "the username to log in with, standard is $USER")
 	loginCmd.Flags().StringVarP(&tokenFile, "tokenfile", "", "", "Read OC token from this file")
+	loginCmd.Flags().BoolVarP(&recreateConfig, "recreate-config", "", false, "Removes current cluster config and recreates")
 }

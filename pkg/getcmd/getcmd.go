@@ -10,7 +10,7 @@ import (
 	"github.com/skatteetaten/aoc/pkg/kubernetes"
 )
 
-const UsageString = "Usage: aoc get files | file [env/]<filename> | adc | secrets | secret <secretname>"
+const UsageString = "Usage: aoc get files | file [env/]<filename> | adc | secrets | secret <secretname> | cluster <clustername> | clusters | kubeconfig | oclogin"
 const filesUsageString = "Usage: aoc get files"
 const fileUseageString = "Usage: aoc get file [env/]<filename>"
 const adcUsageString = "Usage: aoc get adc"
@@ -138,6 +138,10 @@ func (getcmdClass *GetcmdClass) getSecrets(persistentOptions *cmdoptions.CommonC
 func (getcmdClass *GetcmdClass) getKubeConfig(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 	var kubeConfig kubernetes.KubeConfig
 	err = kubeConfig.GetConfig()
+	if err != nil {
+		return
+	}
+
 	output += "Current Context: " + kubeConfig.CurrentContext
 	output += "\nClusters:"
 	for i := range kubeConfig.Clusters {
@@ -156,6 +160,19 @@ func (getcmdClass *GetcmdClass) getKubeConfig(persistentOptions *cmdoptions.Comm
 		output += "\n\tName: " + kubeConfig.Users[i].Name
 		output += "\n\t\tToken: " + kubeConfig.Users[i].User.Token
 	}
+	return
+}
+
+func (getcmdClass *GetcmdClass) getOcLogin(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+	var kubeConfig kubernetes.KubeConfig
+	cluster, user, token, err := kubeConfig.GetClusterUserAndToken()
+	if err != nil {
+		return
+	}
+	output += "Cluster: " + cluster
+	output += "\nUser: " + user
+	output += "\nToken: " + token
+
 	return
 }
 
@@ -199,6 +216,10 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 		{
 			output, err = getcmdClass.getKubeConfig(persistentOptions)
 		}
+	case "oclogin":
+		{
+			output, err = getcmdClass.getOcLogin(persistentOptions)
+		}
 	}
 
 	return
@@ -233,8 +254,16 @@ func validateEditcmd(args []string) (err error) {
 				return
 			}
 		}
+	case "cluster", "clusters", "secret", "secrets", "kubeconfig", "oclogin":
+		{
+			if len(args) > 1 {
+				err = errors.New(UsageString)
+			}
+			return
+		}
 	default:
 		{
+			err = errors.New(UsageString)
 			return
 		}
 

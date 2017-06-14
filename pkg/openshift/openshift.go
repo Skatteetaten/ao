@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/howeyc/gopass"
+	"github.com/skatteetaten/aoc/pkg/kubernetes"
 	"io/ioutil"
 	"log"
 	"net"
@@ -107,7 +108,10 @@ func LoadOrInitiateConfigFile(configLocation string) (*OpenshiftConfig, error) {
 
 	if err != nil {
 		//fmt.Println("No config file found, initializing new config")
-		config := newConfig()
+		config, err := newConfig()
+		if err != nil {
+			return nil, err
+		}
 		if err := config.write(configLocation); err != nil {
 			return nil, err
 		}
@@ -175,12 +179,13 @@ func (this *OpenshiftConfig) write(configLocation string) error {
 	return nil
 }
 
-func newConfig() (config *OpenshiftConfig) {
+func newConfig() (config *OpenshiftConfig, err error) {
 	//fmt.Println("Pinging all clusters and noting which clusters are active in this profile")
 	ch := make(chan *OpenshiftCluster)
 	clusters := []string{"xutv", "test", "prod", "xutv-relay", "test-relay", "prod-relay"}
 	for _, c := range clusters {
-		go newOpenshiftCluster(c, ch)
+		cluster := fmt.Sprintf(urlPattern, c)
+		go newOpenshiftCluster(c, cluster, ch)
 	}
 
 	config = collectOpenshiftClusters(len(clusters), ch)
@@ -194,14 +199,34 @@ func newConfig() (config *OpenshiftConfig) {
 	if taxNorwayClusterFound {
 		fmt.Println("Running in a Norwegian Tax Compliant environment; default cluster config created")
 	} else {
-		config.Clusters = nil
+		config, err = getOcClusters()
+		if err != nil {
+			return
+		}
 	}
 
 	return
 }
 
-func newOpenshiftCluster(name string, ch chan *OpenshiftCluster) {
-	cluster := fmt.Sprintf(urlPattern, name)
+func getOcClusters() (config *OpenshiftConfig, err error) {
+	var kubeConfig kubernetes.KubeConfig
+
+	err = kubeConfig.GetConfig()
+	if err != nil {
+		return
+	}
+	ch := make(chan *OpenshiftCluster)
+	for i := range kubeConfig.Clusters {
+		go newOpenshiftCluster(kubeConfig.Clusters[i].Name, kubeConfig.Clusters[i].Cluster.Server, ch)
+	}
+
+	config = collectOpenshiftClusters(len(kubeConfig.Clusters), ch)
+
+	return
+}
+
+func newOpenshiftCluster(name string, cluster string, ch chan *OpenshiftCluster) {
+	//cluster := fmt.Sprintf(urlPattern, name)
 	reachable := ping(cluster)
 	ch <- &OpenshiftCluster{
 		Name:      name,
