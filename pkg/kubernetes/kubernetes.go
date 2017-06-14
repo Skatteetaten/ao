@@ -1,9 +1,11 @@
 package kubernetes
 
 import (
+	"errors"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"strings"
 )
 
 type KubeConfig struct {
@@ -49,7 +51,48 @@ func (kubeConfig *KubeConfig) GetConfig() error {
 	return nil
 }
 
-func (kubeConfig *KubeConfig) getUserAndToken() (username string, token string) {
+func (kubeConfig *KubeConfig) GetClusterUserAndToken() (clusterAddress string, username string, token string, err error) {
+
+	err = kubeConfig.GetConfig()
+	if err != nil {
+		return
+	}
+
+	currentContext := kubeConfig.CurrentContext
+	if currentContext == "" {
+		err = errors.New("No current OC context")
+		return
+	}
+
+	currentContextParts := strings.Split(currentContext, "/")
+	if len(currentContextParts) < 3 {
+		err = errors.New("Unexpected current context format: " + currentContext)
+		return
+	}
+
+	currentClusterName := currentContextParts[1]
+	username = currentContextParts[2]
+
+	for i := range kubeConfig.Clusters {
+		if kubeConfig.Clusters[i].Name == currentClusterName {
+			clusterAddress = kubeConfig.Clusters[i].Cluster.Server
+		}
+	}
+	if clusterAddress == "" {
+		err = errors.New("Cluster address not found in kubeconfig")
+		return
+	}
+
+	for i := range kubeConfig.Users {
+		if kubeConfig.Users[i].Name == username+"/"+currentClusterName {
+			token = kubeConfig.Users[i].User.Token
+		}
+	}
+
+	if token == "" {
+		err = errors.New("Token not found in kubeconfig")
+		return
+	}
 
 	return
 }
