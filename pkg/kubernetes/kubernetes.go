@@ -51,6 +51,47 @@ func (kubeConfig *KubeConfig) GetConfig() error {
 	return nil
 }
 
+func (kubeConfig *KubeConfig) GetToken(clusterName string) (token string, err error) {
+	err = kubeConfig.GetConfig()
+	if err != nil {
+		return
+	}
+
+	for i := range kubeConfig.Users {
+		userParts := strings.Split(kubeConfig.Users[i].Name, "/")
+		if len(userParts) < 2 {
+			err = errors.New("Unexpected user format: " + kubeConfig.Users[i].Name)
+			return
+		}
+		if userParts[1] == clusterName {
+			token = kubeConfig.Users[i].User.Token
+		}
+	}
+	return
+}
+
+func (kubeConfig *KubeConfig) GetClusterName() (clusterName string, err error) {
+	err = kubeConfig.GetConfig()
+	if err != nil {
+		return
+	}
+
+	currentContext := kubeConfig.CurrentContext
+	if currentContext == "" {
+		err = errors.New("No current OC context")
+		return
+	}
+
+	currentContextParts := strings.Split(currentContext, "/")
+	if len(currentContextParts) < 3 {
+		err = errors.New("Unexpected current context format: " + currentContext)
+		return
+	}
+
+	clusterName = currentContextParts[1]
+	return
+}
+
 func (kubeConfig *KubeConfig) GetClusterUserAndToken() (clusterAddress string, username string, token string, err error) {
 
 	err = kubeConfig.GetConfig()

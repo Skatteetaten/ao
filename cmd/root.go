@@ -44,7 +44,7 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initConfigCobra)
 
 	//Verbose     bool
 	//Debug       bool
@@ -84,13 +84,18 @@ func init() {
 }
 
 // initConfig reads in config file and ENV variables if set.
-func initConfig() {
+
+func initConfigCobra() {
+	initConfig(false)
+}
+
+func initConfig(useOcConfig bool) {
 	viper.SetConfigName(".aoc")  // name of config file (without extension)
 	viper.AddConfigPath("$HOME") // adding home directory as first search path
 	viper.AutomaticEnv()         // read in environment variables that match
 	viper.BindEnv("HOME")
 
 	var configLocation = viper.GetString("HOME") + "/.aoc.json"
-	openshift.LoadOrInitiateConfigFile(configLocation)
+	openshift.LoadOrInitiateConfigFile(configLocation, useOcConfig)
 
 }

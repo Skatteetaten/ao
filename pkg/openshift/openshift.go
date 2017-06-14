@@ -71,12 +71,12 @@ func Login(configLocation string, userName string, affiliation string) {
 
 	//fmt.Println("Login in to all reachable cluster with userName", userName)
 	config, err := loadConfigFile(configLocation)
-	config.Affiliation = affiliation
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	config.Affiliation = affiliation
 	var password string
 	for idx := range config.Clusters {
 		cluster := config.Clusters[idx]
@@ -103,12 +103,12 @@ func Login(configLocation string, userName string, affiliation string) {
 	config.write(configLocation)
 }
 
-func LoadOrInitiateConfigFile(configLocation string) (*OpenshiftConfig, error) {
+func LoadOrInitiateConfigFile(configLocation string, useOcConfig bool) (*OpenshiftConfig, error) {
 	config, err := loadConfigFile(configLocation)
 
 	if err != nil {
 		//fmt.Println("No config file found, initializing new config")
-		config, err := newConfig()
+		config, err := newConfig(useOcConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -153,9 +153,9 @@ func (this *OpenshiftCluster) HasValidToken() bool {
 		return false
 	}
 
-	url := fmt.Sprintf("%s/%s", this.Url, "oapi")
+	clusterUrl := fmt.Sprintf("%s/%s", this.Url, "oapi")
 
-	resp, err := getBearer(url, this.Token)
+	resp, err := getBearer(clusterUrl, this.Token)
 	if err != nil {
 		return false
 	}
@@ -168,44 +168,58 @@ func (this *OpenshiftCluster) HasValidToken() bool {
 }
 
 func (this *OpenshiftConfig) write(configLocation string) error {
-	json, err := json.MarshalIndent(this, "", "  ")
+	configJson, err := json.MarshalIndent(this, "", "  ")
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(configLocation, json, 0644)
+	err = ioutil.WriteFile(configLocation, configJson, 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func newConfig() (config *OpenshiftConfig, err error) {
+func newConfig(useOcConfig bool) (config *OpenshiftConfig, err error) {
 	//fmt.Println("Pinging all clusters and noting which clusters are active in this profile")
-	ch := make(chan *OpenshiftCluster)
-	clusters := []string{"xutv", "test", "prod", "xutv-relay", "test-relay", "prod-relay"}
-	for _, c := range clusters {
-		cluster := fmt.Sprintf(urlPattern, c)
-		go newOpenshiftCluster(c, cluster, ch)
-	}
-
-	config = collectOpenshiftClusters(len(clusters), ch)
 
 	var taxNorwayClusterFound = false
-	for i := range config.Clusters {
-		if config.Clusters[i].Reachable {
-			taxNorwayClusterFound = true
+	if !useOcConfig {
+		ch := make(chan *OpenshiftCluster)
+		clusters := []string{"utv", "test", "prod", "utv-relay", "test-relay", "prod-relay"}
+		for _, c := range clusters {
+			cluster := fmt.Sprintf(urlPattern, c)
+			go newOpenshiftCluster(c, cluster, ch)
+		}
+
+		config = collectOpenshiftClusters(len(clusters), ch, "")
+		if config != nil {
+			for i := range config.Clusters {
+				if config.Clusters[i].Reachable {
+					taxNorwayClusterFound = true
+				}
+			}
+
 		}
 	}
+
 	if taxNorwayClusterFound {
 		fmt.Println("Running in a Norwegian Tax Compliant environment; default cluster config created")
 	} else {
 		config, err = getOcClusters()
-		if err != nil {
+		if err != nil || config == nil {
+			config = emptyConfig()
+			err = nil
 			return
 		}
 	}
 
 	return
+}
+
+func emptyConfig() (config *OpenshiftConfig) {
+	var emptyConfig OpenshiftConfig
+
+	return &emptyConfig
 }
 
 func getOcClusters() (config *OpenshiftConfig, err error) {
@@ -215,13 +229,26 @@ func getOcClusters() (config *OpenshiftConfig, err error) {
 	if err != nil {
 		return
 	}
+	currentOcCluster, err := kubeConfig.GetClusterName()
+	if err != nil {
+		currentOcCluster = ""
+	}
+
 	ch := make(chan *OpenshiftCluster)
 	for i := range kubeConfig.Clusters {
 		go newOpenshiftCluster(kubeConfig.Clusters[i].Name, kubeConfig.Clusters[i].Cluster.Server, ch)
 	}
 
-	config = collectOpenshiftClusters(len(kubeConfig.Clusters), ch)
+	config = collectOpenshiftClusters(len(kubeConfig.Clusters), ch, currentOcCluster)
 
+	for i := range config.Clusters {
+		var token string
+		token, err = kubeConfig.GetToken(config.Clusters[i].Name)
+		if err != nil {
+			return
+		}
+		config.Clusters[i].Token = token
+	}
 	return
 }
 
@@ -235,7 +262,7 @@ func newOpenshiftCluster(name string, cluster string, ch chan *OpenshiftCluster)
 	}
 }
 
-func collectOpenshiftClusters(num int, ch chan *OpenshiftCluster) *OpenshiftConfig {
+func collectOpenshiftClusters(num int, ch chan *OpenshiftCluster, currentOcCluster string) *OpenshiftConfig {
 	var apiCluster string
 	openshiftClusters := []*OpenshiftCluster{}
 	for {
@@ -245,6 +272,10 @@ func collectOpenshiftClusters(num int, ch chan *OpenshiftCluster) *OpenshiftConf
 			if c.Reachable {
 				fmt.Println(c.Name, " is reachable")
 			}
+			if (currentOcCluster == "" && apiCluster == "" && c.Reachable && !strings.Contains(c.Name, "-relay")) || (c.Name == currentOcCluster && c.Reachable) {
+				fmt.Println(c.Name, " is the BooberAPI that will be used")
+				apiCluster = c.Name
+			}
 			if len(openshiftClusters) == num {
 				config := &OpenshiftConfig{
 					Clusters:   openshiftClusters,
@@ -253,10 +284,7 @@ func collectOpenshiftClusters(num int, ch chan *OpenshiftCluster) *OpenshiftConf
 
 				return config
 			}
-			if apiCluster == "" && c.Reachable && !strings.Contains(c.Name, "-relay") {
-				fmt.Println(c.Name, " is the BooberAPI that will be used")
-				apiCluster = c.Name
-			}
+
 		}
 	}
 }
@@ -310,8 +338,8 @@ func askForPassword() (string, error) {
 
 func getToken(cluster string, username string, password string) (string, error) {
 	urlSuffix := "/oauth/authorize?client_id=openshift-challenging-client&response_type=token"
-	url := cluster + urlSuffix
-	resp, err := getBasicAuth(url, username, password)
+	clusterUrl := cluster + urlSuffix
+	resp, err := getBasicAuth(clusterUrl, username, password)
 	if err != nil {
 		return "", err
 	}

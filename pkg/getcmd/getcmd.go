@@ -98,7 +98,7 @@ func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.Common
 			displayClusterName = openshiftConfig.Clusters[i].Name
 			if displayClusterName == clusterName || clusterName == "" {
 				var apiColumn = fileutil.RightPad("", 4)
-				if displayClusterName == openshiftConfig.APICluster {
+				if openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
 					apiColumn = fileutil.RightPad("Yes", 4)
 				}
 				var reachableColumn = fileutil.RightPad("", 10)
@@ -109,9 +109,9 @@ func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.Common
 				displayClusterName = fileutil.RightPad(displayClusterName, 20)
 				urlColumn = openshiftConfig.Clusters[i].Url
 
-				loggedInColumn := "   "
+				loggedInColumn := fileutil.RightPad("", 10)
 				if openshiftConfig.Clusters[i].HasValidToken() {
-					loggedInColumn = "YES"
+					loggedInColumn = fileutil.RightPad("Yes", 10)
 				}
 				output += "\n" + displayClusterName + tab + reachableColumn + tab + loggedInColumn + tab + apiColumn + tab + urlColumn
 			}
