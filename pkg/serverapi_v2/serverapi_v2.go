@@ -84,8 +84,9 @@ type ResponseItemError struct {
 }
 
 type AuroraConfig struct {
-	Files   map[string]json.RawMessage `json:"files"`
-	Secrets map[string]json.RawMessage `json:"secrets"`
+	Files    map[string]json.RawMessage `json:"files"`
+	Secrets  map[string]json.RawMessage `json:"secrets"`
+	Versions map[string]string          `json:"versions"`
 }
 
 type PingResult struct {

@@ -15,7 +15,7 @@ import (
 
 const InvalidConfigurationError = "Invalid configuration"
 
-func GetContent(filename string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (content string, err error) {
+func GetContent(filename string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (content string, version string, err error) {
 	auroraConfig, err := GetAuroraConfig(persistentOptions, affiliation, openshiftConfig)
 	if err != nil {
 		return
@@ -28,10 +28,15 @@ func GetContent(filename string, persistentOptions *cmdoptions.CommonCommandOpti
 			content = string(auroraConfig.Files[filenameIndex])
 		}
 	}
-	if !fileFound {
-		return "", errors.New("Illegal file/folder")
+	for versionIndex := range auroraConfig.Versions {
+		if versionIndex == filename {
+			version = auroraConfig.Versions[versionIndex]
+		}
 	}
-	return content, nil
+	if !fileFound {
+		return "", "", errors.New("Illegal file/folder")
+	}
+	return content, version, nil
 
 }
 
@@ -137,7 +142,7 @@ func GetAuroraConfig(persistentOptions *cmdoptions.CommonCommandOptions, affilia
 	return auroraConfig, nil
 }
 
-func PutContent(filename string, content string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
+func PutContent(filename string, content string, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
 	var apiEndpoint = "/affiliation/" + affiliation + "/auroraconfigfile/" + filename
 	var responses map[string]string
 	fmt.Println(apiEndpoint)
