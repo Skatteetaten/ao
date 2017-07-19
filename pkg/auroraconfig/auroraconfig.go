@@ -99,7 +99,7 @@ func GetAuroraConfig(persistentOptions *cmdoptions.CommonCommandOptions, affilia
 
 	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", persistentOptions.ShowConfig,
 		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
-		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, "")
+		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
 	if err != nil {
 		for server := range responses {
 			response, err := serverapi_v2.ParseResponse(responses[server])
@@ -146,7 +146,7 @@ func PutContent(filename string, content string, version string, persistentOptio
 
 	responses, err = serverapi_v2.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, content, persistentOptions.ShowConfig,
 		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
-		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, "")
+		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
 	if err != nil {
 		for server := range responses {
 			response, err := serverapi_v2.ParseResponse(responses[server])

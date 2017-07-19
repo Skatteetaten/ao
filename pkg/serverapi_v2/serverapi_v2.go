@@ -310,21 +310,21 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 	outputMap = make(map[string]string)
 	if localhost {
 		apiAddress = GetApiAddress("", true)
-	}
-	if apiAddress != "" {
-		var token string = ""
+
 		apiCluster, err = openshiftConfig.GetApiCluster()
 		if token == "" {
 			if apiCluster != nil {
 				token = apiCluster.Token
 			}
 		}
+		fmt.Println("DEBUG Call Api With Headers: api: " + apiAddress + ", Token: " + token)
 		output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
 			GetApiSetupUrl(apiAddress, apiEndpoint, localhost, apiAddress), token, dryRun, debug)
 		outputMap[openshiftConfig.Clusters[0].Name] = output
 		if err != nil {
 			return outputMap, err
 		}
+
 	} else {
 		var errorString string
 		var newlineErr string
