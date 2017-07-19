@@ -3,7 +3,6 @@ package auroraconfig
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
@@ -20,19 +19,15 @@ func GetContent(filename string, persistentOptions *cmdoptions.CommonCommandOpti
 	if err != nil {
 		return
 	}
-	var fileFound bool
+	var fileFound bool = false
 
-	for filenameIndex := range auroraConfig.Files {
-		if filenameIndex == filename {
-			fileFound = true
-			content = string(auroraConfig.Files[filenameIndex])
-		}
+	_, fileFound = auroraConfig.Files[filename]
+	if fileFound {
+		content = string(auroraConfig.Files[filename])
 	}
-	for versionIndex := range auroraConfig.Versions {
-		if versionIndex == filename {
-			version = auroraConfig.Versions[versionIndex]
-		}
-	}
+
+	version = auroraConfig.Versions[filename]
+
 	if !fileFound {
 		return "", "", errors.New("Illegal file/folder")
 	}
@@ -145,8 +140,6 @@ func GetAuroraConfig(persistentOptions *cmdoptions.CommonCommandOptions, affilia
 func PutContent(filename string, content string, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
 	var apiEndpoint = "/affiliation/" + affiliation + "/auroraconfigfile/" + filename
 	var responses map[string]string
-	fmt.Println(apiEndpoint)
-	fmt.Println(content)
 
 	var versionHeader = make(map[string]string)
 	versionHeader["AuroraConfigFileVersion"] = version

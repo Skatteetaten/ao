@@ -3,7 +3,6 @@ package editcmd
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"github.com/skatteetaten/aoc/pkg/auroraconfig"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
@@ -50,6 +49,9 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 	var version string
 
 	content, version, err = auroraconfig.GetContent(filename, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return "", err
+	}
 	content = jsonutil.PrettyPrintJson(content)
 
 	var editCycleDone bool
@@ -152,7 +154,7 @@ func editString(content string) (modifiedContent string, err error) {
 
 	err = os.Remove(filename)
 	if err != nil {
-		fmt.Println("WARNING: Unable to delete tempfile " + filename)
+		err = errors.New("WARNING: Unable to delete tempfile " + filename)
 	}
 	return
 }
