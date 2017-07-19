@@ -3,7 +3,6 @@ package editcmd
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"github.com/skatteetaten/aoc/pkg/auroraconfig"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
@@ -47,8 +46,12 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 
 	var filename string = args[0]
 	var content string
+	var version string
 
-	content, err = auroraconfig.GetContent(filename, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
+	content, version, err = auroraconfig.GetContent(filename, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return "", err
+	}
 	content = jsonutil.PrettyPrintJson(content)
 
 	var editCycleDone bool
@@ -73,7 +76,7 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 		modifiedContent = stripComments(modifiedContent)
 
 		if jsonutil.IsLegalJson(modifiedContent) {
-			validationMessages, err := auroraconfig.PutContent(filename, modifiedContent, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
+			validationMessages, err := auroraconfig.PutContent(filename, modifiedContent, version, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
 			if err != nil {
 				if err.Error() == auroraconfig.InvalidConfigurationError {
 					modifiedContent, _ = addComments(modifiedContent, validationMessages)
@@ -151,7 +154,7 @@ func editString(content string) (modifiedContent string, err error) {
 
 	err = os.Remove(filename)
 	if err != nil {
-		fmt.Println("WARNING: Unable to delete tempfile " + filename)
+		err = errors.New("WARNING: Unable to delete tempfile " + filename)
 	}
 	return
 }

@@ -3,7 +3,6 @@ package auroraconfig
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
@@ -15,23 +14,24 @@ import (
 
 const InvalidConfigurationError = "Invalid configuration"
 
-func GetContent(filename string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (content string, err error) {
+func GetContent(filename string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (content string, version string, err error) {
 	auroraConfig, err := GetAuroraConfig(persistentOptions, affiliation, openshiftConfig)
 	if err != nil {
 		return
 	}
-	var fileFound bool
+	var fileFound bool = false
 
-	for filenameIndex := range auroraConfig.Files {
-		if filenameIndex == filename {
-			fileFound = true
-			content = string(auroraConfig.Files[filenameIndex])
-		}
+	_, fileFound = auroraConfig.Files[filename]
+	if fileFound {
+		content = string(auroraConfig.Files[filename])
 	}
+
+	version = auroraConfig.Versions[filename]
+
 	if !fileFound {
-		return "", errors.New("Illegal file/folder")
+		return "", "", errors.New("Illegal file/folder")
 	}
-	return content, nil
+	return content, version, nil
 
 }
 
@@ -137,13 +137,14 @@ func GetAuroraConfig(persistentOptions *cmdoptions.CommonCommandOptions, affilia
 	return auroraConfig, nil
 }
 
-func PutContent(filename string, content string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
+func PutContent(filename string, content string, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
 	var apiEndpoint = "/affiliation/" + affiliation + "/auroraconfigfile/" + filename
 	var responses map[string]string
-	fmt.Println(apiEndpoint)
-	fmt.Println(content)
 
-	responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, content, persistentOptions.ShowConfig,
+	var versionHeader = make(map[string]string)
+	versionHeader["AuroraConfigFileVersion"] = version
+
+	responses, err = serverapi_v2.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, content, persistentOptions.ShowConfig,
 		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
 		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, "")
 	if err != nil {

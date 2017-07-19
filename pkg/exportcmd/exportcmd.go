@@ -42,7 +42,7 @@ func (exportcmdClass *ExportcmdClass) exportFile(filename string, persistentOpti
 	switch outputFormat {
 	case "json":
 		{
-			content, err := auroraconfig.GetContent(filename, persistentOptions, exportcmdClass.getAffiliation(), exportcmdClass.configuration.GetOpenshiftConfig())
+			content, _, err := auroraconfig.GetContent(filename, persistentOptions, exportcmdClass.getAffiliation(), exportcmdClass.configuration.GetOpenshiftConfig())
 			if err != nil {
 				return "", err
 			}

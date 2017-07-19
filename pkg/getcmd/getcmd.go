@@ -43,7 +43,7 @@ func (getcmdClass *GetcmdClass) getFile(filename string, persistentOptions *cmdo
 	switch outputFormat {
 	case "json":
 		{
-			content, err := auroraconfig.GetContent(filename, persistentOptions, getcmdClass.getAffiliation(), getcmdClass.configuration.GetOpenshiftConfig())
+			content, _, err := auroraconfig.GetContent(filename, persistentOptions, getcmdClass.getAffiliation(), getcmdClass.configuration.GetOpenshiftConfig())
 			if err != nil {
 				return "", err
 			}
@@ -75,7 +75,7 @@ func (getcmdClass *GetcmdClass) getFile(filename string, persistentOptions *cmdo
 		}
 	default:
 		{
-			err = errors.New("Illegal format.  Legal values are json, yaml.")
+			err = errors.New("Illegal format: " + outputFormat + ".  Legal values are json, yaml.")
 		}
 	}
 
