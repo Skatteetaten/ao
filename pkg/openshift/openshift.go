@@ -185,7 +185,7 @@ func newConfig(useOcConfig bool) (config *OpenshiftConfig, err error) {
 	var taxNorwayClusterFound = false
 	if !useOcConfig {
 		ch := make(chan *OpenshiftCluster)
-		clusters := []string{"utv", "test", "prod", "utv-relay", "test-relay", "prod-relay"}
+		clusters := []string{"utv", "test", "prod", "utv-relay", "test-relay", "prod-relay", "qa"}
 		for _, c := range clusters {
 			cluster := fmt.Sprintf(urlPattern, c)
 			go newOpenshiftCluster(c, cluster, ch)
@@ -275,7 +275,7 @@ func collectOpenshiftClusters(num int, ch chan *OpenshiftCluster, currentOcClust
 			if c.Reachable {
 				fmt.Println(c.Name, " is reachable")
 			}
-			if (currentOcCluster == "" && apiCluster == "" && c.Reachable && !strings.Contains(c.Name, "-relay")) || (c.Name == currentOcCluster && c.Reachable) {
+			if (currentOcCluster == "" && apiCluster == "" && c.Reachable && !strings.Contains(c.Name, "qa") && !strings.Contains(c.Name, "-relay")) || (c.Name == currentOcCluster && c.Reachable) {
 				fmt.Println(c.Name, " is the BooberAPI that will be used")
 				apiCluster = c.Name
 			}
