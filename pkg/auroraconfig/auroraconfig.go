@@ -148,7 +148,10 @@ func PutContent(filename string, content string, version string, persistentOptio
 	fmt.Println(apiEndpoint)
 	fmt.Println(content)
 
-	responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, content, persistentOptions.ShowConfig,
+	var versionHeader = make(map[string]string)
+	versionHeader["AuroraConfigFileVersion"] = version
+
+	responses, err = serverapi_v2.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, content, persistentOptions.ShowConfig,
 		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
 		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, "")
 	if err != nil {
