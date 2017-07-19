@@ -75,7 +75,7 @@ func (getcmdClass *GetcmdClass) getFile(filename string, persistentOptions *cmdo
 		}
 	default:
 		{
-			err = errors.New("Illegal format.  Legal values are json, yaml.")
+			err = errors.New("Illegal format: " + outputFormat + ".  Legal values are json, yaml.")
 		}
 	}
 

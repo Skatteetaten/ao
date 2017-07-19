@@ -276,7 +276,7 @@ func GetApiAddress(clusterName string, localhost bool) (apiAddress string) {
 	}
 	return
 }
-func GetApiSetupUrl(clusterName string, apiEndpont string, localhost bool, dryrun bool, apiAddress string) string {
+func GetApiSetupUrl(clusterName string, apiEndpont string, localhost bool, apiAddress string) string {
 	if apiAddress == "" {
 		apiAddress = GetApiAddress(clusterName, localhost)
 	}
@@ -303,9 +303,8 @@ func CallApiShort(httpMethod string, apiEndpoint string, jsonRequestBody string,
 		persistentOptions.Token)
 }
 
-func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
+func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
 	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (outputMap map[string]string, err error) {
-	//var openshiftConfig *openshift.OpenshiftConfig
 	var apiCluster *openshift.OpenshiftCluster
 
 	outputMap = make(map[string]string)
@@ -320,8 +319,8 @@ func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showCo
 				token = apiCluster.Token
 			}
 		}
-		output, err := callApiInstance(httpMethod, combindedJson, verbose,
-			GetApiSetupUrl(apiAddress, apiEndpoint, localhost, dryRun, apiAddress), token, dryRun, debug)
+		output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
+			GetApiSetupUrl(apiAddress, apiEndpoint, localhost, apiAddress), token, dryRun, debug)
 		outputMap[openshiftConfig.Clusters[0].Name] = output
 		if err != nil {
 			return outputMap, err
@@ -332,8 +331,8 @@ func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showCo
 		for i := range openshiftConfig.Clusters {
 			if openshiftConfig.Clusters[i].Reachable {
 				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
-					output, err := callApiInstance(httpMethod, combindedJson, verbose,
-						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, apiEndpoint, localhost, dryRun, apiAddress),
+					output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
+						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, apiEndpoint, localhost, apiAddress),
 						openshiftConfig.Clusters[i].Token, dryRun, debug)
 					if output != "" {
 						outputMap[openshiftConfig.Clusters[i].Name] = output
@@ -353,9 +352,17 @@ func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showCo
 		}
 	}
 	return
+
 }
 
-func callApiInstance(httpMethod string, combindedJson string, verbose bool, url string, token string, dryRun bool, debug bool) (output string, err error) {
+func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
+	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (outputMap map[string]string, err error) {
+	var headers = make(map[string]string)
+	return CallApiWithHeaders(headers, httpMethod, apiEndpoint, combindedJson, showConfig, showObjects, api, localhost, verbose,
+		openshiftConfig, dryRun, debug, apiAddress, token)
+}
+
+func callApiInstance(headers map[string]string, httpMethod string, combindedJson string, verbose bool, url string, token string, dryRun bool, debug bool) (output string, err error) {
 
 	if verbose {
 		fmt.Print("Sending config to Boober at " + url + "... ")
@@ -374,6 +381,11 @@ func callApiInstance(httpMethod string, combindedJson string, verbose bool, url 
 
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Add("dryrun", fmt.Sprintf("%v", dryRun))
+
+	for header := range headers {
+		req.Header.Add(header, headers[header])
+	}
+
 	client := &http.Client{}
 
 	resp, err := client.Do(req)
