@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-const aoc5Url = "http://aoc-update-service-paas-aoc-update.utv.paas.skead.no" //"http://uil0map-hkldev-app01/aoc-v5"
+const aoc5Url = "http://aoc-update-service-paas-aoc-update.utv.paas.skead.no"
 
 func UpdateSelf(args []string, simulate bool, forceVersion string, forceUpdate bool) (output string, err error) {
 	var releaseVersion string

@@ -5,6 +5,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/skatteetaten/aoc/pkg/openshift"
+	"github.com/skatteetaten/aoc/pkg/updatecmd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
@@ -39,6 +40,7 @@ var loginCmd = &cobra.Command{
 		}
 		initConfig(useCurrentOcLogin)
 		openshift.Login(configLocation, userName, affiliation)
+		updatecmd.UpdateSelf(args, true, "", false)
 	},
 }
 
