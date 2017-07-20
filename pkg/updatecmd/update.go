@@ -51,8 +51,6 @@ func doUpdate(version string) (err error) {
 	}
 
 	releasePath := executablePath + "_" + version
-	fmt.Println("DEBUG: Executable path: " + executablePath)
-	fmt.Println("DEBUG: Release path: " + releasePath)
 	body, err := getFile(releaseUrl)
 	err = ioutil.WriteFile(releasePath, []byte(body), 0750)
 	if err != nil {
