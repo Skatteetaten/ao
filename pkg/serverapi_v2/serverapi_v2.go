@@ -317,7 +317,7 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 				token = apiCluster.Token
 			}
 		}
-		fmt.Println("DEBUG Call Api With Headers: api: " + apiAddress + ", Token: " + token)
+		fmt.Println("DEBUG Call Api With Headers: api")
 		output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
 			GetApiSetupUrl(apiAddress, apiEndpoint, localhost, apiAddress), token, dryRun, debug)
 		outputMap[openshiftConfig.Clusters[0].Name] = output
@@ -424,7 +424,7 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 			}
 		}
 		err = errors.New(fmt.Sprintf(errorstring))
-		return
+		return "", err
 	}
 
 	if resp.StatusCode == http.StatusBadRequest {
@@ -435,7 +435,7 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 
 		err = errors.New(fmt.Sprintf(output))
 
-		return
+		return "", err
 	}
 
 	if verbose {
