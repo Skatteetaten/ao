@@ -317,7 +317,6 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 				token = apiCluster.Token
 			}
 		}
-		fmt.Println("DEBUG Call Api With Headers: api")
 		output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
 			GetApiSetupUrl(apiAddress, apiEndpoint, localhost, apiAddress), token, dryRun, debug)
 		outputMap[openshiftConfig.Clusters[0].Name] = output
