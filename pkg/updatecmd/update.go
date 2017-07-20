@@ -13,20 +13,17 @@ const aoc5Url = "http://aoc-update-service-paas-aoc-update.utv.paas.skead.no"
 
 func UpdateSelf(args []string, simulate bool, forceVersion string, forceUpdate bool) (output string, err error) {
 	var releaseVersion string
-	if err != nil {
-		return
-	}
 
 	if forceVersion == "" {
 		releaseVersion, err = getReleaseVersion()
 		if err != nil {
-			return
+			return "", errors.New("Update server unreachable: " + err.Error())
 		}
 	} else {
 		releaseVersion = forceVersion
 	}
 
-	myVersion, err := getMyVersion()
+	myVersion, _ := getMyVersion()
 
 	if myVersion != releaseVersion || forceUpdate {
 		output += "New version detected: Current version: " + myVersion + ".  Available version: " + releaseVersion

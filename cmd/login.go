@@ -40,7 +40,10 @@ var loginCmd = &cobra.Command{
 		}
 		initConfig(useCurrentOcLogin)
 		openshift.Login(configLocation, userName, affiliation)
-		updatecmd.UpdateSelf(args, true, "", false)
+		output, _ := updatecmd.UpdateSelf(args, true, "", false)
+		if strings.Contains(output, "New version detected") {
+			fmt.Println(output)
+		}
 	},
 }
 
