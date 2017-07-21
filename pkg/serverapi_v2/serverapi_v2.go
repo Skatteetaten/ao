@@ -104,6 +104,16 @@ type PingResult struct {
 	} `json:"items"`
 }
 
+type Vault struct {
+	Name        string `json:"name"`
+	Permissions struct {
+		Groups []string `json:"groups"`
+		Users  []string `json:"users"`
+	} `json:"permissions"`
+	Secrets  map[string]string `json:"secrets"`
+	Versions map[string]string `json:"versions"`
+}
+
 const apiNotInstalledResponse = "Application is not available"
 const localhostAddress = "localhost"
 const localhostPort = "8080"
@@ -150,6 +160,18 @@ func ResponseItems2AuroraConfig(response Response) (auroraConfig AuroraConfig, e
 	}
 	for item := range response.Items {
 		err = json.Unmarshal([]byte(response.Items[item]), &auroraConfig)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func ResponseItems2Vaults(response Response) (vaults []Vault, err error) {
+	vaults = make([]Vault, len(response.Items))
+
+	for item := range response.Items {
+		err = json.Unmarshal([]byte(response.Items[item]), &vaults[item])
 		if err != nil {
 			return
 		}

@@ -9,13 +9,13 @@ import (
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/serverapi"
-	//"github.com/skatteetaten/aoc/pkg/serverapi_v2"
 	"io/ioutil"
-	//"net/http"
 	"os"
-	//"strconv"
 	"strings"
 )
+
+const secretUseageString = "Usage: aoc edit secret <vaultname> <secretname>"
+const fileUseageString = "Usage: aoc edit file [env/]<filename>"
 
 const commentString = "# "
 const editMessage = `# Please edit the object below. Lines beginning with a '#' will be ignored,
@@ -36,15 +36,8 @@ func (editcmdClass *EditcmdClass) getAffiliation() (affiliation string) {
 }
 
 func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
-	err = validateEditcmd(args)
-	if err != nil {
-		return
-	}
-	if !serverapi.ValidateLogin(editcmdClass.configuration.GetOpenshiftConfig()) {
-		return "", errors.New("Not logged in, please use aoc login")
-	}
 
-	var filename string = args[0]
+	var filename string = args[1]
 	var content string
 	var version string
 
@@ -58,7 +51,7 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 	var modifiedContent = content
 	for editCycleDone == false {
 		contentBeforeEdit := modifiedContent
-		modifiedContent, err = editString(modifiedContent)
+		modifiedContent, err = editString(editMessage + modifiedContent)
 		if err != nil {
 			return "", err
 		}
@@ -76,7 +69,7 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 		modifiedContent = stripComments(modifiedContent)
 
 		if jsonutil.IsLegalJson(modifiedContent) {
-			validationMessages, err := auroraconfig.PutContent(filename, modifiedContent, version, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
+			validationMessages, err := auroraconfig.PutFile(filename, modifiedContent, version, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
 			if err != nil {
 				if err.Error() == auroraconfig.InvalidConfigurationError {
 					modifiedContent, _ = addComments(modifiedContent, validationMessages)
@@ -89,6 +82,30 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 		} else {
 			modifiedContent, _ = addComments(modifiedContent, "Illegal JSON Format")
 		}
+	}
+
+	return
+}
+
+func (editcmdClass *EditcmdClass) EditSecret(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+
+	var vaultname string = args[1]
+	var secretname string = args[2]
+	var version string = ""
+
+	secret, version, err := auroraconfig.GetSecret(vaultname, secretname, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return "", err
+	}
+
+	var modifiedSecret = secret
+	modifiedSecret, err = editString(modifiedSecret)
+	if err != nil {
+		return "", err
+	}
+
+	if modifiedSecret != secret {
+		_, err = auroraconfig.PutSecret(vaultname, secretname, modifiedSecret, version, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
 	}
 
 	return
@@ -139,7 +156,7 @@ func contentToLines(content string) (contentLines []string, err error) {
 
 func editString(content string) (modifiedContent string, err error) {
 
-	filename, err := createTempFile(editMessage + content)
+	filename, err := createTempFile(content)
 
 	err = fileutil.EditFile(filename)
 	if err != nil {
@@ -177,11 +194,48 @@ func createTempFile(content string) (filename string, err error) {
 	return
 }
 
-func validateEditcmd(args []string) (err error) {
-	if len(args) != 1 {
-		err = errors.New("Usage: aoc edit [env/]file")
+func (editcmdClass *EditcmdClass) EditObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+	err = validateEditcmd(args)
+	if err != nil {
 		return
 	}
+	if !serverapi.ValidateLogin(editcmdClass.configuration.GetOpenshiftConfig()) {
+		return "", errors.New("Not logged in, please use aoc login")
+	}
 
+	var commandStr = args[0]
+	switch commandStr {
+	case "file":
+		{
+			output, err = editcmdClass.EditFile(args, persistentOptions)
+		}
+	case "secret":
+		{
+			output, err = editcmdClass.EditSecret(args, persistentOptions)
+		}
+	}
+	return
+
+}
+
+func validateEditcmd(args []string) (err error) {
+
+	var commandStr = args[0]
+	switch commandStr {
+	case "file":
+		{
+			if len(args) != 2 {
+				err = errors.New(fileUseageString)
+				return
+			}
+		}
+	case "secret":
+		{
+			if len(args) != 3 {
+				err = errors.New(secretUseageString)
+				return
+			}
+		}
+	}
 	return
 }

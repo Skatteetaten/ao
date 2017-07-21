@@ -1,18 +1,23 @@
 package getcmd
 
 import (
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"github.com/skatteetaten/aoc/pkg/auroraconfig"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/kubernetes"
+	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
 )
 
 const UsageString = "Usage: aoc get files | file [env/]<filename> | adc | secrets | secret <secretname> | cluster <clustername> | clusters | kubeconfig | oclogin"
 const filesUsageString = "Usage: aoc get files"
 const fileUseageString = "Usage: aoc get file [env/]<filename>"
+const vaultUseageString = "Usage: aoc get vault <vaultname>"
+const secretUseageString = "Usage: aoc get secret <vaultname> <secretname>"
 const adcUsageString = "Usage: aoc get adc"
 const notYetImplemented = "Not supported yet"
 
@@ -122,7 +127,8 @@ func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.Common
 	return
 }
 
-func (getcmdClass *GetcmdClass) getSecrets(persistentOptions *cmdoptions.CommonCommandOptions, secretName string) (output string, err error) {
+// Deprecated when secrets are removed from AuroraConfig
+/*func (getcmdClass *GetcmdClass) getSecrets(persistentOptions *cmdoptions.CommonCommandOptions, secretName string) (output string, err error) {
 	var secrets []string
 	secrets, err = auroraconfig.GetSecretList(persistentOptions, getcmdClass.getAffiliation(), getcmdClass.configuration.GetOpenshiftConfig())
 
@@ -130,6 +136,47 @@ func (getcmdClass *GetcmdClass) getSecrets(persistentOptions *cmdoptions.CommonC
 	for secretindex := range secrets {
 		if secretName == "" || secrets[secretindex] == secretName {
 			output += "\n" + secrets[secretindex]
+		}
+	}
+	return
+}*/
+
+func (GetcmdClass *GetcmdClass) getVaults(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+	var vaults []serverapi_v2.Vault
+	vaults, err = auroraconfig.GetVaults(persistentOptions, GetcmdClass.getAffiliation(), GetcmdClass.configuration.GetOpenshiftConfig())
+
+	output = "VAULT (Secrets)"
+	for vaultindex := range vaults {
+		numberOfSecrets := len(vaults[vaultindex].Secrets)
+		output += "\n" + vaults[vaultindex].Name + " (" + fmt.Sprintf("%d", numberOfSecrets) + ")"
+	}
+	return
+}
+
+func (GetcmdClass *GetcmdClass) getVault(vaultName string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+	var vaults []serverapi_v2.Vault
+	vaults, err = auroraconfig.GetVaults(persistentOptions, GetcmdClass.getAffiliation(), GetcmdClass.configuration.GetOpenshiftConfig())
+
+	for vaultindex := range vaults {
+		if vaults[vaultindex].Name == vaultName {
+			output = "SECRET"
+			for secretindex := range vaults[vaultindex].Secrets {
+				output += "\n" + secretindex
+			}
+		}
+
+	}
+	return
+}
+
+func (GetcmdClass *GetcmdClass) getSecret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+	var vaults []serverapi_v2.Vault
+	vaults, err = auroraconfig.GetVaults(persistentOptions, GetcmdClass.getAffiliation(), GetcmdClass.configuration.GetOpenshiftConfig())
+
+	for vaultindex := range vaults {
+		if vaults[vaultindex].Name == vaultName {
+			decodedSecret, _ := base64.StdEncoding.DecodeString(vaults[vaultindex].Secrets[secretName])
+			output += string(decodedSecret)
 		}
 	}
 	return
@@ -177,13 +224,17 @@ func (getcmdClass *GetcmdClass) getOcLogin(persistentOptions *cmdoptions.CommonC
 }
 
 func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string, allClusters bool) (output string, err error) {
-	err = validateEditcmd(args)
+	err = validateGetcmd(args)
 	if err != nil {
 		return
 	}
 
 	var commandStr = args[0]
 	switch commandStr {
+	case "vaults":
+		{
+			output, err = getcmdClass.getVaults(persistentOptions)
+		}
 	case "files":
 		{
 			output, err = getcmdClass.getFiles(persistentOptions)
@@ -191,6 +242,14 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 	case "file":
 		{
 			output, err = getcmdClass.getFile(args[1], persistentOptions, outputFormat)
+		}
+	case "vault":
+		{
+			output, err = getcmdClass.getVault(args[1], persistentOptions, outputFormat)
+		}
+	case "secret":
+		{
+			output, err = getcmdClass.getSecret(args[1], args[2], persistentOptions, outputFormat)
 		}
 	case "adc":
 		{
@@ -204,14 +263,15 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 			}
 			output, err = getcmdClass.getClusters(persistentOptions, clusterName, allClusters)
 		}
-	case "secret", "secrets":
-		{
-			var secretName = ""
-			if len(args) > 1 {
-				secretName = args[1]
-			}
-			output, err = getcmdClass.getSecrets(persistentOptions, secretName)
-		}
+		// Deprecated when secrets are removed from AuroraConfig
+		/*	case "secret", "secrets":
+			{
+				var secretName = ""
+				if len(args) > 1 {
+					secretName = args[1]
+				}
+				output, err = getcmdClass.getSecrets(persistentOptions, secretName)
+			}*/
 	case "kubeconfig":
 		{
 			output, err = getcmdClass.getKubeConfig(persistentOptions)
@@ -225,7 +285,7 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 	return
 }
 
-func validateEditcmd(args []string) (err error) {
+func validateGetcmd(args []string) (err error) {
 	if len(args) < 1 {
 		err = errors.New(UsageString)
 		return
@@ -247,6 +307,20 @@ func validateEditcmd(args []string) (err error) {
 				return
 			}
 		}
+	case "vault":
+		{
+			if len(args) != 2 {
+				err = errors.New(vaultUseageString)
+				return
+			}
+		}
+	case "secret":
+		{
+			if len(args) != 3 {
+				err = errors.New(secretUseageString)
+				return
+			}
+		}
 	case "adc":
 		{
 			if len(args) > 1 {
@@ -254,7 +328,7 @@ func validateEditcmd(args []string) (err error) {
 				return
 			}
 		}
-	case "cluster", "clusters", "secret", "secrets", "kubeconfig", "oclogin":
+	case "cluster", "clusters", "kubeconfig", "oclogin", "vaults":
 		{
 			if len(args) > 1 {
 				err = errors.New(UsageString)

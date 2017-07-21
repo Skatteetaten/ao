@@ -24,12 +24,12 @@ import (
 
 // editCmd represents the edit command
 var editCmd = &cobra.Command{
-	Use:   "edit [env/]file",
-	Short: "Edit a single configuration file",
-	Long:  `Edit a single configuration file.`,
+	Use:   "edit file [env/]file | secret vault/secret",
+	Short: "Edit a single configuration file or a secret in a vault",
+	Long:  `Edit a single configuration file or a secret in a vault.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var editcmdObject editcmd.EditcmdClass
-		output, err := editcmdObject.EditFile(args, &persistentOptions)
+		output, err := editcmdObject.EditObject(args, &persistentOptions)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())

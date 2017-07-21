@@ -1,6 +1,7 @@
 package auroraconfig
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
@@ -78,7 +79,8 @@ func GetFileList(persistentOptions *cmdoptions.CommonCommandOptions, affiliation
 	return filenames, nil
 }
 
-func GetSecretList(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (secretnames []string, err error) {
+// Deprecated when Secrets are removed from AuroraConfig
+/*func GetSecretList(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (secretnames []string, err error) {
 	auroraConfig, err := GetAuroraConfig(persistentOptions, affiliation, openshiftConfig)
 	if err != nil {
 		return
@@ -91,6 +93,63 @@ func GetSecretList(persistentOptions *cmdoptions.CommonCommandOptions, affiliati
 		secretnameIndex++
 	}
 	return secretnames, nil
+}*/
+
+func GetVaults(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (vaults []serverapi_v2.Vault, err error) {
+	var apiEndpoint string = "/affiliation/" + affiliation + "/vault"
+	var responses map[string]string
+	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", persistentOptions.ShowConfig,
+		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
+		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
+	if err != nil {
+		for server := range responses {
+			response, err := serverapi_v2.ParseResponse(responses[server])
+			if err != nil {
+				return vaults, err
+			}
+			if !response.Success {
+				output, err := serverapi_v2.ResponsItems2MessageString(response)
+				if err != nil {
+					return vaults, err
+				}
+				err = errors.New(output)
+				return vaults, err
+
+			}
+		}
+
+		return vaults, err
+
+	}
+
+	if len(responses) != 1 {
+		err = errors.New("Internal error in GetVaults: Response from " + strconv.Itoa(len(responses)))
+		return
+	}
+
+	for server := range responses {
+		response, err := serverapi_v2.ParseResponse(responses[server])
+		if err != nil {
+			return vaults, err
+		}
+		vaults, err = serverapi_v2.ResponseItems2Vaults(response)
+	}
+
+	return vaults, err
+}
+
+func GetSecret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (output string, version string, err error) {
+	var vaults []serverapi_v2.Vault
+	vaults, err = GetVaults(persistentOptions, affiliation, openshiftConfig)
+
+	for vaultindex := range vaults {
+		if vaults[vaultindex].Name == vaultName {
+			decodedSecret, _ := base64.StdEncoding.DecodeString(vaults[vaultindex].Secrets[secretName])
+			output = string(decodedSecret)
+			version = vaults[vaultindex].Versions[secretName]
+		}
+	}
+	return
 }
 
 func GetAuroraConfig(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (auroraConfig serverapi_v2.AuroraConfig, err error) {
@@ -137,8 +196,7 @@ func GetAuroraConfig(persistentOptions *cmdoptions.CommonCommandOptions, affilia
 	return auroraConfig, nil
 }
 
-func PutContent(filename string, content string, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
-	var apiEndpoint = "/affiliation/" + affiliation + "/auroraconfigfile/" + filename
+func putContent(apiEndpoint string, content string, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
 	var responses map[string]string
 
 	var versionHeader = make(map[string]string)
@@ -161,4 +219,17 @@ func PutContent(filename string, content string, version string, persistentOptio
 
 	}
 	return
+}
+
+func PutFile(filename string, content string, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
+	var apiEndpoint = "/affiliation/" + affiliation + "/auroraconfigfile/" + filename
+
+	return putContent(apiEndpoint, content, version, persistentOptions, affiliation, openshiftConfig)
+}
+
+func PutSecret(vaultname string, secretname string, secret string, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
+	var apiEndpoint = "/affiliation/" + affiliation + "/vault/" + vaultname + "/secret/" + secretname
+
+	encodedSecret := base64.StdEncoding.EncodeToString([]byte(secret))
+	return putContent(apiEndpoint, encodedSecret, version, persistentOptions, affiliation, openshiftConfig)
 }
