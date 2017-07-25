@@ -453,6 +453,7 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 			}
 		}
 		err = errors.New(fmt.Sprintf(errorstring))
+
 		return "{}", err
 	}
 
