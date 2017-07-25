@@ -389,6 +389,11 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 		fmt.Print("Sending config to Boober at " + url + "... ")
 	}
 
+	if debug {
+		fmt.Println("URL: " + url)
+		fmt.Println("JSON Payload: " + combindedJson)
+		fmt.Println("Token: " + token)
+	}
 	var jsonStr = []byte(combindedJson)
 
 	req, err := http.NewRequest(httpMethod, url, bytes.NewBuffer(jsonStr))
@@ -405,6 +410,9 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 
 	for header := range headers {
 		req.Header.Add(header, headers[header])
+		if debug {
+			fmt.Println("Header: " + header + ", value: " + headers[header])
+		}
 	}
 
 	client := &http.Client{}
@@ -445,18 +453,18 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 			}
 		}
 		err = errors.New(fmt.Sprintf(errorstring))
-		return "", err
+		return "{}", err
 	}
 
 	if resp.StatusCode == http.StatusBadRequest {
-		// We have a validation situation, give error
+		// We have a validation situation, give error.  Expecting JSON formatted output
 		if verbose {
 			fmt.Println("FAIL.  Error in configuration")
 		}
 
 		err = errors.New(fmt.Sprintf(output))
 
-		return "", err
+		return output, err
 	}
 
 	if verbose {
