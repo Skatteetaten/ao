@@ -104,6 +104,16 @@ type PingResult struct {
 	} `json:"items"`
 }
 
+type Vault struct {
+	Name        string `json:"name"`
+	Permissions struct {
+		Groups []string `json:"groups"`
+		Users  []string `json:"users"`
+	} `json:"permissions"`
+	Secrets  map[string]string `json:"secrets"`
+	Versions map[string]string `json:"versions"`
+}
+
 const apiNotInstalledResponse = "Application is not available"
 const localhostAddress = "localhost"
 const localhostPort = "8080"
@@ -150,6 +160,18 @@ func ResponseItems2AuroraConfig(response Response) (auroraConfig AuroraConfig, e
 	}
 	for item := range response.Items {
 		err = json.Unmarshal([]byte(response.Items[item]), &auroraConfig)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func ResponseItems2Vaults(response Response) (vaults []Vault, err error) {
+	vaults = make([]Vault, len(response.Items))
+
+	for item := range response.Items {
+		err = json.Unmarshal([]byte(response.Items[item]), &vaults[item])
 		if err != nil {
 			return
 		}
@@ -367,6 +389,11 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 		fmt.Print("Sending config to Boober at " + url + "... ")
 	}
 
+	if debug {
+		fmt.Println("URL: " + url)
+		fmt.Println("JSON Payload: " + combindedJson)
+		fmt.Println("Token: " + token)
+	}
 	var jsonStr = []byte(combindedJson)
 
 	req, err := http.NewRequest(httpMethod, url, bytes.NewBuffer(jsonStr))
@@ -383,6 +410,9 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 
 	for header := range headers {
 		req.Header.Add(header, headers[header])
+		if debug {
+			fmt.Println("Header: " + header + ", value: " + headers[header])
+		}
 	}
 
 	client := &http.Client{}
@@ -423,18 +453,19 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 			}
 		}
 		err = errors.New(fmt.Sprintf(errorstring))
-		return "", err
+
+		return "{}", err
 	}
 
 	if resp.StatusCode == http.StatusBadRequest {
-		// We have a validation situation, give error
+		// We have a validation situation, give error.  Expecting JSON formatted output
 		if verbose {
 			fmt.Println("FAIL.  Error in configuration")
 		}
 
 		err = errors.New(fmt.Sprintf(output))
 
-		return "", err
+		return output, err
 	}
 
 	if verbose {

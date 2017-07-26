@@ -1,5 +1,4 @@
 // Copyright © 2017 NAME HERE <EMAIL ADDRESS>
-//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,20 +15,20 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/aoc/pkg/editcmd"
+	"github.com/skatteetaten/aoc/pkg/createcmd"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
 )
 
-// editCmd represents the edit command
-var editCmd = &cobra.Command{
-	Use:   "edit file [env/]file | secret vault/secret",
-	Short: "Edit a single configuration file or a secret in a vault",
-	Long:  `Edit a single configuration file or a secret in a vault.`,
+// createCmd represents the create command
+var createCmd = &cobra.Command{
+	Use:   "create vault <vaultname> | secret <vaultname> <secretname>",
+	Short: "Creates a vault or a secret in a vault",
+	Long:  `Creates a vault or a secret in a vault.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var editcmdObject editcmd.EditcmdClass
-		output, err := editcmdObject.EditObject(args, &persistentOptions)
+		var createcmdObject createcmd.CreatecmdClass
+		output, err := createcmdObject.CreateObject(args, &persistentOptions, allClusters)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -44,16 +43,15 @@ var editCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(editCmd)
+	RootCmd.AddCommand(createCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// editCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// createCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// editCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
+	// createCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
