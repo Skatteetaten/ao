@@ -70,6 +70,8 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 			if persistentOptions.Debug {
 				fmt.Println("DEBUG: Content of modified file:")
 				fmt.Println(modifiedContent)
+				fmt.Println("DEBUG: Content of modified file stripped:")
+				fmt.Println(stripComments(modifiedContent))
 			}
 			return output, nil
 		}
