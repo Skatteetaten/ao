@@ -14,6 +14,7 @@ import (
 	"strings"
 )
 
+const usageString = "Usage: aoc edit file [env/]<filename> | secret <vaultname> <secretname> "
 const secretUseageString = "Usage: aoc edit secret <vaultname> <secretname>"
 const fileUseageString = "Usage: aoc edit file [env/]<filename>"
 
@@ -235,6 +236,10 @@ func validateEditcmd(args []string) (err error) {
 				err = errors.New(secretUseageString)
 				return
 			}
+		}
+	default:
+		{
+			err = errors.New(usageString)
 		}
 	}
 	return

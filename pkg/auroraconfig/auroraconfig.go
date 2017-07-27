@@ -233,3 +233,44 @@ func PutSecret(vaultname string, secretname string, secret string, version strin
 	encodedSecret := base64.StdEncoding.EncodeToString([]byte(secret))
 	return putContent(apiEndpoint, encodedSecret, version, persistentOptions, affiliation, openshiftConfig)
 }
+
+func PutVault(vaultname string, vault serverapi_v2.Vault, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
+	var apiEndpoint = "/affiliation/" + affiliation + "/vault/"
+
+	content, err := json.Marshal(vault)
+
+	return putContent(apiEndpoint, string(content), version, persistentOptions, affiliation, openshiftConfig)
+
+}
+
+func deleteContent(apiEndpoint string, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
+	var responses map[string]string
+
+	var versionHeader = make(map[string]string)
+	versionHeader["AuroraConfigFileVersion"] = version
+
+	responses, err = serverapi_v2.CallApiWithHeaders(versionHeader, http.MethodDelete, apiEndpoint, "", persistentOptions.ShowConfig,
+		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
+		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
+	if err != nil {
+		for server := range responses {
+			response, err := serverapi_v2.ParseResponse(responses[server])
+			if err != nil {
+				return "", err
+			}
+			if !response.Success {
+				validationMessages, _ := serverapi_v2.ResponsItems2MessageString(response)
+				return validationMessages, errors.New(validationMessages)
+			}
+		}
+
+	}
+	return
+}
+
+func DeleteVault(vaultname string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
+	var apiEndpoint = "/affiliation/" + affiliation + "/vault/" + vaultname
+
+	return deleteContent(apiEndpoint, "", persistentOptions, affiliation, openshiftConfig)
+
+}

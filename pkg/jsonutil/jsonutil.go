@@ -17,8 +17,7 @@ import (
 const maxSecretFileSize int64 = 10 * 1024
 
 type AuroraConfigPayload struct {
-	Files   map[string]json.RawMessage `json:"files"`
-	Secrets map[string]string          `json:"secrets"`
+	Files map[string]json.RawMessage `json:"files"`
 }
 
 type SetupParamsPayload struct {

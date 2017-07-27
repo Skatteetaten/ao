@@ -15,6 +15,8 @@ import (
 	"strings"
 )
 
+const badRequestString = "Internal error: Bad request"
+
 // Structs to represent return data from the API interface
 
 type ApplicationId struct {
@@ -85,7 +87,6 @@ type ResponseItemError struct {
 
 type AuroraConfig struct {
 	Files    map[string]json.RawMessage `json:"files"`
-	Secrets  map[string]json.RawMessage `json:"secrets"`
 	Versions map[string]string          `json:"versions"`
 }
 
@@ -107,11 +108,11 @@ type PingResult struct {
 type Vault struct {
 	Name        string `json:"name"`
 	Permissions struct {
-		Groups []string `json:"groups"`
-		Users  []string `json:"users"`
-	} `json:"permissions"`
-	Secrets  map[string]string `json:"secrets"`
-	Versions map[string]string `json:"versions"`
+		Groups []string `json:"groups,omitempty"`
+		Users  []string `json:"users,omitempty"`
+	} `json:"permissions,omitempty"`
+	Secrets  map[string]string `json:"secrets""`
+	Versions map[string]string `json:"versions,omitempty"`
 }
 
 const apiNotInstalledResponse = "Application is not available"
@@ -190,7 +191,7 @@ func ApplicationResult2MessageString(applicationResult ApplicationResult) (outpu
 
 func ResponsItems2MessageString(response Response) (output string, err error) {
 	if response.Message != "" {
-		output = response.Message + ": "
+		output = response.Message
 	}
 
 	for item := range response.Items {
@@ -345,34 +346,30 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 		if err != nil {
 			return outputMap, err
 		}
-
 	} else {
-		var errorString string
-		var newlineErr string
+		var errorString string = ""
+		var newlineErr string = ""
 		for i := range openshiftConfig.Clusters {
 			if openshiftConfig.Clusters[i].Reachable {
 				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
 					output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
 						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, apiEndpoint, localhost, apiAddress),
 						openshiftConfig.Clusters[i].Token, dryRun, debug)
-					if output != "" {
-						outputMap[openshiftConfig.Clusters[i].Name] = output
+					outputMap[openshiftConfig.Clusters[i].Name] = output
 
-						if err != nil {
-							errorString += newlineErr + err.Error()
-							newlineErr = "\n"
-						}
+					if err != nil {
+						errorString += newlineErr + err.Error()
+						newlineErr = "\n"
 					}
 				}
 			}
 		}
 		if errorString != "" {
 			err = errors.New(errorString)
-			fmt.Println("ERROR: " + errorString)
-			return
+			return outputMap, err
 		}
 	}
-	return
+	return outputMap, nil
 
 }
 
@@ -383,6 +380,22 @@ func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showCo
 		openshiftConfig, dryRun, debug, apiAddress, token)
 }
 
+func makeResponse(message string, success bool) (responseStr string, err error) {
+	var response Response
+
+	response.Message = message
+	response.Success = success
+	response.Count = 0
+	response.Items = make([]json.RawMessage, 0)
+
+	responseBytes, err := json.Marshal(response)
+	responseStr = string(responseBytes)
+
+	err = errors.New(message)
+
+	return responseStr, err
+}
+
 func callApiInstance(headers map[string]string, httpMethod string, combindedJson string, verbose bool, url string, token string, dryRun bool, debug bool) (output string, err error) {
 
 	if verbose {
@@ -390,9 +403,14 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 	}
 
 	if debug {
-		fmt.Println("URL: " + url)
-		fmt.Println("JSON Payload: " + combindedJson)
-		fmt.Println("Token: " + token)
+		fmt.Println("REQUEST:")
+		fmt.Println("\tURL: " + url)
+		fmt.Println("\tToken: " + token)
+		if combindedJson == "" {
+			fmt.Println("\tNo JSON Payload")
+		} else {
+			fmt.Println("\tJSON Payload: \n" + jsonutil.PrettyPrintJson(combindedJson))
+		}
 	}
 	var jsonStr = []byte(combindedJson)
 
@@ -422,7 +440,8 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 		if verbose {
 			fmt.Println("FAIL.  Error connecting to Boober service")
 		}
-		return "", errors.New(fmt.Sprintf("Error connecting to the Boober service on %v: %v", url, err))
+		errorstring := fmt.Sprintf("Error connecting to the Boober service on %v: %v", url, err)
+		return makeResponse(errorstring, false)
 	}
 
 	defer resp.Body.Close()
@@ -430,7 +449,8 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 	output = string(body)
 
 	if debug {
-		fmt.Println("Response status: " + strconv.Itoa(resp.StatusCode))
+		fmt.Println("RESPONSE:")
+		fmt.Println("\tResponse status: " + strconv.Itoa(resp.StatusCode))
 		if jsonutil.IsLegalJson(output) {
 			fmt.Println(jsonutil.PrettyPrintJson(output))
 		} else {
@@ -439,35 +459,71 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 
 	}
 
-	if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusBadRequest) {
-
+	if jsonutil.IsLegalJson(output) {
+		response, err := ParseResponse(output)
+		if err != nil {
+			// Legal JSON, but not a legal Response struct.  Should not happen, but handle it anyway
+			return makeResponse("Internal error: Boober return not a valid response", false)
+		}
+		if !response.Success {
+			// Something went wrong, set the error flag with the message
+			err = errors.New(response.Message)
+			return output, err
+		}
+	} else {
+		// We got some non-json, return an error
 		var errorstring string
-		if !strings.Contains(output, apiNotInstalledResponse) {
+		if strings.Contains(output, apiNotInstalledResponse) {
+			errorstring = fmt.Sprintf("Error: Boober not available on %v", url)
+		} else {
 			errorstring = fmt.Sprintf("Internal error on %v: %v", url, output)
 		}
 		if verbose {
-			if strings.Contains(output, apiNotInstalledResponse) {
-				fmt.Println("WARN.  Boober not available")
-			} else {
-				fmt.Println("FAIL.  Internal error")
+			fmt.Println(errorstring)
+		}
+		return makeResponse(errorstring, false)
+	}
+
+	/*	if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusBadRequest) {
+			var errorstring string
+			if !strings.Contains(output, apiNotInstalledResponse) {
+				errorstring = fmt.Sprintf("Internal error on %v: %v", url, output)
 			}
+			if verbose {
+				if strings.Contains(output, apiNotInstalledResponse) {
+					fmt.Println("WARN.  Boober not available")
+				} else {
+					fmt.Println("FAIL.  Internal error")
+				}
+			}
+			err = errors.New(fmt.Sprintf(errorstring))
+
+			return "{}", err
 		}
-		err = errors.New(fmt.Sprintf(errorstring))
 
-		return "{}", err
-	}
+		if resp.StatusCode == http.StatusBadRequest {
+			// We have a validation situation, give error.  Expecting JSON formatted output
+			if verbose {
+				fmt.Println("FAIL.  Error in configuration")
+			}
+			fmt.Println("DEBUG: " + output)
+			if output == "" {
+				var returnResponse Response
+				returnResponse.Success = false
+				returnResponse.Count = 0
+				returnResponse.Message = badRequestString
+				returnOutput, err := json.Marshal(returnResponse)
+				if err != nil {
+					return "", errors.New(badRequestString)
+				}
+				output = string(returnOutput)
+				return output, errors.New(badRequestString)
+			}
+			err = errors.New(fmt.Sprintf(output))
 
-	if resp.StatusCode == http.StatusBadRequest {
-		// We have a validation situation, give error.  Expecting JSON formatted output
-		if verbose {
-			fmt.Println("FAIL.  Error in configuration")
+			return "{}", err
 		}
-
-		err = errors.New(fmt.Sprintf(output))
-
-		return output, err
-	}
-
+	*/
 	if verbose {
 		fmt.Println("OK")
 	}

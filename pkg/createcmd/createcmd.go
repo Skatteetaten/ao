@@ -1,7 +1,6 @@
 package createcmd
 
 import (
-	"encoding/base64"
 	"errors"
 	"github.com/skatteetaten/aoc/pkg/auroraconfig"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
@@ -10,6 +9,7 @@ import (
 )
 
 const UsageString = "Usage: aoc create vault <vaultname> | secret <vaultname> <secretname>"
+const vaultExistsError = "Error: Vault exists"
 
 type CreatecmdClass struct {
 	configuration configuration.ConfigurationClass
@@ -38,32 +38,35 @@ func (createcmdClass *CreatecmdClass) vaultExists(vaultname string, persistentOp
 	return false, nil
 }
 
-func (createcmdClass *CreatecmdClass) createVault(vaultName string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
-	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaults(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
+func (createcmdClass *CreatecmdClass) createVault(vaultname string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+	var vault serverapi_v2.Vault
 
-	for vaultindex := range vaults {
-		if vaults[vaultindex].Name == vaultName {
-			output = "SECRET"
-			for secretindex := range vaults[vaultindex].Secrets {
-				output += "\n" + secretindex
-			}
-		}
+	exists, err := createcmdClass.vaultExists(vaultname, persistentOptions)
+	if err != nil {
+		return err
+	}
 
+	if exists {
+		return errors.New(vaultExistsError)
+	}
+
+	vault.Name = vaultname
+	vault.Secrets = make(map[string]string)
+	//vault.Versions = make(map[string]string)
+	//vault.Permissions.Users = make([]string, 0)
+	//vault.Permissions.Groups = make([]string, 1)
+	//vault.Permissions.Groups[0] = "APP_PaaS_utv"
+	message, err := auroraconfig.PutVault(vaultname, vault, "", persistentOptions, createcmdClass.getAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return errors.New(message)
 	}
 	return
 }
 
-func (createcmdClass *CreatecmdClass) createSecret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
-	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaults(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
+func (createcmdClass *CreatecmdClass) createSecret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+	//var vaults []serverapi_v2.Vault
+	//vaults, err = auroraconfig.GetVaults(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
 
-	for vaultindex := range vaults {
-		if vaults[vaultindex].Name == vaultName {
-			decodedSecret, _ := base64.StdEncoding.DecodeString(vaults[vaultindex].Secrets[secretName])
-			output += string(decodedSecret)
-		}
-	}
 	return
 }
 
@@ -77,11 +80,11 @@ func (createcmdClass *CreatecmdClass) CreateObject(args []string, persistentOpti
 	switch commandStr {
 	case "vault":
 		{
-			output, err = createcmdClass.createVault(args[1], persistentOptions)
+			err = createcmdClass.createVault(args[1], persistentOptions)
 		}
 	case "secret":
 		{
-			output, err = createcmdClass.createSecret(args[1], args[2], persistentOptions)
+			err = createcmdClass.createSecret(args[1], args[2], persistentOptions)
 		}
 	}
 	return

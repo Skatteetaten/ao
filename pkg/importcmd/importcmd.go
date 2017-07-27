@@ -103,7 +103,6 @@ func generateJson(folder string, affiliation string, dryRun bool) (jsonStr strin
 
 	var returnMap map[string]json.RawMessage
 	var returnMap2 map[string]json.RawMessage
-	var secretMap map[string]string = make(map[string]string)
 
 	setupCommand.Affiliation = affiliation
 
@@ -126,26 +125,10 @@ func generateJson(folder string, affiliation string, dryRun bool) (jsonStr strin
 	}
 
 	setupCommand.AuroraConfig.Files = returnMap
-	setupCommand.AuroraConfig.Secrets = secretMap
-
-	for fileKey := range setupCommand.AuroraConfig.Files {
-		secret, err := jsonutil.Json2secretFolder(setupCommand.AuroraConfig.Files[fileKey])
-		if err != nil {
-			return "", err
-		}
-		if secret != "" {
-			secretMap, err = jsonutil.SecretFolder2Map(secret)
-			if err != nil {
-				return "", err
-			}
-			setupCommand.AuroraConfig.Secrets = jsonutil.CombineTextMaps(setupCommand.AuroraConfig.Secrets, secretMap)
-		}
-	}
 
 	var jsonByte []byte
 
 	auroraConfigPayload.Files = setupCommand.AuroraConfig.Files
-	auroraConfigPayload.Secrets = setupCommand.AuroraConfig.Secrets
 	jsonByte, err = json.Marshal(auroraConfigPayload)
 	if !(err == nil) {
 		return "", errors.New(fmt.Sprintf("Internal error in marshalling SetupCommand: %v\n", err.Error()))

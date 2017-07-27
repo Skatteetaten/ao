@@ -13,7 +13,7 @@ import (
 	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
 )
 
-const UsageString = "Usage: aoc get files | file [env/]<filename> | adc | secrets | secret <secretname> | cluster <clustername> | clusters | kubeconfig | oclogin"
+const UsageString = "Usage: aoc get files | vaults | vault <vaultname> | file [env/]<filename> | adc | secret <secretname> | cluster <clustername> | clusters | kubeconfig | oclogin"
 const filesUsageString = "Usage: aoc get files"
 const fileUseageString = "Usage: aoc get file [env/]<filename>"
 const vaultUseageString = "Usage: aoc get vault <vaultname>"
@@ -293,13 +293,6 @@ func validateGetcmd(args []string) (err error) {
 
 	var commandStr = args[0]
 	switch commandStr {
-	case "files":
-		{
-			if len(args) > 1 {
-				err = errors.New(filesUsageString)
-				return
-			}
-		}
 	case "file":
 		{
 			if len(args) != 2 {
@@ -328,7 +321,7 @@ func validateGetcmd(args []string) (err error) {
 				return
 			}
 		}
-	case "cluster", "clusters", "kubeconfig", "oclogin", "vaults":
+	case "cluster", "clusters", "kubeconfig", "oclogin", "vaults", "files":
 		{
 			if len(args) > 1 {
 				err = errors.New(UsageString)
