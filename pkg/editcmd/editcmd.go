@@ -135,6 +135,45 @@ func addComments(content string, comments string) (commentedContent string, err 
 }
 
 func stripComments(content string) (uncommentedContent string) {
+	scanner := bufio.NewScanner(strings.NewReader(content))
+	var newline = ""
+	for scanner.Scan() {
+		line := scanner.Text()
+		trimmedLine := strings.TrimSpace(line)
+		if !strings.HasPrefix(trimmedLine, "#") {
+			uncommentedContent += newline + line
+			newline = "\n"
+		}
+	}
+	return
+}
+
+/*func stripComments_old(content string) (uncommentedContent string) {
+	scanner := bufio.NewScanner(strings.NewReader(content))
+	var newline = ""
+	var comment bool = false
+	for scanner.Scan() {
+		line := scanner.Text()
+		trimmedLine := strings.TrimSpace(line)
+		comment = false
+		//if len(trimmedLine) > 0 {
+			if strings.HasPrefix(trimmedLine, "#") {
+				comment = true
+			}
+		//}
+		if !comment {
+			uncommentedContent += newline + line
+			newline = "\n"
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return ""
+	}
+	return
+}*/
+
+/*func stripComments_old(content string) (uncommentedContent string) {
 	var contenttLines []string
 
 	var newline = ""
@@ -148,7 +187,7 @@ func stripComments(content string) (uncommentedContent string) {
 
 	return
 }
-
+*/
 func contentToLines(content string) (contentLines []string, err error) {
 
 	scanner := bufio.NewScanner(strings.NewReader(content))
