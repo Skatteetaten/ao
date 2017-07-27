@@ -50,8 +50,8 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 
 	var editCycleDone bool
 	var modifiedContent = content
+	contentBeforeEdit := modifiedContent
 	for editCycleDone == false {
-		contentBeforeEdit := modifiedContent
 		modifiedContent, err = editString(editMessage + modifiedContent)
 		if err != nil {
 			return "", err

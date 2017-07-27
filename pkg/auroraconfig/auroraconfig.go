@@ -95,6 +95,11 @@ func GetFileList(persistentOptions *cmdoptions.CommonCommandOptions, affiliation
 	return secretnames, nil
 }*/
 
+func GetVault(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (vault serverapi_v2.Vault, err error) {
+
+	return
+}
+
 func GetVaults(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (vaults []serverapi_v2.Vault, err error) {
 	var apiEndpoint string = "/affiliation/" + affiliation + "/vault"
 	var responses map[string]string

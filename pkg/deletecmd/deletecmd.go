@@ -6,6 +6,7 @@ import (
 	"github.com/skatteetaten/aoc/pkg/auroraconfig"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
+	"k8s.io/kubernetes/staging/src/k8s.io/apiserver/pkg/apis/audit"
 )
 
 const UsageString = "Usage: aoc delete vault <vaultname> | secret <vaultname> <secretname>"
@@ -36,6 +37,8 @@ func (deletecmdClass *DeletecmdClass) deleteSecret(vaultName string, secretName 
 	//var vaults []serverapi_v2.Vault
 	//vaults, err = auroraconfig.GetVaults(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
 	fmt.Println("DEBUG: Delete secret called: " + vaultName + "/" + secretName)
+	vaults, err := auroraconfig.GetVaults(persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
+
 	return
 }
 
