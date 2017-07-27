@@ -3,6 +3,7 @@ package editcmd
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"github.com/skatteetaten/aoc/pkg/auroraconfig"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
@@ -50,8 +51,9 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 
 	var editCycleDone bool
 	var modifiedContent = content
-	contentBeforeEdit := modifiedContent
+
 	for editCycleDone == false {
+		contentBeforeEdit := modifiedContent
 		modifiedContent, err = editString(editMessage + modifiedContent)
 		if err != nil {
 			return "", err
@@ -65,6 +67,10 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 				output += "A copy of your changes har been stored to \"" + tempfile + "\"\n"
 			}
 			output += "Edit cancelled, no valid changes were saved."
+			if persistentOptions.Debug {
+				fmt.Println("DEBUG: Content of modified file:")
+				fmt.Println(modifiedContent)
+			}
 			return output, nil
 		}
 		modifiedContent = stripComments(modifiedContent)
