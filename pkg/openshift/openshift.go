@@ -67,7 +67,7 @@ func Logout(configLocation string) (err error) {
 	return
 }
 
-func Login(configLocation string, userName string, affiliation string) {
+func Login(configLocation string, userName string, affiliation string, apiCluster string) {
 
 	//fmt.Println("Login in to all reachable cluster with userName", userName)
 	config, err := loadConfigFile(configLocation)
@@ -99,6 +99,14 @@ func Login(configLocation string, userName string, affiliation string) {
 			log.Fatal(err)
 		}
 		cluster.Token = token
+	}
+	// IF apiCluster is supplied on the login command, then set the API cluster if it is defined and reachable.
+	if apiCluster != "" {
+		for idx := range config.Clusters {
+			if config.Clusters[idx].Name == apiCluster && config.Clusters[idx].Reachable {
+				config.APICluster = apiCluster
+			}
+		}
 	}
 	config.write(configLocation)
 }
