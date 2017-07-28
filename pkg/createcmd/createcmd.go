@@ -38,16 +38,16 @@ func (createcmdClass *CreatecmdClass) vaultExists(vaultname string, persistentOp
 	return false, nil
 }
 
-func (createcmdClass *CreatecmdClass) createVault(vaultname string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+func (createcmdClass *CreatecmdClass) createVault(vaultname string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 	var vault serverapi_v2.Vault
 
 	exists, err := createcmdClass.vaultExists(vaultname, persistentOptions)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if exists {
-		return errors.New(vaultExistsError)
+		return "", errors.New(vaultExistsError)
 	}
 
 	vault.Name = vaultname
@@ -58,16 +58,16 @@ func (createcmdClass *CreatecmdClass) createVault(vaultname string, persistentOp
 	//vault.Permissions.Groups[0] = "APP_PaaS_utv"
 	message, err := auroraconfig.PutVault(vaultname, vault, "", persistentOptions, createcmdClass.getAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
 	if err != nil {
-		return errors.New(message)
+		return "", errors.New(message)
 	}
 	return
 }
 
-func (createcmdClass *CreatecmdClass) createSecret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+func (createcmdClass *CreatecmdClass) createSecret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 	//var vaults []serverapi_v2.Vault
 	//vaults, err = auroraconfig.GetVaults(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
 
-	return
+	return "Not implemented yet, use edit secret to create a new secret", nil
 }
 
 func (createcmdClass *CreatecmdClass) CreateObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, allClusters bool) (output string, err error) {
@@ -80,11 +80,11 @@ func (createcmdClass *CreatecmdClass) CreateObject(args []string, persistentOpti
 	switch commandStr {
 	case "vault":
 		{
-			err = createcmdClass.createVault(args[1], persistentOptions)
+			output, err = createcmdClass.createVault(args[1], persistentOptions)
 		}
 	case "secret":
 		{
-			err = createcmdClass.createSecret(args[1], args[2], persistentOptions)
+			output, err = createcmdClass.createSecret(args[1], args[2], persistentOptions)
 		}
 	}
 	return
