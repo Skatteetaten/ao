@@ -11,6 +11,9 @@ import (
 const UsageString = "Usage: aoc export files | file [env/]<filename> | adc"
 const filesUsageString = "Usage: aoc export files"
 const fileUseageString = "Usage: aoc export file [env/]<filename>"
+const vaultsUsageString = "Usage: aoc export vaults"
+const vaultUsageString = "Usage: aoc export vault <vaultname>"
+const secretUsageString = "Usage: aoc export secret <vaultname> <secretname>"
 const adcUsageString = "Usage: aoc export adc"
 const notYetImplemented = "Not supported yet"
 
@@ -64,6 +67,11 @@ func (exportcmdClass *ExportcmdClass) exportFile(filename string, persistentOpti
 	return
 }
 
+func (exportcmdClass *ExportcmdClass) exportVaults(outputFoldername string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+	//output, err = auroraconfig.GetVaults(persistentOptions, persistentOptions, exportcmdClass.getAffiliation(), exportcmdClass.configuration.GetOpenshiftConfig())
+	return
+}
+
 func (exportcmdClass *ExportcmdClass) getAdc(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 	output += notYetImplemented
 	return
@@ -89,6 +97,10 @@ func (exportcmdClass *ExportcmdClass) ExportObject(args []string, persistentOpti
 		{
 			output, err = exportcmdClass.exportFile(args[1], persistentOptions, outputFormat)
 		}
+	case "vault":
+		{
+
+		}
 	case "adc":
 		{
 			output, err = exportcmdClass.getAdc(persistentOptions)
@@ -113,10 +125,31 @@ func validateExportcmd(args []string) (err error) {
 				return
 			}
 		}
+	case "vaults":
+		{
+			if len(args) > 1 {
+				err = errors.New(vaultsUsageString)
+				return
+			}
+		}
 	case "file":
 		{
 			if len(args) != 2 {
 				err = errors.New(fileUseageString)
+				return
+			}
+		}
+	case "vault":
+		{
+			if len(args) != 2 {
+				err = errors.New(vaultUsageString)
+				return
+			}
+		}
+	case "secret":
+		{
+			if len(args) != 2 {
+				err = errors.New(secretUsageString)
 				return
 			}
 		}

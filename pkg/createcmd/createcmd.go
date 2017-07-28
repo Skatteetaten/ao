@@ -24,7 +24,7 @@ func (createcmdClass *CreatecmdClass) getAffiliation() (affiliation string) {
 
 func (createcmdClass *CreatecmdClass) vaultExists(vaultname string, persistentOptions *cmdoptions.CommonCommandOptions) (exists bool, err error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaults(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
+	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
 	if err != nil {
 		return false, err
 	}

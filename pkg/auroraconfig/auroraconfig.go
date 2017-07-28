@@ -100,7 +100,38 @@ func GetVault(persistentOptions *cmdoptions.CommonCommandOptions, affiliation st
 	return
 }
 
-func GetVaults(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (vaults []serverapi_v2.Vault, err error) {
+func GetVaults(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (output string, err error) {
+	var apiEndpoint string = "/affiliation/" + affiliation + "/vault"
+	var responses map[string]string
+	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", persistentOptions.ShowConfig,
+		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
+		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
+	if err != nil {
+		for server := range responses {
+			response, err := serverapi_v2.ParseResponse(responses[server])
+			if err != nil {
+				return output, err
+			}
+			if !response.Success {
+				output, err := serverapi_v2.ResponsItems2MessageString(response)
+				if err != nil {
+					return output, err
+				}
+				err = errors.New(output)
+				return output, err
+
+			}
+			output = responses[server]
+		}
+
+		return output, err
+
+	}
+
+	return
+}
+
+func GetVaultsArray(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (vaults []serverapi_v2.Vault, err error) {
 	var apiEndpoint string = "/affiliation/" + affiliation + "/vault"
 	var responses map[string]string
 	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", persistentOptions.ShowConfig,
@@ -145,7 +176,7 @@ func GetVaults(persistentOptions *cmdoptions.CommonCommandOptions, affiliation s
 
 func GetSecret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (output string, version string, err error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = GetVaults(persistentOptions, affiliation, openshiftConfig)
+	vaults, err = GetVaultsArray(persistentOptions, affiliation, openshiftConfig)
 
 	for vaultindex := range vaults {
 		if vaults[vaultindex].Name == vaultName {
