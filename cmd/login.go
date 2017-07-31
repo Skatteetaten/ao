@@ -17,6 +17,7 @@ var tokenFile string
 var recreateConfig bool
 var useCurrentOcLogin bool
 var apiCluster string
+var doUpdate bool
 
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
@@ -41,7 +42,7 @@ var loginCmd = &cobra.Command{
 		}
 		initConfig(useCurrentOcLogin)
 		openshift.Login(configLocation, userName, affiliation, apiCluster)
-		output, _ := updatecmd.UpdateSelf(args, true, "", false)
+		output, _ := updatecmd.UpdateSelf(args, !doUpdate, "", false)
 		if strings.Contains(output, "New version detected") {
 			fmt.Println(output)
 		}
@@ -57,4 +58,5 @@ func init() {
 	loginCmd.Flags().BoolVarP(&recreateConfig, "recreate-config", "", false, "Removes current cluster config and recreates")
 	loginCmd.Flags().BoolVarP(&useCurrentOcLogin, "use-current-oclogin", "", false, "Recreates config based on current OC login")
 	loginCmd.Flags().StringVarP(&apiCluster, "apicluster", "a", "", "Set a specific API cluster to use")
+	loginCmd.Flags().BoolVarP(&doUpdate, "do-update", "", false, "Do an update if available")
 }
