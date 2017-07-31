@@ -8,9 +8,12 @@ import (
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 )
 
-const UsageString = "Usage: aoc export files | file [env/]<filename> | adc"
+const UsageString = "Usage: aoc export files | file [env/]<filename> | vaults | adc"
 const filesUsageString = "Usage: aoc export files"
 const fileUseageString = "Usage: aoc export file [env/]<filename>"
+const vaultsUsageString = "Usage: aoc export vaults"
+const vaultUsageString = "Usage: aoc export vault <vaultname>"
+const secretUsageString = "Usage: aoc export secret <vaultname> <secretname>"
 const adcUsageString = "Usage: aoc export adc"
 const notYetImplemented = "Not supported yet"
 
@@ -23,6 +26,25 @@ func (exportcmdClass *ExportcmdClass) getAffiliation() (affiliation string) {
 		affiliation = exportcmdClass.configuration.GetOpenshiftConfig().Affiliation
 	}
 	return
+}
+
+/*func (exportcmdClass *ExportcmdClass) exportVaults(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+	output, err = auroraconfig.GetVaults(persistentOptions, exportcmdClass.getAffiliation(), exportcmdClass.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return
+	}
+	return output, nil
+} */
+
+func (exportcmdClass *ExportcmdClass) exportVaults(outputFoldername string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+	output, err = auroraconfig.GetAllVaults(outputFoldername, persistentOptions, exportcmdClass.getAffiliation(), exportcmdClass.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return
+	}
+	if outputFoldername != "" {
+		output = "Vaults are exported to " + outputFoldername
+	}
+	return output, err
 }
 
 func (exportcmdClass *ExportcmdClass) exportFiles(outputFoldername string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
@@ -80,6 +102,10 @@ func (exportcmdClass *ExportcmdClass) ExportObject(args []string, persistentOpti
 		outputFormat = "json"
 	}
 
+	if len(args) > 1 {
+		outputFolder = args[1]
+	}
+
 	switch commandStr {
 	case "files":
 		{
@@ -88,6 +114,10 @@ func (exportcmdClass *ExportcmdClass) ExportObject(args []string, persistentOpti
 	case "file":
 		{
 			output, err = exportcmdClass.exportFile(args[1], persistentOptions, outputFormat)
+		}
+	case "vaults":
+		{
+			output, err = exportcmdClass.exportVaults(outputFolder, persistentOptions)
 		}
 	case "adc":
 		{
@@ -113,10 +143,31 @@ func validateExportcmd(args []string) (err error) {
 				return
 			}
 		}
+	case "vaults":
+		{
+			if len(args) > 1 {
+				err = errors.New(vaultsUsageString)
+				return
+			}
+		}
 	case "file":
 		{
 			if len(args) != 2 {
 				err = errors.New(fileUseageString)
+				return
+			}
+		}
+	case "vault":
+		{
+			if len(args) != 2 {
+				err = errors.New(vaultUsageString)
+				return
+			}
+		}
+	case "secret":
+		{
+			if len(args) != 2 {
+				err = errors.New(secretUsageString)
 				return
 			}
 		}

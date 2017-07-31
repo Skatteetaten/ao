@@ -26,9 +26,9 @@ var outputFolder string
 
 // exportCmd represents the export command
 var exportCmd = &cobra.Command{
-	Use:   "export files | file [env/]<filename> | adc",
-	Short: "Exports auroraconf to one or more configuration files",
-	Long: `Exports the entire affiliation or a specific file to a set of configuration files.
+	Use:   "export files | file [env/]<filename> | | vaults | vault <vaultname> | secret <vaultname> <secretname> | adc",
+	Short: "Exports auroraconf, vaults or secrets to one or more files",
+	Long: `Exports the entire affiliation or a specific file to a set of files.
 The files will be printed to standard out, but can also be stored individually in a folder structure
 by using the output-folder option.`,
 	Run: func(cmd *cobra.Command, args []string) {

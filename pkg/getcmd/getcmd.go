@@ -143,7 +143,7 @@ func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.Common
 
 func (GetcmdClass *GetcmdClass) getVaults(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaults(persistentOptions, GetcmdClass.getAffiliation(), GetcmdClass.configuration.GetOpenshiftConfig())
+	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, GetcmdClass.getAffiliation(), GetcmdClass.configuration.GetOpenshiftConfig())
 
 	output = "VAULT (Secrets)"
 	for vaultindex := range vaults {
@@ -155,7 +155,7 @@ func (GetcmdClass *GetcmdClass) getVaults(persistentOptions *cmdoptions.CommonCo
 
 func (GetcmdClass *GetcmdClass) getVault(vaultName string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaults(persistentOptions, GetcmdClass.getAffiliation(), GetcmdClass.configuration.GetOpenshiftConfig())
+	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, GetcmdClass.getAffiliation(), GetcmdClass.configuration.GetOpenshiftConfig())
 
 	for vaultindex := range vaults {
 		if vaults[vaultindex].Name == vaultName {
@@ -171,7 +171,7 @@ func (GetcmdClass *GetcmdClass) getVault(vaultName string, persistentOptions *cm
 
 func (GetcmdClass *GetcmdClass) getSecret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaults(persistentOptions, GetcmdClass.getAffiliation(), GetcmdClass.configuration.GetOpenshiftConfig())
+	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, GetcmdClass.getAffiliation(), GetcmdClass.configuration.GetOpenshiftConfig())
 
 	for vaultindex := range vaults {
 		if vaults[vaultindex].Name == vaultName {
