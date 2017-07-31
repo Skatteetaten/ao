@@ -64,6 +64,38 @@ func GetAllContent(outputFolder string, persistentOptions *cmdoptions.CommonComm
 
 }
 
+func GetAllVaults(outputFolder string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (output string, err error) {
+	vaults, err := GetVaultsArray(persistentOptions, affiliation, openshiftConfig)
+	if err != nil {
+		return
+	}
+
+	if outputFolder != "" {
+		if fileutil.IsLegalFileFolder(outputFolder) == fileutil.SpecIllegal {
+			err = errors.New("Illegal file/folder")
+			return "", err
+
+		}
+	}
+
+	var newline = ""
+	for vaultIndex := range vaults {
+		content, err := json.Marshal(vaults[vaultIndex])
+		contentStr := jsonutil.PrettyPrintJson(string(content))
+		output += newline + contentStr
+		newline = "\n"
+		if outputFolder != "" {
+			filename := vaults[vaultIndex].Name + ".json"
+			err = fileutil.WriteFile(outputFolder, filename, contentStr)
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+
+	return output, err
+}
+
 func GetFileList(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (filenames []string, err error) {
 	auroraConfig, err := GetAuroraConfig(persistentOptions, affiliation, openshiftConfig)
 	if err != nil {
@@ -122,11 +154,27 @@ func GetVaults(persistentOptions *cmdoptions.CommonCommandOptions, affiliation s
 
 			}
 			output = responses[server]
+			return output, err
 		}
 
 		return output, err
 
 	}
+
+	if len(responses) != 1 {
+		err = errors.New("Internal error in GetVaults: Response from " + strconv.Itoa(len(responses)))
+		return
+	}
+
+	for server := range responses {
+		response, err := serverapi_v2.ParseResponse(responses[server])
+		if err != nil {
+			return output, err
+		}
+		output, err = serverapi_v2.ResponseItems2Vaults(response)
+	}
+
+	return output, err
 
 	return
 }
@@ -159,7 +207,7 @@ func GetVaultsArray(persistentOptions *cmdoptions.CommonCommandOptions, affiliat
 	}
 
 	if len(responses) != 1 {
-		err = errors.New("Internal error in GetVaults: Response from " + strconv.Itoa(len(responses)))
+		err = errors.New("Internal error in GetVaultsArray: Response from " + strconv.Itoa(len(responses)))
 		return
 	}
 
@@ -168,7 +216,7 @@ func GetVaultsArray(persistentOptions *cmdoptions.CommonCommandOptions, affiliat
 		if err != nil {
 			return vaults, err
 		}
-		vaults, err = serverapi_v2.ResponseItems2Vaults(response)
+		vaults, err = serverapi_v2.ResponseItems2VaultsArray(response)
 	}
 
 	return vaults, err

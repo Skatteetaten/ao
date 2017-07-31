@@ -168,7 +168,7 @@ func ResponseItems2AuroraConfig(response Response) (auroraConfig AuroraConfig, e
 	return
 }
 
-func ResponseItems2Vaults(response Response) (vaults []Vault, err error) {
+func ResponseItems2VaultsArray(response Response) (vaults []Vault, err error) {
 	vaults = make([]Vault, len(response.Items))
 
 	for item := range response.Items {
@@ -176,6 +176,15 @@ func ResponseItems2Vaults(response Response) (vaults []Vault, err error) {
 		if err != nil {
 			return
 		}
+	}
+	return
+}
+
+func ResponseItems2Vaults(response Response) (output string, err error) {
+	var newline string = ""
+	for item := range response.Items {
+		output += newline + jsonutil.PrettyPrintJson(string(response.Items[item]))
+		newline = "\n"
 	}
 	return
 }
