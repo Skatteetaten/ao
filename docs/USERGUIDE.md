@@ -2,7 +2,8 @@
 # General
 AOC works by connecting to the Boober API.  Authentication is handled by sending an 
 OpenShift token in the HTTP header.
-The token is obtained by using the OpenShift API.
+The token is obtained by using the OpenShift API. It is also possible to use a token obtained
+by the oc command ("oc whoami -t").
 
 ### Connect to Boober
 By default, aoc will scan for OpenShift clusters with Boober instances using the naming 
@@ -46,16 +47,28 @@ The AOC commands are shaped after the pattern of the OC commands.
 All the commands have a --help option to explain the usage and the parameters.
 
 ### Common options
---serverapi <http://\<server>:port>   // Address of the boober service
+All commands have a few common options:
+````
+      --serverapi string   Override default server API address
+      --token string       Token to be used for serverapi connections
+  -v, --verbose            Log progress to standard out
+````
+In addition, there are 
+
+## Available commands
 
 ````
+  create      Creates a vault or a secret in a vault
+  delete      Delete a resource
   deploy      Deploy applications in the current affiliation
-  edit        Edit a single configuration file
-  export      A brief description of your command
+  edit        Edit a single configuration file or a secret in a vault
+  export      Exports auroraconf, vaults or secrets to one or more files
   get         Retrieves information from the repository
   import      Imports a set of configuration files to the central store.
   login       Login to openshift clusters
-  ping        A brief description of your command
-  setup       Deploys an application to OpenShift based upon local configuration files
+  logout      Logout of all connected clusters
+  ping        Checks for open connectivity from all nodes in the cluster to a specific ip address and port. 
+  update      Check for available updates for the aoc client, and downloads the update if available.
   version     Shows the version of the aoc client
+
 ````

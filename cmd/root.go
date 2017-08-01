@@ -54,7 +54,7 @@ func init() {
 	//ShowObjects bool
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Verbose, "verbose",
-		"v", false, "Log progress to standard out")
+		"", false, "Log progress to standard out")
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Debug, "debug",
 		"", false, "Show debug information")
