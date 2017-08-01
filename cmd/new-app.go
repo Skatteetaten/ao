@@ -23,13 +23,13 @@ import (
 
 var newappType string
 var newappGroupId string
-var newappArtifactId string
+var newappArtifactId string = ""
 var newappVersion string
 var newappCluster string
 var newappName string
 var newappEnv string
 var newappOutputfolder string
-var newappInteractive bool
+var newappInteractive string
 
 // newAppCmd represents the newApp command
 var newAppCmd = &cobra.Command{
@@ -65,7 +65,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// newAppCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	newAppCmd.Flags().BoolVarP(&newappInteractive, "interactive", "i", false, "Calls the Yeoman generator to prompt for input, and then reads the values from the generated pom.xml")
+	newAppCmd.Flags().StringVarP(&newappInteractive, "interactive", "i", "", "Specifies the folder name for the Yeoman generator.  Calls the generator to prompt for input, and then reads the values from the config files.")
 	newAppCmd.Flags().StringVarP(&newappType, "type", "t", "development", "Type of deploy: development or deploy")
 	newAppCmd.Flags().StringVarP(&newappGroupId, "groupid", "g", "", "GroupID for the application")
 	newAppCmd.Flags().StringVarP(&newappArtifactId, "artifactid", "a", "", "Artifact ID for the application")

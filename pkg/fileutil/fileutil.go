@@ -33,6 +33,20 @@ func IsLegalFileFolder(filespec string) int {
 	return SpecIllegal
 }
 
+func IsFolderEmpty(filespec string) (emptyFolder bool, err error) {
+	var absolutePath string
+	absolutePath, err = filepath.Abs(filespec)
+	if err != nil {
+		return false, err
+	}
+
+	dir, err := ioutil.ReadDir(absolutePath)
+	if err != nil {
+		return false, err
+	}
+	return len(dir) == 0, err
+}
+
 func ValidateFileFolderArg(args []string) (error error) {
 	var errorString string
 
