@@ -77,7 +77,7 @@ func (importClass *ImportClass) ExecuteImport(args []string,
 			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 		} else {
 			responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
-				persistentOptions.ShowObjects, false, persistentOptions.Localhost,
+				persistentOptions.ShowObjects, true, persistentOptions.Localhost,
 				persistentOptions.Verbose, importClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
 			if err != nil {
 				for server := range responses {
