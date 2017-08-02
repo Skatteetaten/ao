@@ -10,6 +10,7 @@ type ConfigurationClass struct {
 	configLocation  string
 	openshiftConfig *openshift.OpenshiftConfig
 	apiClusterIndex int
+	apiClusterName  string
 	initDone        bool
 }
 
@@ -25,7 +26,7 @@ func (configurationClass *ConfigurationClass) init() (err error) {
 	// Find index for API cluster,that is the first reachable cluster
 	if configurationClass.openshiftConfig != nil {
 		for i := range configurationClass.openshiftConfig.Clusters {
-			if configurationClass.openshiftConfig.Clusters[i].Reachable {
+			if configurationClass.openshiftConfig.Clusters[i].Name == configurationClass.openshiftConfig.APICluster {
 				configurationClass.apiClusterIndex = i
 				break
 			}
@@ -35,12 +36,17 @@ func (configurationClass *ConfigurationClass) init() (err error) {
 	return
 }
 
-func (ConfigurationClass *ConfigurationClass) GetOpenshiftConfig() *openshift.OpenshiftConfig {
-	ConfigurationClass.init()
-	return ConfigurationClass.openshiftConfig
+func (configurationClass *ConfigurationClass) GetOpenshiftConfig() *openshift.OpenshiftConfig {
+	configurationClass.init()
+	return configurationClass.openshiftConfig
 }
 
-func (ConfigurationClass *ConfigurationClass) GetApiClusterIndex() int {
-	ConfigurationClass.init()
-	return ConfigurationClass.apiClusterIndex
+func (configurationClass *ConfigurationClass) GetApiClusterIndex() int {
+	configurationClass.init()
+	return configurationClass.apiClusterIndex
+}
+
+func (configurationClass *ConfigurationClass) GetApiClusterName() string {
+	configurationClass.init()
+	return configurationClass.openshiftConfig.APICluster
 }

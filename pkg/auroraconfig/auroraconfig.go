@@ -280,6 +280,21 @@ func GetAuroraConfig(persistentOptions *cmdoptions.CommonCommandOptions, affilia
 	return auroraConfig, nil
 }
 
+func PutAuroraConfig(auroraConfig serverapi_v2.AuroraConfig, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (err error) {
+	content, err := json.Marshal(auroraConfig)
+	if err != nil {
+		return err
+	}
+
+	var apiEndpoint = "/affiliation/" + affiliation + "/auroraconfig"
+
+	_, err = putContent(apiEndpoint, string(content), "", persistentOptions, affiliation, openshiftConfig)
+	if err != nil {
+		return err
+	}
+	return
+}
+
 func putContent(apiEndpoint string, content string, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
 	var responses map[string]string
 

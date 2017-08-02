@@ -33,6 +33,25 @@ func IsLegalFileFolder(filespec string) int {
 	return SpecIllegal
 }
 
+
+func CreateTempFile(content string) (filename string, err error) {
+	const tmpFilePrefix = ".aoc_edit_file_"
+	var tmpDir = os.TempDir()
+	tmpFile, err := ioutil.TempFile(tmpDir, tmpFilePrefix)
+	if err != nil {
+		return "", errors.New("Unable to create temporary file: " + err.Error())
+	}
+	if IsLegalFileFolder(tmpFile.Name()) != SpecIsFile {
+		err = errors.New("Internal error: Illegal temp file name: " + tmpFile.Name())
+	}
+	filename = tmpFile.Name()
+	err = ioutil.WriteFile(tmpFile.Name(), []byte(content), 0700)
+	if err != nil {
+		return
+	}
+	return
+}
+
 func IsFolderEmpty(filespec string) (emptyFolder bool, err error) {
 	var absolutePath string
 	absolutePath, err = filepath.Abs(filespec)

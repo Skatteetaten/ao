@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/skatteetaten/aoc/pkg/auroraconfig"
+	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
+	"github.com/skatteetaten/aoc/pkg/executil"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
-	"github.com/spf13/viper"
+	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
 	"io/ioutil"
-	"os"
-	"os/exec"
 	"path/filepath"
 )
 
@@ -24,26 +25,12 @@ const notYetImplemented = "Not yet implemented"
 const IllegalFolder = "Illegal folder"
 const FolderNotEmpty = "Folder not empty"
 const IllegalJson = "Illegal JSON in yo file"
+const noRootFile = "Affiliation does not contain any about.json at the root level, this is currently unsupported"
 
 const generatorExecutable = "yo"
 const yoName = "aurora-openshift"
 const generatorFileName = ".yo-rc.json"
 const generatorNotInstalled = "Aurora OpenShift generator not installed"
-
-/*{
-"generator-aurora-openshift": {
-"promptValues": {
-"packageName": "no.skatteetaten.aurora.demo",
-"maintainer": "HaakonKlausen <hakon.klausen@skatteetaten.no>"
-},
-"packageName": "no.skatteetaten.aurora.demo",
-"description": "",
-"oracle": false,
-"spock": true,
-"maintainer": "HaakonKlausen <hakon.klausen@skatteetaten.no>",
-"baseName": "foobar"
-}
-}*/
 
 type GeneratorAuroraOpenshift struct {
 	GeneratorAuroraOpenshift struct {
@@ -111,37 +98,9 @@ func readGeneratorValues(foldername string) (generatorValues GeneratorAuroraOpen
 }
 
 func startAuroraOpenshiftGenerator(foldername string, appname string) (generatorValues GeneratorAuroraOpenshift, err error) {
-	exepath, err := exec.LookPath(generatorExecutable)
-	if err != nil {
-		return generatorValues, err
-	}
-	if fileutil.IsLegalFileFolder(exepath) != fileutil.SpecIsFile {
-		return generatorValues, errors.New(generatorNotInstalled)
-	}
 
-	var command exec.Cmd
-	command.Path, err = filepath.Abs(exepath)
-	if err != nil {
-		return generatorValues, err
-	}
-
-	command.Args = make([]string, 3)
-	command.Args[0] = generatorExecutable
-	command.Args[1] = yoName
-	command.Args[2] = appname
-
-	command.Dir, err = filepath.Abs(foldername)
-	fmt.Println("DEBUG: DIR=" + command.Dir)
-	fmt.Println("DEBUG: Appname:" + appname)
-	if err != nil {
-		return generatorValues, err
-	}
-
-	command.Stdin = os.Stdin
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
-
-	err = command.Run()
+	// Run the generator
+	err = executil.RunInteractively(generatorExecutable, foldername, yoName, appname)
 	if err != nil {
 		return generatorValues, err
 	}
@@ -155,23 +114,14 @@ func startAuroraOpenshiftGenerator(foldername string, appname string) (generator
 	return generatorValues, nil
 }
 
-func (newappcmdClass *NewappcmdClass) generateAuroraConfigFiles(appname string, packagename string, env string) (payload map[string]AuroraConfigPayload, err error) {
-	payload = make(map[string]AuroraConfigPayload, 3)
-
-	var envAbout AuroraConfigPayload
-	var envAboutName = env + "/about.json"
-
-	payload[envAboutName] = envAbout
-
-	return
+func (newappcmdClass *NewappcmdClass) generateEnvAbout(env string) (payload AuroraConfigPayload, filename string) {
+	filename = env + "/about.json"
+	return payload, filename
 }
 
-func (newappcmdClass *NewappcmdClass) generateEnvAbout(appname string, packagename string, env string) (payload AuroraConfigPayload, err error) {
-	return
-}
-
-func (newappcmdClass *NewappcmdClass) generateApp(appname string, packagename string, env string) (payload AuroraConfigPayload, err error) {
-	payload.GroupId = packagename
+func (newappcmdClass *NewappcmdClass) generateApp(appname string, groupid string) (payload AuroraConfigPayload, filename string) {
+	filename = appname + ".json"
+	payload.GroupId = groupid
 	payload.ArtifactId = appname
 	payload.Name = appname
 	payload.Version = "1"
@@ -180,37 +130,103 @@ func (newappcmdClass *NewappcmdClass) generateApp(appname string, packagename st
 	payload.Flags.Cert = true
 	payload.Route.Generate = true
 
-	return payload, nil
+	return payload, filename
 }
 
-func (newappcmdClass *NewappcmdClass) generateEnvApp(appname string, packagename string, env string) (payload AuroraConfigPayload, err error) {
-	payload.Type = "development"
-	payload.Cluster = "utv"
+func (newappcmdClass *NewappcmdClass) generateEnvApp(appname string, env string, deploymentType string, cluster string) (payload AuroraConfigPayload, filename string) {
+	filename = env + "/" + appname + ".json"
+	payload.Type = deploymentType
+	payload.Cluster = cluster
+	payload.Version = "1.0-SNAPSHOT"
 
-	return payload, nil
+	return payload, filename
 }
 
-func (newappcmdClass *NewappcmdClass) NewappCommand(args []string, artifactid string, cluster string, env string, groupid string, interactive string, outputFolder string, deployentType string, version string) (output string, err error) {
+func (newappcmdClass *NewappcmdClass) mergeIntoAuroraConfig(config serverapi_v2.AuroraConfig, env string, appname string, groupid string, deploymentType string, cluster string) (mergedConfig serverapi_v2.AuroraConfig, err error) {
 
-	err = validateNewappCommand(args, artifactid, cluster, env, groupid, interactive, outputFolder, deployentType, version)
+	// Check if root about.json exists, if not exit with error
+	_, rootExist := config.Files["about.json"]
+	if !rootExist {
+		err = errors.New(noRootFile)
+		return
+	}
+
+	// Check if Env/About exists, if not create
+	envAbout, envAboutFilename := newappcmdClass.generateEnvAbout(env)
+	_, envappExists := config.Files[envAboutFilename]
+	if !envappExists {
+		config.Files[envAboutFilename], err = json.Marshal(envAbout)
+		if err != nil {
+			return
+		}
+	}
+
+	// Merge app
+	app, appFilename := newappcmdClass.generateApp(appname, groupid)
+	config.Files[appFilename], err = json.Marshal(app)
+	if err != nil {
+		return
+	}
+
+	// Merge env/app
+	envapp, envappFilename := newappcmdClass.generateEnvApp(appname, env, deploymentType, cluster)
+	config.Files[envappFilename], err = json.Marshal(envapp)
+	if err != nil {
+		return
+	}
+
+	return config, err
+}
+
+func (newappcmdClass *NewappcmdClass) NewappCommand(args []string, artifactid string, cluster string, env string, groupid string, interactive string, outputFolder string, deploymentType string, version string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+
+	err = validateNewappCommand(args, artifactid, cluster, env, groupid, interactive, outputFolder, deploymentType, version)
 	if err != nil {
 		return "", err
 	}
 
-	if interactive != "" {
-		generatorValues, err := startAuroraOpenshiftGenerator(interactive, args[0])
-		if err != nil {
-			return "", err
-		}
-		fmt.Println("DEBUG: Packagename: " + generatorValues.GeneratorAuroraOpenshift.PackageName)
-		//var appname = args[0]
-		//var artifactId = generatorValues.GeneratorAuroraOpenshift.PackageName
-		//var affiliation = newappcmdClass.getAffiliation()
-		//var env = viper.GetString("USER")
-
-		//payload, err := newappcmdClass.generateAuroraConfigFiles(appname, artifactid, env)
+	// If cluster not specified, get the API cluster from the config
+	if cluster == "" {
+		cluster = newappcmdClass.configuration.GetApiClusterName()
 	}
 
+	var appname = args[0]
+	if artifactid == "" {
+		artifactid = appname
+	}
+
+	if interactive != "" {
+		var generatorValues GeneratorAuroraOpenshift
+
+		// If generated prompt file does not exist, then start the generator
+		if fileutil.IsLegalFileFolder(filepath.Join(interactive, generatorFileName)) != fileutil.SpecIsFile {
+			generatorValues, err = startAuroraOpenshiftGenerator(interactive, args[0])
+			if err != nil {
+				return "", err
+			}
+		} else {
+			generatorValues, err = readGeneratorValues(interactive)
+		}
+		groupid = generatorValues.GeneratorAuroraOpenshift.PackageName
+	}
+
+	// Get current aurora config
+	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, newappcmdClass.getAffiliation(), newappcmdClass.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return "", err
+	}
+
+	// Merge new app into aurora config
+	mergedAuroraConfig, err := newappcmdClass.mergeIntoAuroraConfig(auroraConfig, env, appname, groupid, deploymentType, cluster)
+	if err != nil {
+		return "", err
+	}
+
+	// Update aurora config in boober
+	err = auroraconfig.PutAuroraConfig(mergedAuroraConfig, persistentOptions, newappcmdClass.getAffiliation(), newappcmdClass.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return "", err
+	}
 	return
 }
 
@@ -229,7 +245,7 @@ func validateNewappCommand(args []string, artifactid string, cluster string, env
 
 	if interactive != "" {
 
-		if artifactid != "" || cluster != "" || env != "" || groupid != "" || outputFolder != "" {
+		if artifactid != "" || groupid != "" || outputFolder != "" {
 			err = errors.New(InteractiveNoFlags)
 			return err
 		}
@@ -240,14 +256,14 @@ func validateNewappCommand(args []string, artifactid string, cluster string, env
 		}
 
 		// Check for empty folder
-		isempty, err := fileutil.IsFolderEmpty(interactive)
+		/*isempty, err := fileutil.IsFolderEmpty(interactive)
 		if err != nil {
 			return err
 		}
 		if !isempty {
 			err = errors.New(FolderNotEmpty)
 			return err
-		}
+		}*/
 	} else {
 		err = errors.New(notYetImplemented)
 		return err

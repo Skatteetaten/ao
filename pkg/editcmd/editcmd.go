@@ -60,7 +60,7 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 		}
 		if (stripComments(modifiedContent) == stripComments(contentBeforeEdit)) || stripComments(modifiedContent) == stripComments(content) {
 			if stripComments(modifiedContent) != stripComments(content) {
-				tempfile, err := createTempFile(stripComments(modifiedContent))
+				tempfile, err := fileutil.CreateTempFile(stripComments(modifiedContent))
 				if err != nil {
 					return "", nil
 				}
@@ -204,7 +204,7 @@ func contentToLines(content string) (contentLines []string, err error) {
 
 func editString(content string) (modifiedContent string, err error) {
 
-	filename, err := createTempFile(content)
+	filename, err := fileutil.CreateTempFile(content)
 
 	err = fileutil.EditFile(filename)
 	if err != nil {
@@ -220,24 +220,6 @@ func editString(content string) (modifiedContent string, err error) {
 	err = os.Remove(filename)
 	if err != nil {
 		err = errors.New("WARNING: Unable to delete tempfile " + filename)
-	}
-	return
-}
-
-func createTempFile(content string) (filename string, err error) {
-	const tmpFilePrefix = ".aoc_edit_file_"
-	var tmpDir = os.TempDir()
-	tmpFile, err := ioutil.TempFile(tmpDir, tmpFilePrefix)
-	if err != nil {
-		return "", errors.New("Unable to create temporary file: " + err.Error())
-	}
-	if fileutil.IsLegalFileFolder(tmpFile.Name()) != fileutil.SpecIsFile {
-		err = errors.New("Internal error: Illegal temp file name: " + tmpFile.Name())
-	}
-	filename = tmpFile.Name()
-	err = ioutil.WriteFile(tmpFile.Name(), []byte(content), 0700)
-	if err != nil {
-		return
 	}
 	return
 }

@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"github.com/skatteetaten/aoc/pkg/newappcmd"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"log"
 	"os"
 )
@@ -40,7 +41,7 @@ The appname parameter is optional if artifactid is set; if not specified the app
 If the artifactid is not given, it will default to the appname.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var newappcmdObject newappcmd.NewappcmdClass
-		output, err := newappcmdObject.NewappCommand(args, newappArtifactId, newappCluster, newappEnv, newappGroupId, newappInteractive, newappOutputfolder, newappType, newappVersion)
+		output, err := newappcmdObject.NewappCommand(args, newappArtifactId, newappCluster, newappEnv, newappGroupId, newappInteractive, newappOutputfolder, newappType, newappVersion, &persistentOptions)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -55,7 +56,7 @@ If the artifactid is not given, it will default to the appname.`,
 
 func init() {
 	RootCmd.AddCommand(newAppCmd)
-
+	viper.BindEnv("USER")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
@@ -70,7 +71,7 @@ func init() {
 	newAppCmd.Flags().StringVarP(&newappGroupId, "groupid", "g", "", "GroupID for the application")
 	newAppCmd.Flags().StringVarP(&newappArtifactId, "artifactid", "a", "", "Artifact ID for the application")
 	newAppCmd.Flags().StringVarP(&newappVersion, "version", "v", "latest", "Version for the application")
-	newAppCmd.Flags().StringVarP(&newappCluster, "cluster", "c", "", "OpenShift Clustername target")
-	newAppCmd.Flags().StringVarP(&newappEnv, "env", "e", "", "Environment folder for the config")
+	newAppCmd.Flags().StringVarP(&newappCluster, "cluster", "c", "", "OpenShift Clustername target, defaults to AOC API cluster")
+	newAppCmd.Flags().StringVarP(&newappEnv, "env", "e", viper.GetString("USER"), "Environment folder for the config, defaults to username")
 	newAppCmd.Flags().StringVarP(&newappOutputfolder, "output-folder", "o", "", "If specified the files are generated in this folder instead of being sent to Boober")
 }

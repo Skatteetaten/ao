@@ -3,13 +3,50 @@ package updatecmd
 import (
 	"errors"
 	"fmt"
+	"github.com/skatteetaten/aoc/pkg/executil"
 	"github.com/skatteetaten/aoc/pkg/versionutil"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
 const aoc5Url = "http://aoc-update-service-paas-aoc-update.utv.paas.skead.no"
+
+func InstallAuroraOpenshiftGenerator() (err error) {
+	const gitExec = "git"
+	const gitCloneCommand = "clone"
+	const generatorUrl = "https://github.com/Skatteetaten/generator-aurora-openshift.git"
+	const generatorFolderName = "generator-aurora-openshift"
+	const generatorInstallFile = "install.sh"
+	const shellExecutable = "sh"
+
+	// Make a temp folder
+	installDir, err := ioutil.TempDir("", "aog-install")
+	if err != nil {
+		return err
+	}
+
+	// Clone the generator
+	err = executil.RunInteractively(gitExec, installDir, gitCloneCommand, generatorUrl)
+	if err != nil {
+		return err
+	}
+
+	// Run install
+	err = executil.RunInteractively(shellExecutable, filepath.Join(installDir, generatorFolderName), generatorInstallFile)
+	if err != nil {
+		return err
+	}
+
+	// Remove temp folder
+	err = os.RemoveAll(installDir)
+	if err != nil {
+		return err
+	}
+
+	return
+}
 
 func UpdateSelf(args []string, simulate bool, forceVersion string, forceUpdate bool) (output string, err error) {
 	var releaseVersion string

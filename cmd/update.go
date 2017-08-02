@@ -24,6 +24,7 @@ import (
 var simulate bool
 var forceVersion string
 var forceUpdate bool
+var installGenerator bool
 
 // updateCmd represents the update command
 var updateCmd = &cobra.Command{
@@ -31,6 +32,14 @@ var updateCmd = &cobra.Command{
 	Short: "Check for available updates for the aoc client, and downloads the update if available.",
 	Long:  `Available updates are searced for using a service in the OpenShift cluster.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if installGenerator {
+			err := updatecmd.InstallAuroraOpenshiftGenerator()
+			if err != nil {
+				l := log.New(os.Stderr, "", 0)
+				l.Println(err.Error())
+				os.Exit(-1)
+			}
+		}
 		output, err := updatecmd.UpdateSelf(args, simulate, forceVersion, forceUpdate)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
@@ -56,7 +65,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// updateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
+	updateCmd.Flags().BoolVarP(&installGenerator, "install-generator", "i", false, "Install the Aurora OpenShift generator")
 	updateCmd.Flags().BoolVarP(&simulate, "simulate", "s", false,
 		"No action, just checks for avaliable update.")
 	updateCmd.Flags().StringVarP(&forceVersion, "force-version", "", "", "Force download of a specific version")
