@@ -197,19 +197,21 @@ func (newappcmdClass *NewappcmdClass) NewappCommand(args []string, artifactid st
 		artifactid = appname
 	}
 
-	if folder != "" {
+	if generateApp {
 		var generatorValues GeneratorAuroraOpenshift
-
-		// If generated prompt file does not exist, then start the generator
-		if fileutil.IsLegalFileFolder(filepath.Join(folder, generatorFileName)) != fileutil.SpecIsFile {
-			generatorValues, err = startAuroraOpenshiftGenerator(folder, args[0])
-			if err != nil {
-				return "", err
-			}
-		} else {
-			output += "App files exists in folder, using previously generator run."
-			generatorValues, err = readGeneratorValues(folder)
+		empty, err := fileutil.IsFolderEmpty(folder)
+		if err != nil {
+			return "", err
 		}
+		if !empty {
+			err = errors.New(FolderNotEmpty)
+			return "", err
+		}
+		generatorValues, err = startAuroraOpenshiftGenerator(folder, args[0])
+		if err != nil {
+			return "", err
+		}
+
 		groupid = generatorValues.GeneratorAuroraOpenshift.PackageName
 	}
 
@@ -259,17 +261,15 @@ func validateNewappCommand(args []string, artifactid string, cluster string, env
 		}
 
 		// Check for empty folder
-		/*isempty, err := fileutil.IsFolderEmpty(interactive)
+		isempty, err := fileutil.IsFolderEmpty(folder)
 		if err != nil {
 			return err
 		}
 		if !isempty {
 			err = errors.New(FolderNotEmpty)
 			return err
-		}*/
+		}
 	} else {
-		err = errors.New(notYetImplemented)
-		return err
 
 		// Check that we have a version if type is deployment
 		if deploymentType == "deploy" {
@@ -299,6 +299,10 @@ func validateNewappCommand(args []string, artifactid string, cluster string, env
 			err = errors.New(fmt.Sprintf(MissingArgumentFormat, "deploymentType"))
 			return err
 		}
+	}
+	if outputFolder != "" {
+		err = errors.New(notYetImplemented)
+		return err
 	}
 	return
 }

@@ -36,9 +36,14 @@ var newappGenerateApp bool
 // newAppCmd represents the newApp command
 var newAppCmd = &cobra.Command{
 	Use:   "new-app <appname>",
-	Short: "Creates an AuroraConfig for an application",
+	Short: "Creates an AuroraConfig for an application and optionally generates an an empty application",
 	Long: `Creates an AuroraConfig for an application and uploads it to Boober.
-The appname parameter is optional if artifactid is set; if not specified the app will be named as the artifactid.
+As default, the generate-app flag is set to true.  This will call the Yeoman generator for creating applications to run on the Aurora OpenShift platform.
+The Yeoman generator will create the application files in the current folder.  The folder to be used can be overridden with the --folder / -f flag.
+If the folder is not empty, the command will return an error.
+
+If the generate-app is set to false, the generator will not be called, and the command will generate a set of Aurora config files based upon the arguments.
+
 If the artifactid is not given, it will default to the appname.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var newappcmdObject newappcmd.NewappcmdClass
@@ -68,10 +73,10 @@ func init() {
 	// is called directly, e.g.:
 	// newAppCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	newAppCmd.Flags().BoolVarP(&newappGenerateApp, "generate-app", "g", true, "Calls the Yeoman generator to generate a sample app")
+	newAppCmd.Flags().BoolVarP(&newappGenerateApp, "generate-app", "", true, "Calls the Yeoman generator to generate a sample app")
 	newAppCmd.Flags().StringVarP(&newappFolder, "folder", "f", ".", "Specifies the folder name for the Yeoman generator.  Calls the generator to prompt for input, and then reads the values from the config files.")
 	newAppCmd.Flags().StringVarP(&newappType, "type", "t", "development", "Type of deploy: development or deploy")
-	newAppCmd.Flags().StringVarP(&newappGroupId, "groupid", "", "", "GroupID for the application")
+	newAppCmd.Flags().StringVarP(&newappGroupId, "groupid", "g", "", "GroupID for the application")
 	newAppCmd.Flags().StringVarP(&newappArtifactId, "artifactid", "a", "", "Artifact ID for the application")
 	newAppCmd.Flags().StringVarP(&newappVersion, "version", "v", "latest", "Version for the application")
 	newAppCmd.Flags().StringVarP(&newappCluster, "cluster", "c", "", "OpenShift Clustername target, defaults to AOC API cluster")
