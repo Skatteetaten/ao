@@ -31,6 +31,7 @@ const generatorExecutable = "yo"
 const yoName = "aurora-openshift"
 const generatorFileName = ".yo-rc.json"
 const generatorNotInstalled = "Aurora OpenShift generator not installed"
+const deploymentTypeDevelopment = "development"
 
 type GeneratorAuroraOpenshift struct {
 	GeneratorAuroraOpenshift struct {
@@ -137,8 +138,9 @@ func (newappcmdClass *NewappcmdClass) generateEnvApp(appname string, env string,
 	filename = env + "/" + appname + ".json"
 	payload.Type = deploymentType
 	payload.Cluster = cluster
-	payload.Version = "1.0-SNAPSHOT"
-
+	if deploymentType == deploymentTypeDevelopment {
+		payload.Version = "1.0-SNAPSHOT"
+	}
 	return payload, filename
 }
 
@@ -178,9 +180,9 @@ func (newappcmdClass *NewappcmdClass) mergeIntoAuroraConfig(config serverapi_v2.
 	return config, err
 }
 
-func (newappcmdClass *NewappcmdClass) NewappCommand(args []string, artifactid string, cluster string, env string, groupid string, interactive string, outputFolder string, deploymentType string, version string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (newappcmdClass *NewappcmdClass) NewappCommand(args []string, artifactid string, cluster string, env string, groupid string, folder string, outputFolder string, deploymentType string, version string, generateApp bool, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 
-	err = validateNewappCommand(args, artifactid, cluster, env, groupid, interactive, outputFolder, deploymentType, version)
+	err = validateNewappCommand(args, artifactid, cluster, env, groupid, folder, outputFolder, deploymentType, version, generateApp)
 	if err != nil {
 		return "", err
 	}
@@ -195,17 +197,18 @@ func (newappcmdClass *NewappcmdClass) NewappCommand(args []string, artifactid st
 		artifactid = appname
 	}
 
-	if interactive != "" {
+	if folder != "" {
 		var generatorValues GeneratorAuroraOpenshift
 
 		// If generated prompt file does not exist, then start the generator
-		if fileutil.IsLegalFileFolder(filepath.Join(interactive, generatorFileName)) != fileutil.SpecIsFile {
-			generatorValues, err = startAuroraOpenshiftGenerator(interactive, args[0])
+		if fileutil.IsLegalFileFolder(filepath.Join(folder, generatorFileName)) != fileutil.SpecIsFile {
+			generatorValues, err = startAuroraOpenshiftGenerator(folder, args[0])
 			if err != nil {
 				return "", err
 			}
 		} else {
-			generatorValues, err = readGeneratorValues(interactive)
+			output += "App files exists in folder, using previously generator run."
+			generatorValues, err = readGeneratorValues(folder)
 		}
 		groupid = generatorValues.GeneratorAuroraOpenshift.PackageName
 	}
@@ -230,7 +233,7 @@ func (newappcmdClass *NewappcmdClass) NewappCommand(args []string, artifactid st
 	return
 }
 
-func validateNewappCommand(args []string, artifactid string, cluster string, env string, groupid string, interactive string, outputFolder string, deploymentType string, version string) (err error) {
+func validateNewappCommand(args []string, artifactid string, cluster string, env string, groupid string, folder string, outputFolder string, deploymentType string, version string, generateApp bool) (err error) {
 	// Check for interactive, then no other parameters should be given
 
 	if len(args) > 1 {
@@ -243,14 +246,14 @@ func validateNewappCommand(args []string, artifactid string, cluster string, env
 		return err
 	}
 
-	if interactive != "" {
+	if generateApp {
 
 		if artifactid != "" || groupid != "" || outputFolder != "" {
 			err = errors.New(InteractiveNoFlags)
 			return err
 		}
 		// Check for valid folder
-		if fileutil.IsLegalFileFolder(interactive) != fileutil.SpecIsFolder {
+		if fileutil.IsLegalFileFolder(folder) != fileutil.SpecIsFolder {
 			err = errors.New(IllegalFolder)
 			return err
 		}

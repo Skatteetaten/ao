@@ -30,7 +30,8 @@ var newappCluster string
 var newappName string
 var newappEnv string
 var newappOutputfolder string
-var newappInteractive string
+var newappFolder string
+var newappGenerateApp bool
 
 // newAppCmd represents the newApp command
 var newAppCmd = &cobra.Command{
@@ -41,7 +42,7 @@ The appname parameter is optional if artifactid is set; if not specified the app
 If the artifactid is not given, it will default to the appname.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var newappcmdObject newappcmd.NewappcmdClass
-		output, err := newappcmdObject.NewappCommand(args, newappArtifactId, newappCluster, newappEnv, newappGroupId, newappInteractive, newappOutputfolder, newappType, newappVersion, &persistentOptions)
+		output, err := newappcmdObject.NewappCommand(args, newappArtifactId, newappCluster, newappEnv, newappGroupId, newappFolder, newappOutputfolder, newappType, newappVersion, newappGenerateApp, &persistentOptions)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -66,9 +67,11 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// newAppCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	newAppCmd.Flags().StringVarP(&newappInteractive, "interactive", "i", "", "Specifies the folder name for the Yeoman generator.  Calls the generator to prompt for input, and then reads the values from the config files.")
+
+	newAppCmd.Flags().BoolVarP(&newappGenerateApp, "generate-app", "g", true, "Calls the Yeoman generator to generate a sample app")
+	newAppCmd.Flags().StringVarP(&newappFolder, "folder", "f", ".", "Specifies the folder name for the Yeoman generator.  Calls the generator to prompt for input, and then reads the values from the config files.")
 	newAppCmd.Flags().StringVarP(&newappType, "type", "t", "development", "Type of deploy: development or deploy")
-	newAppCmd.Flags().StringVarP(&newappGroupId, "groupid", "g", "", "GroupID for the application")
+	newAppCmd.Flags().StringVarP(&newappGroupId, "groupid", "", "", "GroupID for the application")
 	newAppCmd.Flags().StringVarP(&newappArtifactId, "artifactid", "a", "", "Artifact ID for the application")
 	newAppCmd.Flags().StringVarP(&newappVersion, "version", "v", "latest", "Version for the application")
 	newAppCmd.Flags().StringVarP(&newappCluster, "cluster", "c", "", "OpenShift Clustername target, defaults to AOC API cluster")
