@@ -41,6 +41,47 @@ func (deletecmdClass *DeletecmdClass) deleteSecret(vaultName string, secretName 
 	return
 }
 
+func (deletecmdClass *DeletecmdClass) deleteEnv(env string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+	// Get current aurora config
+	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return err
+	}
+
+	// Update aurora config in boober
+	err = auroraconfig.PutAuroraConfig(auroraConfig, persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return err
+	}
+
+	return
+}
+
+func (deletecmdClass *DeletecmdClass) deleteDeployment(app string, env string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+	// Get current aurora config
+	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return err
+	}
+
+	deploymentFilename := env + "/" + app + ".json"
+	_, deploymentExists := auroraConfig.Files[deploymentFilename]
+	if !deploymentExists {
+		err = errors.New("No such deployment")
+		return err
+	}
+
+	delete(auroraConfig.Files, deploymentFilename)
+
+	// Update aurora config in boober
+	err = auroraconfig.PutAuroraConfig(auroraConfig, persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return err
+	}
+
+	return
+}
+
 func (deletecmdClass *DeletecmdClass) DeleteObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 	err = validateDeletecmd(args)
 	if err != nil {
@@ -57,6 +98,18 @@ func (deletecmdClass *DeletecmdClass) DeleteObject(args []string, persistentOpti
 		{
 			err = deletecmdClass.deleteSecret(args[1], args[2], persistentOptions)
 		}
+	case "app":
+		{
+
+		}
+	case "env":
+		{
+			//err = deletecmdClass.deleteEnv(args[1], persistentOptions)
+		}
+	case "deployment":
+		{
+			err = deletecmdClass.deleteDeployment(args[1], args[2], persistentOptions)
+		}
 	}
 	return
 
@@ -70,14 +123,14 @@ func validateDeletecmd(args []string) (err error) {
 
 	var commandStr = args[0]
 	switch commandStr {
-	case "vault":
+	case "vault", "app", "env":
 		{
 			if len(args) != 2 {
 				err = errors.New(UsageString)
 				return
 			}
 		}
-	case "secret":
+	case "secret", "deployment":
 		{
 			if len(args) != 3 {
 				err = errors.New(UsageString)

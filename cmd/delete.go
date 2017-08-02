@@ -9,7 +9,7 @@ import (
 )
 
 var deleteCmd = &cobra.Command{
-	Use:   "delete vault <vaultname> | secret <vaultname> <secretname>",
+	Use:   "delete vault <vaultname> | secret <vaultname> <secretname> | app <appname> | env <envname> | deployment <appname> <envname>",
 	Short: "Delete a resource",
 	Long:  `Delete a resource from the repository.`,
 
