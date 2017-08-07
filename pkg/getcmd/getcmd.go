@@ -15,8 +15,8 @@ import (
 
 const UsageString = "Usage: aoc get files | vaults | vault <vaultname> | file [env/]<filename> | adc | secret <secretname> | cluster <clustername> | clusters | kubeconfig | oclogin"
 const filesUsageString = "Usage: aoc get files"
-const fileUseageString = "Usage: aoc get file [env/]<filename>"
-const vaultUseageString = "Usage: aoc get vault <vaultname>"
+const fileUseageString = "Usage: aoc get file [[env/]<filename>]"
+const vaultUseageString = "Usage: aoc get vault [<vaultname>]"
 const secretUseageString = "Usage: aoc get secret <vaultname> <secretname>"
 const adcUsageString = "Usage: aoc get adc"
 const notYetImplemented = "Not supported yet"
@@ -231,21 +231,21 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 
 	var commandStr = args[0]
 	switch commandStr {
-	case "vaults":
+	case "vault", "vaults":
 		{
-			output, err = getcmdClass.getVaults(persistentOptions)
+			if len(args) > 1 {
+				output, err = getcmdClass.getVault(args[1], persistentOptions, outputFormat)
+			} else {
+				output, err = getcmdClass.getVaults(persistentOptions)
+			}
 		}
-	case "files":
+	case "file", "files":
 		{
-			output, err = getcmdClass.getFiles(persistentOptions)
-		}
-	case "file":
-		{
-			output, err = getcmdClass.getFile(args[1], persistentOptions, outputFormat)
-		}
-	case "vault":
-		{
-			output, err = getcmdClass.getVault(args[1], persistentOptions, outputFormat)
+			if len(args) > 1 {
+				output, err = getcmdClass.getFile(args[1], persistentOptions, outputFormat)
+			} else {
+				output, err = getcmdClass.getFiles(persistentOptions)
+			}
 		}
 	case "secret":
 		{
@@ -293,16 +293,16 @@ func validateGetcmd(args []string) (err error) {
 
 	var commandStr = args[0]
 	switch commandStr {
-	case "file":
+	case "file", "files":
 		{
-			if len(args) != 2 {
+			if len(args) > 2 {
 				err = errors.New(fileUseageString)
 				return
 			}
 		}
-	case "vault":
+	case "vault", "vaults":
 		{
-			if len(args) != 2 {
+			if len(args) > 2 {
 				err = errors.New(vaultUseageString)
 				return
 			}
@@ -321,7 +321,7 @@ func validateGetcmd(args []string) (err error) {
 				return
 			}
 		}
-	case "cluster", "clusters", "kubeconfig", "oclogin", "vaults", "files":
+	case "cluster", "clusters", "kubeconfig", "oclogin":
 		{
 			if len(args) > 1 {
 				err = errors.New(UsageString)
