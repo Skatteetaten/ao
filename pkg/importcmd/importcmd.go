@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/skatteetaten/aoc/pkg/auroraconfig"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
@@ -56,6 +57,17 @@ func (importClass *ImportClass) ExecuteImport(args []string,
 		return
 	}
 
+	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, importClass.getAffiliation(), importClass.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return "", err
+	}
+
+	// We allow just one file to be in the config, that will be the global about.json that is illegal to delete.
+	// Will probably be safe to overwrite
+	if len(auroraConfig.Files) > 1 {
+		err = errors.New("Import not allowed into a non-empty AuroraConfig as it will overwrite the config.")
+		return "", err
+	}
 	var apiEndpoint string
 	apiEndpoint = "/affiliation/" + importClass.getAffiliation() + "/auroraconfig"
 
