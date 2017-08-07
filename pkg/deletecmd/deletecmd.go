@@ -7,6 +7,7 @@ import (
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
 	"github.com/skatteetaten/aoc/pkg/executil"
+	"github.com/skatteetaten/aoc/pkg/openshift"
 	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
 	"strings"
 )
@@ -17,6 +18,7 @@ const vaultDontExistsError = "Error: No such vault"
 type DeletecmdClass struct {
 	configuration  configuration.ConfigurationClass
 	deleteFileList []string
+	force          bool
 }
 
 func (deletecmdClass *DeletecmdClass) getAffiliation() (affiliation string) {
@@ -30,8 +32,21 @@ func (deletecmdClass *DeletecmdClass) addDeleteFile(filename string) {
 	deletecmdClass.deleteFileList = append(deletecmdClass.deleteFileList, filename)
 }
 
-func (deletecmdClass *DeletecmdClass) deleteFilesInList(auroraConfig serverapi_v2.AuroraConfig) (newAuroraConfig serverapi_v2.AuroraConfig, err error) {
+func (deletecmdClass *DeletecmdClass) isFileDeleted(filename string) bool {
+	for i := range deletecmdClass.deleteFileList {
+		if deletecmdClass.deleteFileList[i] == filename {
+			return true
+		}
+	}
+	return false
+}
 
+func (deletecmdClass *DeletecmdClass) deleteFilesInList(auroraConfig serverapi_v2.AuroraConfig, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) error {
+	// Delete all files in list
+	for i := range deletecmdClass.deleteFileList {
+		delete(auroraConfig.Files, deletecmdClass.deleteFileList[i])
+	}
+	return auroraconfig.PutAuroraConfig(auroraConfig, persistentOptions, affiliation, openshiftConfig)
 }
 
 func (deletecmdClass *DeletecmdClass) deleteVault(vaultName string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
@@ -53,17 +68,69 @@ func (deletecmdClass *DeletecmdClass) deleteSecret(vaultName string, secretName 
 	return
 }
 
-// TODO: Delete all deployments of app in
-// TODO: Chekc for existence of other app.json in all the envs affected, if none found then delete the root file as well
-func (deletecmdClass *DeletecmdClass) deleteApp(app string, force bool, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+func (deletecmdClass *DeletecmdClass) addDeleteFileWithPrompt(filename string, prompt string) (err error) {
+	if deletecmdClass.force {
+		deletecmdClass.addDeleteFile(filename)
+	} else {
+		confirm, err := executil.PromptYNC(prompt)
+		if err != nil {
+			return err
+		}
+		if confirm == "Y" {
+			deletecmdClass.addDeleteFile(filename)
+		}
+		if confirm == "C" {
+			err = errors.New("Operation cancelled by user")
+			return err
+		}
+	}
+	return
+}
+
+func (deletecmdClass *DeletecmdClass) deleteApp(app string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
 	// Get current aurora config
 	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
 	if err != nil {
 		return err
 	}
 
-	// Update aurora config in boober
-	err = auroraconfig.PutAuroraConfig(auroraConfig, persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
+	for filename := range auroraConfig.Files {
+		if strings.Contains(filename, "/"+app+".json") {
+			err = deletecmdClass.addDeleteFileWithPrompt(filename, "Delete file "+filename)
+			if err != nil {
+				return err
+			}
+
+			// Check if no other app in folder this app was deleted in.  If no more exists, then delete the env file about.json
+			var parts []string = strings.Split(filename, "/")
+			var env = parts[0]
+			var otherAppDeployedInEnv bool = false
+			for appfile := range auroraConfig.Files {
+				if strings.Contains(appfile, env+"/") && !strings.Contains(appfile, "/about.json") {
+					if !deletecmdClass.isFileDeleted(appfile) {
+						otherAppDeployedInEnv = true
+						break
+					}
+				}
+			}
+
+			if !otherAppDeployedInEnv {
+				var aboutFile = env + "/about.json"
+				err = deletecmdClass.addDeleteFileWithPrompt(aboutFile, "No other deployments in "+env+" exists, delete about file "+aboutFile)
+				if err != nil {
+					return err
+				}
+			}
+
+		}
+	}
+
+	// Delete the root app file
+	var rootAppFile string = app + ".json"
+	err = deletecmdClass.addDeleteFileWithPrompt(rootAppFile, "Delete file "+rootAppFile)
+
+	// Delete all files in list and update aurora config in boober
+	err = deletecmdClass.deleteFilesInList(auroraConfig, persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
 	if err != nil {
 		return err
 	}
@@ -71,7 +138,6 @@ func (deletecmdClass *DeletecmdClass) deleteApp(app string, force bool, persiste
 	return
 }
 
-// TODO: Check for existence of app.json for all apps in env in other envs, if none found then delete the root file as well
 func (deletecmdClass *DeletecmdClass) deleteEnv(env string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
 	// Get current aurora config
 	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
@@ -79,8 +145,41 @@ func (deletecmdClass *DeletecmdClass) deleteEnv(env string, persistentOptions *c
 		return err
 	}
 
-	// Update aurora config in boober
-	err = auroraconfig.PutAuroraConfig(auroraConfig, persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
+	// Delete all files in the folder
+	for filename := range auroraConfig.Files {
+		if strings.Contains(filename, env+"/") {
+			var parts []string = strings.Split(filename, "/")
+			var app = parts[1]
+
+			err = deletecmdClass.addDeleteFileWithPrompt(filename, "Delete file "+filename)
+			if err != nil {
+				return err
+			}
+			// If not about.json then check if this app is deployed in another env.  If not, then delete the root app.json also
+			var deployAppFoundInOtherEnv bool = false
+			if filename != env+"/about.json" {
+				for appfile := range auroraConfig.Files {
+					if strings.Contains(appfile, "/"+app) {
+						// Check if file is marked for deletion, then we will not mark as found
+						if !deletecmdClass.isFileDeleted(appfile) {
+							deployAppFoundInOtherEnv = true
+							break
+						}
+					}
+				}
+				if !deployAppFoundInOtherEnv {
+					var rootFileName = app
+					err = deletecmdClass.addDeleteFileWithPrompt(rootFileName, "No other deployment of "+rootFileName+" exists, delete root file "+rootFileName)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	// Delete all files in list and update aurora config in boober
+	err = deletecmdClass.deleteFilesInList(auroraConfig, persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
 	if err != nil {
 		return err
 	}
@@ -88,8 +187,7 @@ func (deletecmdClass *DeletecmdClass) deleteEnv(env string, persistentOptions *c
 	return
 }
 
-func (deletecmdClass *DeletecmdClass) deleteDeployment(env string, app string, force bool, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
-	var deleteFileList []string
+func (deletecmdClass *DeletecmdClass) deleteDeployment(env string, app string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
 
 	// Get current aurora config
 	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
@@ -100,25 +198,15 @@ func (deletecmdClass *DeletecmdClass) deleteDeployment(env string, app string, f
 	deploymentFilename := env + "/" + app + ".json"
 	_, deploymentExists := auroraConfig.Files[deploymentFilename]
 	if !deploymentExists {
-		if !force {
+		if !deletecmdClass.force {
 			err = errors.New("No such deployment")
 		}
 		return err
 	}
 
-	if force {
-		deleteFileList = append(deleteFileList, deploymentFilename)
-	} else {
-		confirm, err := executil.PromptYNC("Delete file " + deploymentFilename)
-		if err != nil {
-			return err
-		}
-		if confirm == "Y" {
-			deleteFileList = append(deleteFileList, deploymentFilename)
-		}
-		if confirm == "C" {
-			return err
-		}
+	err = deletecmdClass.addDeleteFileWithPrompt(deploymentFilename, "Delete file "+deploymentFilename)
+	if err != nil {
+		return err
 	}
 
 	// Check for existence of app.json in other envs, if none found then delete the root file as well
@@ -131,19 +219,10 @@ func (deletecmdClass *DeletecmdClass) deleteDeployment(env string, app string, f
 	}
 
 	if !deployAppFoundInOtherEnv {
-		if force {
-			deleteFileList = append(deleteFileList, app+".json")
-		} else {
-			confirm, err := executil.PromptYNC("No other deployment of " + app + " exists, delete root file " + app + ".json")
-			if err != nil {
-				return err
-			}
-			if confirm == "Y" {
-				deleteFileList = append(deleteFileList, app+".json")
-			}
-			if confirm == "C" {
-				return err
-			}
+		var rootFileName = app + ".json"
+		err = deletecmdClass.addDeleteFileWithPrompt(rootFileName, "No other deployment of "+app+" exists, delete root file "+rootFileName)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -157,29 +236,15 @@ func (deletecmdClass *DeletecmdClass) deleteDeployment(env string, app string, f
 	}
 
 	if !otherAppInSameFolder {
-		if force {
-			deleteFileList = append(deleteFileList, env+"/about.json")
-		} else {
-			confirm, err := executil.PromptYNC("No other apps exists in the env " + env + ", delete environment file " + env + "/about.json")
-			if err != nil {
-				return err
-			}
-			if confirm == "Y" {
-				deleteFileList = append(deleteFileList, env+"/about.json")
-			}
-			if confirm == "C" {
-				return err
-			}
+		var envAboutFilename string = env + "/about.json"
+		err = deletecmdClass.addDeleteFileWithPrompt(envAboutFilename, "No other apps exists in the env "+env+", delete environment file "+envAboutFilename)
+		if err != nil {
+			return err
 		}
 	}
 
-	// Delete all files in list
-	for i := range deleteFileList {
-		delete(auroraConfig.Files, deleteFileList[i])
-	}
-
-	// Update aurora config in boober
-	err = auroraconfig.PutAuroraConfig(auroraConfig, persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
+	// Delete all files in list and update aurora config in boober
+	err = deletecmdClass.deleteFilesInList(auroraConfig, persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
 	if err != nil {
 		return err
 	}
@@ -187,7 +252,7 @@ func (deletecmdClass *DeletecmdClass) deleteDeployment(env string, app string, f
 	return
 }
 
-func (deletecmdClass *DeletecmdClass) deleteFile(filename string, force bool, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+func (deletecmdClass *DeletecmdClass) deleteFile(filename string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
 	// Get current aurora config
 	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
 	if err != nil {
@@ -196,16 +261,15 @@ func (deletecmdClass *DeletecmdClass) deleteFile(filename string, force bool, pe
 
 	_, deploymentExists := auroraConfig.Files[filename]
 	if !deploymentExists {
-		if !force {
+		if !deletecmdClass.force {
 			err = errors.New("No such file")
 		}
 		return err
 	}
 
-	delete(auroraConfig.Files, filename)
-
-	// Update aurora config in boober
-	err = auroraconfig.PutAuroraConfig(auroraConfig, persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
+	deletecmdClass.addDeleteFile(filename)
+	// Delete all files in list and update aurora config in boober
+	err = deletecmdClass.deleteFilesInList(auroraConfig, persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
 	if err != nil {
 		return err
 	}
@@ -219,6 +283,8 @@ func (deletecmdClass *DeletecmdClass) DeleteObject(args []string, force bool, pe
 		return
 	}
 
+	deletecmdClass.force = force
+
 	var commandStr = args[0]
 	switch commandStr {
 	case "vault":
@@ -231,19 +297,19 @@ func (deletecmdClass *DeletecmdClass) DeleteObject(args []string, force bool, pe
 		}
 	case "app":
 		{
-
+			err = deletecmdClass.deleteApp(args[1], persistentOptions)
 		}
 	case "env":
 		{
-			//err = deletecmdClass.deleteEnv(args[1], persistentOptions)
+			err = deletecmdClass.deleteEnv(args[1], persistentOptions)
 		}
 	case "deployment":
 		{
-			err = deletecmdClass.deleteDeployment(args[1], args[2], force, persistentOptions)
+			err = deletecmdClass.deleteDeployment(args[1], args[2], persistentOptions)
 		}
 	case "file":
 		{
-			err = deletecmdClass.deleteFile(args[1], force, persistentOptions)
+			err = deletecmdClass.deleteFile(args[1], persistentOptions)
 		}
 	}
 	return
