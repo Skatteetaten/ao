@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-const usageString = "Usage: aoc ping <address> -p <port> -c <cluster>"
+const usageString = "Usage: ping <address> -p <port> -c <cluster>"
 const statusOpen = "OPEN"
 const statusClosed = "CLOSED"
 const partlyClosed = "PARTLY CLOSED"

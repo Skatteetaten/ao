@@ -15,7 +15,7 @@ import (
 	"path/filepath"
 )
 
-const UsageString = "Usage: aoc new-app <appname>"
+const UsageString = "Usage: new-app <appname>"
 const AppnameNeeded = "Missing appname parameter "
 const MissingArgumentFormat = "Missing %v"
 const InteractiveNoFlags = "No specification flags allowed for interactive run"

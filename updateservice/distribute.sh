@@ -23,12 +23,12 @@ fi
 # Set nodename on OpenShift node used to populate the PV
 #
 openshiftnode=uil0paas-utv-node01
-openshiftproject=paas-aoc-update
+openshiftproject=paas-ao-update
 openshiftpvbasedir=/shared/pv/recyclable
 #
 # Related constants
 #
-pvcname=aoc-update-htdocs
+pvcname=ao-update-htdocs
 aocrelease=/home/$USER/go/src/github.com/skatteetaten/ao/bin/amd64/aoc
 releaseinfo=releaseinfo.json
 tmpreleaseinfo=/tmp/$releaseinfo
@@ -65,17 +65,17 @@ $aocrelease version -o json >$tmpreleaseinfo
 #
 # Copy files to temporary folder on OpenShift node
 #
-ssh $openshiftnode "mkdir -p ~/aoc-v5"
-scp $aocrelease $remotedir/aoc
+ssh $openshiftnode "mkdir -p ~/ao-v5"
+scp $aocrelease $remotedir/ao
 scp $tmpreleaseinfo $remotedir/$releaseinfo
 #
 # Copy the files to the actual volume
 #
-ssh $openshiftnode "sudo cp ~/aoc-v5/ao $openshiftpvbasedir/$pv/$filename"
-ssh $openshiftnode "sudo cp ~/aoc-v5/ao $openshiftpvbasedir/$pv/"
-ssh $openshiftnode "sudo cp ~/aoc-v5/$releaseinfo $openshiftpvbasedir/$pv/"
+ssh $openshiftnode "sudo cp ~/ao-v5/ao $openshiftpvbasedir/$pv/$filename"
+ssh $openshiftnode "sudo cp ~/ao-v5/ao $openshiftpvbasedir/$pv/"
+ssh $openshiftnode "sudo cp ~/ao-v5/$releaseinfo $openshiftpvbasedir/$pv/"
 #
 # Clean up the temporary folder
 #
-ssh $openshiftnode "rm ~/aoc-v5/ao"
-ssh $openshiftnode "rm ~/aoc-v5/$releaseinfo"
+ssh $openshiftnode "rm ~/ao-v5/ao"
+ssh $openshiftnode "rm ~/ao-v5/$releaseinfo"

@@ -13,12 +13,12 @@ import (
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 )
 
-const UsageString = "Usage: aoc get files | vaults | vault <vaultname> | file [env/]<filename> | adc | secret <secretname> | cluster <clustername> | clusters | kubeconfig | oclogin"
-const filesUsageString = "Usage: aoc get files"
-const fileUseageString = "Usage: aoc get file [[env/]<filename>]"
-const vaultUseageString = "Usage: aoc get vault [<vaultname>]"
-const secretUseageString = "Usage: aoc get secret <vaultname> <secretname>"
-const adcUsageString = "Usage: aoc get adc"
+const UsageString = "Usage: get files | vaults | vault <vaultname> | file [env/]<filename> | adc | secret <secretname> | cluster <clustername> | clusters | kubeconfig | oclogin"
+const filesUsageString = "Usage: get files"
+const fileUseageString = "Usage: get file [[env/]<filename>]"
+const vaultUseageString = "Usage: get vault [<vaultname>]"
+const secretUseageString = "Usage: get secret <vaultname> <secretname>"
+const adcUsageString = "Usage: get adc"
 const notYetImplemented = "Not supported yet"
 
 type GetcmdClass struct {

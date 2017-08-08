@@ -27,7 +27,7 @@ func (configuration *ConfigurationClass) init() (err error) {
 		return
 	}
 
-	configuration.configLocation = viper.GetString("HOME") + "/.aoc.json"
+	configuration.configLocation = viper.GetString("HOME") + "/.ao.json"
 	configuration.openshiftConfig, err = openshift.LoadOrInitiateConfigFile(configuration.configLocation, false)
 	if err != nil {
 		err = errors.New("Error in loading OpenShift configuration")

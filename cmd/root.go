@@ -21,7 +21,7 @@ var localDryRun bool
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "aoc",
+	Use:   "ao",
 	Short: "Aurora Openshift CLI",
 	Long: `A command line interface that interacts with the Boober serverapi
 to enable the user to manipulate the Aurora Config for an affiliation, and to
@@ -90,12 +90,12 @@ func initConfigCobra() {
 }
 
 func initConfig(useOcConfig bool) {
-	viper.SetConfigName(".aoc")  // name of config file (without extension)
+	viper.SetConfigName(".ao")   // name of config file (without extension)
 	viper.AddConfigPath("$HOME") // adding home directory as first search path
 	viper.AutomaticEnv()         // read in environment variables that match
 	viper.BindEnv("HOME")
 
-	var configLocation = viper.GetString("HOME") + "/.aoc.json"
+	var configLocation = viper.GetString("HOME") + "/.ao.json"
 	openshift.LoadOrInitiateConfigFile(configLocation, useOcConfig)
 
 }

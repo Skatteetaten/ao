@@ -15,9 +15,9 @@ import (
 	"strings"
 )
 
-const usageString = "Usage: aoc edit file [env/]<filename> | secret <vaultname> <secretname> "
-const secretUseageString = "Usage: aoc edit secret <vaultname> <secretname>"
-const fileUseageString = "Usage: aoc edit file [env/]<filename>"
+const usageString = "Usage: edit file [env/]<filename> | secret <vaultname> <secretname> "
+const secretUseageString = "Usage: edit secret <vaultname> <secretname>"
+const fileUseageString = "Usage: edit file [env/]<filename>"
 
 const commentString = "# "
 const editMessage = `# Please edit the object below. Lines beginning with a '#' will be ignored,

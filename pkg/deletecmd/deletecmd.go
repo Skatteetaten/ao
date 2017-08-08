@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-const UsageString = "Usage: aoc delete vault <vaultname> | secret <vaultname> <secretname> | app <appname> | env <envname> | deployment <envname> <appname> | file <filename>"
+const UsageString = "Usage: delete vault <vaultname> | secret <vaultname> <secretname> | app <appname> | env <envname> | deployment <envname> <appname> | file <filename>"
 const vaultDontExistsError = "Error: No such vault"
 
 type DeletecmdClass struct {

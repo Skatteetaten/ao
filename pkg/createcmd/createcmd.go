@@ -8,7 +8,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 )
 
-const UsageString = "Usage: aoc create vault <vaultname> | secret <vaultname> <secretname>"
+const UsageString = "Usage: create vault <vaultname> | secret <vaultname> <secretname>"
 const vaultExistsError = "Error: Vault exists"
 
 type CreatecmdClass struct {

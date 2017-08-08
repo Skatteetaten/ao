@@ -33,9 +33,8 @@ func IsLegalFileFolder(filespec string) int {
 	return SpecIllegal
 }
 
-
 func CreateTempFile(content string) (filename string, err error) {
-	const tmpFilePrefix = ".aoc_edit_file_"
+	const tmpFilePrefix = ".ao_edit_file_"
 	var tmpDir = os.TempDir()
 	tmpFile, err := ioutil.TempFile(tmpDir, tmpFilePrefix)
 	if err != nil {

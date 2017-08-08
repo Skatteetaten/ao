@@ -8,13 +8,13 @@ import (
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 )
 
-const UsageString = "Usage: aoc export files | file [env/]<filename> | vaults | adc"
-const filesUsageString = "Usage: aoc export files"
-const fileUseageString = "Usage: aoc export file [env/]<filename>"
-const vaultsUsageString = "Usage: aoc export vaults"
-const vaultUsageString = "Usage: aoc export vault <vaultname>"
-const secretUsageString = "Usage: aoc export secret <vaultname> <secretname>"
-const adcUsageString = "Usage: aoc export adc"
+const UsageString = "Usage: export files | file [env/]<filename> | vaults | adc"
+const filesUsageString = "Usage: export files"
+const fileUseageString = "Usage: export file [env/]<filename>"
+const vaultsUsageString = "Usage: export vaults"
+const vaultUsageString = "Usage: export vault <vaultname>"
+const secretUsageString = "Usage: export secret <vaultname> <secretname>"
+const adcUsageString = "Usage: export adc"
 const notYetImplemented = "Not supported yet"
 
 type ExportcmdClass struct {

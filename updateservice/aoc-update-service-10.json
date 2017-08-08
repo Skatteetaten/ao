@@ -7,7 +7,7 @@
             "kind": "PersistentVolumeClaim",
             "apiVersion": "v1",
             "metadata": {
-                "name": "aoc-update-htdocs"
+                "name": "ao-update-htdocs"
             },
             "spec": {
                 "accessModes": [
@@ -24,11 +24,11 @@
             "kind": "DeploymentConfig",
             "apiVersion": "v1",
             "metadata": {
-                "name": "aoc-update-service-10",
+                "name": "ao-update-service-10",
                 "generation": 1,
                 "creationTimestamp": null,
                 "labels": {
-                    "app": "aoc-update-service-10"
+                    "app": "ao-update-service-10"
                 }
             },
             "spec": {
@@ -53,11 +53,11 @@
                         "imageChangeParams": {
                             "automatic": true,
                             "containerNames": [
-                                "aoc-update-service-10"
+                                "ao-update-service-10"
                             ],
                             "from": {
                                 "kind": "ImageStreamTag",
-                                "namespace": "paas-aoc-update",
+                                "namespace": "paas-ao-update",
                                 "name": "s2i-httpd-server:latest"
                             }
                         }
@@ -66,14 +66,14 @@
                 "replicas": 1,
                 "test": false,
                 "selector": {
-                    "app": "aoc-update-service-10",
-                    "deploymentconfig": "aoc-update-service-10"
+                    "app": "ao-update-service-10",
+                    "deploymentconfig": "ao-update-service-10"
                 },
                 "template": {
                     "metadata": {
                         "labels": {
-                            "app": "aoc-update-service-10",
-                            "deploymentconfig": "aoc-update-service-10"
+                            "app": "ao-update-service-10",
+                            "deploymentconfig": "ao-update-service-10"
                         }
                     },
                     "spec": {
@@ -81,13 +81,13 @@
                             {
                                 "name": "volume-va8p1",
                                 "persistentVolumeClaim": {
-                                    "claimName": "aoc-update-htdocs"
+                                    "claimName": "ao-update-htdocs"
                                 }
                             }
                         ],
                         "containers": [
                             {
-                                "name": "aoc-update-service-10",
+                                "name": "ao-update-service-10",
                                 "image": "getwarped/s2i-httpd-server",
                                 "ports": [
                                     {
@@ -144,17 +144,17 @@
             "kind": "ReplicationController",
             "apiVersion": "v1",
             "metadata": {
-                "name": "aoc-update-service-10",
+                "name": "ao-update-service-10",
                 "generation": 1,
                 "creationTimestamp": null,
                 "labels": {
-                    "app": "aoc-update-service-10",
-                    "openshift.io/deployment-config.name": "aoc-update-service-10"
+                    "app": "ao-update-service-10",
+                    "openshift.io/deployment-config.name": "ao-update-service-10"
                 },
                 "annotations": {
-                    "openshift.io/deployer-pod.name": "aoc-update-service-10-deploy",
+                    "openshift.io/deployer-pod.name": "ao-update-service-10-deploy",
                     "openshift.io/deployment-config.latest-version": "2",
-                    "openshift.io/deployment-config.name": "aoc-update-service-10",
+                    "openshift.io/deployment-config.name": "ao-update-service-10",
                     "openshift.io/deployment.phase": "Complete",
                     "openshift.io/deployment.replicas": "",
                     "openshift.io/deployment.status-reason": "config change"
@@ -163,22 +163,22 @@
             "spec": {
                 "replicas": 1,
                 "selector": {
-                    "app": "aoc-update-service-10",
-                    "deployment": "aoc-update-service-10",
-                    "deploymentconfig": "aoc-update-service-10"
+                    "app": "ao-update-service-10",
+                    "deployment": "ao-update-service-10",
+                    "deploymentconfig": "ao-update-service-10"
                 },
                 "template": {
                     "metadata": {
                         "creationTimestamp": null,
                         "labels": {
-                            "app": "aoc-update-service-10",
-                            "deployment": "aoc-update-service-10",
-                            "deploymentconfig": "aoc-update-service-10"
+                            "app": "ao-update-service-10",
+                            "deployment": "ao-update-service-10",
+                            "deploymentconfig": "ao-update-service-10"
                         },
                         "annotations": {
                             "openshift.io/deployment-config.latest-version": "2",
-                            "openshift.io/deployment-config.name": "aoc-update-service-10",
-                            "openshift.io/deployment.name": "aoc-update-service-10",
+                            "openshift.io/deployment-config.name": "ao-update-service-10",
+                            "openshift.io/deployment.name": "ao-update-service-10",
                             "openshift.io/generated-by": "OpenShiftWebConsole"
                         }
                     },
@@ -187,13 +187,13 @@
                             {
                                 "name": "volume-va8p1",
                                 "persistentVolumeClaim": {
-                                    "claimName": "aoc-update-htdocs"
+                                    "claimName": "ao-update-htdocs"
                                 }
                             }
                         ],
                         "containers": [
                             {
-                                "name": "aoc-update-service-10",
+                                "name": "ao-update-service-10",
                                 "image": "getwarped/s2i-httpd-server",
                                 "ports": [
                                     {
@@ -227,13 +227,13 @@
             "kind": "Route",
             "apiVersion": "v1",
             "metadata": {
-                "name": "aoc-update-service",
+                "name": "ao-update-service",
                 "creationTimestamp": null
             },
             "spec": {
                 "to": {
                     "kind": "Service",
-                    "name": "aoc-update-service-10",
+                    "name": "ao-update-service-10",
                     "weight": 100
                 },
                 "port": {
@@ -260,10 +260,10 @@
             "kind": "Service",
             "apiVersion": "v1",
             "metadata": {
-                "name": "aoc-update-service-10",
+                "name": "ao-update-service-10",
                 "creationTimestamp": null,
                 "labels": {
-                    "app": "aoc-update-service-10"
+                    "app": "ao-update-service-10"
                 },
                 "annotations": {
                     "openshift.io/generated-by": "OpenShiftWebConsole"
@@ -279,7 +279,7 @@
                     }
                 ],
                 "selector": {
-                    "deploymentconfig": "aoc-update-service-10"
+                    "deploymentconfig": "ao-update-service-10"
                 },
                 "type": "ClusterIP",
                 "sessionAffinity": "None"

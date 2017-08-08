@@ -23,7 +23,7 @@ type ImportClass struct {
 
 func validateImportCommand(args []string) (error error) {
 	if len(args) != 1 {
-		error = errors.New("Usage: aoc import <folder>")
+		error = errors.New("Usage: import <folder>")
 		return
 	}
 	if fileutil.IsLegalFileFolder(args[0]) != fileutil.SpecIsFolder {
