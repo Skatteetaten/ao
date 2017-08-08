@@ -7,9 +7,11 @@ import (
 	"github.com/skatteetaten/aoc/pkg/auroraconfig"
 	"github.com/skatteetaten/aoc/pkg/cmdoptions"
 	"github.com/skatteetaten/aoc/pkg/configuration"
+	"github.com/skatteetaten/aoc/pkg/executil"
 	"github.com/skatteetaten/aoc/pkg/jsonutil"
 	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -37,7 +39,6 @@ func (deploy *DeployClass) addLegalApp(app string) {
 		}
 	}
 	deploy.legalAppList = append(deploy.legalAppList, app)
-	fmt.Println("DEBUG: Added app: " + app)
 	return
 }
 
@@ -48,7 +49,6 @@ func (deploy *DeployClass) addLegalEnv(env string) {
 		}
 	}
 	deploy.legalEnvList = append(deploy.legalEnvList, env)
-	fmt.Println("DEBUG: Added env: " + env)
 	return
 }
 
@@ -178,11 +178,16 @@ func (deploy *DeployClass) getLegalEnvAppList() (err error) {
 
 // Try to match an argument with an app, returns "" if none found
 func (deploy *DeployClass) getFuzzyApp(arg string) (app string, err error) {
+	// First check for exact match
+	for i := range deploy.legalAppList {
+		if deploy.legalAppList[i] == arg {
+			return arg, nil
+		}
+	}
+	// No exact match found, look for an app name that contains the string
 	for i := range deploy.legalAppList {
 		if strings.Contains(deploy.legalAppList[i], arg) {
-			fmt.Println("DEBUG: App " + arg + " found: " + deploy.legalAppList[i])
 			if app != "" {
-				fmt.Println("DEBUG: Non-unique app")
 				err = errors.New(arg + ": Not a unique application identifier, matching " + app + " and " + deploy.legalAppList[i])
 				return "", err
 			}
@@ -194,11 +199,16 @@ func (deploy *DeployClass) getFuzzyApp(arg string) (app string, err error) {
 
 // Try to match an argument with an env, returns "" if none found
 func (deploy *DeployClass) getFuzzyEnv(arg string) (env string, err error) {
+	// First check for exact match
+	for i := range deploy.legalEnvList {
+		if deploy.legalEnvList[i] == arg {
+			return arg, nil
+		}
+	}
+	// No exact match found, look for an env name that contains the string
 	for i := range deploy.legalEnvList {
 		if strings.Contains(deploy.legalEnvList[i], arg) {
-			fmt.Println("DEBUG: Env " + arg + " found: " + deploy.legalEnvList[i])
 			if env != "" {
-				fmt.Println("DEBUG: Non-unique env")
 				err = errors.New(arg + ": Not a unique environment identifier, matching both " + env + " and " + deploy.legalEnvList[i])
 				return "", err
 			}
@@ -211,7 +221,6 @@ func (deploy *DeployClass) getFuzzyEnv(arg string) (env string, err error) {
 func (deploy *DeployClass) populateFuzzyEnvAppList(args []string) (err error) {
 
 	for i := range args {
-		fmt.Println("DEBUG: Checking arg " + args[i])
 		var env string
 		var app string
 
@@ -234,14 +243,14 @@ func (deploy *DeployClass) populateFuzzyEnvAppList(args []string) (err error) {
 			if err != nil {
 				return err
 			}
+			if env != "" && app != "" {
+				err = errors.New(args[i] + ": Not a unique identifier, matching both environment " + env + " and application " + app)
+				return err
+			}
 		}
 		if env == "" && app == "" {
 			// None found, return error
 			err = errors.New(args[i] + ": not found")
-			return err
-		}
-		if env != "" && app != "" {
-			err = errors.New(args[i] + ": Not a unique identifier, matching both environment " + env + " and application " + app)
 			return err
 		}
 		if env != "" {
@@ -288,6 +297,30 @@ func (deploy *DeployClass) populateFlagsEnvAppList(appList []string, envList []s
 	return
 }
 
+func (deploy *DeployClass) populateAllAppForEnv(env string) (err error) {
+
+	auroraConfig, err := auroraconfig.GetAuroraConfig(deploy.configuration.GetPersistentOptions(), deploy.configuration.GetAffiliation(), deploy.configuration.GetOpenshiftConfig())
+	if err != nil {
+		return err
+	}
+
+	for filename := range auroraConfig.Files {
+		if strings.Contains(filename, "/") {
+			// We have a full path name
+			parts := strings.Split(filename, "/")
+			if parts[0] == env {
+				if !strings.Contains(parts[1], "about.json") {
+					if strings.HasSuffix(parts[1], ".json") {
+						deploy.appList = append(deploy.appList, strings.TrimSuffix(parts[1], ".json"))
+					}
+				}
+			}
+		}
+	}
+
+	return
+}
+
 func (deploy *DeployClass) populateAll() {
 	deploy.envList = deploy.legalEnvList
 	deploy.appList = deploy.legalAppList
@@ -311,11 +344,20 @@ func (deploy *DeployClass) validateDeploy(args []string, appList []string, envLi
 	}
 
 	if deployAll {
+		deploy.populateAll()
 		if !force {
-			// TODO: Prompt user
+
+			response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.appList)) + " applications in " + strconv.Itoa(len(deploy.envList)) + " environments.  Are you sure?")
+			if err != nil {
+				return err
+			}
+			if response != "Y" {
+				err = errors.New("Operation cancelled by user")
+				return err
+			}
 
 		}
-		deploy.populateAll()
+
 	} else {
 		err = deploy.populateFuzzyEnvAppList(args)
 		if err != nil {
@@ -324,6 +366,24 @@ func (deploy *DeployClass) validateDeploy(args []string, appList []string, envLi
 
 		err = deploy.populateFlagsEnvAppList(appList, envList)
 		if err != nil {
+			return err
+		}
+	}
+
+	if len(deploy.envList) > 0 && len(deploy.appList) == 0 {
+		// User have specified one or more environments, but not an application list, so prefill it
+		for i := range deploy.envList {
+			err := deploy.populateAllAppForEnv(deploy.envList[i])
+			if err != nil {
+				return err
+			}
+		}
+		response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.appList)) + " applications in " + strconv.Itoa(len(deploy.envList)) + " environments.  Are you sure?")
+		if err != nil {
+			return err
+		}
+		if response != "Y" {
+			err = errors.New("Operation cancelled by user")
 			return err
 		}
 	}
