@@ -29,10 +29,10 @@ openshiftpvbasedir=/shared/pv/recyclable
 # Related constants
 #
 pvcname=ao-update-htdocs
-aocrelease=/home/$USER/go/src/github.com/skatteetaten/ao/bin/amd64/aoc
+aocrelease=/home/$USER/go/src/github.com/skatteetaten/ao/bin/amd64/ao
 releaseinfo=releaseinfo.json
 tmpreleaseinfo=/tmp/$releaseinfo
-remotedir=uil0paas-utv-node01:/home/$USER/aoc-v5
+remotedir=uil0paas-utv-node01:/home/$USER/ao-v5
 #
 # Check for valid oc login
 #

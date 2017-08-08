@@ -23,14 +23,14 @@ var doUpdate bool
 var loginCmd = &cobra.Command{
 	Use:   "login <Affiliation>",
 	Short: "Login to openshift clusters",
-	Long:  `This command will log in to all avilable clusters and store the tokens in the .aoc config file `,
+	Long:  `This command will log in to all avilable clusters and store the tokens in the .ao.json config file `,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			fmt.Println("Please specify affiliation to log in to")
 			os.Exit(1)
 		}
 		affiliation := args[0]
-		var configLocation = viper.GetString("HOME") + "/.aoc.json"
+		var configLocation = viper.GetString("HOME") + "/.ao.json"
 		if recreateConfig || useCurrentOcLogin {
 			err := os.Remove(configLocation)
 			if err != nil {

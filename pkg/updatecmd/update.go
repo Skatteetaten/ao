@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 )
 
-const aoc5Url = "http://ao-update-service-paas-ao-update.utv.paas.skead.no"
+const ao5Url = "http://ao-update-service-paas-ao-update.utv.paas.skead.no"
 
 func InstallAuroraOpenshiftGenerator() (err error) {
 	const gitExec = "git"
@@ -79,8 +79,8 @@ func UpdateSelf(args []string, simulate bool, forceVersion string, forceUpdate b
 }
 
 func doUpdate(version string) (err error) {
-	releaseFilename := "aoc_" + version
-	releaseUrl := aoc5Url + "/" + releaseFilename
+	releaseFilename := "ao_" + version
+	releaseUrl := ao5Url + "/" + releaseFilename
 
 	executablePath, err := os.Executable()
 	if err != nil {
@@ -101,7 +101,7 @@ func doUpdate(version string) (err error) {
 }
 
 func getReleaseVersion() (version string, err error) {
-	releaseinfoUrl := aoc5Url + "/releaseinfo.json"
+	releaseinfoUrl := ao5Url + "/releaseinfo.json"
 	releaseinfo, err := getFile(releaseinfoUrl)
 	if err != nil {
 		return
@@ -132,7 +132,7 @@ func getFile(url string) (file []byte, err error) {
 	resp, err := client.Do(req)
 	if err != nil {
 
-		err = errors.New(fmt.Sprintf("Error downloading update from %v: %v", aoc5Url, err))
+		err = errors.New(fmt.Sprintf("Error downloading update from %v: %v", ao5Url, err))
 		return
 	}
 

@@ -218,7 +218,7 @@ func newConfig(useOcConfig bool) (config *OpenshiftConfig, err error) {
 			config = emptyConfig()
 			err = nil
 			fmt.Println("No config detected; empty cluster config created.")
-			fmt.Println("Please update ~/.aoc.json manually")
+			fmt.Println("Please update ~/.ao.json manually")
 			return
 		}
 		fmt.Println("OC config detected; default cluster config created")

@@ -65,7 +65,7 @@ func (versionStruct *VersionStruct) Version2Filename() (output string, err error
 		err = errors.New("No version injected")
 		return
 	}
-	output = "aoc_" + output
+	output = "ao_" + output
 	return
 }
 
