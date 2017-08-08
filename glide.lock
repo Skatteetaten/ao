@@ -1,5 +1,5 @@
-hash: b6f1409331a85913b24c1a02409edd33df437853e0cc0c13052e9391f38df3f8
-updated: 2017-03-22T13:46:20.599671939+01:00
+hash: 1ccc00b0e63574ceab3416734322cb6d55fb2608e6e7226dc4dea9094a05bf9a
+updated: 2017-08-09T09:24:45.820527864+02:00
 imports:
 - name: github.com/cpuguy83/go-md2man
   version: 71acacd42f85e5e82f70a55327789582a5200a90
@@ -22,6 +22,10 @@ imports:
   version: 3ca23474a7c7203e0a0a070fd33508f6efdb9b3d
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/jbenet/go-context
+  version: d14ea06fba99483203c19d92cfcd13ebe73135f4
+  subpackages:
+  - io
 - name: github.com/magiconair/properties
   version: 9c47895dc1ce54302908ab8a43385d1f5df2c11c
 - name: github.com/mitchellh/mapstructure
@@ -32,13 +36,12 @@ imports:
   version: 439fbba1f887c286024370cb4f281ba815c4c7d7
 - name: github.com/russross/blackfriday
   version: 8cec3a854e68dba10faabbe31c089abf4a3e57a6
+- name: github.com/sergi/go-diff
+  version: feef008d51ad2b3778f85d387ccf91735543008d
+  subpackages:
+  - diffmatchpatch
 - name: github.com/shurcooL/sanitized_anchor_name
   version: 244f5ac324cb97e1987ef901a0081a77bfd8e845
-- name: github.com/Skatteetaten/aoc
-  version: c7293d1f1e338c8e7a7fd6e68e4690cbf1dff414
-  subpackages:
-  - cmd
-  - openshift
 - name: github.com/spf13/afero
   version: 90dd71edc4d0a8b3511dc12ea15d617d03be09e0
   subpackages:
@@ -53,21 +56,91 @@ imports:
   version: 5ccb023bc27df288a957c5e994cd44fd19619465
 - name: github.com/spf13/viper
   version: 5ed0fc31f7f453625df314d8e66b9791e8d13003
-- name: golang.org/x/crypto
-  version: 1f22c0103821b9390939b6776727195525381532
+- name: github.com/src-d/gcfg
+  version: f187355171c936ac84a82793659ebb4936bc1c23
   subpackages:
+  - scanner
+  - token
+  - types
+- name: github.com/xanzy/ssh-agent
+  version: ba9c9e33906f58169366275e3450db66139a31a9
+- name: golang.org/x/crypto
+  version: b176d7def5d71bdd214203491f89843ed217f420
+  subpackages:
+  - curve25519
+  - ed25519
+  - ed25519/internal/edwards25519
+  - ssh
+  - ssh/agent
+  - ssh/knownhosts
   - ssh/terminal
+- name: golang.org/x/net
+  version: 1c05540f6879653db88113bc4a2b70aec4bd491f
+  subpackages:
+  - context
 - name: golang.org/x/sys
   version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
   subpackages:
   - unix
+  - windows
 - name: golang.org/x/text
   version: 2910a502d2bf9e43193af9d68ca516529614eed3
   subpackages:
   - transform
   - unicode/norm
+- name: gopkg.in/src-d/go-billy.v3
+  version: c329b7bc7b9d24905d2bc1b85bfa29f7ae266314
+  subpackages:
+  - helper/chroot
+  - helper/polyfill
+  - osfs
+  - util
+- name: gopkg.in/src-d/go-git.v4
+  version: 8ddbecf782c2e340fd85bb4ba4d00dc73d749f87
+  subpackages:
+  - config
+  - internal/revision
+  - plumbing
+  - plumbing/cache
+  - plumbing/filemode
+  - plumbing/format/config
+  - plumbing/format/diff
+  - plumbing/format/gitignore
+  - plumbing/format/idxfile
+  - plumbing/format/index
+  - plumbing/format/objfile
+  - plumbing/format/packfile
+  - plumbing/format/pktline
+  - plumbing/object
+  - plumbing/protocol/packp
+  - plumbing/protocol/packp/capability
+  - plumbing/protocol/packp/sideband
+  - plumbing/revlist
+  - plumbing/storer
+  - plumbing/transport
+  - plumbing/transport/client
+  - plumbing/transport/file
+  - plumbing/transport/git
+  - plumbing/transport/http
+  - plumbing/transport/internal/common
+  - plumbing/transport/server
+  - plumbing/transport/ssh
+  - storage
+  - storage/filesystem
+  - storage/filesystem/internal/dotgit
+  - storage/memory
+  - utils/binary
+  - utils/diff
+  - utils/ioutil
+  - utils/merkletrie
+  - utils/merkletrie/filesystem
+  - utils/merkletrie/index
+  - utils/merkletrie/internal/frame
+  - utils/merkletrie/noder
+- name: gopkg.in/warnings.v0
+  version: 8a331561fe74dadba6edfc59f3be66c22c3b065d
 - name: gopkg.in/yaml.v2
   version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
 testImports:
 - name: gopkg.in/h2non/gock.v1
-  version: 2897ffde93a71060ce86518f1e7317ec8433d2d6
+  version: 84d599244901620fb3eb96473eb9e50619f69b47
