@@ -1,11 +1,14 @@
 package executil
 
 import (
+	"bufio"
 	"errors"
+	"fmt"
 	"github.com/skatteetaten/aoc/pkg/fileutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 const commandNotFound = "Command not found"
@@ -45,4 +48,22 @@ func RunInteractively(commandString string, foldername string, args ...string) (
 		return err
 	}
 	return nil
+}
+
+// Prompt for Yes, No or Cancel
+func PromptYNC(promptString string) (retval string, err error) {
+	var validResponse bool = false
+	reader := bufio.NewReader(os.Stdin)
+	for !validResponse {
+		fmt.Print(promptString + " (Yes/No/Cancel): ")
+		result, err := reader.ReadString('\n')
+		if err != nil {
+			return "", err
+		}
+		if strings.ContainsAny("YyNnCcYesNoCancel", result) {
+			return strings.ToUpper(string(result[0])), nil
+		}
+
+	}
+	return
 }
