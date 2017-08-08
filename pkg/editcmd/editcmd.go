@@ -9,7 +9,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
-	"github.com/skatteetaten/ao/pkg/serverapi"
+	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -30,20 +30,19 @@ type EditcmdClass struct {
 	configuration configuration.ConfigurationClass
 }
 
-func (editcmdClass *EditcmdClass) getAffiliation() (affiliation string) {
-	if editcmdClass.configuration.GetOpenshiftConfig() != nil {
-		affiliation = editcmdClass.configuration.GetOpenshiftConfig().Affiliation
-	}
+func (editcmd *EditcmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+
+	editcmd.configuration.Init(persistentOptions)
 	return
 }
 
-func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (editcmd *EditcmdClass) EditFile(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 
 	var filename string = args[1]
 	var content string
 	var version string
 
-	content, version, err = auroraconfig.GetContent(filename, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
+	content, version, err = auroraconfig.GetContent(filename, persistentOptions, editcmd.configuration.GetAffiliation(), editcmd.configuration.GetOpenshiftConfig())
 	if err != nil {
 		return "", err
 	}
@@ -78,7 +77,7 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 		modifiedContent = stripComments(modifiedContent)
 
 		if jsonutil.IsLegalJson(modifiedContent) {
-			validationMessages, err := auroraconfig.PutFile(filename, modifiedContent, version, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
+			validationMessages, err := auroraconfig.PutFile(filename, modifiedContent, version, persistentOptions, editcmd.configuration.GetAffiliation(), editcmd.configuration.GetOpenshiftConfig())
 			if err != nil {
 				if err.Error() == auroraconfig.InvalidConfigurationError {
 					modifiedContent, _ = addComments(modifiedContent, validationMessages)
@@ -96,13 +95,13 @@ func (editcmdClass *EditcmdClass) EditFile(args []string, persistentOptions *cmd
 	return
 }
 
-func (editcmdClass *EditcmdClass) EditSecret(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (editcmd *EditcmdClass) EditSecret(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 
 	var vaultname string = args[1]
 	var secretname string = args[2]
 	var version string = ""
 
-	secret, version, err := auroraconfig.GetSecret(vaultname, secretname, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
+	secret, version, err := auroraconfig.GetSecret(vaultname, secretname, persistentOptions, editcmd.configuration.GetAffiliation(), editcmd.configuration.GetOpenshiftConfig())
 	if err != nil {
 		return "", err
 	}
@@ -114,7 +113,7 @@ func (editcmdClass *EditcmdClass) EditSecret(args []string, persistentOptions *c
 	}
 
 	if modifiedSecret != secret {
-		_, err = auroraconfig.PutSecret(vaultname, secretname, modifiedSecret, version, persistentOptions, editcmdClass.getAffiliation(), editcmdClass.configuration.GetOpenshiftConfig())
+		_, err = auroraconfig.PutSecret(vaultname, secretname, modifiedSecret, version, persistentOptions, editcmd.configuration.GetAffiliation(), editcmd.configuration.GetOpenshiftConfig())
 	}
 
 	return
@@ -148,46 +147,6 @@ func stripComments(content string) (uncommentedContent string) {
 	return
 }
 
-/*func stripComments_old(content string) (uncommentedContent string) {
-	scanner := bufio.NewScanner(strings.NewReader(content))
-	var newline = ""
-	var comment bool = false
-	for scanner.Scan() {
-		line := scanner.Text()
-		trimmedLine := strings.TrimSpace(line)
-		comment = false
-		//if len(trimmedLine) > 0 {
-			if strings.HasPrefix(trimmedLine, "#") {
-				comment = true
-			}
-		//}
-		if !comment {
-			uncommentedContent += newline + line
-			newline = "\n"
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return ""
-	}
-	return
-}*/
-
-/*func stripComments_old(content string) (uncommentedContent string) {
-	var contenttLines []string
-
-	var newline = ""
-	contenttLines, _ = contentToLines(content)
-	for lineno := range contenttLines {
-		if strings.TrimLeft(contenttLines[lineno], commentString) == contenttLines[lineno] {
-			uncommentedContent += newline + contenttLines[lineno]
-			newline = "\n"
-		}
-	}
-
-	return
-}
-*/
 func contentToLines(content string) (contentLines []string, err error) {
 
 	scanner := bufio.NewScanner(strings.NewReader(content))
@@ -224,24 +183,27 @@ func editString(content string) (modifiedContent string, err error) {
 	return
 }
 
-func (editcmdClass *EditcmdClass) EditObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (editcmd *EditcmdClass) EditObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+	editcmd.init(persistentOptions)
+
+	if !serverapi_v2.ValidateLogin(editcmd.configuration.GetOpenshiftConfig()) {
+		return "", errors.New("Not logged in, please use ao login")
+	}
+
 	err = validateEditcmd(args)
 	if err != nil {
 		return
-	}
-	if !serverapi.ValidateLogin(editcmdClass.configuration.GetOpenshiftConfig()) {
-		return "", errors.New("Not logged in, please use aoc login")
 	}
 
 	var commandStr = args[0]
 	switch commandStr {
 	case "file":
 		{
-			output, err = editcmdClass.EditFile(args, persistentOptions)
+			output, err = editcmd.EditFile(args, persistentOptions)
 		}
 	case "secret":
 		{
-			output, err = editcmdClass.EditSecret(args, persistentOptions)
+			output, err = editcmd.EditSecret(args, persistentOptions)
 		}
 	}
 	return

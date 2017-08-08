@@ -20,7 +20,18 @@ type PingcmdClass struct {
 	configuration configuration.ConfigurationClass
 }
 
-func (pingcmdClass *PingcmdClass) PingAddress(args []string, pingPort string, pingCluster string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (pingcmd *PingcmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+
+	pingcmd.configuration.Init(persistentOptions)
+	return
+}
+
+func (pingcmd *PingcmdClass) PingAddress(args []string, pingPort string, pingCluster string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+	pingcmd.init(persistentOptions)
+	if !serverapi_v2.ValidateLogin(pingcmd.configuration.GetOpenshiftConfig()) {
+		return "", errors.New("Not logged in, please use ao login")
+	}
+
 	err = validatePingcmd(args)
 	if err != nil {
 		return
@@ -34,7 +45,7 @@ func (pingcmdClass *PingcmdClass) PingAddress(args []string, pingPort string, pi
 		pingPort = "80"
 	}
 	argument += "&port=" + pingPort
-	openshiftConfig := pingcmdClass.configuration.GetOpenshiftConfig()
+	openshiftConfig := pingcmd.configuration.GetOpenshiftConfig()
 
 	result, err := serverapi_v2.CallConsole("netdebug", argument, verbose, debug, openshiftConfig)
 	if err != nil {

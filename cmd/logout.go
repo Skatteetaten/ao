@@ -25,7 +25,7 @@ var logoutCmd = &cobra.Command{
 	Short: "Logout of all connected clusters",
 	Long:  `Removes the tokens stored for each cluster in the configuration file.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var configLocation = viper.GetString("HOME") + "/.aoc.json"
+		var configLocation = viper.GetString("HOME") + "/.ao.json"
 		openshift.Logout(configLocation)
 	},
 }

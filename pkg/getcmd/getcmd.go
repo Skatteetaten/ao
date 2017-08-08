@@ -25,16 +25,15 @@ type GetcmdClass struct {
 	configuration configuration.ConfigurationClass
 }
 
-func (getcmdClass *GetcmdClass) getAffiliation() (affiliation string) {
-	if getcmdClass.configuration.GetOpenshiftConfig() != nil {
-		affiliation = getcmdClass.configuration.GetOpenshiftConfig().Affiliation
-	}
+func (getcmd *GetcmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+
+	getcmd.configuration.Init(persistentOptions)
 	return
 }
 
-func (getcmdClass *GetcmdClass) getFiles(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (getcmd *GetcmdClass) getFiles(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 	var files []string
-	files, err = auroraconfig.GetFileList(persistentOptions, getcmdClass.getAffiliation(), getcmdClass.configuration.GetOpenshiftConfig())
+	files, err = auroraconfig.GetFileList(persistentOptions, getcmd.configuration.GetAffiliation(), getcmd.configuration.GetOpenshiftConfig())
 
 	output = "NAME"
 	for fileindex := range files {
@@ -43,12 +42,12 @@ func (getcmdClass *GetcmdClass) getFiles(persistentOptions *cmdoptions.CommonCom
 	return
 }
 
-func (getcmdClass *GetcmdClass) getFile(filename string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+func (getcmd *GetcmdClass) getFile(filename string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
 
 	switch outputFormat {
 	case "json":
 		{
-			content, _, err := auroraconfig.GetContent(filename, persistentOptions, getcmdClass.getAffiliation(), getcmdClass.configuration.GetOpenshiftConfig())
+			content, _, err := auroraconfig.GetContent(filename, persistentOptions, getcmd.configuration.GetAffiliation(), getcmd.configuration.GetOpenshiftConfig())
 			if err != nil {
 				return "", err
 			}
@@ -58,7 +57,7 @@ func (getcmdClass *GetcmdClass) getFile(filename string, persistentOptions *cmdo
 	case "":
 		{
 			var files []string
-			files, err = auroraconfig.GetFileList(persistentOptions, getcmdClass.getAffiliation(), getcmdClass.configuration.GetOpenshiftConfig())
+			files, err = auroraconfig.GetFileList(persistentOptions, getcmd.configuration.GetAffiliation(), getcmd.configuration.GetOpenshiftConfig())
 			output = "NAME"
 			var fileFound bool
 			for fileindex := range files {
@@ -87,16 +86,16 @@ func (getcmdClass *GetcmdClass) getFile(filename string, persistentOptions *cmdo
 	return
 }
 
-func (getcmdClass *GetcmdClass) getAdc(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (getcmd *GetcmdClass) getAdc(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 	output += notYetImplemented
 	return
 }
 
-func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.CommonCommandOptions, clusterName string, allClusters bool) (output string, err error) {
+func (getcmd *GetcmdClass) getClusters(persistentOptions *cmdoptions.CommonCommandOptions, clusterName string, allClusters bool) (output string, err error) {
 	var displayClusterName string
 	const tab = " "
 
-	openshiftConfig := getcmdClass.configuration.GetOpenshiftConfig()
+	openshiftConfig := getcmd.configuration.GetOpenshiftConfig()
 	output = "CLUSTER NAME         REACHABLE  LOGGED IN  API  URL"
 	for i := range openshiftConfig.Clusters {
 		if openshiftConfig.Clusters[i].Reachable || allClusters {
@@ -127,23 +126,9 @@ func (getcmdClass *GetcmdClass) getClusters(persistentOptions *cmdoptions.Common
 	return
 }
 
-// Deprecated when secrets are removed from AuroraConfig
-/*func (getcmdClass *GetcmdClass) getSecrets(persistentOptions *cmdoptions.CommonCommandOptions, secretName string) (output string, err error) {
-	var secrets []string
-	secrets, err = auroraconfig.GetSecretList(persistentOptions, getcmdClass.getAffiliation(), getcmdClass.configuration.GetOpenshiftConfig())
-
-	output = "NAME"
-	for secretindex := range secrets {
-		if secretName == "" || secrets[secretindex] == secretName {
-			output += "\n" + secrets[secretindex]
-		}
-	}
-	return
-}*/
-
-func (GetcmdClass *GetcmdClass) getVaults(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (getcmd *GetcmdClass) getVaults(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, GetcmdClass.getAffiliation(), GetcmdClass.configuration.GetOpenshiftConfig())
+	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, getcmd.configuration.GetAffiliation(), getcmd.configuration.GetOpenshiftConfig())
 
 	output = "VAULT (Secrets)"
 	for vaultindex := range vaults {
@@ -153,9 +138,9 @@ func (GetcmdClass *GetcmdClass) getVaults(persistentOptions *cmdoptions.CommonCo
 	return
 }
 
-func (GetcmdClass *GetcmdClass) getVault(vaultName string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+func (getcmd *GetcmdClass) getVault(vaultName string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, GetcmdClass.getAffiliation(), GetcmdClass.configuration.GetOpenshiftConfig())
+	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, getcmd.configuration.GetAffiliation(), getcmd.configuration.GetOpenshiftConfig())
 
 	for vaultindex := range vaults {
 		if vaults[vaultindex].Name == vaultName {
@@ -169,9 +154,9 @@ func (GetcmdClass *GetcmdClass) getVault(vaultName string, persistentOptions *cm
 	return
 }
 
-func (GetcmdClass *GetcmdClass) getSecret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+func (getcmd *GetcmdClass) getSecret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, GetcmdClass.getAffiliation(), GetcmdClass.configuration.GetOpenshiftConfig())
+	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, getcmd.configuration.GetAffiliation(), getcmd.configuration.GetOpenshiftConfig())
 
 	for vaultindex := range vaults {
 		if vaults[vaultindex].Name == vaultName {
@@ -182,7 +167,7 @@ func (GetcmdClass *GetcmdClass) getSecret(vaultName string, secretName string, p
 	return
 }
 
-func (getcmdClass *GetcmdClass) getKubeConfig(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (getcmd *GetcmdClass) getKubeConfig(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 	var kubeConfig kubernetes.KubeConfig
 	err = kubeConfig.GetConfig()
 	if err != nil {
@@ -210,7 +195,7 @@ func (getcmdClass *GetcmdClass) getKubeConfig(persistentOptions *cmdoptions.Comm
 	return
 }
 
-func (getcmdClass *GetcmdClass) getOcLogin(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (getcmd *GetcmdClass) getOcLogin(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 	var kubeConfig kubernetes.KubeConfig
 	cluster, user, token, err := kubeConfig.GetClusterUserAndToken()
 	if err != nil {
@@ -223,7 +208,12 @@ func (getcmdClass *GetcmdClass) getOcLogin(persistentOptions *cmdoptions.CommonC
 	return
 }
 
-func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string, allClusters bool) (output string, err error) {
+func (getcmd *GetcmdClass) GetObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string, allClusters bool) (output string, err error) {
+	getcmd.init(persistentOptions)
+	if !serverapi_v2.ValidateLogin(getcmd.configuration.GetOpenshiftConfig()) {
+		return "", errors.New("Not logged in, please use ao login")
+	}
+
 	err = validateGetcmd(args)
 	if err != nil {
 		return
@@ -234,26 +224,26 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 	case "vault", "vaults":
 		{
 			if len(args) > 1 {
-				output, err = getcmdClass.getVault(args[1], persistentOptions, outputFormat)
+				output, err = getcmd.getVault(args[1], persistentOptions, outputFormat)
 			} else {
-				output, err = getcmdClass.getVaults(persistentOptions)
+				output, err = getcmd.getVaults(persistentOptions)
 			}
 		}
 	case "file", "files":
 		{
 			if len(args) > 1 {
-				output, err = getcmdClass.getFile(args[1], persistentOptions, outputFormat)
+				output, err = getcmd.getFile(args[1], persistentOptions, outputFormat)
 			} else {
-				output, err = getcmdClass.getFiles(persistentOptions)
+				output, err = getcmd.getFiles(persistentOptions)
 			}
 		}
 	case "secret":
 		{
-			output, err = getcmdClass.getSecret(args[1], args[2], persistentOptions, outputFormat)
+			output, err = getcmd.getSecret(args[1], args[2], persistentOptions, outputFormat)
 		}
 	case "adc":
 		{
-			output, err = getcmdClass.getAdc(persistentOptions)
+			output, err = getcmd.getAdc(persistentOptions)
 		}
 	case "cluster", "clusters":
 		{
@@ -261,7 +251,7 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 			if len(args) > 1 {
 				clusterName = args[1]
 			}
-			output, err = getcmdClass.getClusters(persistentOptions, clusterName, allClusters)
+			output, err = getcmd.getClusters(persistentOptions, clusterName, allClusters)
 		}
 		// Deprecated when secrets are removed from AuroraConfig
 		/*	case "secret", "secrets":
@@ -274,11 +264,11 @@ func (getcmdClass *GetcmdClass) GetObject(args []string, persistentOptions *cmdo
 			}*/
 	case "kubeconfig":
 		{
-			output, err = getcmdClass.getKubeConfig(persistentOptions)
+			output, err = getcmd.getKubeConfig(persistentOptions)
 		}
 	case "oclogin":
 		{
-			output, err = getcmdClass.getOcLogin(persistentOptions)
+			output, err = getcmd.getOcLogin(persistentOptions)
 		}
 	}
 

@@ -15,16 +15,15 @@ type CreatecmdClass struct {
 	configuration configuration.ConfigurationClass
 }
 
-func (createcmdClass *CreatecmdClass) getAffiliation() (affiliation string) {
-	if createcmdClass.configuration.GetOpenshiftConfig() != nil {
-		affiliation = createcmdClass.configuration.GetOpenshiftConfig().Affiliation
-	}
+func (createcmd *CreatecmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+
+	createcmd.configuration.Init(persistentOptions)
 	return
 }
 
 func (createcmdClass *CreatecmdClass) vaultExists(vaultname string, persistentOptions *cmdoptions.CommonCommandOptions) (exists bool, err error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
+	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, createcmdClass.configuration.GetAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
 	if err != nil {
 		return false, err
 	}
@@ -56,7 +55,7 @@ func (createcmdClass *CreatecmdClass) createVault(vaultname string, persistentOp
 	//vault.Permissions.Users = make([]string, 0)
 	//vault.Permissions.Groups = make([]string, 1)
 	//vault.Permissions.Groups[0] = "APP_PaaS_utv"
-	message, err := auroraconfig.PutVault(vaultname, vault, "", persistentOptions, createcmdClass.getAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
+	message, err := auroraconfig.PutVault(vaultname, vault, "", persistentOptions, createcmdClass.configuration.GetAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
 	if err != nil {
 		return "", errors.New(message)
 	}
@@ -70,8 +69,14 @@ func (createcmdClass *CreatecmdClass) createSecret(vaultName string, secretName 
 	return "Not implemented yet, use edit secret to create a new secret", nil
 }
 
-func (createcmdClass *CreatecmdClass) CreateObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, allClusters bool) (output string, err error) {
+func (createcmd *CreatecmdClass) CreateObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, allClusters bool) (output string, err error) {
+	createcmd.init(persistentOptions)
+	if !serverapi_v2.ValidateLogin(createcmd.configuration.GetOpenshiftConfig()) {
+		return "", errors.New("Not logged in, please use ao login")
+	}
+
 	err = validateCreatecmd(args)
+
 	if err != nil {
 		return
 	}
@@ -80,11 +85,11 @@ func (createcmdClass *CreatecmdClass) CreateObject(args []string, persistentOpti
 	switch commandStr {
 	case "vault":
 		{
-			output, err = createcmdClass.createVault(args[1], persistentOptions)
+			output, err = createcmd.createVault(args[1], persistentOptions)
 		}
 	case "secret":
 		{
-			output, err = createcmdClass.createSecret(args[1], args[2], persistentOptions)
+			output, err = createcmd.createSecret(args[1], args[2], persistentOptions)
 		}
 	}
 	return

@@ -9,7 +9,6 @@ import (
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
-	"github.com/skatteetaten/ao/pkg/serverapi"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 	"io/ioutil"
 	"net/http"
@@ -18,7 +17,12 @@ import (
 
 type ImportClass struct {
 	configuration configuration.ConfigurationClass
-	initDone      bool
+}
+
+func (importObj *ImportClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+
+	importObj.configuration.Init(persistentOptions)
+	return
 }
 
 func validateImportCommand(args []string) (error error) {
@@ -33,22 +37,16 @@ func validateImportCommand(args []string) (error error) {
 	return
 }
 
-func (importClass *ImportClass) getAffiliation() (affiliation string) {
-	if importClass.configuration.GetOpenshiftConfig() != nil {
-		affiliation = importClass.configuration.GetOpenshiftConfig().Affiliation
-	}
-	return
-}
-
-func (importClass *ImportClass) ExecuteImport(args []string,
+func (importObj *ImportClass) ExecuteImport(args []string,
 	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool) (
 	output string, error error) {
 
+	importObj.init(persistentOptions)
 	//var errorString string
 
 	if !localDryRun {
-		if !serverapi.ValidateLogin(importClass.configuration.GetOpenshiftConfig()) {
-			return "", errors.New("Not logged in, please use aoc login")
+		if !serverapi_v2.ValidateLogin(importObj.configuration.GetOpenshiftConfig()) {
+			return "", errors.New("Not logged in, please use ao login")
 		}
 	}
 
@@ -57,7 +55,7 @@ func (importClass *ImportClass) ExecuteImport(args []string,
 		return
 	}
 
-	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, importClass.getAffiliation(), importClass.configuration.GetOpenshiftConfig())
+	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, importObj.configuration.GetAffiliation(), importObj.configuration.GetOpenshiftConfig())
 	if err != nil {
 		return "", err
 	}
@@ -69,7 +67,7 @@ func (importClass *ImportClass) ExecuteImport(args []string,
 		return "", err
 	}
 	var apiEndpoint string
-	apiEndpoint = "/affiliation/" + importClass.getAffiliation() + "/auroraconfig"
+	apiEndpoint = "/affiliation/" + importObj.configuration.GetAffiliation() + "/auroraconfig"
 
 	var repo = args[0]
 
@@ -81,7 +79,7 @@ func (importClass *ImportClass) ExecuteImport(args []string,
 	// Initialize JSON
 
 	jsonStr, err := generateJson(absolutePath,
-		importClass.getAffiliation(), persistentOptions.DryRun)
+		importObj.configuration.GetAffiliation(), persistentOptions.DryRun)
 	if err != nil {
 		return "", err
 	} else {
@@ -90,7 +88,7 @@ func (importClass *ImportClass) ExecuteImport(args []string,
 		} else {
 			responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, true, persistentOptions.Localhost,
-				persistentOptions.Verbose, importClass.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
+				persistentOptions.Verbose, importObj.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
 			if err != nil {
 				for server := range responses {
 					response, err := serverapi_v2.ParseResponse(responses[server])

@@ -65,10 +65,9 @@ type NewappcmdClass struct {
 	configuration configuration.ConfigurationClass
 }
 
-func (newappcmdClass *NewappcmdClass) getAffiliation() (affiliation string) {
-	if newappcmdClass.configuration.GetOpenshiftConfig() != nil {
-		affiliation = newappcmdClass.configuration.GetOpenshiftConfig().Affiliation
-	}
+func (newappcmd *NewappcmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+
+	newappcmd.configuration.Init(persistentOptions)
 	return
 }
 
@@ -115,12 +114,12 @@ func startAuroraOpenshiftGenerator(foldername string, appname string) (generator
 	return generatorValues, nil
 }
 
-func (newappcmdClass *NewappcmdClass) generateEnvAbout(env string) (payload AuroraConfigPayload, filename string) {
+func (newappcmd *NewappcmdClass) generateEnvAbout(env string) (payload AuroraConfigPayload, filename string) {
 	filename = env + "/about.json"
 	return payload, filename
 }
 
-func (newappcmdClass *NewappcmdClass) generateApp(appname string, groupid string) (payload AuroraConfigPayload, filename string) {
+func (newappcmd *NewappcmdClass) generateApp(appname string, groupid string) (payload AuroraConfigPayload, filename string) {
 	filename = appname + ".json"
 	payload.GroupId = groupid
 	payload.ArtifactId = appname
@@ -134,7 +133,7 @@ func (newappcmdClass *NewappcmdClass) generateApp(appname string, groupid string
 	return payload, filename
 }
 
-func (newappcmdClass *NewappcmdClass) generateEnvApp(appname string, env string, deploymentType string, cluster string) (payload AuroraConfigPayload, filename string) {
+func (newappcmd *NewappcmdClass) generateEnvApp(appname string, env string, deploymentType string, cluster string) (payload AuroraConfigPayload, filename string) {
 	filename = env + "/" + appname + ".json"
 	payload.Type = deploymentType
 	payload.Cluster = cluster
@@ -144,7 +143,7 @@ func (newappcmdClass *NewappcmdClass) generateEnvApp(appname string, env string,
 	return payload, filename
 }
 
-func (newappcmdClass *NewappcmdClass) mergeIntoAuroraConfig(config serverapi_v2.AuroraConfig, env string, appname string, groupid string, deploymentType string, cluster string) (mergedConfig serverapi_v2.AuroraConfig, err error) {
+func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi_v2.AuroraConfig, env string, appname string, groupid string, deploymentType string, cluster string) (mergedConfig serverapi_v2.AuroraConfig, err error) {
 
 	// Check if root about.json exists, if not exit with error
 	_, rootExist := config.Files["about.json"]
@@ -154,7 +153,7 @@ func (newappcmdClass *NewappcmdClass) mergeIntoAuroraConfig(config serverapi_v2.
 	}
 
 	// Check if Env/About exists, if not create
-	envAbout, envAboutFilename := newappcmdClass.generateEnvAbout(env)
+	envAbout, envAboutFilename := newappcmd.generateEnvAbout(env)
 	_, envappExists := config.Files[envAboutFilename]
 	if !envappExists {
 		config.Files[envAboutFilename], err = json.Marshal(envAbout)
@@ -164,14 +163,14 @@ func (newappcmdClass *NewappcmdClass) mergeIntoAuroraConfig(config serverapi_v2.
 	}
 
 	// Merge app
-	app, appFilename := newappcmdClass.generateApp(appname, groupid)
+	app, appFilename := newappcmd.generateApp(appname, groupid)
 	config.Files[appFilename], err = json.Marshal(app)
 	if err != nil {
 		return
 	}
 
 	// Merge env/app
-	envapp, envappFilename := newappcmdClass.generateEnvApp(appname, env, deploymentType, cluster)
+	envapp, envappFilename := newappcmd.generateEnvApp(appname, env, deploymentType, cluster)
 	config.Files[envappFilename], err = json.Marshal(envapp)
 	if err != nil {
 		return
@@ -180,7 +179,11 @@ func (newappcmdClass *NewappcmdClass) mergeIntoAuroraConfig(config serverapi_v2.
 	return config, err
 }
 
-func (newappcmdClass *NewappcmdClass) NewappCommand(args []string, artifactid string, cluster string, env string, groupid string, folder string, outputFolder string, deploymentType string, version string, generateApp bool, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string, cluster string, env string, groupid string, folder string, outputFolder string, deploymentType string, version string, generateApp bool, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+
+	if !serverapi_v2.ValidateLogin(newappcmd.configuration.GetOpenshiftConfig()) {
+		return "", errors.New("Not logged in, please use ao login")
+	}
 
 	err = validateNewappCommand(args, artifactid, cluster, env, groupid, folder, outputFolder, deploymentType, version, generateApp)
 	if err != nil {
@@ -189,7 +192,7 @@ func (newappcmdClass *NewappcmdClass) NewappCommand(args []string, artifactid st
 
 	// If cluster not specified, get the API cluster from the config
 	if cluster == "" {
-		cluster = newappcmdClass.configuration.GetApiClusterName()
+		cluster = newappcmd.configuration.GetApiClusterName()
 	}
 
 	var appname = args[0]
@@ -216,19 +219,19 @@ func (newappcmdClass *NewappcmdClass) NewappCommand(args []string, artifactid st
 	}
 
 	// Get current aurora config
-	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, newappcmdClass.getAffiliation(), newappcmdClass.configuration.GetOpenshiftConfig())
+	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, newappcmd.configuration.GetAffiliation(), newappcmd.configuration.GetOpenshiftConfig())
 	if err != nil {
 		return "", err
 	}
 
 	// Merge new app into aurora config
-	mergedAuroraConfig, err := newappcmdClass.mergeIntoAuroraConfig(auroraConfig, env, appname, groupid, deploymentType, cluster)
+	mergedAuroraConfig, err := newappcmd.mergeIntoAuroraConfig(auroraConfig, env, appname, groupid, deploymentType, cluster)
 	if err != nil {
 		return "", err
 	}
 
 	// Update aurora config in boober
-	err = auroraconfig.PutAuroraConfig(mergedAuroraConfig, persistentOptions, newappcmdClass.getAffiliation(), newappcmdClass.configuration.GetOpenshiftConfig())
+	err = auroraconfig.PutAuroraConfig(mergedAuroraConfig, persistentOptions, newappcmd.configuration.GetAffiliation(), newappcmd.configuration.GetOpenshiftConfig())
 	if err != nil {
 		return "", err
 	}
