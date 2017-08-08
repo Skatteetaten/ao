@@ -1,6 +1,6 @@
 package main
 
-import "github.com/skatteetaten/aoc/cmd"
+import "github.com/skatteetaten/ao/cmd"
 
 func main() {
 	cmd.Execute()

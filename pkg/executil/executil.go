@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/skatteetaten/aoc/pkg/fileutil"
+	"github.com/skatteetaten/ao/pkg/fileutil"
 	"os"
 	"os/exec"
 	"path/filepath"

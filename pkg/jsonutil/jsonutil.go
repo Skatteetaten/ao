@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/skatteetaten/aoc/pkg/fileutil"
+	"github.com/skatteetaten/ao/pkg/fileutil"
 	"io/ioutil"
 	"os"
 	"path/filepath"

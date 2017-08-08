@@ -3,8 +3,8 @@ package updatecmd
 import (
 	"errors"
 	"fmt"
-	"github.com/skatteetaten/aoc/pkg/executil"
-	"github.com/skatteetaten/aoc/pkg/versionutil"
+	"github.com/skatteetaten/ao/pkg/executil"
+	"github.com/skatteetaten/ao/pkg/versionutil"
 	"io/ioutil"
 	"net/http"
 	"os"

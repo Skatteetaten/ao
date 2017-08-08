@@ -14,7 +14,7 @@
 package cmd
 
 import (
-	"github.com/skatteetaten/aoc/pkg/openshift"
+	"github.com/skatteetaten/ao/pkg/openshift"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

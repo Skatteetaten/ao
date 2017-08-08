@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/howeyc/gopass"
-	"github.com/skatteetaten/aoc/pkg/kubernetes"
+	"github.com/skatteetaten/ao/pkg/kubernetes"
 	"io/ioutil"
 	"log"
 	"net"

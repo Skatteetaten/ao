@@ -29,7 +29,7 @@ openshiftpvbasedir=/shared/pv/recyclable
 # Related constants
 #
 pvcname=aoc-update-htdocs
-aocrelease=/home/$USER/go/src/github.com/skatteetaten/aoc/bin/amd64/aoc
+aocrelease=/home/$USER/go/src/github.com/skatteetaten/ao/bin/amd64/aoc
 releaseinfo=releaseinfo.json
 tmpreleaseinfo=/tmp/$releaseinfo
 remotedir=uil0paas-utv-node01:/home/$USER/aoc-v5
@@ -71,11 +71,11 @@ scp $tmpreleaseinfo $remotedir/$releaseinfo
 #
 # Copy the files to the actual volume
 #
-ssh $openshiftnode "sudo cp ~/aoc-v5/aoc $openshiftpvbasedir/$pv/$filename"
-ssh $openshiftnode "sudo cp ~/aoc-v5/aoc $openshiftpvbasedir/$pv/"
+ssh $openshiftnode "sudo cp ~/aoc-v5/ao $openshiftpvbasedir/$pv/$filename"
+ssh $openshiftnode "sudo cp ~/aoc-v5/ao $openshiftpvbasedir/$pv/"
 ssh $openshiftnode "sudo cp ~/aoc-v5/$releaseinfo $openshiftpvbasedir/$pv/"
 #
 # Clean up the temporary folder
 #
-ssh $openshiftnode "rm ~/aoc-v5/aoc"
+ssh $openshiftnode "rm ~/aoc-v5/ao"
 ssh $openshiftnode "rm ~/aoc-v5/$releaseinfo"

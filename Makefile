@@ -13,10 +13,10 @@
 # limitations under the License.
 
 # The binary to build (just the basename).
-BIN := aoc
+BIN := ao
 
 # This repo's root import path (under GOPATH).
-PKG := github.com/skatteetaten/aoc
+PKG := github.com/skatteetaten/ao
 
 # Where to push the docker image.
 REGISTRY ?= thockin

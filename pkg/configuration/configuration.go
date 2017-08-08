@@ -2,8 +2,8 @@ package configuration
 
 import (
 	"errors"
-	"github.com/skatteetaten/aoc/pkg/cmdoptions"
-	"github.com/skatteetaten/aoc/pkg/openshift"
+	"github.com/skatteetaten/ao/pkg/cmdoptions"
+	"github.com/skatteetaten/ao/pkg/openshift"
 	"github.com/spf13/viper"
 )
 

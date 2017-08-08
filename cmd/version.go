@@ -16,13 +16,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/aoc/pkg/jsonutil"
-	"github.com/skatteetaten/aoc/pkg/versionutil"
+	"github.com/skatteetaten/ao/pkg/jsonutil"
+	"github.com/skatteetaten/ao/pkg/versionutil"
 	"github.com/spf13/cobra"
 	"os"
 )
-
-
 
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{

@@ -28,7 +28,7 @@ func (versionStruct *VersionStruct) Version2Text() (output string, err error) {
 	if versionStruct.BuildNumber != "" {
 		version = version + "." + versionStruct.BuildNumber
 	}
-	output = "Aurora OC version " + versionStruct.Version //MajorVersion + "." + versionStruct.MinorVersion + "." + versionStruct.BuildNumber
+	output = "Aurora Oc version " + versionStruct.Version //MajorVersion + "." + versionStruct.MinorVersion + "." + versionStruct.BuildNumber
 	if versionStruct.Githash != "" {
 		output += "\nBranch: " + versionStruct.Branch + " (" + versionStruct.Githash + ")"
 	}

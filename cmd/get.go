@@ -16,7 +16,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/aoc/pkg/getcmd"
+	"github.com/skatteetaten/ao/pkg/getcmd"
 	"github.com/spf13/cobra"
 	"log"
 	"os"

@@ -2,10 +2,10 @@ package createcmd
 
 import (
 	"errors"
-	"github.com/skatteetaten/aoc/pkg/auroraconfig"
-	"github.com/skatteetaten/aoc/pkg/cmdoptions"
-	"github.com/skatteetaten/aoc/pkg/configuration"
-	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/skatteetaten/ao/pkg/cmdoptions"
+	"github.com/skatteetaten/ao/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 )
 
 const UsageString = "Usage: aoc create vault <vaultname> | secret <vaultname> <secretname>"

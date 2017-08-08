@@ -3,12 +3,12 @@ package deletecmd
 import (
 	"errors"
 	"fmt"
-	"github.com/skatteetaten/aoc/pkg/auroraconfig"
-	"github.com/skatteetaten/aoc/pkg/cmdoptions"
-	"github.com/skatteetaten/aoc/pkg/configuration"
-	"github.com/skatteetaten/aoc/pkg/executil"
-	"github.com/skatteetaten/aoc/pkg/openshift"
-	"github.com/skatteetaten/aoc/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/skatteetaten/ao/pkg/cmdoptions"
+	"github.com/skatteetaten/ao/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/executil"
+	"github.com/skatteetaten/ao/pkg/openshift"
+	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 	"strings"
 )
 

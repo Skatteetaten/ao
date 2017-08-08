@@ -1,6 +1,6 @@
-package: github.com/skatteetaten/aoc
+package: github.com/skatteetaten/ao
 import:
-- package: github.com/Skatteetaten/aoc
+- package: github.com/Skatteetaten/ao
   subpackages:
   - cmd
   - openshift

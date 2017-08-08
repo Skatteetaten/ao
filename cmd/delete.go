@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/aoc/pkg/deletecmd"
+	"github.com/skatteetaten/ao/pkg/deletecmd"
 	"github.com/spf13/cobra"
 	"log"
 	"os"

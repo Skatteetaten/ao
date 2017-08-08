@@ -39,7 +39,7 @@ export GOARCH="${ARCH}"
 # So for now, we filter on our own dependencies
 #
 
-PACKAGES=$(go list ./... | grep "aoc/cmd\|aoc/pkg\|aoc$" | xargs echo)
+PACKAGES=$(go list ./... | grep "ao/cmd\|ao/pkg\|ao$" | xargs echo)
 go install                                                         \
     -installsuffix "static"                                        \
     -ldflags "-X ${PKG}/pkg/versionutil.version=${VERSION} -X ${PKG}/pkg/versionutil.branch=${BRANCH} -X ${PKG}/pkg/versionutil.buildstamp=${BUILDSTAMP} -X ${PKG}/pkg/versionutil.githash=${GITHASH}" \

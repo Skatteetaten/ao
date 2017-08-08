@@ -16,7 +16,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/aoc/pkg/deploy"
+	"github.com/skatteetaten/ao/pkg/deploy"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
@@ -80,7 +80,6 @@ func init() {
 
 	deployCmd.Flags().BoolVarP(&forceDeployFlag, "force",
 		"", false, "Supress prompts")
-
 
 	// Here you will define your flags and configuration settings.
 
