@@ -25,6 +25,8 @@ import (
 var appList []string
 var envList []string
 var overrideJson []string
+var deployAllFlag bool
+var forceDeployFlag bool
 
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
@@ -42,10 +44,9 @@ Using the -e flag, it is possible to limit the deploy to the specified environme
 Using the -a flag, it is possible to limit the deploy to the specified application.
 Both flags can be used to limit the deploy to a specific application in a specific environment.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var deployObject deploy.DeployClass
+		var deploy deploy.DeployClass
 
-		deployObject.Init()
-		output, err := deployObject.ExecuteDeploy(args, overrideJson, appList, envList, &persistentOptions, localDryRun)
+		output, err := deploy.ExecuteDeploy(args, overrideJson, appList, envList, &persistentOptions, localDryRun, deployAllFlag, forceDeployFlag)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -73,6 +74,13 @@ func init() {
 
 	deployCmd.Flags().StringArrayVarP(&envList, "env",
 		"e", nil, "Only deploy specified environment")
+
+	deployCmd.Flags().BoolVarP(&deployAllFlag, "all",
+		"", false, "Will deploy all applications in all affiliations in all clusters reachable")
+
+	deployCmd.Flags().BoolVarP(&forceDeployFlag, "force",
+		"", false, "Supress prompts")
+
 
 	// Here you will define your flags and configuration settings.
 
