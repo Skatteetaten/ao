@@ -8,6 +8,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
+	"github.com/skatteetaten/ao/pkg/fuzzyargs"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/kubernetes"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
@@ -42,7 +43,20 @@ func (getcmd *GetcmdClass) getFiles(persistentOptions *cmdoptions.CommonCommandO
 	return
 }
 
-func (getcmd *GetcmdClass) getFile(filename string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+func (getcmd *GetcmdClass) getFile(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+	var fuzzyArgs fuzzyargs.FuzzyArgs
+	err = fuzzyArgs.Init(&getcmd.configuration)
+	if err != nil {
+		return "", err
+	}
+	err = fuzzyArgs.PopulateFuzzyEnvAppList(args)
+	if err != nil {
+		return "", err
+	}
+	filename, err := fuzzyArgs.GetFile()
+	if err != nil {
+		return "", err
+	}
 
 	switch outputFormat {
 	case "json":
@@ -232,7 +246,7 @@ func (getcmd *GetcmdClass) GetObject(args []string, persistentOptions *cmdoption
 	case "file", "files":
 		{
 			if len(args) > 1 {
-				output, err = getcmd.getFile(args[1], persistentOptions, outputFormat)
+				output, err = getcmd.getFile(args[1:], persistentOptions, outputFormat)
 			} else {
 				output, err = getcmd.getFiles(persistentOptions)
 			}
@@ -285,7 +299,7 @@ func validateGetcmd(args []string) (err error) {
 	switch commandStr {
 	case "file", "files":
 		{
-			if len(args) > 2 {
+			if len(args) > 3 {
 				err = errors.New(fileUseageString)
 				return
 			}
