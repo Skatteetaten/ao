@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
+	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/openshift"
@@ -15,8 +16,8 @@ import (
 
 const InvalidConfigurationError = "Invalid configuration"
 
-func GetContent(filename string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (content string, version string, err error) {
-	auroraConfig, err := GetAuroraConfig(persistentOptions, affiliation, openshiftConfig)
+func GetContent(filename string, configuration *configuration.ConfigurationClass) (content string, version string, err error) {
+	auroraConfig, err := GetAuroraConfig(configuration)
 	if err != nil {
 		return
 	}
@@ -36,8 +37,8 @@ func GetContent(filename string, persistentOptions *cmdoptions.CommonCommandOpti
 
 }
 
-func GetAllContent(outputFolder string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (output string, err error) {
-	auroraConfig, err := GetAuroraConfig(persistentOptions, affiliation, openshiftConfig)
+func GetAllContent(outputFolder string, configuration *configuration.ConfigurationClass) (output string, err error) {
+	auroraConfig, err := GetAuroraConfig(configuration)
 	if err != nil {
 		return
 	}
@@ -64,8 +65,8 @@ func GetAllContent(outputFolder string, persistentOptions *cmdoptions.CommonComm
 
 }
 
-func GetAllVaults(outputFolder string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (output string, err error) {
-	vaults, err := GetVaultsArray(persistentOptions, affiliation, openshiftConfig)
+func GetAllVaults(outputFolder string, configuration *configuration.ConfigurationClass) (output string, err error) {
+	vaults, err := GetVaultsArray(configuration)
 	if err != nil {
 		return
 	}
@@ -96,8 +97,8 @@ func GetAllVaults(outputFolder string, persistentOptions *cmdoptions.CommonComma
 	return output, err
 }
 
-func GetFileList(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (filenames []string, err error) {
-	auroraConfig, err := GetAuroraConfig(persistentOptions, affiliation, openshiftConfig)
+func GetFileList(configuration *configuration.ConfigurationClass) (filenames []string, err error) {
+	auroraConfig, err := GetAuroraConfig(configuration)
 	if err != nil {
 		return
 	}
@@ -132,12 +133,13 @@ func GetVault(persistentOptions *cmdoptions.CommonCommandOptions, affiliation st
 	return
 }
 
-func GetVaults(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (output string, err error) {
-	var apiEndpoint string = "/affiliation/" + affiliation + "/vault"
+func GetVaults(configuration *configuration.ConfigurationClass) (output string, err error) {
+	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/vault"
 	var responses map[string]string
-	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", persistentOptions.ShowConfig,
-		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
-		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
+	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
+		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
+		configuration.GetPersistentOptions().Verbose, configuration.GetOpenshiftConfig(), configuration.GetPersistentOptions().DryRun,
+		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
 	if err != nil {
 		for server := range responses {
 			response, err := serverapi_v2.ParseResponse(responses[server])
@@ -179,12 +181,13 @@ func GetVaults(persistentOptions *cmdoptions.CommonCommandOptions, affiliation s
 	return
 }
 
-func GetVaultsArray(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (vaults []serverapi_v2.Vault, err error) {
-	var apiEndpoint string = "/affiliation/" + affiliation + "/vault"
+func GetVaultsArray(configuration *configuration.ConfigurationClass) (vaults []serverapi_v2.Vault, err error) {
+	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/vault"
 	var responses map[string]string
-	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", persistentOptions.ShowConfig,
-		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
-		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
+	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
+		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
+		configuration.GetPersistentOptions().Verbose, configuration.GetOpenshiftConfig(), configuration.GetPersistentOptions().DryRun,
+		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
 	if err != nil {
 		for server := range responses {
 			response, err := serverapi_v2.ParseResponse(responses[server])
@@ -222,9 +225,9 @@ func GetVaultsArray(persistentOptions *cmdoptions.CommonCommandOptions, affiliat
 	return vaults, err
 }
 
-func GetSecret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (output string, version string, err error) {
+func GetSecret(vaultName string, secretName string, configuration *configuration.ConfigurationClass) (output string, version string, err error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = GetVaultsArray(persistentOptions, affiliation, openshiftConfig)
+	vaults, err = GetVaultsArray(configuration)
 
 	for vaultindex := range vaults {
 		if vaults[vaultindex].Name == vaultName {
@@ -236,13 +239,14 @@ func GetSecret(vaultName string, secretName string, persistentOptions *cmdoption
 	return
 }
 
-func GetAuroraConfig(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (auroraConfig serverapi_v2.AuroraConfig, err error) {
-	var apiEndpoint string = "/affiliation/" + affiliation + "/auroraconfig"
+func GetAuroraConfig(configuration *configuration.ConfigurationClass) (auroraConfig serverapi_v2.AuroraConfig, err error) {
+	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/auroraconfig"
 	var responses map[string]string
 
-	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", persistentOptions.ShowConfig,
-		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
-		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
+	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
+		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
+		configuration.GetPersistentOptions().Verbose, configuration.GetOpenshiftConfig(), configuration.GetPersistentOptions().DryRun,
+		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
 	if err != nil {
 		for server := range responses {
 			response, err := serverapi_v2.ParseResponse(responses[server])
@@ -280,30 +284,44 @@ func GetAuroraConfig(persistentOptions *cmdoptions.CommonCommandOptions, affilia
 	return auroraConfig, nil
 }
 
-func PutAuroraConfig(auroraConfig serverapi_v2.AuroraConfig, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (err error) {
+func PutAuroraConfig(auroraConfig serverapi_v2.AuroraConfig, configuration *configuration.ConfigurationClass) (err error) {
 	content, err := json.Marshal(auroraConfig)
 	if err != nil {
 		return err
 	}
 
-	var apiEndpoint = "/affiliation/" + affiliation + "/auroraconfig"
+	var apiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/auroraconfig"
 
-	_, err = putContent(apiEndpoint, string(content), "", persistentOptions, affiliation, openshiftConfig)
+	_, err = putContent(apiEndpoint, string(content), "", configuration)
 	if err != nil {
 		return err
 	}
 	return
 }
 
-func putContent(apiEndpoint string, content string, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
+func putContent(apiEndpoint string, content string, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
 	var responses map[string]string
 
 	var versionHeader = make(map[string]string)
 	versionHeader["AuroraConfigFileVersion"] = version
 
-	responses, err = serverapi_v2.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, content, persistentOptions.ShowConfig,
-		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
-		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
+	/* headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, api bool, localhost bool, verbose bool,
+	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string*/
+
+	responses, err = serverapi_v2.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, content, true,
+		configuration.GetPersistentOptions().Localhost,
+		configuration.GetPersistentOptions().Verbose,
+		configuration.GetOpenshiftConfig(), configuration.GetPersistentOptions().DryRun, configuration.GetPersistentOptions().Debug,
+		configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
+
+	/*
+		configuration.GetPersistentOptions().ShowConfig,
+		configuration.GetPersistentOptions().ShowObjects,
+
+
+		true, configuration.GetPersistentOptions().Localhost,
+		configuration.GetPersistentOptions().Verbose, configuration.GetOpenshiftConfig(), configuration.GetPersistentOptions().DryRun,
+		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)*/
 	if err != nil {
 		for server := range responses {
 			response, err := serverapi_v2.ParseResponse(responses[server])
@@ -320,37 +338,40 @@ func putContent(apiEndpoint string, content string, version string, persistentOp
 	return
 }
 
-func PutFile(filename string, content string, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
-	var apiEndpoint = "/affiliation/" + affiliation + "/auroraconfigfile/" + filename
+func PutFile(filename string, content string, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
+	var apiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/auroraconfigfile/" + filename
 
-	return putContent(apiEndpoint, content, version, persistentOptions, affiliation, openshiftConfig)
+	return putContent(apiEndpoint, content, version, configuration)
 }
 
-func PutSecret(vaultname string, secretname string, secret string, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
-	var apiEndpoint = "/affiliation/" + affiliation + "/vault/" + vaultname + "/secret/" + secretname
+func PutSecret(vaultname string, secretname string, secret string, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
+	var apiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/vault/" + vaultname + "/secret/" + secretname
 
 	encodedSecret := base64.StdEncoding.EncodeToString([]byte(secret))
-	return putContent(apiEndpoint, encodedSecret, version, persistentOptions, affiliation, openshiftConfig)
+	return putContent(apiEndpoint, encodedSecret, version, configuration)
 }
 
-func PutVault(vaultname string, vault serverapi_v2.Vault, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
-	var apiEndpoint = "/affiliation/" + affiliation + "/vault/"
+func PutVault(vaultname string, vault serverapi_v2.Vault, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
+	var apiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/vault/"
 
 	content, err := json.Marshal(vault)
 
-	return putContent(apiEndpoint, string(content), version, persistentOptions, affiliation, openshiftConfig)
+	return putContent(apiEndpoint, string(content), version, configuration)
 
 }
 
-func deleteContent(apiEndpoint string, version string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
+func deleteContent(apiEndpoint string, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
 	var responses map[string]string
 
 	var versionHeader = make(map[string]string)
 	versionHeader["AuroraConfigFileVersion"] = version
 
-	responses, err = serverapi_v2.CallApiWithHeaders(versionHeader, http.MethodDelete, apiEndpoint, "", persistentOptions.ShowConfig,
-		persistentOptions.ShowObjects, true, persistentOptions.Localhost,
-		persistentOptions.Verbose, openshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
+	responses, err = serverapi_v2.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, "", true,
+		configuration.GetPersistentOptions().Localhost,
+		configuration.GetPersistentOptions().Verbose,
+		configuration.GetOpenshiftConfig(), configuration.GetPersistentOptions().DryRun, configuration.GetPersistentOptions().Debug,
+		configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
+
 	if err != nil {
 		for server := range responses {
 			response, err := serverapi_v2.ParseResponse(responses[server])
@@ -367,9 +388,9 @@ func deleteContent(apiEndpoint string, version string, persistentOptions *cmdopt
 	return
 }
 
-func DeleteVault(vaultname string, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (validationMessages string, err error) {
-	var apiEndpoint = "/affiliation/" + affiliation + "/vault/" + vaultname
+func DeleteVault(vaultname string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
+	var apiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/vault/" + vaultname
 
-	return deleteContent(apiEndpoint, "", persistentOptions, affiliation, openshiftConfig)
+	return deleteContent(apiEndpoint, "", configuration)
 
 }

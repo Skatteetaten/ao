@@ -1,4 +1,4 @@
-package serverapi
+package serverapi_v2
 
 import "testing"
 

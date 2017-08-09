@@ -32,6 +32,12 @@ type DeployClass struct {
 	overrideJsons []string
 }
 
+func (deploy *DeployClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+
+	deploy.configuration.Init(persistentOptions)
+	return
+}
+
 func (deploy *DeployClass) addLegalApp(app string) {
 	for i := range deploy.legalAppList {
 		if deploy.legalAppList[i] == app {
@@ -49,12 +55,6 @@ func (deploy *DeployClass) addLegalEnv(env string) {
 		}
 	}
 	deploy.legalEnvList = append(deploy.legalEnvList, env)
-	return
-}
-
-func (deploy *DeployClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
-
-	deploy.configuration.Init(persistentOptions)
 	return
 }
 
@@ -155,7 +155,7 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 
 func (deploy *DeployClass) getLegalEnvAppList() (err error) {
 
-	auroraConfig, err := auroraconfig.GetAuroraConfig(deploy.configuration.GetPersistentOptions(), deploy.configuration.GetAffiliation(), deploy.configuration.GetOpenshiftConfig())
+	auroraConfig, err := auroraconfig.GetAuroraConfig(&deploy.configuration)
 	if err != nil {
 		return err
 	}
@@ -299,7 +299,7 @@ func (deploy *DeployClass) populateFlagsEnvAppList(appList []string, envList []s
 
 func (deploy *DeployClass) populateAllAppForEnv(env string) (err error) {
 
-	auroraConfig, err := auroraconfig.GetAuroraConfig(deploy.configuration.GetPersistentOptions(), deploy.configuration.GetAffiliation(), deploy.configuration.GetOpenshiftConfig())
+	auroraConfig, err := auroraconfig.GetAuroraConfig(&deploy.configuration)
 	if err != nil {
 		return err
 	}
