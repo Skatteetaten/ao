@@ -7,7 +7,6 @@ import (
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/executil"
-	"github.com/skatteetaten/ao/pkg/openshift"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 	"strings"
 )
@@ -40,18 +39,18 @@ func (deletecmd *DeletecmdClass) isFileDeleted(filename string) bool {
 	return false
 }
 
-func (deletecmd *DeletecmdClass) deleteFilesInList(auroraConfig serverapi_v2.AuroraConfig, persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) error {
+func (deletecmd *DeletecmdClass) deleteFilesInList(auroraConfig serverapi_v2.AuroraConfig) error {
 	// Delete all files in list
 	for i := range deletecmd.deleteFileList {
 		delete(auroraConfig.Files, deletecmd.deleteFileList[i])
 	}
-	return auroraconfig.PutAuroraConfig(auroraConfig, persistentOptions, affiliation, openshiftConfig)
+	return auroraconfig.PutAuroraConfig(auroraConfig, &deletecmd.configuration)
 }
 
 func (deletecmd *DeletecmdClass) deleteVault(vaultName string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
 	//var vaults []serverapi_v2.Vault
 	//vaults, err = auroraconfig.GetVaults(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
-	_, err = auroraconfig.DeleteVault(vaultName, persistentOptions, deletecmd.configuration.GetAffiliation(), deletecmd.configuration.GetOpenshiftConfig())
+	_, err = auroraconfig.DeleteVault(vaultName, &deletecmd.configuration)
 	if err != nil {
 		return err
 	}
@@ -88,7 +87,7 @@ func (deletecmd *DeletecmdClass) addDeleteFileWithPrompt(filename string, prompt
 
 func (deletecmd *DeletecmdClass) deleteApp(app string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
 	// Get current aurora config
-	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, deletecmd.configuration.GetAffiliation(), deletecmd.configuration.GetOpenshiftConfig())
+	auroraConfig, err := auroraconfig.GetAuroraConfig(&deletecmd.configuration)
 	if err != nil {
 		return err
 	}
@@ -129,7 +128,7 @@ func (deletecmd *DeletecmdClass) deleteApp(app string, persistentOptions *cmdopt
 	err = deletecmd.addDeleteFileWithPrompt(rootAppFile, "Delete file "+rootAppFile)
 
 	// Delete all files in list and update aurora config in boober
-	err = deletecmd.deleteFilesInList(auroraConfig, persistentOptions, deletecmd.configuration.GetAffiliation(), deletecmd.configuration.GetOpenshiftConfig())
+	err = deletecmd.deleteFilesInList(auroraConfig)
 	if err != nil {
 		return err
 	}
@@ -139,7 +138,7 @@ func (deletecmd *DeletecmdClass) deleteApp(app string, persistentOptions *cmdopt
 
 func (deletecmd *DeletecmdClass) deleteEnv(env string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
 	// Get current aurora config
-	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, deletecmd.configuration.GetAffiliation(), deletecmd.configuration.GetOpenshiftConfig())
+	auroraConfig, err := auroraconfig.GetAuroraConfig(&deletecmd.configuration)
 	if err != nil {
 		return err
 	}
@@ -178,7 +177,7 @@ func (deletecmd *DeletecmdClass) deleteEnv(env string, persistentOptions *cmdopt
 	}
 
 	// Delete all files in list and update aurora config in boober
-	err = deletecmd.deleteFilesInList(auroraConfig, persistentOptions, deletecmd.configuration.GetAffiliation(), deletecmd.configuration.GetOpenshiftConfig())
+	err = deletecmd.deleteFilesInList(auroraConfig)
 	if err != nil {
 		return err
 	}
@@ -189,7 +188,7 @@ func (deletecmd *DeletecmdClass) deleteEnv(env string, persistentOptions *cmdopt
 func (deletecmd *DeletecmdClass) deleteDeployment(env string, app string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
 
 	// Get current aurora config
-	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, deletecmd.configuration.GetAffiliation(), deletecmd.configuration.GetOpenshiftConfig())
+	auroraConfig, err := auroraconfig.GetAuroraConfig(&deletecmd.configuration)
 	if err != nil {
 		return err
 	}
@@ -243,7 +242,7 @@ func (deletecmd *DeletecmdClass) deleteDeployment(env string, app string, persis
 	}
 
 	// Delete all files in list and update aurora config in boober
-	err = deletecmd.deleteFilesInList(auroraConfig, persistentOptions, deletecmd.configuration.GetAffiliation(), deletecmd.configuration.GetOpenshiftConfig())
+	err = deletecmd.deleteFilesInList(auroraConfig)
 	if err != nil {
 		return err
 	}
@@ -253,7 +252,7 @@ func (deletecmd *DeletecmdClass) deleteDeployment(env string, app string, persis
 
 func (deletecmd *DeletecmdClass) deleteFile(filename string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
 	// Get current aurora config
-	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, deletecmd.configuration.GetAffiliation(), deletecmd.configuration.GetOpenshiftConfig())
+	auroraConfig, err := auroraconfig.GetAuroraConfig(&deletecmd.configuration)
 	if err != nil {
 		return err
 	}
@@ -268,7 +267,7 @@ func (deletecmd *DeletecmdClass) deleteFile(filename string, persistentOptions *
 
 	deletecmd.addDeleteFile(filename)
 	// Delete all files in list and update aurora config in boober
-	err = deletecmd.deleteFilesInList(auroraConfig, persistentOptions, deletecmd.configuration.GetAffiliation(), deletecmd.configuration.GetOpenshiftConfig())
+	err = deletecmd.deleteFilesInList(auroraConfig)
 	if err != nil {
 		return err
 	}

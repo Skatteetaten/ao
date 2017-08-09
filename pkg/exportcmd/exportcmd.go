@@ -37,7 +37,7 @@ func (exportObj *ExportcmdClass) init(persistentOptions *cmdoptions.CommonComman
 } */
 
 func (exportObj *ExportcmdClass) exportVaults(outputFoldername string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
-	output, err = auroraconfig.GetAllVaults(outputFoldername, persistentOptions, exportObj.configuration.GetAffiliation(), exportObj.configuration.GetOpenshiftConfig())
+	output, err = auroraconfig.GetAllVaults(outputFoldername, &exportObj.configuration)
 	if err != nil {
 		return
 	}
@@ -49,7 +49,7 @@ func (exportObj *ExportcmdClass) exportVaults(outputFoldername string, persisten
 
 func (exportObj *ExportcmdClass) exportFiles(outputFoldername string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
 
-	output, err = auroraconfig.GetAllContent(outputFoldername, persistentOptions, exportObj.configuration.GetAffiliation(), exportObj.configuration.GetOpenshiftConfig())
+	output, err = auroraconfig.GetAllContent(outputFoldername, &exportObj.configuration)
 	if err != nil {
 		return
 	}
@@ -64,7 +64,7 @@ func (exportObj *ExportcmdClass) exportFile(filename string, persistentOptions *
 	switch outputFormat {
 	case "json":
 		{
-			content, _, err := auroraconfig.GetContent(filename, persistentOptions, exportObj.configuration.GetAffiliation(), exportObj.configuration.GetOpenshiftConfig())
+			content, _, err := auroraconfig.GetContent(filename, &exportObj.configuration)
 			if err != nil {
 				return "", err
 			}

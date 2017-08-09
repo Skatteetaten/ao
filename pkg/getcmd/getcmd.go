@@ -33,7 +33,7 @@ func (getcmd *GetcmdClass) init(persistentOptions *cmdoptions.CommonCommandOptio
 
 func (getcmd *GetcmdClass) getFiles(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 	var files []string
-	files, err = auroraconfig.GetFileList(persistentOptions, getcmd.configuration.GetAffiliation(), getcmd.configuration.GetOpenshiftConfig())
+	files, err = auroraconfig.GetFileList(&getcmd.configuration)
 
 	output = "NAME"
 	for fileindex := range files {
@@ -47,7 +47,7 @@ func (getcmd *GetcmdClass) getFile(filename string, persistentOptions *cmdoption
 	switch outputFormat {
 	case "json":
 		{
-			content, _, err := auroraconfig.GetContent(filename, persistentOptions, getcmd.configuration.GetAffiliation(), getcmd.configuration.GetOpenshiftConfig())
+			content, _, err := auroraconfig.GetContent(filename, &getcmd.configuration)
 			if err != nil {
 				return "", err
 			}
@@ -57,7 +57,7 @@ func (getcmd *GetcmdClass) getFile(filename string, persistentOptions *cmdoption
 	case "":
 		{
 			var files []string
-			files, err = auroraconfig.GetFileList(persistentOptions, getcmd.configuration.GetAffiliation(), getcmd.configuration.GetOpenshiftConfig())
+			files, err = auroraconfig.GetFileList(&getcmd.configuration)
 			output = "NAME"
 			var fileFound bool
 			for fileindex := range files {
@@ -128,7 +128,7 @@ func (getcmd *GetcmdClass) getClusters(persistentOptions *cmdoptions.CommonComma
 
 func (getcmd *GetcmdClass) getVaults(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, getcmd.configuration.GetAffiliation(), getcmd.configuration.GetOpenshiftConfig())
+	vaults, err = auroraconfig.GetVaultsArray(&getcmd.configuration)
 
 	output = "VAULT (Secrets)"
 	for vaultindex := range vaults {
@@ -140,7 +140,7 @@ func (getcmd *GetcmdClass) getVaults(persistentOptions *cmdoptions.CommonCommand
 
 func (getcmd *GetcmdClass) getVault(vaultName string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, getcmd.configuration.GetAffiliation(), getcmd.configuration.GetOpenshiftConfig())
+	vaults, err = auroraconfig.GetVaultsArray(&getcmd.configuration)
 
 	for vaultindex := range vaults {
 		if vaults[vaultindex].Name == vaultName {
@@ -156,7 +156,7 @@ func (getcmd *GetcmdClass) getVault(vaultName string, persistentOptions *cmdopti
 
 func (getcmd *GetcmdClass) getSecret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaultsArray(persistentOptions, getcmd.configuration.GetAffiliation(), getcmd.configuration.GetOpenshiftConfig())
+	vaults, err = auroraconfig.GetVaultsArray(&getcmd.configuration)
 
 	for vaultindex := range vaults {
 		if vaults[vaultindex].Name == vaultName {

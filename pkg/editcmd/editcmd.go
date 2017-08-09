@@ -42,7 +42,7 @@ func (editcmd *EditcmdClass) EditFile(args []string, persistentOptions *cmdoptio
 	var content string
 	var version string
 
-	content, version, err = auroraconfig.GetContent(filename, persistentOptions, editcmd.configuration.GetAffiliation(), editcmd.configuration.GetOpenshiftConfig())
+	content, version, err = auroraconfig.GetContent(filename, &editcmd.configuration)
 	if err != nil {
 		return "", err
 	}
@@ -77,7 +77,7 @@ func (editcmd *EditcmdClass) EditFile(args []string, persistentOptions *cmdoptio
 		modifiedContent = stripComments(modifiedContent)
 
 		if jsonutil.IsLegalJson(modifiedContent) {
-			validationMessages, err := auroraconfig.PutFile(filename, modifiedContent, version, persistentOptions, editcmd.configuration.GetAffiliation(), editcmd.configuration.GetOpenshiftConfig())
+			validationMessages, err := auroraconfig.PutFile(filename, modifiedContent, version, &editcmd.configuration)
 			if err != nil {
 				if err.Error() == auroraconfig.InvalidConfigurationError {
 					modifiedContent, _ = addComments(modifiedContent, validationMessages)
@@ -101,7 +101,7 @@ func (editcmd *EditcmdClass) EditSecret(args []string, persistentOptions *cmdopt
 	var secretname string = args[2]
 	var version string = ""
 
-	secret, version, err := auroraconfig.GetSecret(vaultname, secretname, persistentOptions, editcmd.configuration.GetAffiliation(), editcmd.configuration.GetOpenshiftConfig())
+	secret, version, err := auroraconfig.GetSecret(vaultname, secretname, &editcmd.configuration)
 	if err != nil {
 		return "", err
 	}
@@ -113,7 +113,7 @@ func (editcmd *EditcmdClass) EditSecret(args []string, persistentOptions *cmdopt
 	}
 
 	if modifiedSecret != secret {
-		_, err = auroraconfig.PutSecret(vaultname, secretname, modifiedSecret, version, persistentOptions, editcmd.configuration.GetAffiliation(), editcmd.configuration.GetOpenshiftConfig())
+		_, err = auroraconfig.PutSecret(vaultname, secretname, modifiedSecret, version, &editcmd.configuration)
 	}
 
 	return

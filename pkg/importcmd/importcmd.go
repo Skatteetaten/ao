@@ -55,7 +55,7 @@ func (importObj *ImportClass) ExecuteImport(args []string,
 		return
 	}
 
-	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, importObj.configuration.GetAffiliation(), importObj.configuration.GetOpenshiftConfig())
+	auroraConfig, err := auroraconfig.GetAuroraConfig(&importObj.configuration)
 	if err != nil {
 		return "", err
 	}

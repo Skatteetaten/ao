@@ -335,7 +335,12 @@ func CallApiShort(httpMethod string, apiEndpoint string, jsonRequestBody string,
 		persistentOptions.Token)
 }
 
-func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
+func CallApiWithConfig(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, configuration *configuration.ConfigurationClass) (outputMap map[string]string, err error) {
+	//return CallApiWithHeaders (headers, httpMethod, apiEndpoint, combindedJson, api,  )
+	return
+}
+
+func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, api bool, localhost bool, verbose bool,
 	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (outputMap map[string]string, err error) {
 	var apiCluster *openshift.OpenshiftCluster
 
@@ -385,7 +390,7 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
 	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (outputMap map[string]string, err error) {
 	var headers = make(map[string]string)
-	return CallApiWithHeaders(headers, httpMethod, apiEndpoint, combindedJson, showConfig, showObjects, api, localhost, verbose,
+	return CallApiWithHeaders(headers, httpMethod, apiEndpoint, combindedJson, api, localhost, verbose,
 		openshiftConfig, dryRun, debug, apiAddress, token)
 }
 

@@ -219,7 +219,7 @@ func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string,
 	}
 
 	// Get current aurora config
-	auroraConfig, err := auroraconfig.GetAuroraConfig(persistentOptions, newappcmd.configuration.GetAffiliation(), newappcmd.configuration.GetOpenshiftConfig())
+	auroraConfig, err := auroraconfig.GetAuroraConfig(&newappcmd.configuration)
 	if err != nil {
 		return "", err
 	}
@@ -231,7 +231,7 @@ func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string,
 	}
 
 	// Update aurora config in boober
-	err = auroraconfig.PutAuroraConfig(mergedAuroraConfig, persistentOptions, newappcmd.configuration.GetAffiliation(), newappcmd.configuration.GetOpenshiftConfig())
+	err = auroraconfig.PutAuroraConfig(mergedAuroraConfig, &newappcmd.configuration)
 	if err != nil {
 		return "", err
 	}
