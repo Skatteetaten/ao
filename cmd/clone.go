@@ -4,13 +4,10 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/src-d/go-git.v4"
-	"github.com/skatteetaten/aoc/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/configuration"
 	"os/user"
 	_ "go/token"
-	"os"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
-	"github.com/howeyc/gopass"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 )
 
 var cloneCmd = &cobra.Command{
@@ -25,7 +22,7 @@ var cloneCmd = &cobra.Command{
 			affiliation = affiliationFlag
 		}
 
-		if len(affiliation) == 0 {
+		if len(affiliation) < 1 {
 			fmt.Println("No affiliation chosen, please login.")
 			return
 		}
@@ -33,11 +30,15 @@ var cloneCmd = &cobra.Command{
 		username, _ := cmd.LocalFlags().GetString("user")
 		path, _ := cmd.LocalFlags().GetString("path")
 
-		if len(path) == 0 {
+		if len(path) < 1 {
 			path = fmt.Sprintf("./%s", affiliation)
 		}
 
-		clone(affiliation, username, path)
+		err := auroraconfig.Clone(affiliation, username, path)
+
+		if err != nil {
+			fmt.Println(err)
+		}
 	},
 }
 
@@ -53,26 +54,4 @@ func init() {
 	cloneCmd.Flags().StringP("affiliation", "a", "", "Affiliation to clone")
 	cloneCmd.Flags().StringP("path", "p", "", "Clone repo to path")
 	cloneCmd.Flags().StringP("user", "u", defaultUsername, "Clone repo as user")
-}
-
-func clone(affiliation string, username string, path string) {
-	url := fmt.Sprintf("https://%s@git.aurora.skead.no/scm/ac/%s.git", username, affiliation)
-
-	fmt.Printf("Cloning AuroraConfig for affiliation %s\n", affiliation)
-	fmt.Printf("%s\n\n", url)
-
-	fmt.Printf("Enter password: ")
-	password, _ := gopass.GetPasswdMasked()
-
-	fmt.Println()
-
-	_, err := git.PlainClone(path, false, &git.CloneOptions{
-		URL:      url,
-		Progress: os.Stdout,
-		Auth:     http.NewBasicAuth(username, string(password)),
-	})
-
-	if err != nil {
-		fmt.Println(err.Error())
-	}
 }
