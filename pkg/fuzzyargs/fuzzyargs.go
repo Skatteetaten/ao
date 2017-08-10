@@ -83,6 +83,9 @@ func (fuzzyArgs *FuzzyArgs) getLegalEnvAppFileList() (err error) {
 
 // Try to match an argument with an app, returns "" if none found
 func (fuzzyArgs *FuzzyArgs) getFuzzyApp(arg string) (app string, err error) {
+	if strings.HasSuffix(arg, ".json") {
+		arg = strings.TrimSuffix(arg, ".json")
+	}
 	// First check for exact match
 	for i := range fuzzyArgs.legalAppList {
 		if fuzzyArgs.legalAppList[i] == arg {
@@ -193,7 +196,7 @@ func (fuzzyArgs *FuzzyArgs) GetEnv() (env string, err error) {
 		err = errors.New("No unique environment identified")
 		return "", err
 	}
-	if len(fuzzyArgs.appList) > 0 {
+	if len(fuzzyArgs.envList) > 0 {
 		return fuzzyArgs.envList[0], nil
 	}
 	return "", nil
@@ -241,14 +244,18 @@ func (fuzzyArgs *FuzzyArgs) GetFile() (filename string, err error) {
 	if err != nil {
 		return "", err
 	}
-	if env == "" {
+	/*if env == "" {
 		// We need to find a unique env for a file
 		filename, err = fuzzyArgs.App2File(app)
 		if err != nil {
 			return "", err
 		}
+	}*/
+	if env == "" {
+		filename = app + ".json"
+	} else {
+		filename = env + "/" + app + ".json"
 	}
-	filename = env + "/" + app + ".json"
 	if fuzzyArgs.IsLegalFile(filename) {
 		return filename, nil
 	}

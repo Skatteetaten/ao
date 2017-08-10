@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
@@ -65,27 +66,29 @@ func (getcmd *GetcmdClass) getFile(args []string, persistentOptions *cmdoptions.
 			if err != nil {
 				return "", err
 			}
-			output = jsonutil.PrettyPrintJson(content)
+			output += filename + ":\n"
+			output += jsonutil.PrettyPrintJson(content)
 			return output, err
 		}
-	case "":
-		{
-			var files []string
-			files, err = auroraconfig.GetFileList(&getcmd.configuration)
-			output = "NAME"
-			var fileFound bool
-			for fileindex := range files {
-				if files[fileindex] == filename {
-					output += "\n" + files[fileindex]
-					fileFound = true
+		/*	case "":
+			{
+				var files []string
+				files, err = auroraconfig.GetFileList(&getcmd.configuration)
+				output = "NAME"
+				var fileFound bool
+				for fileindex := range files {
+					if files[fileindex] == filename {
+						output += filename + ":\n"
+						output += "\n" + files[fileindex]
+						fileFound = true
+					}
 				}
-			}
-			if !fileFound {
-				err = errors.New("Error: file \"" + filename + "\" not found")
-				return "", err
-			}
-			return output, nil
-		}
+				if !fileFound {
+					err = errors.New("Error: file \"" + filename + "\" not found")
+					return "", err
+				}
+				return output, nil
+			}*/
 	case "yaml":
 		{
 			err = errors.New(notYetImplemented)
