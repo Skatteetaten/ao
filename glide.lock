@@ -1,5 +1,5 @@
-hash: 1ccc00b0e63574ceab3416734322cb6d55fb2608e6e7226dc4dea9094a05bf9a
-updated: 2017-08-09T09:24:45.820527864+02:00
+hash: ad30e9267d68c2c6d02c84810d4ee7c9fcaea8385f38157a76a05436a8fd2895
+updated: 2017-08-14T15:04:31.887357032+02:00
 imports:
 - name: github.com/cpuguy83/go-md2man
   version: 71acacd42f85e5e82f70a55327789582a5200a90
@@ -34,6 +34,8 @@ imports:
   version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
 - name: github.com/pelletier/go-toml
   version: 439fbba1f887c286024370cb4f281ba815c4c7d7
+- name: github.com/pkg/errors
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/russross/blackfriday
   version: 8cec3a854e68dba10faabbe31c089abf4a3e57a6
 - name: github.com/sergi/go-diff
