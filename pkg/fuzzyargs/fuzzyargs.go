@@ -14,8 +14,9 @@ PopulateFuzzyEnvAppList()		- Parses the args array given
 
 import (
 	"errors"
-	"github.com/skatteetaten/ao/pkg/configuration"
 	"strings"
+
+	"github.com/skatteetaten/ao/pkg/configuration"
 )
 
 type FuzzyArgs struct {
@@ -82,7 +83,7 @@ func (fuzzyArgs *FuzzyArgs) getLegalEnvAppFileList() (err error) {
 }
 
 // Try to match an argument with an app, returns "" if none found
-func (fuzzyArgs *FuzzyArgs) getFuzzyApp(arg string) (app string, err error) {
+func (fuzzyArgs *FuzzyArgs) GetFuzzyApp(arg string) (app string, err error) {
 	if strings.HasSuffix(arg, ".json") {
 		arg = strings.TrimSuffix(arg, ".json")
 	}
@@ -106,7 +107,7 @@ func (fuzzyArgs *FuzzyArgs) getFuzzyApp(arg string) (app string, err error) {
 }
 
 // Try to match an argument with an env, returns "" if none found
-func (fuzzyArgs *FuzzyArgs) getFuzzyEnv(arg string) (env string, err error) {
+func (fuzzyArgs *FuzzyArgs) GetFuzzyEnv(arg string) (env string, err error) {
 	// First check for exact match
 	for i := range fuzzyArgs.legalEnvList {
 		if fuzzyArgs.legalEnvList[i] == arg {
@@ -134,20 +135,20 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList(args []string) (err error) {
 
 		if strings.Contains(args[i], "/") {
 			parts := strings.Split(args[i], "/")
-			env, err = fuzzyArgs.getFuzzyEnv(parts[0])
+			env, err = fuzzyArgs.GetFuzzyEnv(parts[0])
 			if err != nil {
 				return err
 			}
-			app, err = fuzzyArgs.getFuzzyApp(parts[1])
+			app, err = fuzzyArgs.GetFuzzyApp(parts[1])
 			if err != nil {
 				return err
 			}
 		} else {
-			env, err = fuzzyArgs.getFuzzyEnv(args[i])
+			env, err = fuzzyArgs.GetFuzzyEnv(args[i])
 			if err != nil {
 				return err
 			}
-			app, err = fuzzyArgs.getFuzzyApp(args[i])
+			app, err = fuzzyArgs.GetFuzzyApp(args[i])
 			if err != nil {
 				return err
 			}
