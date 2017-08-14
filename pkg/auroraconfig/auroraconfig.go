@@ -4,14 +4,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"strconv"
+
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/openshift"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
-	"net/http"
-	"strconv"
 )
 
 const InvalidConfigurationError = "Invalid configuration"

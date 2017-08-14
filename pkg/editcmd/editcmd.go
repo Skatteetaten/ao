@@ -4,15 +4,17 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
+
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
+	"github.com/skatteetaten/ao/pkg/fuzzyargs"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
-	"io/ioutil"
-	"os"
-	"strings"
 )
 
 const usageString = "Usage: edit file [env/]<filename> | secret <vaultname> <secretname> "
@@ -20,7 +22,8 @@ const secretUseageString = "Usage: edit secret <vaultname> <secretname>"
 const fileUseageString = "Usage: edit file [env/]<filename>"
 
 const commentString = "# "
-const editMessage = `# Please edit the object below. Lines beginning with a '#' will be ignored,
+const editMessage = `
+# Please edit the object below. Lines beginning with a '#' will be ignored,
 # and an empty file will abort the edit. If an error occurs while saving this file will be
 # reopened with the relevant failures.
 #
@@ -33,12 +36,12 @@ type EditcmdClass struct {
 func (editcmd *EditcmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
 
 	editcmd.configuration.Init(persistentOptions)
+
 	return
 }
 
-func (editcmd *EditcmdClass) EditFile(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (editcmd *EditcmdClass) EditFile(filename string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 
-	var filename string = args[1]
 	var content string
 	var version string
 
@@ -53,7 +56,7 @@ func (editcmd *EditcmdClass) EditFile(args []string, persistentOptions *cmdoptio
 
 	for editCycleDone == false {
 		contentBeforeEdit := modifiedContent
-		modifiedContent, err = editString(editMessage + modifiedContent)
+		modifiedContent, err = editString("# File: " + filename + editMessage + modifiedContent)
 		if err != nil {
 			return "", err
 		}
@@ -195,15 +198,41 @@ func (editcmd *EditcmdClass) EditObject(args []string, persistentOptions *cmdopt
 		return
 	}
 
+	var fuzzyArgs fuzzyargs.FuzzyArgs
+	err = fuzzyArgs.Init(&editcmd.configuration)
+	if err != nil {
+		return "", err
+	}
+
 	var commandStr = args[0]
 	switch commandStr {
 	case "file":
 		{
-			output, err = editcmd.EditFile(args, persistentOptions)
+			err = fuzzyArgs.PopulateFuzzyEnvAppList(args[1:])
+			if err != nil {
+				return "", err
+			}
+			filename, err := fuzzyArgs.GetFile()
+			if err != nil {
+				return "", err
+			}
+			output, err = editcmd.EditFile(filename, persistentOptions)
 		}
 	case "secret":
 		{
 			output, err = editcmd.EditSecret(args, persistentOptions)
+		}
+	default:
+		{
+			err = fuzzyArgs.PopulateFuzzyEnvAppList(args)
+			if err != nil {
+				return "", err
+			}
+			filename, err := fuzzyArgs.GetFile()
+			if err != nil {
+				return "", err
+			}
+			output, err = editcmd.EditFile(filename, persistentOptions)
 		}
 	}
 	return
@@ -216,7 +245,7 @@ func validateEditcmd(args []string) (err error) {
 	switch commandStr {
 	case "file":
 		{
-			if len(args) != 2 {
+			if len(args) < 2 {
 				err = errors.New(fileUseageString)
 				return
 			}
@@ -230,7 +259,8 @@ func validateEditcmd(args []string) (err error) {
 		}
 	default:
 		{
-			err = errors.New(usageString)
+			// Might be a filename, just return and let the main proc parse it
+			return
 		}
 	}
 	return
