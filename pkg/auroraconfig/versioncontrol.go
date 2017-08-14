@@ -46,12 +46,26 @@ func Clone(affiliation string, username string, outputPath string, url string) (
 	}
 
 	currentDir, _ := os.Getwd()
-
 	os.Chdir(outputPath)
+
 	cmd := exec.Command("git", "branch", "--set-upstream-to=origin/master", "master")
-	cmd.Run()
+	if err = cmd.Run(); err != nil {
+		return err
+	}
 
 	os.Chdir(currentDir)
+
+	return nil
+}
+
+func CheckRepo() error {
+
+	if err := compareGitLog("origin/master..HEAD"); err != nil {
+		return errors.Wrap(err, "run git reset HEAD")
+	}
+	if err := compareGitLog("HEAD..origin/master"); err != nil {
+		return errors.Wrap(err, "run git pull")
+	}
 
 	return nil
 }
@@ -70,10 +84,7 @@ func Commit(username string, persistentOptions *cmdoptions.CommonCommandOptions)
 		fmt.Println(err)
 	}
 
-	refs, _ := repository.References()
-	head, _ := repository.Head()
-
-	if err = resetTo("origin/master", refs, head.Hash()); err != nil {
+	if err = CheckRepo(); err != nil {
 		return err
 	}
 
@@ -82,19 +93,31 @@ func Commit(username string, persistentOptions *cmdoptions.CommonCommandOptions)
 
 	ac, err := GetAuroraConfig(&config)
 
+	if err != nil {
+		return err
+	}
+
 	if err = addFilesToAuroraConfig(&ac); err != nil {
 		fmt.Println(err)
 	}
 
+	head, _ := repository.Head()
 	removeFilesFromAuroraConfig(repository, &ac, head.Hash())
 
-	for k, _ := range ac.Files {
-		fmt.Println(k)
+	if err = PutAuroraConfig(ac, &config); err != nil {
+		return err
 	}
 
-	if err = PutAuroraConfig(ac, &config); err != nil {
-		fmt.Println(err)
+	if err = exec.Command("git", "checkout", ".").Run(); err != nil {
+		return err
 	}
+
+	wt, _ := repository.Worktree()
+
+	wt.Pull(&git.PullOptions{
+		Auth:     basicAuth,
+		Progress: os.Stdout,
+	})
 
 	return nil
 }
@@ -151,10 +174,10 @@ func fetchOrigin(repository *git.Repository, auth *http.BasicAuth) error {
 /**
  * git log HEAD..origin/master
  */
-func isRepositoryUpToDate(repository *git.Repository) error {
+func IsRepositoryUpToDate(branch string, repository *git.Repository) error {
 
 	refs, _ := repository.References()
-	originHash := getBranchHash("origin/master", refs)
+	originHash := getBranchHash(branch, refs)
 	head, _ := repository.Head()
 
 	headLog, _ := repository.Log(&git.LogOptions{
@@ -180,7 +203,26 @@ func isRepositoryUpToDate(repository *git.Repository) error {
 	})
 
 	if len(newCommits) > 0 {
-		fmt.Println("You need to pull")
+		return errors.New("You need to pull the latest configuration. (git pull)")
+	}
+
+	return nil
+}
+
+func compareGitLog(compare string) error {
+
+	cmd := exec.Command("git", "log", compare, "--oneline")
+	out, err := cmd.Output()
+
+	if err != nil {
+		return err
+	}
+
+	output := string(out)
+
+	if len(output) > 0 {
+		fmt.Printf(output)
+		return errors.New("new commits")
 	}
 
 	return nil
