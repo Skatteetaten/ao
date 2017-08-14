@@ -31,6 +31,7 @@ type DeployClass struct {
 	legalAppList  []string
 	legalEnvList  []string
 	overrideJsons []string
+	auroraConfig  *serverapi_v2.AuroraConfig
 }
 
 func (deploy *DeployClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
@@ -93,7 +94,7 @@ func (deploy *DeployClass) generateJson(
 }
 
 func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, applist []string, envList []string,
-	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool, deployAll bool, force bool) (output string, err error) {
+	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool, deployAll bool, force bool, deployVersion string) (output string, err error) {
 
 	deploy.init(persistentOptions)
 	if !serverapi_v2.ValidateLogin(deploy.configuration.GetOpenshiftConfig()) {
@@ -103,6 +104,11 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 	err = deploy.validateDeploy(args, applist, envList, deployAll, force)
 	if err != nil {
 		return "", err
+	}
+
+	// If version is given, then update version in the config
+	if deployVersion != "" {
+
 	}
 
 	var affiliation = deploy.configuration.GetAffiliation()
@@ -299,13 +305,15 @@ func (deploy *DeployClass) populateFlagsEnvAppList(appList []string, envList []s
 }
 
 func (deploy *DeployClass) populateAllAppForEnv(env string) (err error) {
-
-	auroraConfig, err := auroraconfig.GetAuroraConfig(&deploy.configuration)
-	if err != nil {
-		return err
+	if deploy.auroraConfig == nil {
+		auroraConfig, err := auroraconfig.GetAuroraConfig(&deploy.configuration)
+		if err != nil {
+			return err
+		}
+		deploy.auroraConfig = &auroraConfig
 	}
 
-	for filename := range auroraConfig.Files {
+	for filename := range deploy.auroraConfig.Files {
 		if strings.Contains(filename, "/") {
 			// We have a full path name
 			parts := strings.Split(filename, "/")
