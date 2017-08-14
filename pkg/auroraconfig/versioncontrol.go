@@ -3,32 +3,22 @@ package auroraconfig
 import (
 	"fmt"
 	"github.com/howeyc/gopass"
-	"os"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"github.com/pkg/errors"
-	"gopkg.in/src-d/go-git.v4/plumbing/storer"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	"strings"
-	"os/exec"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
-	"io/ioutil"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"path/filepath"
 	"github.com/skatteetaten/ao/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 )
 
-func authenticateUser(username string) *http.BasicAuth {
-	fmt.Printf("Enter password: ")
-	password, _ := gopass.GetPasswdMasked()
-
-	fmt.Println()
-
-	return http.NewBasicAuth(username, string(password))
-}
-
-func Clone(affiliation string, username string, outputPath string, url string) (error) {
+func Clone(affiliation string, username string, outputPath string, url string) error {
 
 	fmt.Printf("Cloning AuroraConfig for affiliation %s\n", affiliation)
 	fmt.Printf("%s\n\n", url)
@@ -58,21 +48,9 @@ func Clone(affiliation string, username string, outputPath string, url string) (
 	return nil
 }
 
-func CheckRepo() error {
-
-	if err := compareGitLog("origin/master..HEAD"); err != nil {
-		return errors.Wrap(err, "run git reset HEAD")
-	}
-	if err := compareGitLog("HEAD..origin/master"); err != nil {
-		return errors.Wrap(err, "run git pull")
-	}
-
-	return nil
-}
-
 func Commit(username string, persistentOptions *cmdoptions.CommonCommandOptions) error {
 
-	wd, err := os.Getwd()
+	wd, _ := os.Getwd()
 
 	repository, err := git.PlainOpen(wd)
 	if err != nil {
@@ -80,31 +58,18 @@ func Commit(username string, persistentOptions *cmdoptions.CommonCommandOptions)
 	}
 
 	basicAuth := authenticateUser(username)
-	if err = fetchOrigin(repository, basicAuth); err != nil {
-		fmt.Println(err)
-	}
+	// returns error if repository is already up to date
+	fetchOrigin(repository, basicAuth)
 
-	if err = CheckRepo(); err != nil {
+	if err = checkForNewCommits(); err != nil {
 		return err
 	}
 
-	var config configuration.ConfigurationClass
-	config.Init(persistentOptions)
-
-	ac, err := GetAuroraConfig(&config)
-
-	if err != nil {
+	if err = checkRepoForChanges(repository); err != nil {
 		return err
 	}
 
-	if err = addFilesToAuroraConfig(&ac); err != nil {
-		fmt.Println(err)
-	}
-
-	head, _ := repository.Head()
-	removeFilesFromAuroraConfig(repository, &ac, head.Hash())
-
-	if err = PutAuroraConfig(ac, &config); err != nil {
+	if err = handleAuroraConfigCommit(repository, persistentOptions); err != nil {
 		return err
 	}
 
@@ -113,11 +78,93 @@ func Commit(username string, persistentOptions *cmdoptions.CommonCommandOptions)
 	}
 
 	wt, _ := repository.Worktree()
-
 	wt.Pull(&git.PullOptions{
-		Auth:     basicAuth,
-		Progress: os.Stdout,
+		Auth: basicAuth,
 	})
+
+	return nil
+}
+
+func authenticateUser(username string) *http.BasicAuth {
+	fmt.Print("Enter password: ")
+	password, _ := gopass.GetPasswdMasked()
+
+	fmt.Println()
+
+	return http.NewBasicAuth(username, string(password))
+}
+
+func handleAuroraConfigCommit(repository *git.Repository, persistentOptions *cmdoptions.CommonCommandOptions) error {
+
+	var config configuration.ConfigurationClass
+	config.Init(persistentOptions)
+
+	ac, err := GetAuroraConfig(&config)
+
+	if err != nil {
+		return errors.Wrap(err, "Failed getting AuroraConfig")
+	}
+
+	if err = addFilesToAuroraConfig(&ac); err != nil {
+		return errors.Wrap(err, "Failed adding files to AuroraConfig")
+	}
+
+	head, _ := repository.Head()
+	removeFilesFromAuroraConfig(repository, &ac, head.Hash())
+
+	if err = PutAuroraConfig(ac, &config); err != nil {
+		return errors.Wrap(err, "Failed committing AuroraConfig")
+	}
+
+	return nil
+}
+
+func checkRepoForChanges(repository *git.Repository) error {
+	wt, _ := repository.Worktree()
+	status, _ := wt.Status()
+	if status.IsClean() {
+		return errors.New("Nothing to commit")
+	}
+
+	return nil
+}
+
+func fetchOrigin(repository *git.Repository, auth *http.BasicAuth) error {
+
+	return repository.Fetch(&git.FetchOptions{
+		Auth:       auth,
+		RemoteName: "origin",
+	})
+}
+
+func checkForNewCommits() error {
+
+	if err := compareGitLog("origin/master..HEAD"); err != nil {
+		return errors.New(`You have committed local changes.
+Please revert them with: git reset HEAD^`)
+	}
+
+	if err := compareGitLog("HEAD..origin/master"); err != nil {
+		return errors.New(`Please update to latest configuration with: git pull`)
+	}
+
+	return nil
+}
+
+func compareGitLog(compare string) error {
+
+	cmd := exec.Command("git", "log", compare, "--oneline")
+	out, err := cmd.Output()
+
+	if err != nil {
+		return err
+	}
+
+	output := string(out)
+
+	if len(output) > 0 {
+		return errors.New("new commits")
+	}
 
 	return nil
 }
@@ -161,105 +208,4 @@ func removeFilesFromAuroraConfig(repository *git.Repository, ac *serverapi_v2.Au
 
 		return nil
 	})
-}
-
-func fetchOrigin(repository *git.Repository, auth *http.BasicAuth) error {
-
-	return repository.Fetch(&git.FetchOptions{
-		Auth:       auth,
-		RemoteName: "origin",
-	})
-}
-
-/**
- * git log HEAD..origin/master
- */
-func IsRepositoryUpToDate(branch string, repository *git.Repository) error {
-
-	refs, _ := repository.References()
-	originHash := getBranchHash(branch, refs)
-	head, _ := repository.Head()
-
-	headLog, _ := repository.Log(&git.LogOptions{
-		From: head.Hash(),
-	})
-
-	originLog, _ := repository.Log(&git.LogOptions{
-		From: originHash,
-	})
-
-	var newCommits []string
-	headCommit, _ := headLog.Next()
-
-	originLog.ForEach(func(commit *object.Commit) error {
-
-		if headCommit.Hash != commit.Hash {
-			newCommits = append(newCommits, commit.Hash.String())
-		}
-
-		originLog.Close()
-
-		return nil
-	})
-
-	if len(newCommits) > 0 {
-		return errors.New("You need to pull the latest configuration. (git pull)")
-	}
-
-	return nil
-}
-
-func compareGitLog(compare string) error {
-
-	cmd := exec.Command("git", "log", compare, "--oneline")
-	out, err := cmd.Output()
-
-	if err != nil {
-		return err
-	}
-
-	output := string(out)
-
-	if len(output) > 0 {
-		fmt.Printf(output)
-		return errors.New("new commits")
-	}
-
-	return nil
-}
-
-func resetTo(branch string, refs storer.ReferenceIter, headHash plumbing.Hash) error {
-
-	branchHash := getBranchHash(branch, refs)
-
-	if branchHash.String() == headHash.String() {
-		return nil
-	}
-
-	gitReset := exec.Command("git", "reset", branchHash.String())
-
-	fmt.Println("Reset commits to " + branch)
-
-	err := gitReset.Run()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func getBranchHash(branch string, refs storer.ReferenceIter) plumbing.Hash {
-
-	branchHash := plumbing.NewHash("")
-
-	refs.ForEach(func(ref *plumbing.Reference) error {
-
-		if strings.Contains(ref.Name().String(), branch) {
-			branchHash = ref.Hash()
-		}
-
-		return nil
-	})
-
-	return branchHash
 }
