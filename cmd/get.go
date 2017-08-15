@@ -16,22 +16,26 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/getcmd"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
 )
 
+import pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
+
 var outputFormat string
 var allClusters bool
 
+const UsageString = "Usage: get files | vaults | vault <vaultname> | file [env/]<filename> | adc | secret <secretname> | cluster <clustername> | clusters | kubeconfig | oclogin"
+
 // getCmd represents the get command
 var getCmd = &cobra.Command{
-	Use:   "get file | file [env/]<filename> | adc",
+	Use:   "get",
 	Short: "Retrieves information from the repository",
 	Long:  `Can be used to retrieve one file or all the files from the respository.`,
+	ValidArgs: []string {"file"},
 	Run: func(cmd *cobra.Command, args []string) {
-		var getcmdObject getcmd.GetcmdClass
+		var getcmdObject pkgGetCmd.GetcmdClass
 		if outputFormat == "text" {
 			outputFormat = "json"
 		}
@@ -48,8 +52,18 @@ var getCmd = &cobra.Command{
 	},
 }
 
+var getFileCmd = &cobra.Command{
+	Use: "file",
+	Short: "Get file",
+	Aliases: []string {"files"},
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("sup")
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(getCmd)
+	getCmd.AddCommand(getFileCmd)
 
 	// Here you will define your flags and configuration settings.
 
