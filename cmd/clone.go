@@ -34,9 +34,7 @@ var cloneCmd = &cobra.Command{
 			path = fmt.Sprintf("./%s", affiliation)
 		}
 
-		url := fmt.Sprintf("https://%s@git.aurora.skead.no/scm/ac/%s.git", username, affiliation)
-
-		err := auroraconfig.Clone(affiliation, username, path, url)
+		err := auroraconfig.Clone(affiliation, username, path)
 
 		if err != nil {
 			fmt.Println(err)

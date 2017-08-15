@@ -18,8 +18,11 @@ import (
 	"strings"
 )
 
-func Clone(affiliation string, username string, outputPath string, url string) error {
+var GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
 
+func Clone(affiliation string, username string, outputPath string) error {
+
+	url := fmt.Sprintf(GIT_URL_FORMAT, username, affiliation)
 	fmt.Printf("Cloning AuroraConfig for affiliation %s\n", affiliation)
 	fmt.Printf("%s\n\n", url)
 
@@ -57,6 +60,14 @@ func Commit(username string, persistentOptions *cmdoptions.CommonCommandOptions)
 		return err
 	}
 
+	var config configuration.ConfigurationClass
+	config.Init(persistentOptions)
+
+	url := fmt.Sprintf(GIT_URL_FORMAT, username, config.GetAffiliation())
+	if err = validateRepo(url, repository); err != nil {
+		return err
+	}
+
 	basicAuth := authenticateUser(username)
 	// returns error if repository is already up to date
 	fetchOrigin(repository, basicAuth)
@@ -69,7 +80,7 @@ func Commit(username string, persistentOptions *cmdoptions.CommonCommandOptions)
 		return err
 	}
 
-	if err = handleAuroraConfigCommit(repository, persistentOptions); err != nil {
+	if err = handleAuroraConfigCommit(repository, &config); err != nil {
 		return err
 	}
 
@@ -85,6 +96,21 @@ func Commit(username string, persistentOptions *cmdoptions.CommonCommandOptions)
 	return nil
 }
 
+func validateRepo(gitUrl string, repository *git.Repository) error {
+
+	remote, _ :=repository.Remote("origin")
+	remoteUrl := remote.Config().URL
+
+	if gitUrl != remoteUrl {
+		message := fmt.Sprintf(`Wrong repository.
+Expected remote to be %s
+But was %s`, gitUrl, remoteUrl)
+		return errors.New(message)
+	}
+
+	return nil
+}
+
 func authenticateUser(username string) *http.BasicAuth {
 	fmt.Print("Enter password: ")
 	password, _ := gopass.GetPasswdMasked()
@@ -94,12 +120,9 @@ func authenticateUser(username string) *http.BasicAuth {
 	return http.NewBasicAuth(username, string(password))
 }
 
-func handleAuroraConfigCommit(repository *git.Repository, persistentOptions *cmdoptions.CommonCommandOptions) error {
+func handleAuroraConfigCommit(repository *git.Repository, config *configuration.ConfigurationClass) error {
 
-	var config configuration.ConfigurationClass
-	config.Init(persistentOptions)
-
-	ac, err := GetAuroraConfig(&config)
+	ac, err := GetAuroraConfig(config)
 
 	if err != nil {
 		return errors.Wrap(err, "Failed getting AuroraConfig")
@@ -112,7 +135,7 @@ func handleAuroraConfigCommit(repository *git.Repository, persistentOptions *cmd
 	head, _ := repository.Head()
 	removeFilesFromAuroraConfig(repository, &ac, head.Hash())
 
-	if err = PutAuroraConfig(ac, &config); err != nil {
+	if err = PutAuroraConfig(ac, config); err != nil {
 		return errors.Wrap(err, "Failed committing AuroraConfig")
 	}
 
