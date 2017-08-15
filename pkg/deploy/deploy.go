@@ -105,6 +105,8 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 		return "", err
 	}
 
+	deploy.overrideJsons = overrideJsons
+
 	var affiliation = deploy.configuration.GetAffiliation()
 	json, err := deploy.generateJson(affiliation, persistentOptions.DryRun)
 	if err != nil {
