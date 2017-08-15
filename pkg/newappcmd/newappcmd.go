@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
+
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
@@ -11,8 +14,6 @@ import (
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
-	"io/ioutil"
-	"path/filepath"
 )
 
 const UsageString = "Usage: new-app <appname>"
@@ -183,6 +184,11 @@ func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string,
 
 	if !serverapi_v2.ValidateLogin(newappcmd.configuration.GetOpenshiftConfig()) {
 		return "", errors.New("Not logged in, please use ao login")
+	}
+
+	err = newappcmd.init(persistentOptions)
+	if err != nil {
+		return "", err
 	}
 
 	err = validateNewappCommand(args, artifactid, cluster, env, groupid, folder, outputFolder, deploymentType, version, generateApp)

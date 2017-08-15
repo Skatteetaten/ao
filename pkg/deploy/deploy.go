@@ -31,6 +31,7 @@ type DeployClass struct {
 	legalAppList  []string
 	legalEnvList  []string
 	overrideJsons []string
+	auroraConfig  *serverapi_v2.AuroraConfig
 }
 
 func (deploy *DeployClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
@@ -93,12 +94,18 @@ func (deploy *DeployClass) generateJson(
 }
 
 func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, applist []string, envList []string,
-	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool, deployAll bool, force bool) (output string, err error) {
+	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool, deployAll bool, force bool, deployVersion string) (output string, err error) {
 
 	deploy.init(persistentOptions)
 	if !serverapi_v2.ValidateLogin(deploy.configuration.GetOpenshiftConfig()) {
 		return "", errors.New("Not logged in, please use aoc login")
 	}
+
+	ac, err := auroraconfig.GetAuroraConfig(&deploy.configuration)
+	if err != nil {
+		return "", err
+	}
+	deploy.auroraConfig = &ac
 
 	err = deploy.validateDeploy(args, applist, envList, deployAll, force)
 	if err != nil {
@@ -106,6 +113,13 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 	}
 
 	deploy.overrideJsons = overrideJsons
+
+	if deployVersion != "" {
+		err = deploy.updateVersion(deployVersion)
+		if err != nil {
+			return "", err
+		}
+	}
 
 	var affiliation = deploy.configuration.GetAffiliation()
 	json, err := deploy.generateJson(affiliation, persistentOptions.DryRun)
@@ -158,11 +172,7 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 
 func (deploy *DeployClass) getLegalEnvAppList() (err error) {
 
-	auroraConfig, err := auroraconfig.GetAuroraConfig(&deploy.configuration)
-	if err != nil {
-		return err
-	}
-	for filename := range auroraConfig.Files {
+	for filename := range deploy.auroraConfig.Files {
 		if strings.Contains(filename, "/") {
 			// We have a full path name
 			parts := strings.Split(filename, "/")
@@ -381,13 +391,15 @@ func (deploy *DeployClass) validateDeploy(args []string, appList []string, envLi
 				return err
 			}
 		}
-		response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.appList)) + " applications in " + strconv.Itoa(len(deploy.envList)) + " environments.  Are you sure?")
-		if err != nil {
-			return err
-		}
-		if response != "Y" {
-			err = errors.New("Operation cancelled by user")
-			return err
+		if !force {
+			response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.appList)) + " applications in " + strconv.Itoa(len(deploy.envList)) + " environments.  Are you sure?")
+			if err != nil {
+				return err
+			}
+			if response != "Y" {
+				err = errors.New("Operation cancelled by user")
+				return err
+			}
 		}
 	}
 

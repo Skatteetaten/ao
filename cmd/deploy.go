@@ -16,10 +16,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/deploy"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
+
+	"github.com/skatteetaten/ao/pkg/deploy"
+	"github.com/spf13/cobra"
 )
 
 var appList []string
@@ -27,6 +28,7 @@ var envList []string
 var overrideJson []string
 var deployAllFlag bool
 var forceDeployFlag bool
+var deployVersion string
 
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
@@ -46,7 +48,7 @@ Both flags can be used to limit the deploy to a specific application in a specif
 	Run: func(cmd *cobra.Command, args []string) {
 		var deploy deploy.DeployClass
 
-		output, err := deploy.ExecuteDeploy(args, overrideJson, appList, envList, &persistentOptions, localDryRun, deployAllFlag, forceDeployFlag)
+		output, err := deploy.ExecuteDeploy(args, overrideJson, appList, envList, &persistentOptions, localDryRun, deployAllFlag, forceDeployFlag, deployVersion)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -80,6 +82,10 @@ func init() {
 
 	deployCmd.Flags().BoolVarP(&forceDeployFlag, "force",
 		"", false, "Supress prompts")
+
+	deployCmd.Flags().StringVarP(&deployVersion, "version",
+		"v", "", "Will update the version tag in the app of base configuration file prior to deploy, depending on which file contains the version tag.  If both files "+
+			"files contains the tag, the tag will be updated in the app configuration file.")
 
 	// Here you will define your flags and configuration settings.
 
