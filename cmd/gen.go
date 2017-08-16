@@ -7,10 +7,11 @@ import (
 )
 
 var genCmd = &cobra.Command{
-	Use:   "gen",
-	Short: "Generates bash completion file",
+	Use:    "gen",
+	Short:  "Generates bash completion file",
+	Hidden: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := RootCmd.GenBashCompletionFile("ao_bash_completion.sh"); err != nil {
+		if err := RootCmd.GenBashCompletionFile("ao.sh"); err != nil {
 			fmt.Println(err)
 		} else {
 			fmt.Println("File created")
