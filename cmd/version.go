@@ -22,6 +22,7 @@ import (
 	"os"
 )
 
+var outputFormat string
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
 	Use:   "version",
