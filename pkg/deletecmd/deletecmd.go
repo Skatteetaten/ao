@@ -2,7 +2,6 @@ package deletecmd
 
 import (
 	"errors"
-	"fmt"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/executil"
@@ -11,12 +10,11 @@ import (
 )
 
 const UsageString = "Usage: delete vault <vaultname> | secret <vaultname> <secretname> | app <appname> | env <envname> | deployment <envname> <appname> | file <filename>"
-const vaultDontExistsError = "Error: No such vault"
 
 type DeletecmdClass struct {
 	Configuration  *configuration.ConfigurationClass
+	Force          bool
 	deleteFileList []string
-	force          bool
 }
 
 func (deletecmd *DeletecmdClass) addDeleteFile(filename string) {
@@ -40,27 +38,13 @@ func (deletecmd *DeletecmdClass) deleteFilesInList(auroraConfig serverapi_v2.Aur
 	return auroraconfig.PutAuroraConfig(auroraConfig, deletecmd.Configuration)
 }
 
-func (deletecmd *DeletecmdClass) deleteVault(vaultName string) (err error) {
-	//var vaults []serverapi_v2.Vault
-	//vaults, err = auroraconfig.GetVaults(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.Configuration.GetOpenshiftConfig())
+func (deletecmd *DeletecmdClass) DeleteVault(vaultName string) (err error) {
 	_, err = auroraconfig.DeleteVault(vaultName, deletecmd.Configuration)
-	if err != nil {
-		return err
-	}
-	return
-}
-
-func (deletecmd *DeletecmdClass) deleteSecret(vaultName string, secretName string) (err error) {
-	//var vaults []serverapi_v2.Vault
-	//vaults, err = auroraconfig.GetVaults(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.Configuration.GetOpenshiftConfig())
-	fmt.Println("DEBUG: Delete secret called: " + vaultName + "/" + secretName)
-	//vaults, err := auroraconfig.GetVaults(persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.Configuration.GetOpenshiftConfig())
-
-	return
+	return err
 }
 
 func (deletecmd *DeletecmdClass) addDeleteFileWithPrompt(filename string, prompt string) (err error) {
-	if deletecmd.force {
+	if deletecmd.Force {
 		deletecmd.addDeleteFile(filename)
 	} else {
 		confirm, err := executil.PromptYNC(prompt)
@@ -78,7 +62,7 @@ func (deletecmd *DeletecmdClass) addDeleteFileWithPrompt(filename string, prompt
 	return
 }
 
-func (deletecmd *DeletecmdClass) deleteApp(app string) (err error) {
+func (deletecmd *DeletecmdClass) DeleteApp(app string) (err error) {
 	// Get current aurora config
 	auroraConfig, err := auroraconfig.GetAuroraConfig(deletecmd.Configuration)
 	if err != nil {
@@ -129,7 +113,7 @@ func (deletecmd *DeletecmdClass) deleteApp(app string) (err error) {
 	return
 }
 
-func (deletecmd *DeletecmdClass) deleteEnv(env string) (err error) {
+func (deletecmd *DeletecmdClass) DeleteEnv(env string) (err error) {
 	// Get current aurora config
 	auroraConfig, err := auroraconfig.GetAuroraConfig(deletecmd.Configuration)
 	if err != nil {
@@ -178,7 +162,7 @@ func (deletecmd *DeletecmdClass) deleteEnv(env string) (err error) {
 	return
 }
 
-func (deletecmd *DeletecmdClass) deleteDeployment(env string, app string) (err error) {
+func (deletecmd *DeletecmdClass) DeleteDeployment(env string, app string) (err error) {
 
 	// Get current aurora config
 	auroraConfig, err := auroraconfig.GetAuroraConfig(deletecmd.Configuration)
@@ -189,7 +173,7 @@ func (deletecmd *DeletecmdClass) deleteDeployment(env string, app string) (err e
 	deploymentFilename := env + "/" + app + ".json"
 	_, deploymentExists := auroraConfig.Files[deploymentFilename]
 	if !deploymentExists {
-		if !deletecmd.force {
+		if !deletecmd.Force {
 			err = errors.New("No such deployment")
 		}
 		return err
@@ -243,7 +227,7 @@ func (deletecmd *DeletecmdClass) deleteDeployment(env string, app string) (err e
 	return
 }
 
-func (deletecmd *DeletecmdClass) deleteFile(filename string) (err error) {
+func (deletecmd *DeletecmdClass) DeleteFile(filename string) (err error) {
 	// Get current aurora config
 	auroraConfig, err := auroraconfig.GetAuroraConfig(deletecmd.Configuration)
 	if err != nil {
@@ -252,7 +236,7 @@ func (deletecmd *DeletecmdClass) deleteFile(filename string) (err error) {
 
 	_, deploymentExists := auroraConfig.Files[filename]
 	if !deploymentExists {
-		if !deletecmd.force {
+		if !deletecmd.Force {
 			err = errors.New("No such file")
 		}
 		return err
@@ -266,70 +250,4 @@ func (deletecmd *DeletecmdClass) deleteFile(filename string) (err error) {
 	}
 
 	return
-}
-
-func (deletecmd *DeletecmdClass) DeleteObject(args []string, force bool) (output string, err error) {
-	err = validateDeletecmd(args)
-	if err != nil {
-		return
-	}
-
-	deletecmd.force = force
-
-	var commandStr = args[0]
-	switch commandStr {
-	case "vault":
-		{
-			err = deletecmd.deleteVault(args[1])
-		}
-	case "secret":
-		{
-			err = deletecmd.deleteSecret(args[1], args[2])
-		}
-	case "app":
-		{
-			err = deletecmd.deleteApp(args[1])
-		}
-	case "env":
-		{
-			err = deletecmd.deleteEnv(args[1])
-		}
-	case "deployment":
-		{
-			err = deletecmd.deleteDeployment(args[1], args[2])
-		}
-	case "file":
-		{
-			err = deletecmd.deleteFile(args[1])
-		}
-	}
-	return
-
-}
-
-func validateDeletecmd(args []string) (err error) {
-	if len(args) < 1 {
-		err = errors.New(UsageString)
-		return
-	}
-
-	var commandStr = args[0]
-	switch commandStr {
-	case "vault", "app", "env", "file":
-		{
-			if len(args) != 2 {
-				err = errors.New(UsageString)
-				return
-			}
-		}
-	case "secret", "deployment":
-		{
-			if len(args) != 3 {
-				err = errors.New(UsageString)
-				return
-			}
-		}
-	}
-	return
-
 }
