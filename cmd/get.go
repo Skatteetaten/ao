@@ -3,43 +3,80 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
+	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/openshift"
+	"os"
 )
 
-import pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
-
-var allClusters bool
 var getcmdObject pkgGetCmd.GetcmdClass
 
 var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Retrieves information from the repository",
 	Long:  `Can be used to retrieve one file or all the files from the respository.`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		var openshiftConfig openshift.OpenshiftConfig
+		if valid := serverapi_v2.ValidateLogin(&openshiftConfig); !valid {
+			fmt.Println("Not logged in, please use ao login")
+			os.Exit(1)
+		}
+
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(cmd.Usage())
 	},
 }
 
 var getFileCmd = &cobra.Command{
-	Use:     "file",
+	Use:     "file [envname] <filename>",
 	Short:   "Get file",
 	Aliases: []string{"files"},
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("file")
+
+		var output string
+		var err error
+
+		if len(args) == 0 {
+			output, err = getcmdObject.Files(&persistentOptions)
+		} else {
+			output, err = getcmdObject.File(args, &persistentOptions)
+		}
+
+		if err == nil {
+			fmt.Println(output)
+		} else {
+			fmt.Println(err)
+		}
 	},
 }
 
 var getVaultCmd = &cobra.Command{
-	Use:     "vault",
+	Use:     "vault [vaultname]",
 	Short:   "Get vault",
 	Aliases: []string{"vaults"},
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("vault")
+
+		var output string
+		var err error
+
+		if len(args) == 0 {
+			output, err = getcmdObject.Vaults(&persistentOptions)
+		} else {
+			output, err = getcmdObject.Vault(args[0], &persistentOptions)
+		}
+
+		if err == nil {
+			fmt.Println(output)
+		} else {
+			fmt.Println(err)
+		}
 	},
 }
 
 var getSecretCmd = &cobra.Command{
-	Use:     "secret <vault> <secret>",
-	Short:   "Get secret",
+	Use:   "secret <vault> <secret>",
+	Short: "Get secret",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) != 2 {
@@ -56,7 +93,7 @@ var getSecretCmd = &cobra.Command{
 }
 
 var getClusterCmd = &cobra.Command{
-	Use:     "cluster",
+	Use:     "cluster [clustername]",
 	Short:   "Get cluster",
 	Aliases: []string{"clusters"},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -66,6 +103,7 @@ var getClusterCmd = &cobra.Command{
 			clusterName = args[0]
 		}
 
+		allClusters, _ := cmd.Flags().GetBool("all")
 		if output, err := getcmdObject.Clusters(&persistentOptions, clusterName, allClusters); err == nil {
 			fmt.Println(output)
 		} else {
@@ -107,6 +145,6 @@ func init() {
 	getCmd.AddCommand(getKubeConfigCmd)
 	getCmd.AddCommand(getOcLoginCmd)
 
-	getClusterCmd.Flags().BoolVarP(&allClusters, "all",
+	getClusterCmd.Flags().BoolP("all",
 		"a", false, "Show all clusters, not just the reachable ones")
 }

@@ -2,7 +2,6 @@ package getcmd
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
@@ -15,65 +14,57 @@ import (
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 )
 
-const UsageString = "Usage: get files | vaults | vault <vaultname> | file [env/]<filename> | adc | secret <secretname> | cluster <clustername> | clusters | kubeconfig | oclogin"
-const fileUseageString = "Usage: get file [[env/]<filename>]"
-const vaultUseageString = "Usage: get vault [<vaultname>]"
-const secretUseageString = "Usage: get secret <vaultname> <secretname>"
-
 type GetcmdClass struct {
 	configuration configuration.ConfigurationClass
 }
 
-func (getcmd *GetcmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+func (getcmd *GetcmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) error {
 
-	getcmd.configuration.Init(persistentOptions)
-	return
+	return getcmd.configuration.Init(persistentOptions)
 }
 
-func (getcmd *GetcmdClass) getFiles(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (getcmd *GetcmdClass) Files(persistentOptions *cmdoptions.CommonCommandOptions) (string, error) {
+	getcmd.init(persistentOptions)
 	var files []string
-	files, err = auroraconfig.GetFileList(&getcmd.configuration)
+	files, err := auroraconfig.GetFileList(&getcmd.configuration)
 
-	output = "NAME"
+	if err != nil {
+		return "", err
+	}
+
+	output := "NAME"
 	for fileindex := range files {
 		output += "\n" + files[fileindex]
 	}
-	return
+
+	return output, nil
 }
 
-func (getcmd *GetcmdClass) getFile(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+func (getcmd *GetcmdClass) File(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (string, error) {
+	getcmd.init(persistentOptions)
 	var fuzzyArgs fuzzyargs.FuzzyArgs
-	err = fuzzyArgs.Init(&getcmd.configuration)
-	if err != nil {
+	if err := fuzzyArgs.Init(&getcmd.configuration); err != nil {
 		return "", err
 	}
-	err = fuzzyArgs.PopulateFuzzyEnvAppList(args)
-	if err != nil {
+
+	if err := fuzzyArgs.PopulateFuzzyEnvAppList(args); err != nil {
 		return "", err
 	}
+
 	filename, err := fuzzyArgs.GetFile()
 	if err != nil {
 		return "", err
 	}
 
-	switch outputFormat {
-	case "json":
-		{
-			content, _, err := auroraconfig.GetContent(filename, &getcmd.configuration)
-			if err != nil {
-				return "", err
-			}
-			output += filename + ":\n"
-			output += jsonutil.PrettyPrintJson(content)
-			return output, err
-		}
-	default:
-		{
-			err = errors.New("Illegal format: " + outputFormat + ".  Legal value are json.")
-		}
+	content, _, err := auroraconfig.GetContent(filename, &getcmd.configuration)
+	if err != nil {
+		return "", err
 	}
 
-	return
+	output := filename + ":\n"
+	output += jsonutil.PrettyPrintJson(content)
+
+	return output, err
 }
 
 func (getcmd *GetcmdClass) Clusters(persistentOptions *cmdoptions.CommonCommandOptions, clusterName string, allClusters bool) (string, error) {
@@ -111,36 +102,48 @@ func (getcmd *GetcmdClass) Clusters(persistentOptions *cmdoptions.CommonCommandO
 	return output, nil
 }
 
-func (getcmd *GetcmdClass) getVaults(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (getcmd *GetcmdClass) Vaults(persistentOptions *cmdoptions.CommonCommandOptions) (string, error) {
+	getcmd.init(persistentOptions)
 	var vaults []serverapi_v2.Vault
 
-	vaults, err = auroraconfig.GetVaultsArray(&getcmd.configuration)
+	vaults, err := auroraconfig.GetVaultsArray(&getcmd.configuration)
 
-	output = "VAULT (Secrets)"
+	if err != nil {
+		return "", err
+	}
+
+	output := "VAULT (Secrets)"
 	for vaultindex := range vaults {
 		numberOfSecrets := len(vaults[vaultindex].Secrets)
 		output += "\n" + vaults[vaultindex].Name + " (" + fmt.Sprintf("%d", numberOfSecrets) + ")"
 	}
-	return
+
+	return output, err
 }
 
-func (getcmd *GetcmdClass) getVault(vaultName string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+func (getcmd *GetcmdClass) Vault(vaultName string, persistentOptions *cmdoptions.CommonCommandOptions) (string, error) {
+	getcmd.init(persistentOptions)
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaultsArray(&getcmd.configuration)
+	vaults, err := auroraconfig.GetVaultsArray(&getcmd.configuration)
 
+	if err != nil {
+		return "", err
+	}
+
+	output := "SECRET"
 	for vaultindex := range vaults {
 		if vaults[vaultindex].Name == vaultName {
-			output = "SECRET"
 			for secretindex := range vaults[vaultindex].Secrets {
 				output += "\n" + secretindex
 			}
 		}
-
 	}
-	return
+
+	return output, nil
 }
 
 func (getcmd *GetcmdClass) Secret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions) (string, error) {
+	getcmd.init(persistentOptions)
 	var output string
 	var vaults []serverapi_v2.Vault
 	vaults, err := auroraconfig.GetVaultsArray(&getcmd.configuration)
@@ -187,88 +190,16 @@ func (getcmd *GetcmdClass) KubeConfig(persistentOptions *cmdoptions.CommonComman
 	return output, nil
 }
 
-func (getcmd *GetcmdClass) OcLogin(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (getcmd *GetcmdClass) OcLogin(persistentOptions *cmdoptions.CommonCommandOptions) (string, error) {
 	var kubeConfig kubernetes.KubeConfig
 	cluster, user, token, err := kubeConfig.GetClusterUserAndToken()
 	if err != nil {
-		return
+		return "", err
 	}
-	output += "Cluster: " + cluster
+
+	output := "Cluster: " + cluster
 	output += "\nUser: " + user
 	output += "\nToken: " + token
 
-	return
-}
-
-func (getcmd *GetcmdClass) GetObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
-	getcmd.init(persistentOptions)
-	if !serverapi_v2.ValidateLogin(getcmd.configuration.GetOpenshiftConfig()) {
-		return "", errors.New("Not logged in, please use ao login")
-	}
-
-	err = validateGetcmd(args)
-	if err != nil {
-		return
-	}
-
-	var commandStr = args[0]
-	switch commandStr {
-	case "vault", "vaults":
-		{
-			if len(args) > 1 {
-				output, err = getcmd.getVault(args[1], persistentOptions, outputFormat)
-			} else {
-				output, err = getcmd.getVaults(persistentOptions)
-			}
-		}
-	case "file", "files":
-		{
-			if len(args) > 1 {
-				output, err = getcmd.getFile(args[1:], persistentOptions, outputFormat)
-			} else {
-				output, err = getcmd.getFiles(persistentOptions)
-			}
-		}
-	}
-
-	return
-}
-
-func validateGetcmd(args []string) (err error) {
-	if len(args) < 1 {
-		err = errors.New(UsageString)
-		return
-	}
-
-	var commandStr = args[0]
-	switch commandStr {
-	case "file", "files":
-		{
-			if len(args) > 3 {
-				err = errors.New(fileUseageString)
-				return
-			}
-		}
-	case "vault", "vaults":
-		{
-			if len(args) > 2 {
-				err = errors.New(vaultUseageString)
-				return
-			}
-		}
-	case "secret":
-		{
-			if len(args) != 3 {
-				err = errors.New(secretUseageString)
-				return
-			}
-		}
-	default:
-		{
-			err = errors.New(UsageString)
-			return
-		}
-	}
-
-	return
+	return output, nil
 }
