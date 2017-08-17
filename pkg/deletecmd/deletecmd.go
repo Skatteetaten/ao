@@ -9,57 +9,10 @@ import (
 	"strings"
 )
 
-const UsageString = "Usage: delete vault <vaultname> | secret <vaultname> <secretname> | app <appname> | env <envname> | deployment <envname> <appname> | file <filename>"
-
 type DeletecmdClass struct {
 	Configuration  *configuration.ConfigurationClass
 	Force          bool
 	deleteFileList []string
-}
-
-func (deletecmd *DeletecmdClass) addDeleteFile(filename string) {
-	deletecmd.deleteFileList = append(deletecmd.deleteFileList, filename)
-}
-
-func (deletecmd *DeletecmdClass) isFileDeleted(filename string) bool {
-	for i := range deletecmd.deleteFileList {
-		if deletecmd.deleteFileList[i] == filename {
-			return true
-		}
-	}
-	return false
-}
-
-func (deletecmd *DeletecmdClass) deleteFilesInList(auroraConfig serverapi_v2.AuroraConfig) error {
-	// Delete all files in list
-	for i := range deletecmd.deleteFileList {
-		delete(auroraConfig.Files, deletecmd.deleteFileList[i])
-	}
-	return auroraconfig.PutAuroraConfig(auroraConfig, deletecmd.Configuration)
-}
-
-func (deletecmd *DeletecmdClass) DeleteVault(vaultName string) (err error) {
-	_, err = auroraconfig.DeleteVault(vaultName, deletecmd.Configuration)
-	return err
-}
-
-func (deletecmd *DeletecmdClass) addDeleteFileWithPrompt(filename string, prompt string) (err error) {
-	if deletecmd.Force {
-		deletecmd.addDeleteFile(filename)
-	} else {
-		confirm, err := executil.PromptYNC(prompt)
-		if err != nil {
-			return err
-		}
-		if confirm == "Y" {
-			deletecmd.addDeleteFile(filename)
-		}
-		if confirm == "C" {
-			err = errors.New("Operation cancelled by user")
-			return err
-		}
-	}
-	return
 }
 
 func (deletecmd *DeletecmdClass) DeleteApp(app string) (err error) {
@@ -249,5 +202,50 @@ func (deletecmd *DeletecmdClass) DeleteFile(filename string) (err error) {
 		return err
 	}
 
+	return
+}
+
+func (deletecmd *DeletecmdClass) addDeleteFile(filename string) {
+	deletecmd.deleteFileList = append(deletecmd.deleteFileList, filename)
+}
+
+func (deletecmd *DeletecmdClass) isFileDeleted(filename string) bool {
+	for i := range deletecmd.deleteFileList {
+		if deletecmd.deleteFileList[i] == filename {
+			return true
+		}
+	}
+	return false
+}
+
+func (deletecmd *DeletecmdClass) deleteFilesInList(auroraConfig serverapi_v2.AuroraConfig) error {
+	// Delete all files in list
+	for i := range deletecmd.deleteFileList {
+		delete(auroraConfig.Files, deletecmd.deleteFileList[i])
+	}
+	return auroraconfig.PutAuroraConfig(auroraConfig, deletecmd.Configuration)
+}
+
+func (deletecmd *DeletecmdClass) DeleteVault(vaultName string) (err error) {
+	_, err = auroraconfig.DeleteVault(vaultName, deletecmd.Configuration)
+	return err
+}
+
+func (deletecmd *DeletecmdClass) addDeleteFileWithPrompt(filename string, prompt string) (err error) {
+	if deletecmd.Force {
+		deletecmd.addDeleteFile(filename)
+	} else {
+		confirm, err := executil.PromptYNC(prompt)
+		if err != nil {
+			return err
+		}
+		if confirm == "Y" {
+			deletecmd.addDeleteFile(filename)
+		}
+		if confirm == "C" {
+			err = errors.New("Operation cancelled by user")
+			return err
+		}
+	}
 	return
 }

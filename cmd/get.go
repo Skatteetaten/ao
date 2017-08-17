@@ -15,7 +15,7 @@ var getCmd = &cobra.Command{
 	Short: "Retrieves information from the repository",
 	Long:  `Can be used to retrieve one file or all the files from the respository.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(cmd.Usage())
+		cmd.Usage()
 	},
 }
 
