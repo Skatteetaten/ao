@@ -176,7 +176,7 @@ func GetVaults(configuration *configuration.ConfigurationClass) (output string, 
 	var responses map[string]string
 	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
 		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
-		configuration.GetPersistentOptions().Verbose, configuration.GetOpenshiftConfig(), configuration.GetPersistentOptions().DryRun,
+		configuration.GetPersistentOptions().Verbose, configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun,
 		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
 	if err != nil {
 		for server := range responses {
@@ -224,7 +224,7 @@ func GetVaultsArray(configuration *configuration.ConfigurationClass) (vaults []s
 	var responses map[string]string
 	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
 		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
-		configuration.GetPersistentOptions().Verbose, configuration.GetOpenshiftConfig(), configuration.GetPersistentOptions().DryRun,
+		configuration.GetPersistentOptions().Verbose, configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun,
 		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
 	if err != nil {
 		for server := range responses {
@@ -283,7 +283,7 @@ func GetAuroraConfig(configuration *configuration.ConfigurationClass) (auroraCon
 
 	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
 		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
-		configuration.GetPersistentOptions().Verbose, configuration.GetOpenshiftConfig(), configuration.GetPersistentOptions().DryRun,
+		configuration.GetPersistentOptions().Verbose, configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun,
 		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
 	if err != nil {
 		for server := range responses {
@@ -349,7 +349,7 @@ func putContent(apiEndpoint string, content string, version string, configuratio
 	responses, err = serverapi_v2.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, content, true,
 		configuration.GetPersistentOptions().Localhost,
 		configuration.GetPersistentOptions().Verbose,
-		configuration.GetOpenshiftConfig(), configuration.GetPersistentOptions().DryRun, configuration.GetPersistentOptions().Debug,
+		configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun, configuration.GetPersistentOptions().Debug,
 		configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
 
 	/*
@@ -407,7 +407,7 @@ func deleteContent(apiEndpoint string, version string, configuration *configurat
 	responses, err = serverapi_v2.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, "", true,
 		configuration.GetPersistentOptions().Localhost,
 		configuration.GetPersistentOptions().Verbose,
-		configuration.GetOpenshiftConfig(), configuration.GetPersistentOptions().DryRun, configuration.GetPersistentOptions().Debug,
+		configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun, configuration.GetPersistentOptions().Debug,
 		configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
 
 	if err != nil {

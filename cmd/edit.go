@@ -28,8 +28,10 @@ var editCmd = &cobra.Command{
 	Short: "Edit a single configuration file or a secret in a vault",
 	Long:  `Edit a single configuration file or a secret in a vault.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var editcmdObject editcmd.EditcmdClass
-		output, err := editcmdObject.EditObject(args, &persistentOptions)
+		editcmdObject := &editcmd.EditcmdClass{
+			Configuration: config,
+		}
+		output, err := editcmdObject.EditObject(args)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())

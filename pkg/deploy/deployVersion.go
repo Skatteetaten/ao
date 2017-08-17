@@ -22,7 +22,7 @@ func (deploy *DeployClass) updateVersion(deployVersion string) (err error) {
 	}
 
 	if deploy.auroraConfig == nil {
-		auroraConfig, err := auroraconfig.GetAuroraConfig(&deploy.configuration)
+		auroraConfig, err := auroraconfig.GetAuroraConfig(deploy.Configuration)
 		if err != nil {
 			return err
 		}
@@ -39,7 +39,7 @@ func (deploy *DeployClass) updateVersion(deployVersion string) (err error) {
 		}
 	}
 
-	err = auroraconfig.PutAuroraConfig(*deploy.auroraConfig, &deploy.configuration)
+	err = auroraconfig.PutAuroraConfig(*deploy.auroraConfig, deploy.Configuration)
 	if err != nil {
 		return err
 	}

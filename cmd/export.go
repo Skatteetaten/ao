@@ -31,7 +31,9 @@ var exportCmd = &cobra.Command{
 The files will be printed to standard out, but can also be stored individually in a folder structure
 by using the output-folder option.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var exportcmdObject exportcmd.ExportcmdClass
+		exportcmdObject := &exportcmd.ExportcmdClass{
+			Configuration: config,
+		}
 		output, err := exportcmdObject.ExportObject(args, &persistentOptions, "json", outputFolder)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)

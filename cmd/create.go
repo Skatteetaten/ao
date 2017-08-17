@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/createcmd"
 	"github.com/spf13/cobra"
-	"log"
-	"os"
+	"github.com/skatteetaten/ao/pkg/vault"
 )
 
 var createCmd = &cobra.Command{
@@ -13,26 +11,24 @@ var createCmd = &cobra.Command{
 	Short: "Creates a vault or a secret in a vault",
 	Long:  `Creates a vault or a secret in a vault.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var createcmdObject createcmd.CreatecmdClass
+		fmt.Println(cmd.UseLine())
+	},
+}
 
-		allClusters, _ := cmd.Flags().GetBool("all")
-		output, err := createcmdObject.CreateObject(args, &persistentOptions, allClusters)
-		if err != nil {
-			l := log.New(os.Stderr, "", 0)
-			l.Println(err.Error())
-			os.Exit(-1)
+var createVaultCmd = &cobra.Command{
+	Use:   "vault <vaultname>",
+	Short: "Create a vault",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) == 1 {
+			vault.CreateVault(args[0], config)
 		} else {
-			if output != "" {
-				fmt.Println(output)
-			}
+			fmt.Println(cmd.UseLine())
 		}
-
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(createCmd)
-
-	getClusterCmd.Flags().BoolP("all",
-		"a", false, "Show all clusters, not just the reachable ones")
+	createCmd.AddCommand(createVaultCmd)
 }

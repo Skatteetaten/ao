@@ -2,7 +2,6 @@ package pingcmd
 
 import (
 	"errors"
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
@@ -16,38 +15,22 @@ const statusOpen = "OPEN"
 const statusClosed = "CLOSED"
 const partlyClosed = "PARTLY CLOSED"
 
-type PingcmdClass struct {
-	configuration configuration.ConfigurationClass
-}
-
-func (pingcmd *PingcmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
-
-	pingcmd.configuration.Init(persistentOptions)
-	return
-}
-
-func (pingcmd *PingcmdClass) PingAddress(args []string, pingPort string, pingCluster string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
-	pingcmd.init(persistentOptions)
-	if !serverapi_v2.ValidateLogin(pingcmd.configuration.GetOpenshiftConfig()) {
-		return "", errors.New("Not logged in, please use ao login")
-	}
-
+func PingAddress(args []string, pingPort string, pingCluster string, config *configuration.ConfigurationClass) (output string, err error) {
 	err = validatePingcmd(args)
 	if err != nil {
 		return
 	}
 
-	var verbose = persistentOptions.Verbose
-	var debug = persistentOptions.Debug
+	var verbose = config.PersistentOptions.Verbose
+	var debug = config.PersistentOptions.Debug
 	address := args[0]
 	argument := "host=" + address
 	if pingPort == "" {
 		pingPort = "80"
 	}
 	argument += "&port=" + pingPort
-	openshiftConfig := pingcmd.configuration.GetOpenshiftConfig()
 
-	result, err := serverapi_v2.CallConsole("netdebug", argument, verbose, debug, openshiftConfig)
+	result, err := serverapi_v2.CallConsole("netdebug", argument, verbose, debug, config.OpenshiftConfig)
 	if err != nil {
 		return
 	}
@@ -68,7 +51,7 @@ func (pingcmd *PingcmdClass) PingAddress(args []string, pingPort string, pingClu
 		} else {
 			numberOfClosedHosts++
 		}
-		if persistentOptions.Verbose {
+		if verbose {
 			hostNames, err := net.LookupAddr(pingResult.Items[hostIndex].HostIp)
 			if err != nil {
 				hostNames = make([]string, 1)
@@ -85,7 +68,7 @@ func (pingcmd *PingcmdClass) PingAddress(args []string, pingPort string, pingClu
 			pingResult.Items[hostIndex].HostName = hostName
 		}
 	}
-	if persistentOptions.Verbose {
+	if verbose {
 		var hosts []string
 		for hostIndex := range pingResult.Items {
 			hosts = append(hosts, pingResult.Items[hostIndex].HostName)

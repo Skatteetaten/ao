@@ -29,8 +29,10 @@ var importCmd = &cobra.Command{
 	Long:  `Imports a set of configuration files to the central store.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Work your own magic here
-		var importObject importcmd.ImportClass
-		output, err := importObject.ExecuteImport(args, &persistentOptions, localDryRun)
+		importObject := &importcmd.ImportClass{
+			Configuration: config,
+		}
+		output, err := importObject.ExecuteImport(args, localDryRun)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())

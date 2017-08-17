@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/executil"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
@@ -15,15 +14,9 @@ const UsageString = "Usage: delete vault <vaultname> | secret <vaultname> <secre
 const vaultDontExistsError = "Error: No such vault"
 
 type DeletecmdClass struct {
-	configuration  configuration.ConfigurationClass
+	Configuration  *configuration.ConfigurationClass
 	deleteFileList []string
 	force          bool
-}
-
-func (deletecmd *DeletecmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
-
-	deletecmd.configuration.Init(persistentOptions)
-	return
 }
 
 func (deletecmd *DeletecmdClass) addDeleteFile(filename string) {
@@ -44,24 +37,24 @@ func (deletecmd *DeletecmdClass) deleteFilesInList(auroraConfig serverapi_v2.Aur
 	for i := range deletecmd.deleteFileList {
 		delete(auroraConfig.Files, deletecmd.deleteFileList[i])
 	}
-	return auroraconfig.PutAuroraConfig(auroraConfig, &deletecmd.configuration)
+	return auroraconfig.PutAuroraConfig(auroraConfig, deletecmd.Configuration)
 }
 
-func (deletecmd *DeletecmdClass) deleteVault(vaultName string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+func (deletecmd *DeletecmdClass) deleteVault(vaultName string) (err error) {
 	//var vaults []serverapi_v2.Vault
-	//vaults, err = auroraconfig.GetVaults(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
-	_, err = auroraconfig.DeleteVault(vaultName, &deletecmd.configuration)
+	//vaults, err = auroraconfig.GetVaults(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.Configuration.GetOpenshiftConfig())
+	_, err = auroraconfig.DeleteVault(vaultName, deletecmd.Configuration)
 	if err != nil {
 		return err
 	}
 	return
 }
 
-func (deletecmd *DeletecmdClass) deleteSecret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+func (deletecmd *DeletecmdClass) deleteSecret(vaultName string, secretName string) (err error) {
 	//var vaults []serverapi_v2.Vault
-	//vaults, err = auroraconfig.GetVaults(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.configuration.GetOpenshiftConfig())
+	//vaults, err = auroraconfig.GetVaults(persistentOptions, createcmdClass.getAffiliation(), createcmdClass.Configuration.GetOpenshiftConfig())
 	fmt.Println("DEBUG: Delete secret called: " + vaultName + "/" + secretName)
-	//vaults, err := auroraconfig.GetVaults(persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.configuration.GetOpenshiftConfig())
+	//vaults, err := auroraconfig.GetVaults(persistentOptions, deletecmdClass.getAffiliation(), deletecmdClass.Configuration.GetOpenshiftConfig())
 
 	return
 }
@@ -85,9 +78,9 @@ func (deletecmd *DeletecmdClass) addDeleteFileWithPrompt(filename string, prompt
 	return
 }
 
-func (deletecmd *DeletecmdClass) deleteApp(app string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+func (deletecmd *DeletecmdClass) deleteApp(app string) (err error) {
 	// Get current aurora config
-	auroraConfig, err := auroraconfig.GetAuroraConfig(&deletecmd.configuration)
+	auroraConfig, err := auroraconfig.GetAuroraConfig(deletecmd.Configuration)
 	if err != nil {
 		return err
 	}
@@ -136,9 +129,9 @@ func (deletecmd *DeletecmdClass) deleteApp(app string, persistentOptions *cmdopt
 	return
 }
 
-func (deletecmd *DeletecmdClass) deleteEnv(env string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+func (deletecmd *DeletecmdClass) deleteEnv(env string) (err error) {
 	// Get current aurora config
-	auroraConfig, err := auroraconfig.GetAuroraConfig(&deletecmd.configuration)
+	auroraConfig, err := auroraconfig.GetAuroraConfig(deletecmd.Configuration)
 	if err != nil {
 		return err
 	}
@@ -185,10 +178,10 @@ func (deletecmd *DeletecmdClass) deleteEnv(env string, persistentOptions *cmdopt
 	return
 }
 
-func (deletecmd *DeletecmdClass) deleteDeployment(env string, app string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+func (deletecmd *DeletecmdClass) deleteDeployment(env string, app string) (err error) {
 
 	// Get current aurora config
-	auroraConfig, err := auroraconfig.GetAuroraConfig(&deletecmd.configuration)
+	auroraConfig, err := auroraconfig.GetAuroraConfig(deletecmd.Configuration)
 	if err != nil {
 		return err
 	}
@@ -250,9 +243,9 @@ func (deletecmd *DeletecmdClass) deleteDeployment(env string, app string, persis
 	return
 }
 
-func (deletecmd *DeletecmdClass) deleteFile(filename string, persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+func (deletecmd *DeletecmdClass) deleteFile(filename string) (err error) {
 	// Get current aurora config
-	auroraConfig, err := auroraconfig.GetAuroraConfig(&deletecmd.configuration)
+	auroraConfig, err := auroraconfig.GetAuroraConfig(deletecmd.Configuration)
 	if err != nil {
 		return err
 	}
@@ -275,11 +268,7 @@ func (deletecmd *DeletecmdClass) deleteFile(filename string, persistentOptions *
 	return
 }
 
-func (deletecmd *DeletecmdClass) DeleteObject(args []string, force bool, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
-	deletecmd.init(persistentOptions)
-	if !serverapi_v2.ValidateLogin(deletecmd.configuration.GetOpenshiftConfig()) {
-		return "", errors.New("Not logged in, please use ao login")
-	}
+func (deletecmd *DeletecmdClass) DeleteObject(args []string, force bool) (output string, err error) {
 	err = validateDeletecmd(args)
 	if err != nil {
 		return
@@ -291,27 +280,27 @@ func (deletecmd *DeletecmdClass) DeleteObject(args []string, force bool, persist
 	switch commandStr {
 	case "vault":
 		{
-			err = deletecmd.deleteVault(args[1], persistentOptions)
+			err = deletecmd.deleteVault(args[1])
 		}
 	case "secret":
 		{
-			err = deletecmd.deleteSecret(args[1], args[2], persistentOptions)
+			err = deletecmd.deleteSecret(args[1], args[2])
 		}
 	case "app":
 		{
-			err = deletecmd.deleteApp(args[1], persistentOptions)
+			err = deletecmd.deleteApp(args[1])
 		}
 	case "env":
 		{
-			err = deletecmd.deleteEnv(args[1], persistentOptions)
+			err = deletecmd.deleteEnv(args[1])
 		}
 	case "deployment":
 		{
-			err = deletecmd.deleteDeployment(args[1], args[2], persistentOptions)
+			err = deletecmd.deleteDeployment(args[1], args[2])
 		}
 	case "file":
 		{
-			err = deletecmd.deleteFile(args[1], persistentOptions)
+			err = deletecmd.deleteFile(args[1])
 		}
 	}
 	return

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
@@ -16,13 +15,7 @@ import (
 )
 
 type ImportClass struct {
-	configuration configuration.ConfigurationClass
-}
-
-func (importObj *ImportClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
-
-	importObj.configuration.Init(persistentOptions)
-	return
+	Configuration *configuration.ConfigurationClass
 }
 
 func validateImportCommand(args []string) (error error) {
@@ -37,25 +30,16 @@ func validateImportCommand(args []string) (error error) {
 	return
 }
 
-func (importObj *ImportClass) ExecuteImport(args []string,
-	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool) (
+func (importObj *ImportClass) ExecuteImport(args []string, localDryRun bool) (
 	output string, error error) {
-
-	importObj.init(persistentOptions)
 	//var errorString string
-
-	if !localDryRun {
-		if !serverapi_v2.ValidateLogin(importObj.configuration.GetOpenshiftConfig()) {
-			return "", errors.New("Not logged in, please use ao login")
-		}
-	}
 
 	error = validateImportCommand(args)
 	if error != nil {
 		return
 	}
 
-	auroraConfig, err := auroraconfig.GetAuroraConfig(&importObj.configuration)
+	auroraConfig, err := auroraconfig.GetAuroraConfig(importObj.Configuration)
 	if err != nil {
 		return "", err
 	}
@@ -67,7 +51,7 @@ func (importObj *ImportClass) ExecuteImport(args []string,
 		return "", err
 	}
 	var apiEndpoint string
-	apiEndpoint = "/affiliation/" + importObj.configuration.GetAffiliation() + "/auroraconfig"
+	apiEndpoint = "/affiliation/" + importObj.Configuration.GetAffiliation() + "/auroraconfig"
 
 	var repo = args[0]
 
@@ -76,10 +60,11 @@ func (importObj *ImportClass) ExecuteImport(args []string,
 
 	absolutePath, _ = filepath.Abs(repo)
 
+	persistentOptions := importObj.Configuration.PersistentOptions
 	// Initialize JSON
 
 	jsonStr, err := generateJson(absolutePath,
-		importObj.configuration.GetAffiliation(), persistentOptions.DryRun)
+		importObj.Configuration.GetAffiliation(), persistentOptions.DryRun)
 	if err != nil {
 		return "", err
 	} else {
@@ -88,7 +73,7 @@ func (importObj *ImportClass) ExecuteImport(args []string,
 		} else {
 			responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, true, persistentOptions.Localhost,
-				persistentOptions.Verbose, importObj.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
+				persistentOptions.Verbose, importObj.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
 			if err != nil {
 				for server := range responses {
 					response, err := serverapi_v2.ParseResponse(responses[server])

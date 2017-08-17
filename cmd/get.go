@@ -4,25 +4,16 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
-	"github.com/skatteetaten/ao/pkg/openshift"
-	"os"
 )
 
-var getcmdObject pkgGetCmd.GetcmdClass
+var getcmdObject = &pkgGetCmd.GetcmdClass{
+	Configuration: config,
+}
 
 var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Retrieves information from the repository",
 	Long:  `Can be used to retrieve one file or all the files from the respository.`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		var openshiftConfig openshift.OpenshiftConfig
-		if valid := serverapi_v2.ValidateLogin(&openshiftConfig); !valid {
-			fmt.Println("Not logged in, please use ao login")
-			os.Exit(1)
-		}
-
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(cmd.Usage())
 	},
@@ -38,9 +29,9 @@ var getFileCmd = &cobra.Command{
 		var err error
 
 		if len(args) == 0 {
-			output, err = getcmdObject.Files(&persistentOptions)
+			output, err = getcmdObject.Files()
 		} else {
-			output, err = getcmdObject.File(args, &persistentOptions)
+			output, err = getcmdObject.File(args)
 		}
 
 		if err == nil {
@@ -61,9 +52,9 @@ var getVaultCmd = &cobra.Command{
 		var err error
 
 		if len(args) == 0 {
-			output, err = getcmdObject.Vaults(&persistentOptions)
+			output, err = getcmdObject.Vaults()
 		} else {
-			output, err = getcmdObject.Vault(args[0], &persistentOptions)
+			output, err = getcmdObject.Vault(args[0])
 		}
 
 		if err == nil {
@@ -84,7 +75,7 @@ var getSecretCmd = &cobra.Command{
 			return
 		}
 
-		if output, err := getcmdObject.Secret(args[0], args[1], &persistentOptions); err == nil {
+		if output, err := getcmdObject.Secret(args[0], args[1]); err == nil {
 			fmt.Println(output)
 		} else {
 			fmt.Println(err)

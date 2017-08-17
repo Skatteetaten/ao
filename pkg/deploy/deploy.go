@@ -24,7 +24,7 @@ type DeployCommand struct {
 }
 
 type DeployClass struct {
-	configuration configuration.ConfigurationClass
+	Configuration *configuration.ConfigurationClass
 	setupCommand  DeployCommand
 	appList       []string
 	envList       []string
@@ -32,12 +32,6 @@ type DeployClass struct {
 	legalEnvList  []string
 	overrideJsons []string
 	auroraConfig  *serverapi_v2.AuroraConfig
-}
-
-func (deploy *DeployClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
-
-	deploy.configuration.Init(persistentOptions)
-	return
 }
 
 func (deploy *DeployClass) addLegalApp(app string) {
@@ -96,12 +90,7 @@ func (deploy *DeployClass) generateJson(
 func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, applist []string, envList []string,
 	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool, deployAll bool, force bool, deployVersion string) (output string, err error) {
 
-	deploy.init(persistentOptions)
-	if !serverapi_v2.ValidateLogin(deploy.configuration.GetOpenshiftConfig()) {
-		return "", errors.New("Not logged in, please use aoc login")
-	}
-
-	ac, err := auroraconfig.GetAuroraConfig(&deploy.configuration)
+	ac, err := auroraconfig.GetAuroraConfig(deploy.Configuration)
 	if err != nil {
 		return "", err
 	}
@@ -121,7 +110,7 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 		}
 	}
 
-	var affiliation = deploy.configuration.GetAffiliation()
+	var affiliation = deploy.Configuration.GetAffiliation()
 	json, err := deploy.generateJson(affiliation, persistentOptions.DryRun)
 	if err != nil {
 		return "", err
@@ -135,7 +124,7 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 	} else {
 		responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, json, persistentOptions.ShowConfig,
 			persistentOptions.ShowObjects, false, persistentOptions.Localhost,
-			persistentOptions.Verbose, deploy.configuration.GetOpenshiftConfig(), persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
+			persistentOptions.Verbose, deploy.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
 		if err != nil {
 			for server := range responses {
 				response, err := serverapi_v2.ParseResponse(responses[server])
@@ -312,7 +301,7 @@ func (deploy *DeployClass) populateFlagsEnvAppList(appList []string, envList []s
 
 func (deploy *DeployClass) populateAllAppForEnv(env string) (err error) {
 
-	auroraConfig, err := auroraconfig.GetAuroraConfig(&deploy.configuration)
+	auroraConfig, err := auroraconfig.GetAuroraConfig(deploy.Configuration)
 	if err != nil {
 		return err
 	}

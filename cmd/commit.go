@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/spf13/cobra"
 	"os/user"
 )
 
@@ -18,7 +18,7 @@ var commitCmd = &cobra.Command{
 			defaultUsername = currentUser.Username
 		}
 
-		if err := auroraconfig.Commit(defaultUsername, &persistentOptions); err != nil {
+		if err := auroraconfig.Commit(defaultUsername, config); err != nil {
 			fmt.Println(err.Error())
 		} else {
 			fmt.Println("Commit success")

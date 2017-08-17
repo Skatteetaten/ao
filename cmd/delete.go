@@ -28,8 +28,11 @@ Specifying the force flag will suppress the confirmation prompts, and delete all
 `,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		var deletecmdObject deletecmd.DeletecmdClass
-		output, err := deletecmdObject.DeleteObject(args, deleteCmdForce, &persistentOptions)
+		deletecmdObject := &deletecmd.DeletecmdClass{
+			Configuration: config,
+		}
+
+		output, err := deletecmdObject.DeleteObject(args, deleteCmdForce)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())

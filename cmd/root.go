@@ -9,13 +9,19 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
+	"github.com/skatteetaten/ao/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"strings"
 )
 
 // Cobra Flag variables
 var persistentOptions cmdoptions.CommonCommandOptions
-var overrideFiles []string
 var overrideValues []string
 var localDryRun bool
+
+var config = &configuration.ConfigurationClass{
+	PersistentOptions: &persistentOptions,
+}
 
 //var cfgFile string
 
@@ -31,6 +37,23 @@ This application has two main parts.
 1. manage the aoc configuration via cli
 2. apply the aoc configuration to the clusters
 `,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		commandsWithoutLogin := []string{"login", "logout", "version", "update", "help"}
+
+		commands := strings.Split(cmd.CommandPath(), " ")
+		if len(commands) > 1 {
+			for _, command := range commandsWithoutLogin {
+				if commands[1] == command {
+					return
+				}
+			}
+		}
+
+		if valid := serverapi_v2.ValidateLogin(config.OpenshiftConfig); !valid {
+			fmt.Println("Not logged in, please use ao login")
+			os.Exit(1)
+		}
+	},
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -44,6 +67,7 @@ func Execute() {
 }
 
 func init() {
+	config.Init()
 	cobra.OnInitialize(initConfigCobra)
 
 	//Verbose     bool

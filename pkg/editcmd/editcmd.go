@@ -3,16 +3,16 @@ package editcmd
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/fuzzyargs"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/jsonutil"
 )
 
 const usageString = "Usage: edit file [env/]<filename> | secret <vaultname> <secretname> "
@@ -29,23 +29,74 @@ const editMessage = `
 `
 
 type EditcmdClass struct {
-	configuration configuration.ConfigurationClass
+	Configuration *configuration.ConfigurationClass
 }
 
-func (editcmd *EditcmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
+func (editcmd *EditcmdClass) EditFile(filename string) (output string, err error) {
 
-	editcmd.configuration.Init(persistentOptions)
+	var content string
+	var version string
+
+	content, version, err = auroraconfig.GetContent(filename, editcmd.Configuration)
+	if err != nil {
+		return "", err
+	}
+	content = jsonutil.PrettyPrintJson(content)
+
+	var editCycleDone bool
+	var modifiedContent = content
+
+	for editCycleDone == false {
+		contentBeforeEdit := modifiedContent
+		modifiedContent, err = editString("# File: " + filename + editMessage + modifiedContent)
+		if err != nil {
+			return "", err
+		}
+		if (stripComments(modifiedContent) == stripComments(contentBeforeEdit)) || stripComments(modifiedContent) == stripComments(content) {
+			if stripComments(modifiedContent) != stripComments(content) {
+				tempfile, err := fileutil.CreateTempFile(stripComments(modifiedContent))
+				if err != nil {
+					return "", nil
+				}
+				output += "A copy of your changes har been stored to \"" + tempfile + "\"\n"
+			}
+			output += "Edit cancelled, no valid changes were saved."
+			if editcmd.Configuration.PersistentOptions.Debug {
+				fmt.Println("DEBUG: Content of modified file:")
+				fmt.Println(modifiedContent)
+				fmt.Println("DEBUG: Content of modified file stripped:")
+				fmt.Println(stripComments(modifiedContent))
+			}
+			return output, nil
+		}
+		modifiedContent = stripComments(modifiedContent)
+
+		if jsonutil.IsLegalJson(modifiedContent) {
+			validationMessages, err := auroraconfig.PutFile(filename, modifiedContent, version, editcmd.Configuration)
+			if err != nil {
+				if err.Error() == auroraconfig.InvalidConfigurationError {
+					modifiedContent, _ = addComments(modifiedContent, validationMessages)
+				} else {
+					editCycleDone = true
+				}
+			} else {
+				editCycleDone = true
+			}
+		} else {
+			modifiedContent, _ = addComments(modifiedContent, "Illegal JSON Format")
+		}
+	}
 
 	return
 }
 
-func (editcmd *EditcmdClass) EditSecret(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (editcmd *EditcmdClass) EditSecret(args []string) (output string, err error) {
 
 	var vaultname string = args[1]
 	var secretname string = args[2]
 	var version string = ""
 
-	secret, version, err := auroraconfig.GetSecret(vaultname, secretname, &editcmd.configuration)
+	secret, version, err := auroraconfig.GetSecret(vaultname, secretname, editcmd.Configuration)
 	if err != nil {
 		return "", err
 	}
@@ -57,7 +108,7 @@ func (editcmd *EditcmdClass) EditSecret(args []string, persistentOptions *cmdopt
 	}
 
 	if modifiedSecret != secret {
-		_, err = auroraconfig.PutSecret(vaultname, secretname, modifiedSecret, version, &editcmd.configuration)
+		_, err = auroraconfig.PutSecret(vaultname, secretname, modifiedSecret, version, editcmd.Configuration)
 	}
 
 	return
@@ -127,12 +178,7 @@ func editString(content string) (modifiedContent string, err error) {
 	return
 }
 
-func (editcmd *EditcmdClass) EditObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
-	editcmd.init(persistentOptions)
-
-	if !serverapi_v2.ValidateLogin(editcmd.configuration.GetOpenshiftConfig()) {
-		return "", errors.New("Not logged in, please use ao login")
-	}
+func (editcmd *EditcmdClass) EditObject(args []string) (output string, err error) {
 
 	err = validateEditcmd(args)
 	if err != nil {
@@ -140,7 +186,7 @@ func (editcmd *EditcmdClass) EditObject(args []string, persistentOptions *cmdopt
 	}
 
 	var fuzzyArgs fuzzyargs.FuzzyArgs
-	err = fuzzyArgs.Init(&editcmd.configuration)
+	err = fuzzyArgs.Init(editcmd.Configuration)
 	if err != nil {
 		return "", err
 	}
@@ -157,11 +203,11 @@ func (editcmd *EditcmdClass) EditObject(args []string, persistentOptions *cmdopt
 			if err != nil {
 				return "", err
 			}
-			output, err = editcmd.EditFile(filename, persistentOptions)
+			output, err = editcmd.EditFile(filename)
 		}
 	case "secret":
 		{
-			output, err = editcmd.EditSecret(args, persistentOptions)
+			output, err = editcmd.EditSecret(args)
 		}
 	case "vault":
 		{
@@ -177,7 +223,7 @@ func (editcmd *EditcmdClass) EditObject(args []string, persistentOptions *cmdopt
 			if err != nil {
 				return "", err
 			}
-			output, err = editcmd.EditFile(filename, persistentOptions)
+			output, err = editcmd.EditFile(filename)
 		}
 	}
 	return
