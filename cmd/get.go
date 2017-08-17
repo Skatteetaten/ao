@@ -95,7 +95,7 @@ var getClusterCmd = &cobra.Command{
 		}
 
 		allClusters, _ := cmd.Flags().GetBool("all")
-		if output, err := getcmdObject.Clusters(&persistentOptions, clusterName, allClusters); err == nil {
+		if output, err := getcmdObject.Clusters(clusterName, allClusters); err == nil {
 			fmt.Println(output)
 		} else {
 			fmt.Println(err)
@@ -107,7 +107,7 @@ var getKubeConfigCmd = &cobra.Command{
 	Use:   "kubeconfig",
 	Short: "Get kubeconfig",
 	Run: func(cmd *cobra.Command, args []string) {
-		if output, err := getcmdObject.KubeConfig(&persistentOptions); err == nil {
+		if output, err := getcmdObject.KubeConfig(); err == nil {
 			fmt.Println(output)
 		} else {
 			fmt.Println(err)
@@ -119,7 +119,7 @@ var getOcLoginCmd = &cobra.Command{
 	Use:   "oclogin",
 	Short: "Get oclogin",
 	Run: func(cmd *cobra.Command, args []string) {
-		if output, err := getcmdObject.OcLogin(&persistentOptions); err == nil {
+		if output, err := getcmdObject.OcLogin(); err == nil {
 			fmt.Println(output)
 		} else {
 			fmt.Println(err)

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/fuzzyargs"
@@ -60,7 +59,7 @@ func (getcmd *GetcmdClass) File(args []string) (string, error) {
 	return output, err
 }
 
-func (getcmd *GetcmdClass) Clusters(persistentOptions *cmdoptions.CommonCommandOptions, clusterName string, allClusters bool) (string, error) {
+func (getcmd *GetcmdClass) Clusters(clusterName string, allClusters bool) (string, error) {
 	var displayClusterName string
 	const tab = " "
 
@@ -151,7 +150,7 @@ func (getcmd *GetcmdClass) Secret(vaultName string, secretName string) (string, 
 	return output, nil
 }
 
-func (getcmd *GetcmdClass) KubeConfig(persistentOptions *cmdoptions.CommonCommandOptions) (string, error) {
+func (getcmd *GetcmdClass) KubeConfig() (string, error) {
 	var kubeConfig kubernetes.KubeConfig
 
 	if err := kubeConfig.GetConfig(); err != nil {
@@ -180,7 +179,7 @@ func (getcmd *GetcmdClass) KubeConfig(persistentOptions *cmdoptions.CommonComman
 	return output, nil
 }
 
-func (getcmd *GetcmdClass) OcLogin(persistentOptions *cmdoptions.CommonCommandOptions) (string, error) {
+func (getcmd *GetcmdClass) OcLogin() (string, error) {
 	var kubeConfig kubernetes.KubeConfig
 	cluster, user, token, err := kubeConfig.GetClusterUserAndToken()
 	if err != nil {
