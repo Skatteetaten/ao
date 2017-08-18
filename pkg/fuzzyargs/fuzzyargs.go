@@ -257,9 +257,17 @@ func (fuzzyArgs *FuzzyArgs) GetFile() (filename string, err error) {
 	}*/
 
 	if env == "" {
-		filename = app + ".json"
+		if app == "" {
+			filename = "about.json"
+		} else {
+			filename = app + ".json"
+		}
 	} else {
-		filename = env + "/" + app + ".json"
+		if strings.Contains(filename, "about") {
+			filename = env + "/" + "about.json"
+		} else {
+			filename = env + "/" + app + ".json"
+		}
 	}
 	if fuzzyArgs.IsLegalFile(filename) {
 		return filename, nil
