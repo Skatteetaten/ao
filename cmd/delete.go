@@ -30,7 +30,7 @@ or to cancel all deletions by pressing C.
 Specifying the force flag will suppress the confirmation prompts, and delete all matching files.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(cmd.Usage())
+		cmd.Usage()
 	},
 }
 

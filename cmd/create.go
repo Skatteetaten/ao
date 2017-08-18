@@ -7,11 +7,10 @@ import (
 )
 
 var createCmd = &cobra.Command{
-	Use:   "create vault <vaultname> | secret <vaultname> <secretname>",
-	Short: "Creates a vault or a secret in a vault",
-	Long:  `Creates a vault or a secret in a vault.`,
+	Use:   "create",
+	Short: "Creates a resource",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(cmd.UseLine())
+		cmd.Usage()
 	},
 }
 
