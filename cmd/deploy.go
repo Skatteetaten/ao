@@ -45,6 +45,7 @@ As per default, all applications in all environments will be deployed.
 Using the -e flag, it is possible to limit the deploy to the specified environment.
 Using the -a flag, it is possible to limit the deploy to the specified application.
 Both flags can be used to limit the deploy to a specific application in a specific environment.`,
+	Aliases: []string{"setup"},
 	Run: func(cmd *cobra.Command, args []string) {
 		deploy := deploy.DeployClass{
 			Configuration: config,

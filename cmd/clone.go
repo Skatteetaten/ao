@@ -3,10 +3,10 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"os/user"
-	_ "go/token"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/spf13/cobra"
+	_ "go/token"
+	"os/user"
 )
 
 var cloneCmd = &cobra.Command{
@@ -36,7 +36,6 @@ func init() {
 	RootCmd.AddCommand(cloneCmd)
 
 	defaultUsername := ""
-
 	if currentUser, err := user.Current(); err == nil {
 		defaultUsername = currentUser.Username
 	}
