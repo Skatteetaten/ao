@@ -237,6 +237,9 @@ func (fuzzyArgs *FuzzyArgs) App2File(app string) (filename string, err error) {
 
 // Func to get a filename if we expect the user to uniquely identify a file
 func (fuzzyArgs *FuzzyArgs) GetFile() (filename string, err error) {
+	if fuzzyArgs.IsLegalFile(filename) {
+		return filename, nil
+	}
 	env, err := fuzzyArgs.GetEnv()
 	if err != nil {
 		return "", err
@@ -252,6 +255,7 @@ func (fuzzyArgs *FuzzyArgs) GetFile() (filename string, err error) {
 			return "", err
 		}
 	}*/
+
 	if env == "" {
 		filename = app + ".json"
 	} else {
