@@ -3,7 +3,6 @@ package editcmd
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -13,7 +12,6 @@ import (
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/fuzzyargs"
-	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 )
 
@@ -37,64 +35,6 @@ type EditcmdClass struct {
 func (editcmd *EditcmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
 
 	editcmd.configuration.Init(persistentOptions)
-
-	return
-}
-
-func (editcmd *EditcmdClass) EditFile(filename string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
-
-	var content string
-	var version string
-
-	content, version, err = auroraconfig.GetContent(filename, &editcmd.configuration)
-	if err != nil {
-		return "", err
-	}
-	content = jsonutil.PrettyPrintJson(content)
-
-	var editCycleDone bool
-	var modifiedContent = content
-
-	for editCycleDone == false {
-		contentBeforeEdit := modifiedContent
-		modifiedContent, err = editString("# File: " + filename + editMessage + modifiedContent)
-		if err != nil {
-			return "", err
-		}
-		if (stripComments(modifiedContent) == stripComments(contentBeforeEdit)) || stripComments(modifiedContent) == stripComments(content) {
-			if stripComments(modifiedContent) != stripComments(content) {
-				tempfile, err := fileutil.CreateTempFile(stripComments(modifiedContent))
-				if err != nil {
-					return "", nil
-				}
-				output += "A copy of your changes har been stored to \"" + tempfile + "\"\n"
-			}
-			output += "Edit cancelled, no valid changes were saved."
-			if persistentOptions.Debug {
-				fmt.Println("DEBUG: Content of modified file:")
-				fmt.Println(modifiedContent)
-				fmt.Println("DEBUG: Content of modified file stripped:")
-				fmt.Println(stripComments(modifiedContent))
-			}
-			return output, nil
-		}
-		modifiedContent = stripComments(modifiedContent)
-
-		if jsonutil.IsLegalJson(modifiedContent) {
-			validationMessages, err := auroraconfig.PutFile(filename, modifiedContent, version, &editcmd.configuration)
-			if err != nil {
-				if err.Error() == auroraconfig.InvalidConfigurationError {
-					modifiedContent, _ = addComments(modifiedContent, validationMessages)
-				} else {
-					editCycleDone = true
-				}
-			} else {
-				editCycleDone = true
-			}
-		} else {
-			modifiedContent, _ = addComments(modifiedContent, "Illegal JSON Format")
-		}
-	}
 
 	return
 }
