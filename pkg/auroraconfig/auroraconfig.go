@@ -7,11 +7,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
-	"github.com/skatteetaten/ao/pkg/openshift"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 )
 
@@ -129,9 +127,48 @@ func GetFileList(configuration *configuration.ConfigurationClass) (filenames []s
 	return secretnames, nil
 }*/
 
-func GetVault(persistentOptions *cmdoptions.CommonCommandOptions, affiliation string, openshiftConfig *openshift.OpenshiftConfig) (vault serverapi_v2.Vault, err error) {
+func GetVault(vaultname string, configuration *configuration.ConfigurationClass) (vault serverapi_v2.Vault, err error) {
+	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/vault/" + vaultname
+	var responses map[string]string
+	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
+		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
+		configuration.GetPersistentOptions().Verbose, configuration.GetOpenshiftConfig(), configuration.GetPersistentOptions().DryRun,
+		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
+	if err != nil {
+		for server := range responses {
+			response, err := serverapi_v2.ParseResponse(responses[server])
+			if err != nil {
+				return vault, err
+			}
+			if !response.Success {
+				output, err := serverapi_v2.ResponsItems2MessageString(response)
+				if err != nil {
+					return vault, err
+				}
+				err = errors.New(output)
+				return vault, err
 
-	return
+			}
+		}
+
+		return vault, err
+
+	}
+
+	if len(responses) != 1 {
+		err = errors.New("Internal error in GetVaultsArray: Response from " + strconv.Itoa(len(responses)))
+		return
+	}
+
+	for server := range responses {
+		response, err := serverapi_v2.ParseResponse(responses[server])
+		if err != nil {
+			return vault, err
+		}
+		vault, err = serverapi_v2.ResponseItems2Vault(response)
+	}
+
+	return vault, err
 }
 
 func GetVaults(configuration *configuration.ConfigurationClass) (output string, err error) {

@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
-	"github.com/skatteetaten/ao/pkg/configuration"
-	"github.com/skatteetaten/ao/pkg/jsonutil"
-	"github.com/skatteetaten/ao/pkg/openshift"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/skatteetaten/ao/pkg/cmdoptions"
+	"github.com/skatteetaten/ao/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/jsonutil"
+	"github.com/skatteetaten/ao/pkg/openshift"
 )
 
 const badRequestString = "Internal error: Bad request"
@@ -173,6 +174,17 @@ func ResponseItems2VaultsArray(response Response) (vaults []Vault, err error) {
 
 	for item := range response.Items {
 		err = json.Unmarshal([]byte(response.Items[item]), &vaults[item])
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func ResponseItems2Vault(response Response) (vault Vault, err error) {
+
+	for item := range response.Items {
+		err = json.Unmarshal([]byte(response.Items[item]), &vault)
 		if err != nil {
 			return
 		}
