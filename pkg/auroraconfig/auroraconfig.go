@@ -132,7 +132,7 @@ func GetVault(vaultname string, configuration *configuration.ConfigurationClass)
 	var responses map[string]string
 	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
 		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
-		configuration.GetPersistentOptions().Verbose, configuration.GetOpenshiftConfig(), configuration.GetPersistentOptions().DryRun,
+		configuration.GetPersistentOptions().Verbose, configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun,
 		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
 	if err != nil {
 		for server := range responses {

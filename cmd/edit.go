@@ -63,8 +63,26 @@ var editSecretCmd = &cobra.Command{
 	},
 }
 
+var editVaultCmd = &cobra.Command{
+	Use:   "vault <vaultname>",
+	Short: "Edit a vault",
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 1 {
+			cmd.Usage()
+			return
+		}
+
+		if output, err := editcmdObject.EditVault(args[0]); err == nil {
+			fmt.Println(output)
+		} else {
+			fmt.Println(err)
+		}
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(editCmd)
 	editCmd.AddCommand(editFileCmd)
 	editCmd.AddCommand(editSecretCmd)
+	editCmd.AddCommand(editVaultCmd)
 }
