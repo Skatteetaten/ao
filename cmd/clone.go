@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/skatteetaten/ao/pkg/configuration"
 	"os/user"
 	_ "go/token"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"

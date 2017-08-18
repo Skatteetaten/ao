@@ -13,19 +13,19 @@ type ConfigurationClass struct {
 	configLocation    string
 	apiClusterIndex   int
 	apiClusterName    string
-	initDone          bool
 }
 
-func (configuration *ConfigurationClass) Init() (err error) {
-	if configuration.initDone {
-		return
-	}
+func (configuration *ConfigurationClass) Init() error {
 
 	configuration.configLocation = viper.GetString("HOME") + "/.ao.json"
-	configuration.OpenshiftConfig, err = openshift.LoadOrInitiateConfigFile(configuration.configLocation, false)
-	if err != nil {
-		err = errors.New("Error in loading OpenShift configuration")
+	openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configuration.configLocation, false)
+
+	if err == nil {
+		configuration.OpenshiftConfig = openshiftConfig
+	} else {
+		return errors.New("Error in loading OpenShift configuration")
 	}
+
 	// Find index for API cluster,that is the first reachable cluster
 	if configuration.OpenshiftConfig != nil {
 		for i := range configuration.OpenshiftConfig.Clusters {
@@ -35,8 +35,8 @@ func (configuration *ConfigurationClass) Init() (err error) {
 			}
 		}
 	}
-	configuration.initDone = true
-	return
+
+	return nil
 }
 
 func (configuration *ConfigurationClass) GetApiClusterIndex() int {
