@@ -15,11 +15,6 @@ import (
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 )
 
-const usageString = "Usage: edit file [env/]<filename> | secret <vaultname> <secretname> "
-const secretUseageString = "Usage: edit secret <vaultname> <secretname>"
-const fileUseageString = "Usage: edit file [env/]<filename>"
-const vaultUseageString = "Usage: edit vault <vaultname>"
-
 const commentString = "# "
 const editMessage = `
 # Please edit the object below. Lines beginning with a '#' will be ignored,
@@ -30,6 +25,22 @@ const editMessage = `
 
 type EditcmdClass struct {
 	Configuration *configuration.ConfigurationClass
+}
+
+func (editcmd *EditcmdClass) FuzzyEditFile(args []string) (string, error) {
+	var fuzzyArgs fuzzyargs.FuzzyArgs
+	fuzzyArgs.Init(editcmd.Configuration)
+
+	if err := fuzzyArgs.PopulateFuzzyEnvAppList(args[0:]); err != nil {
+		return "", err
+	}
+
+	filename, err := fuzzyArgs.GetFile()
+	if err != nil {
+		return "", err
+	}
+
+	return editcmd.EditFile(filename)
 }
 
 func (editcmd *EditcmdClass) EditFile(filename string) (output string, err error) {
@@ -90,13 +101,9 @@ func (editcmd *EditcmdClass) EditFile(filename string) (output string, err error
 	return
 }
 
-func (editcmd *EditcmdClass) EditSecret(args []string) (output string, err error) {
+func (editcmd *EditcmdClass) EditSecret(vaultName string, secretName string) (string, error) {
 
-	var vaultname string = args[1]
-	var secretname string = args[2]
-	var version string = ""
-
-	secret, version, err := auroraconfig.GetSecret(vaultname, secretname, editcmd.Configuration)
+	secret, version, err := auroraconfig.GetSecret(vaultName, secretName, editcmd.Configuration)
 	if err != nil {
 		return "", err
 	}
@@ -108,10 +115,10 @@ func (editcmd *EditcmdClass) EditSecret(args []string) (output string, err error
 	}
 
 	if modifiedSecret != secret {
-		_, err = auroraconfig.PutSecret(vaultname, secretname, modifiedSecret, version, editcmd.Configuration)
+		_, err = auroraconfig.PutSecret(vaultName, secretName, modifiedSecret, version, editcmd.Configuration)
 	}
 
-	return
+	return modifiedSecret, err
 }
 
 func addComments(content string, comments string) (commentedContent string, err error) {
@@ -174,92 +181,6 @@ func editString(content string) (modifiedContent string, err error) {
 	err = os.Remove(filename)
 	if err != nil {
 		err = errors.New("WARNING: Unable to delete tempfile " + filename)
-	}
-	return
-}
-
-func (editcmd *EditcmdClass) EditObject(args []string) (output string, err error) {
-
-	err = validateEditcmd(args)
-	if err != nil {
-		return
-	}
-
-	var fuzzyArgs fuzzyargs.FuzzyArgs
-	err = fuzzyArgs.Init(editcmd.Configuration)
-	if err != nil {
-		return "", err
-	}
-
-	var commandStr = args[0]
-	switch commandStr {
-	case "file":
-		{
-			err = fuzzyArgs.PopulateFuzzyEnvAppList(args[1:])
-			if err != nil {
-				return "", err
-			}
-			filename, err := fuzzyArgs.GetFile()
-			if err != nil {
-				return "", err
-			}
-			output, err = editcmd.EditFile(filename)
-		}
-	case "secret":
-		{
-			output, err = editcmd.EditSecret(args)
-		}
-	case "vault":
-		{
-			output, err = editcmd.EditVault(args[1], persistentOptions)
-		}
-	default:
-		{
-			err = fuzzyArgs.PopulateFuzzyEnvAppList(args)
-			if err != nil {
-				return "", err
-			}
-			filename, err := fuzzyArgs.GetFile()
-			if err != nil {
-				return "", err
-			}
-			output, err = editcmd.EditFile(filename)
-		}
-	}
-	return
-
-}
-
-func validateEditcmd(args []string) (err error) {
-
-	var commandStr = args[0]
-	switch commandStr {
-	case "file":
-		{
-			if len(args) < 2 {
-				err = errors.New(fileUseageString)
-				return
-			}
-		}
-	case "secret":
-		{
-			if len(args) != 3 {
-				err = errors.New(secretUseageString)
-				return
-			}
-		}
-	case "vault":
-		{
-			if len(args) < 2 {
-				err = errors.New(vaultUseageString)
-				return
-			}
-		}
-	default:
-		{
-			// Might be a filename, just return and let the main proc parse it
-			return
-		}
 	}
 	return
 }
