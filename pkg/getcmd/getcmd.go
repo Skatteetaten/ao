@@ -2,11 +2,9 @@ package getcmd
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/fuzzyargs"
@@ -15,105 +13,58 @@ import (
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 )
 
-const UsageString = "Usage: get files | vaults | vault <vaultname> | file [env/]<filename> | adc | secret <secretname> | cluster <clustername> | clusters | kubeconfig | oclogin"
-const filesUsageString = "Usage: get files"
-const fileUseageString = "Usage: get file [[env/]<filename>]"
-const vaultUseageString = "Usage: get vault [<vaultname>]"
-const secretUseageString = "Usage: get secret <vaultname> <secretname>"
-const adcUsageString = "Usage: get adc"
-const notYetImplemented = "Not supported yet"
-
 type GetcmdClass struct {
-	configuration configuration.ConfigurationClass
+	Configuration *configuration.ConfigurationClass
 }
 
-func (getcmd *GetcmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
-
-	getcmd.configuration.Init(persistentOptions)
-	return
-}
-
-func (getcmd *GetcmdClass) getFiles(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (getcmd *GetcmdClass) Files() (string, error) {
 	var files []string
-	files, err = auroraconfig.GetFileList(&getcmd.configuration)
+	files, err := auroraconfig.GetFileList(getcmd.Configuration)
 
-	output = "NAME"
+	if err != nil {
+		return "", err
+	}
+
+	output := "NAME"
 	for fileindex := range files {
 		output += "\n" + files[fileindex]
 	}
-	return
+
+	return output, nil
 }
 
-func (getcmd *GetcmdClass) getFile(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+func (getcmd *GetcmdClass) File(args []string) (string, error) {
 	var fuzzyArgs fuzzyargs.FuzzyArgs
-	err = fuzzyArgs.Init(&getcmd.configuration)
-	if err != nil {
+	if err := fuzzyArgs.Init(getcmd.Configuration); err != nil {
 		return "", err
 	}
-	err = fuzzyArgs.PopulateFuzzyEnvAppList(args)
-	if err != nil {
+
+	if err := fuzzyArgs.PopulateFuzzyEnvAppList(args); err != nil {
 		return "", err
 	}
+
 	filename, err := fuzzyArgs.GetFile()
 	if err != nil {
 		return "", err
 	}
 
-	switch outputFormat {
-	case "json":
-		{
-			content, _, err := auroraconfig.GetContent(filename, &getcmd.configuration)
-			if err != nil {
-				return "", err
-			}
-			output += filename + ":\n"
-			output += jsonutil.PrettyPrintJson(content)
-			return output, err
-		}
-		/*	case "":
-			{
-				var files []string
-				files, err = auroraconfig.GetFileList(&getcmd.configuration)
-				output = "NAME"
-				var fileFound bool
-				for fileindex := range files {
-					if files[fileindex] == filename {
-						output += filename + ":\n"
-						output += "\n" + files[fileindex]
-						fileFound = true
-					}
-				}
-				if !fileFound {
-					err = errors.New("Error: file \"" + filename + "\" not found")
-					return "", err
-				}
-				return output, nil
-			}*/
-	case "yaml":
-		{
-			err = errors.New(notYetImplemented)
-			return "", err
-		}
-	default:
-		{
-			err = errors.New("Illegal format: " + outputFormat + ".  Legal values are json, yaml.")
-		}
+	content, _, err := auroraconfig.GetContent(filename, getcmd.Configuration)
+	if err != nil {
+		return "", err
 	}
 
-	return
+	output := filename + ":\n"
+	output += jsonutil.PrettyPrintJson(content)
+
+	return output, err
 }
 
-func (getcmd *GetcmdClass) getAdc(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
-	output += notYetImplemented
-	return
-}
-
-func (getcmd *GetcmdClass) getClusters(persistentOptions *cmdoptions.CommonCommandOptions, clusterName string, allClusters bool) (output string, err error) {
+func (getcmd *GetcmdClass) Clusters(clusterName string, allClusters bool) (string, error) {
 	var displayClusterName string
 	const tab = " "
 
-	openshiftConfig := getcmd.configuration.GetOpenshiftConfig()
-	output = "CLUSTER NAME         REACHABLE  LOGGED IN  API  URL"
+	openshiftConfig := getcmd.Configuration.OpenshiftConfig
+	output := "CLUSTER NAME         REACHABLE  LOGGED IN  API  URL"
 	for i := range openshiftConfig.Clusters {
 		if openshiftConfig.Clusters[i].Reachable || allClusters {
 			displayClusterName = openshiftConfig.Clusters[i].Name
@@ -140,40 +91,55 @@ func (getcmd *GetcmdClass) getClusters(persistentOptions *cmdoptions.CommonComma
 
 	}
 
-	return
+	return output, nil
 }
 
-func (getcmd *GetcmdClass) getVaults(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (getcmd *GetcmdClass) Vaults() (string, error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaultsArray(&getcmd.configuration)
 
-	output = "VAULT (Secrets)"
+	vaults, err := auroraconfig.GetVaultsArray(getcmd.Configuration)
+
+	if err != nil {
+		return "", err
+	}
+
+	output := "VAULT (Secrets)"
 	for vaultindex := range vaults {
 		numberOfSecrets := len(vaults[vaultindex].Secrets)
 		output += "\n" + vaults[vaultindex].Name + " (" + fmt.Sprintf("%d", numberOfSecrets) + ")"
 	}
-	return
+
+	return output, err
 }
 
-func (getcmd *GetcmdClass) getVault(vaultName string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+func (getcmd *GetcmdClass) Vault(vaultName string) (string, error) {
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaultsArray(&getcmd.configuration)
+	vaults, err := auroraconfig.GetVaultsArray(getcmd.Configuration)
 
+	if err != nil {
+		return "", err
+	}
+
+	output := "SECRET"
 	for vaultindex := range vaults {
 		if vaults[vaultindex].Name == vaultName {
-			output = "SECRET"
 			for secretindex := range vaults[vaultindex].Secrets {
 				output += "\n" + secretindex
 			}
 		}
-
 	}
-	return
+
+	return output, nil
 }
 
-func (getcmd *GetcmdClass) getSecret(vaultName string, secretName string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
+func (getcmd *GetcmdClass) Secret(vaultName string, secretName string) (string, error) {
+	var output string
 	var vaults []serverapi_v2.Vault
-	vaults, err = auroraconfig.GetVaultsArray(&getcmd.configuration)
+	vaults, err := auroraconfig.GetVaultsArray(getcmd.Configuration)
+
+	if err != nil {
+		return "", err
+	}
 
 	for vaultindex := range vaults {
 		if vaults[vaultindex].Name == vaultName {
@@ -181,17 +147,17 @@ func (getcmd *GetcmdClass) getSecret(vaultName string, secretName string, persis
 			output += string(decodedSecret)
 		}
 	}
-	return
+	return output, nil
 }
 
-func (getcmd *GetcmdClass) getKubeConfig(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (getcmd *GetcmdClass) KubeConfig() (string, error) {
 	var kubeConfig kubernetes.KubeConfig
-	err = kubeConfig.GetConfig()
-	if err != nil {
-		return
+
+	if err := kubeConfig.GetConfig(); err != nil {
+		return "", err
 	}
 
-	output += "Current Context: " + kubeConfig.CurrentContext
+	output := "Current Context: " + kubeConfig.CurrentContext
 	output += "\nClusters:"
 	for i := range kubeConfig.Clusters {
 		output += "\n\tName: " + kubeConfig.Clusters[i].Name
@@ -209,139 +175,20 @@ func (getcmd *GetcmdClass) getKubeConfig(persistentOptions *cmdoptions.CommonCom
 		output += "\n\tName: " + kubeConfig.Users[i].Name
 		output += "\n\t\tToken: " + kubeConfig.Users[i].User.Token
 	}
-	return
+
+	return output, nil
 }
 
-func (getcmd *GetcmdClass) getOcLogin(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (getcmd *GetcmdClass) OcLogin() (string, error) {
 	var kubeConfig kubernetes.KubeConfig
 	cluster, user, token, err := kubeConfig.GetClusterUserAndToken()
 	if err != nil {
-		return
+		return "", err
 	}
-	output += "Cluster: " + cluster
+
+	output := "Cluster: " + cluster
 	output += "\nUser: " + user
 	output += "\nToken: " + token
 
-	return
-}
-
-func (getcmd *GetcmdClass) GetObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string, allClusters bool) (output string, err error) {
-	getcmd.init(persistentOptions)
-	if !serverapi_v2.ValidateLogin(getcmd.configuration.GetOpenshiftConfig()) {
-		return "", errors.New("Not logged in, please use ao login")
-	}
-
-	err = validateGetcmd(args)
-	if err != nil {
-		return
-	}
-
-	var commandStr = args[0]
-	switch commandStr {
-	case "vault", "vaults":
-		{
-			if len(args) > 1 {
-				output, err = getcmd.getVault(args[1], persistentOptions, outputFormat)
-			} else {
-				output, err = getcmd.getVaults(persistentOptions)
-			}
-		}
-	case "file", "files":
-		{
-			if len(args) > 1 {
-				output, err = getcmd.getFile(args[1:], persistentOptions, outputFormat)
-			} else {
-				output, err = getcmd.getFiles(persistentOptions)
-			}
-		}
-	case "secret":
-		{
-			output, err = getcmd.getSecret(args[1], args[2], persistentOptions, outputFormat)
-		}
-	case "adc":
-		{
-			output, err = getcmd.getAdc(persistentOptions)
-		}
-	case "cluster", "clusters":
-		{
-			var clusterName = ""
-			if len(args) > 1 {
-				clusterName = args[1]
-			}
-			output, err = getcmd.getClusters(persistentOptions, clusterName, allClusters)
-		}
-		// Deprecated when secrets are removed from AuroraConfig
-		/*	case "secret", "secrets":
-			{
-				var secretName = ""
-				if len(args) > 1 {
-					secretName = args[1]
-				}
-				output, err = getcmdClass.getSecrets(persistentOptions, secretName)
-			}*/
-	case "kubeconfig":
-		{
-			output, err = getcmd.getKubeConfig(persistentOptions)
-		}
-	case "oclogin":
-		{
-			output, err = getcmd.getOcLogin(persistentOptions)
-		}
-	}
-
-	return
-}
-
-func validateGetcmd(args []string) (err error) {
-	if len(args) < 1 {
-		err = errors.New(UsageString)
-		return
-	}
-
-	var commandStr = args[0]
-	switch commandStr {
-	case "file", "files":
-		{
-			if len(args) > 3 {
-				err = errors.New(fileUseageString)
-				return
-			}
-		}
-	case "vault", "vaults":
-		{
-			if len(args) > 2 {
-				err = errors.New(vaultUseageString)
-				return
-			}
-		}
-	case "secret":
-		{
-			if len(args) != 3 {
-				err = errors.New(secretUseageString)
-				return
-			}
-		}
-	case "adc":
-		{
-			if len(args) > 1 {
-				err = errors.New(adcUsageString)
-				return
-			}
-		}
-	case "cluster", "clusters", "kubeconfig", "oclogin":
-		{
-			if len(args) > 1 {
-				err = errors.New(UsageString)
-			}
-			return
-		}
-	default:
-		{
-			err = errors.New(UsageString)
-			return
-		}
-
-	}
-
-	return
+	return output, nil
 }

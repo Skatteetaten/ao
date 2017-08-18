@@ -51,7 +51,7 @@ type AuroraConfigPayload struct {
 	Name       string `json:"name,omitempty"`
 	Version    string `json:"version,omitempty"`
 	Replicas   string `json:"replicas,omitempty"`
-	Flags      struct {
+	Flags struct {
 		Rolling bool `json:"rolling,omitempty"`
 		Cert    bool `json:"cert,omitempty"`
 	} `json:"flags,omitempty"`
@@ -63,13 +63,7 @@ type AuroraConfigPayload struct {
 }
 
 type NewappcmdClass struct {
-	configuration configuration.ConfigurationClass
-}
-
-func (newappcmd *NewappcmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
-
-	newappcmd.configuration.Init(persistentOptions)
-	return
+	Configuration *configuration.ConfigurationClass
 }
 
 func readGeneratorValues(foldername string) (generatorValues GeneratorAuroraOpenshift, err error) {
@@ -182,15 +176,6 @@ func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi_v2.Auror
 
 func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string, cluster string, env string, groupid string, folder string, outputFolder string, deploymentType string, version string, generateApp bool, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
 
-	if !serverapi_v2.ValidateLogin(newappcmd.configuration.GetOpenshiftConfig()) {
-		return "", errors.New("Not logged in, please use ao login")
-	}
-
-	err = newappcmd.init(persistentOptions)
-	if err != nil {
-		return "", err
-	}
-
 	err = validateNewappCommand(args, artifactid, cluster, env, groupid, folder, outputFolder, deploymentType, version, generateApp)
 	if err != nil {
 		return "", err
@@ -198,7 +183,7 @@ func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string,
 
 	// If cluster not specified, get the API cluster from the config
 	if cluster == "" {
-		cluster = newappcmd.configuration.GetApiClusterName()
+		cluster = newappcmd.Configuration.GetApiClusterName()
 	}
 
 	var appname = args[0]
@@ -225,7 +210,7 @@ func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string,
 	}
 
 	// Get current aurora config
-	auroraConfig, err := auroraconfig.GetAuroraConfig(&newappcmd.configuration)
+	auroraConfig, err := auroraconfig.GetAuroraConfig(newappcmd.Configuration)
 	if err != nil {
 		return "", err
 	}
@@ -237,7 +222,7 @@ func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string,
 	}
 
 	// Update aurora config in boober
-	err = auroraconfig.PutAuroraConfig(mergedAuroraConfig, &newappcmd.configuration)
+	err = auroraconfig.PutAuroraConfig(mergedAuroraConfig, newappcmd.Configuration)
 	if err != nil {
 		return "", err
 	}

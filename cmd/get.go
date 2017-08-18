@@ -1,67 +1,141 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/getcmd"
 	"github.com/spf13/cobra"
-	"log"
-	"os"
+	pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
 )
 
-var outputFormat string
-var allClusters bool
+var getcmdObject = &pkgGetCmd.GetcmdClass{
+	Configuration: config,
+}
 
-// getCmd represents the get command
 var getCmd = &cobra.Command{
-	Use:   "get file | file [env/]<filename> | adc",
+	Use:   "get",
 	Short: "Retrieves information from the repository",
 	Long:  `Can be used to retrieve one file or all the files from the respository.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var getcmdObject getcmd.GetcmdClass
-		if outputFormat == "text" {
-			outputFormat = "json"
-		}
-		output, err := getcmdObject.GetObject(args, &persistentOptions, outputFormat, allClusters)
-		if err != nil {
-			l := log.New(os.Stderr, "", 0)
-			l.Println(err.Error())
-			os.Exit(-1)
+		cmd.Usage()
+	},
+}
+
+var getFileCmd = &cobra.Command{
+	Use:     "file [envname] <filename>",
+	Short:   "Get file",
+	Aliases: []string{"files"},
+	Run: func(cmd *cobra.Command, args []string) {
+
+		var output string
+		var err error
+
+		if len(args) == 0 {
+			output, err = getcmdObject.Files()
 		} else {
-			if output != "" {
-				fmt.Println(output)
-			}
+			output, err = getcmdObject.File(args)
+		}
+
+		if err == nil {
+			fmt.Println(output)
+		} else {
+			fmt.Println(err)
+		}
+	},
+}
+
+var getVaultCmd = &cobra.Command{
+	Use:     "vault [vaultname]",
+	Short:   "Get vault",
+	Aliases: []string{"vaults"},
+	Run: func(cmd *cobra.Command, args []string) {
+
+		var output string
+		var err error
+
+		if len(args) == 0 {
+			output, err = getcmdObject.Vaults()
+		} else {
+			output, err = getcmdObject.Vault(args[0])
+		}
+
+		if err == nil {
+			fmt.Println(output)
+		} else {
+			fmt.Println(err)
+		}
+	},
+}
+
+var getSecretCmd = &cobra.Command{
+	Use:   "secret <vault> <secret>",
+	Short: "Get secret",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) != 2 {
+			fmt.Println(cmd.UseLine())
+			return
+		}
+
+		if output, err := getcmdObject.Secret(args[0], args[1]); err == nil {
+			fmt.Println(output)
+		} else {
+			fmt.Println(err)
+		}
+	},
+}
+
+var getClusterCmd = &cobra.Command{
+	Use:     "cluster [clustername]",
+	Short:   "Get cluster",
+	Aliases: []string{"clusters"},
+	Run: func(cmd *cobra.Command, args []string) {
+		clusterName := ""
+
+		if len(args) > 0 {
+			clusterName = args[0]
+		}
+
+		allClusters, _ := cmd.Flags().GetBool("all")
+		if output, err := getcmdObject.Clusters(clusterName, allClusters); err == nil {
+			fmt.Println(output)
+		} else {
+			fmt.Println(err)
+		}
+	},
+}
+
+var getKubeConfigCmd = &cobra.Command{
+	Use:   "kubeconfig",
+	Short: "Get kubeconfig",
+	Run: func(cmd *cobra.Command, args []string) {
+		if output, err := getcmdObject.KubeConfig(); err == nil {
+			fmt.Println(output)
+		} else {
+			fmt.Println(err)
+		}
+	},
+}
+
+var getOcLoginCmd = &cobra.Command{
+	Use:   "oclogin",
+	Short: "Get oclogin",
+	Run: func(cmd *cobra.Command, args []string) {
+		if output, err := getcmdObject.OcLogin(); err == nil {
+			fmt.Println(output)
+		} else {
+			fmt.Println(err)
 		}
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(getCmd)
+	getCmd.AddCommand(getFileCmd)
+	getCmd.AddCommand(getVaultCmd)
+	getCmd.AddCommand(getSecretCmd)
+	getCmd.AddCommand(getClusterCmd)
+	getCmd.AddCommand(getKubeConfigCmd)
+	getCmd.AddCommand(getOcLoginCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// getCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// getCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	getCmd.Flags().StringVarP(&outputFormat, "output",
-		"o", "json", "Output format. One of: json|yaml")
-	getCmd.Flags().BoolVarP(&allClusters, "all",
+	getClusterCmd.Flags().BoolP("all",
 		"a", false, "Show all clusters, not just the reachable ones")
 }

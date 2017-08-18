@@ -2,13 +2,16 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/deletecmd"
+	pkgDelteCmd "github.com/skatteetaten/ao/pkg/deletecmd"
 	"github.com/spf13/cobra"
-	"log"
-	"os"
 )
 
-var deleteCmdForce bool
+var forceFlag bool
+var deletecmdObject = &pkgDelteCmd.DeletecmdClass{
+	Configuration: config,
+	Force:         forceFlag,
+}
+
 var deleteCmd = &cobra.Command{
 	Use:   "delete vault <vaultname> | secret <vaultname> <secretname> | app <appname> | env <envname> | deployment <envname> <appname> | file <filename>",
 	Short: "Delete a resource",
@@ -26,23 +29,88 @@ or to cancel all deletions by pressing C.
 
 Specifying the force flag will suppress the confirmation prompts, and delete all matching files.
 `,
-
 	Run: func(cmd *cobra.Command, args []string) {
-		var deletecmdObject deletecmd.DeletecmdClass
-		output, err := deletecmdObject.DeleteObject(args, deleteCmdForce, &persistentOptions)
-		if err != nil {
-			l := log.New(os.Stderr, "", 0)
-			l.Println(err.Error())
-			os.Exit(-1)
-		} else {
-			if output != "" {
-				fmt.Println(output)
-			}
+		cmd.Usage()
+	},
+}
+
+var deleteVaultCmd = &cobra.Command{
+	Use:   "vault <vaultname>",
+	Short: "Delete vault",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) != 1 {
+			fmt.Println(cmd.UseLine())
+			return
 		}
+
+		deletecmdObject.DeleteVault(args[0])
+	},
+}
+
+var deleteAppCmd = &cobra.Command{
+	Use:   "app <appname>",
+	Short: "Delete application",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) != 1 {
+			fmt.Println(cmd.UseLine())
+			return
+		}
+
+		deletecmdObject.DeleteApp(args[0])
+	},
+}
+
+var deleteEnvCmd = &cobra.Command{
+	Use:   "env <envname>",
+	Short: "Delete environment",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) != 1 {
+			fmt.Println(cmd.UseLine())
+			return
+		}
+
+		deletecmdObject.DeleteEnv(args[0])
+	},
+}
+
+var deleteDeploymentCmd = &cobra.Command{
+	Use:   "deployment <envname> <appname>",
+	Short: "Delete deployment",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) != 2 {
+			fmt.Println(cmd.UseLine())
+			return
+		}
+
+		deletecmdObject.DeleteDeployment(args[0], args[1])
+	},
+}
+
+var deleteFileCmd = &cobra.Command{
+	Use:   "file <filename>",
+	Short: "Delete file",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) != 1 {
+			fmt.Println(cmd.UseLine())
+			return
+		}
+
+		deletecmdObject.DeleteFile(args[0])
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(deleteCmd)
-	deleteCmd.Flags().BoolVarP(&deleteCmdForce, "force", "f", false, "ignore nonexistent files and arguments, never prompt")
+	deleteCmd.AddCommand(deleteVaultCmd)
+	deleteCmd.AddCommand(deleteAppCmd)
+	deleteCmd.AddCommand(deleteEnvCmd)
+	deleteCmd.AddCommand(deleteDeploymentCmd)
+	deleteCmd.AddCommand(deleteFileCmd)
+
+	deleteCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "ignore nonexistent files and arguments, never prompt")
 }

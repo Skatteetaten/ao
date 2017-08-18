@@ -6,7 +6,6 @@ import (
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 )
 
 const UsageString = "Usage: export files | file [env/]<filename> | vaults | adc"
@@ -19,17 +18,11 @@ const adcUsageString = "Usage: export adc"
 const notYetImplemented = "Not supported yet"
 
 type ExportcmdClass struct {
-	configuration configuration.ConfigurationClass
-}
-
-func (exportObj *ExportcmdClass) init(persistentOptions *cmdoptions.CommonCommandOptions) (err error) {
-
-	exportObj.configuration.Init(persistentOptions)
-	return
+	Configuration *configuration.ConfigurationClass
 }
 
 /*func (exportcmdClass *ExportcmdClass) exportVaults(persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
-	output, err = auroraconfig.GetVaults(persistentOptions, exportcmdClass.getAffiliation(), exportcmdClass.configuration.GetOpenshiftConfig())
+	output, err = auroraconfig.GetVaults(persistentOptions, exportcmdClass.getAffiliation(), exportcmdClass.Configuration.GetOpenshiftConfig())
 	if err != nil {
 		return
 	}
@@ -37,7 +30,7 @@ func (exportObj *ExportcmdClass) init(persistentOptions *cmdoptions.CommonComman
 } */
 
 func (exportObj *ExportcmdClass) exportVaults(outputFoldername string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
-	output, err = auroraconfig.GetAllVaults(outputFoldername, &exportObj.configuration)
+	output, err = auroraconfig.GetAllVaults(outputFoldername, exportObj.Configuration)
 	if err != nil {
 		return
 	}
@@ -49,7 +42,7 @@ func (exportObj *ExportcmdClass) exportVaults(outputFoldername string, persisten
 
 func (exportObj *ExportcmdClass) exportFiles(outputFoldername string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string) (output string, err error) {
 
-	output, err = auroraconfig.GetAllContent(outputFoldername, &exportObj.configuration)
+	output, err = auroraconfig.GetAllContent(outputFoldername, exportObj.Configuration)
 	if err != nil {
 		return
 	}
@@ -64,7 +57,7 @@ func (exportObj *ExportcmdClass) exportFile(filename string, persistentOptions *
 	switch outputFormat {
 	case "json":
 		{
-			content, _, err := auroraconfig.GetContent(filename, &exportObj.configuration)
+			content, _, err := auroraconfig.GetContent(filename, exportObj.Configuration)
 			if err != nil {
 				return "", err
 			}
@@ -92,11 +85,6 @@ func (exportObj *ExportcmdClass) getAdc(persistentOptions *cmdoptions.CommonComm
 }
 
 func (exportObj *ExportcmdClass) ExportObject(args []string, persistentOptions *cmdoptions.CommonCommandOptions, outputFormat string, outputFolder string) (output string, err error) {
-	exportObj.init(persistentOptions)
-	if !serverapi_v2.ValidateLogin(exportObj.configuration.GetOpenshiftConfig()) {
-		return "", errors.New("Not logged in, please use ao login")
-	}
-
 	err = validateExportcmd(args)
 	if err != nil {
 		return

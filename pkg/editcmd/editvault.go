@@ -4,14 +4,12 @@ import (
 	"encoding/json"
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
-
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 )
 
-func (editcmd *EditcmdClass) EditVault(vaultname string, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
-	vault, err := auroraconfig.GetVault(vaultname, &editcmd.configuration)
+func (editcmd *EditcmdClass) EditVault(vaultname string) (output string, err error) {
+	vault, err := auroraconfig.GetVault(vaultname, editcmd.Configuration)
 	if err != nil {
 		return "", err
 	}
@@ -21,7 +19,7 @@ func (editcmd *EditcmdClass) EditVault(vaultname string, persistentOptions *cmdo
 		return "", err
 	}
 
-	_, output, err = editCycle(string(vaultString), vaultname, "", putVaultString, &editcmd.configuration)
+	_, output, err = editCycle(string(vaultString), vaultname, "", putVaultString, editcmd.Configuration)
 
 	return output, nil
 }

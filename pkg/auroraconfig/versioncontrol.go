@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/howeyc/gopass"
 	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 	"gopkg.in/src-d/go-git.v4"
@@ -18,7 +17,7 @@ import (
 	"strings"
 )
 
-var GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
+const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
 
 func Clone(affiliation string, username string, outputPath string) error {
 
@@ -51,7 +50,7 @@ func Clone(affiliation string, username string, outputPath string) error {
 	return nil
 }
 
-func Commit(username string, persistentOptions *cmdoptions.CommonCommandOptions) error {
+func Commit(username string, config *configuration.ConfigurationClass) error {
 
 	wd, _ := os.Getwd()
 
@@ -59,9 +58,6 @@ func Commit(username string, persistentOptions *cmdoptions.CommonCommandOptions)
 	if err != nil {
 		return err
 	}
-
-	var config configuration.ConfigurationClass
-	config.Init(persistentOptions)
 
 	url := fmt.Sprintf(GIT_URL_FORMAT, username, config.GetAffiliation())
 	if err = validateRepo(url, repository); err != nil {
@@ -80,7 +76,7 @@ func Commit(username string, persistentOptions *cmdoptions.CommonCommandOptions)
 		return err
 	}
 
-	if err = handleAuroraConfigCommit(repository, &config); err != nil {
+	if err = handleAuroraConfigCommit(repository, config); err != nil {
 		return err
 	}
 
@@ -98,7 +94,7 @@ func Commit(username string, persistentOptions *cmdoptions.CommonCommandOptions)
 
 func validateRepo(gitUrl string, repository *git.Repository) error {
 
-	remote, _ :=repository.Remote("origin")
+	remote, _ := repository.Remote("origin")
 	remoteUrl := remote.Config().URL
 
 	if gitUrl != remoteUrl {
