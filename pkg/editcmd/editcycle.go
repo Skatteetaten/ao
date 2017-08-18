@@ -43,7 +43,7 @@ func editCycle(content string, contentName string, version string, store storeFu
 		modifiedContent = stripComments(modifiedContent)
 
 		if jsonutil.IsLegalJson(modifiedContent) {
-			validationMessages, err := store(modifiedContent, contentName, version, configuration)
+			validationMessages, err := store(contentName, modifiedContent, version, configuration)
 			if err != nil {
 				if err.Error() == auroraconfig.InvalidConfigurationError {
 					modifiedContent, _ = addComments(modifiedContent, validationMessages)

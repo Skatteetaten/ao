@@ -26,7 +26,7 @@ func (editcmd *EditcmdClass) EditVault(vaultname string, persistentOptions *cmdo
 	return output, nil
 }
 
-func putVaultString(vaultString string, vaultname string, version string, configuration *configuration.ConfigurationClass) (output string, err error) {
+func putVaultString(vaultname string, vaultString string, version string, configuration *configuration.ConfigurationClass) (output string, err error) {
 	var vault serverapi_v2.Vault
 
 	err = json.Unmarshal([]byte(vaultString), &vault)
