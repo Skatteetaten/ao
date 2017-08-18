@@ -20,6 +20,7 @@ import (
 const usageString = "Usage: edit file [env/]<filename> | secret <vaultname> <secretname> "
 const secretUseageString = "Usage: edit secret <vaultname> <secretname>"
 const fileUseageString = "Usage: edit file [env/]<filename>"
+const vaultUseageString = "Usage: edit vault <vaultname>"
 
 const commentString = "# "
 const editMessage = `
@@ -222,6 +223,10 @@ func (editcmd *EditcmdClass) EditObject(args []string, persistentOptions *cmdopt
 		{
 			output, err = editcmd.EditSecret(args, persistentOptions)
 		}
+	case "vault":
+		{
+			output, err = editcmd.EditVault(args[1], persistentOptions)
+		}
 	default:
 		{
 			err = fuzzyArgs.PopulateFuzzyEnvAppList(args)
@@ -254,6 +259,13 @@ func validateEditcmd(args []string) (err error) {
 		{
 			if len(args) != 3 {
 				err = errors.New(secretUseageString)
+				return
+			}
+		}
+	case "vault":
+		{
+			if len(args) < 2 {
+				err = errors.New(vaultUseageString)
 				return
 			}
 		}
