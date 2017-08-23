@@ -244,16 +244,29 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList(args []string) (err error) {
 				return err
 			}
 			if env != "" {
-				fuzzyArgs.envList = append(fuzzyArgs.envList, env)
+				fuzzyArgs.AddEnv(env)
 			}
 			if app != "" {
-				fuzzyArgs.appList = append(fuzzyArgs.appList, app)
+				fuzzyArgs.AddApp(app)
 			}
 		}
 
 	}
 
 	return
+}
+
+func (fuzzyArgs *FuzzyArgs) AddApp(app string) {
+	fuzzyArgs.appList = append(fuzzyArgs.appList, app)
+}
+
+func (fuzzyArgs *FuzzyArgs) AddEnv(env string) {
+	fuzzyArgs.envList = append(fuzzyArgs.envList, env)
+}
+
+func (fuzzyArgs *FuzzyArgs) DeployAll() {
+	fuzzyArgs.envList = fuzzyArgs.legalFileList
+	fuzzyArgs.appList = fuzzyArgs.legalAppList
 }
 
 func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList_old(args []string) (err error) {

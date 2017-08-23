@@ -12,11 +12,11 @@ import (
 
 func (deploy *DeployClass) updateVersion(deployVersion string) (err error) {
 	// Check for a single app deploy
-	if len(deploy.appList) != 1 {
+	if len(deploy.fuzzyArgs.GetApps()) != 1 {
 		err := errors.New("Setting version is only allowed in single-app deploys")
 		return err
 	}
-	if len(deploy.envList) != 1 {
+	if len(deploy.fuzzyArgs.GetEnvs()) != 1 {
 		err := errors.New("Setting version is only allowed in single-env deploys")
 		return err
 	}
@@ -28,8 +28,16 @@ func (deploy *DeployClass) updateVersion(deployVersion string) (err error) {
 		}
 		deploy.auroraConfig = &auroraConfig
 	}
+	env, err := deploy.fuzzyArgs.GetEnv()
+	if err != nil {
+		return err
+	}
 
-	configfilename := deploy.envList[0] + "/" + deploy.appList[0] + ".json"
+	app, err := deploy.fuzzyArgs.GetApp()
+	if err != nil {
+		return err
+	}
+	configfilename := env + "/" + app + ".json"
 	for filename := range deploy.auroraConfig.Files {
 		if filename == configfilename {
 			deploy.auroraConfig.Files[filename], err = setVersion(deploy.auroraConfig.Files[filename], deployVersion)

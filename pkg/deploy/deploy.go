@@ -12,6 +12,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/executil"
+	"github.com/skatteetaten/ao/pkg/fuzzyargs"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 )
@@ -26,15 +27,12 @@ type DeployCommand struct {
 type DeployClass struct {
 	Configuration *configuration.ConfigurationClass
 	setupCommand  DeployCommand
-	appList       []string
-	envList       []string
-	legalAppList  []string
-	legalEnvList  []string
+	fuzzyArgs     fuzzyargs.FuzzyArgs
 	overrideJsons []string
 	auroraConfig  *serverapi_v2.AuroraConfig
 }
 
-func (deploy *DeployClass) addLegalApp(app string) {
+/*func (deploy *DeployClass) addLegalApp(app string) {
 	for i := range deploy.legalAppList {
 		if deploy.legalAppList[i] == app {
 			return
@@ -52,18 +50,21 @@ func (deploy *DeployClass) addLegalEnv(env string) {
 	}
 	deploy.legalEnvList = append(deploy.legalEnvList, env)
 	return
-}
+}*/
 
 func (deploy *DeployClass) generateJson(
 	affiliation string, dryRun bool) (jsonStr string, err error) {
 
-	if len(deploy.appList) != 0 {
-		deploy.setupCommand.SetupParams.Apps = deploy.appList
+	applist := deploy.fuzzyArgs.GetApps()
+
+	if len(applist) != 0 {
+		deploy.setupCommand.SetupParams.Apps = applist
 	} else {
 		deploy.setupCommand.SetupParams.Apps = make([]string, 0)
 	}
-	if len(deploy.envList) != 0 {
-		deploy.setupCommand.SetupParams.Envs = deploy.envList
+	envlist := deploy.fuzzyArgs.GetEnvs()
+	if len(envlist) != 0 {
+		deploy.setupCommand.SetupParams.Envs = envlist
 	} else {
 		deploy.setupCommand.SetupParams.Envs = make([]string, 0)
 	}
@@ -159,7 +160,7 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 	return
 }
 
-func (deploy *DeployClass) getLegalEnvAppList() (err error) {
+/*func (deploy *DeployClass) getLegalEnvAppList() (err error) {
 
 	for filename := range deploy.auroraConfig.Files {
 		if strings.Contains(filename, "/") {
@@ -265,18 +266,19 @@ func (deploy *DeployClass) populateFuzzyEnvAppList(args []string) (err error) {
 	}
 	return
 }
+*/
 
 func (deploy *DeployClass) populateFlagsEnvAppList(appList []string, envList []string) (err error) {
 	var env string
 	var app string
 
 	for i := range appList {
-		app, err = deploy.getFuzzyApp(appList[i])
+		app, err = deploy.fuzzyArgs.GetFuzzyApp(appList[i])
 		if err != nil {
 			return err
 		}
 		if app != "" {
-			deploy.appList = append(deploy.appList, app)
+			deploy.fuzzyArgs.AddApp(app)
 		} else {
 			err = errors.New(appList[i] + ": not found")
 			return err
@@ -284,12 +286,12 @@ func (deploy *DeployClass) populateFlagsEnvAppList(appList []string, envList []s
 	}
 
 	for i := range envList {
-		env, err = deploy.getFuzzyEnv(envList[i])
+		env, err = deploy.fuzzyArgs.GetFuzzyApp(envList[i])
 		if err != nil {
 			return err
 		}
 		if env != "" {
-			deploy.envList = append(deploy.envList, env)
+			deploy.fuzzyArgs.AddEnv(env)
 		} else {
 			err = errors.New(envList[i] + ": not found")
 			return err
@@ -313,19 +315,13 @@ func (deploy *DeployClass) populateAllAppForEnv(env string) (err error) {
 			if parts[0] == env {
 				if !strings.Contains(parts[1], "about.json") {
 					if strings.HasSuffix(parts[1], ".json") {
-						deploy.appList = append(deploy.appList, strings.TrimSuffix(parts[1], ".json"))
+						deploy.fuzzyArgs.AddApp(strings.TrimSuffix(parts[1], ".json"))
 					}
 				}
 			}
 		}
 	}
 
-	return
-}
-
-func (deploy *DeployClass) populateAll() {
-	deploy.envList = deploy.legalEnvList
-	deploy.appList = deploy.legalAppList
 	return
 }
 
@@ -340,16 +336,16 @@ func (deploy *DeployClass) validateDeploy(args []string, appList []string, envLi
 		}
 	}
 
-	err = deploy.getLegalEnvAppList()
+	err = deploy.fuzzyArgs.Init(deploy.Configuration)
 	if err != nil {
 		return err
 	}
 
 	if deployAll {
-		deploy.populateAll()
+		deploy.fuzzyArgs.DeployAll()
 		if !force {
 
-			response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.appList)) + " applications in " + strconv.Itoa(len(deploy.envList)) + " environments.  Are you sure?")
+			response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.fuzzyArgs.GetApps())) + " applications in " + strconv.Itoa(len(deploy.fuzzyArgs.GetEnvs())) + " environments.  Are you sure?")
 			if err != nil {
 				return err
 			}
@@ -361,7 +357,7 @@ func (deploy *DeployClass) validateDeploy(args []string, appList []string, envLi
 		}
 
 	} else {
-		err = deploy.populateFuzzyEnvAppList(args)
+		err = deploy.fuzzyArgs.PopulateFuzzyEnvAppList(args)
 		if err != nil {
 			return err
 		}
@@ -372,16 +368,17 @@ func (deploy *DeployClass) validateDeploy(args []string, appList []string, envLi
 		}
 	}
 
-	if len(deploy.envList) > 0 && len(deploy.appList) == 0 {
+	if len(deploy.fuzzyArgs.GetEnvs()) > 0 && len(deploy.fuzzyArgs.GetApps()) == 0 {
 		// User have specified one or more environments, but not an application list, so prefill it
-		for i := range deploy.envList {
-			err := deploy.populateAllAppForEnv(deploy.envList[i])
+		for i := range deploy.fuzzyArgs.GetEnvs() {
+			err := deploy.populateAllAppForEnv(deploy.fuzzyArgs.GetEnvs()[i])
 			if err != nil {
 				return err
 			}
 		}
 		if !force {
-			response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.appList)) + " applications in " + strconv.Itoa(len(deploy.envList)) + " environments.  Are you sure?")
+			response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.fuzzyArgs.GetApps())) + " applications in " + strconv.Itoa(len(deploy.fuzzyArgs.GetEnvs())) + " environments.  Are you sure?")
+			//			response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.appList)) + " applications in " + strconv.Itoa(len(deploy.envList)) + " environments.  Are you sure?")
 			if err != nil {
 				return err
 			}
