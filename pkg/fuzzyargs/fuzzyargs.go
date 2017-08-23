@@ -10,6 +10,22 @@ Init()							- Reads the AuroraConfig
 PopulateFuzzyEnvAppList()		- Parses the args array given
 
 
+Two modes: Expect env/app combinations, or a single file name
+Clients will do:
+- Init(configuration)					This will read the boober configuration and populate the
+										legal<Type>list arrays in the FuzzyArgs struct
+- PopulateFuzzyEnvAppList(args)			This will populate the <Type>list arrays
+- PopulateFuzzyFileList(args)			This will populate the FileList array, including the about entries
+
+Arguments types:
+
+<short env>/<short app>					Identify an app and an environment OR a file
+<short env>
+<short app>
+<short "about.json">					Only applicable on files
+<short env>/<short "about.json">		Only applicable on files
+
+
 */
 
 import (
@@ -23,62 +39,19 @@ type FuzzyArgs struct {
 	configuration *configuration.ConfigurationClass
 	appList       []string
 	envList       []string
-	fileList      []string
+	filename      string
 	legalAppList  []string
 	legalEnvList  []string
 	legalFileList []string
 }
 
+// ** Initialize **
 func (fuzzyArgs *FuzzyArgs) Init(configuration *configuration.ConfigurationClass) (err error) {
 	fuzzyArgs.configuration = configuration
 	err = fuzzyArgs.getLegalEnvAppFileList()
 	if err != nil {
 		return err
 	}
-	return
-}
-
-func (fuzzyArgs *FuzzyArgs) addLegalApp(app string) {
-	for i := range fuzzyArgs.legalAppList {
-		if fuzzyArgs.legalAppList[i] == app {
-			return
-		}
-	}
-	fuzzyArgs.legalAppList = append(fuzzyArgs.legalAppList, app)
-	return
-}
-
-func (fuzzyArgs *FuzzyArgs) addLegalEnv(env string) {
-	for i := range fuzzyArgs.legalEnvList {
-		if fuzzyArgs.legalEnvList[i] == env {
-			return
-		}
-	}
-	fuzzyArgs.legalEnvList = append(fuzzyArgs.legalEnvList, env)
-	return
-}
-
-func (fuzzyArgs *FuzzyArgs) getLegalEnvAppFileList() (err error) {
-
-	auroraConfig, err := auroraconfig.GetAuroraConfig(fuzzyArgs.configuration)
-	if err != nil {
-		return err
-	}
-	for filename := range auroraConfig.Files {
-		fuzzyArgs.legalFileList = append(fuzzyArgs.legalFileList, filename)
-		if strings.Contains(filename, "/") {
-			// We have a full path name
-			parts := strings.Split(filename, "/")
-			fuzzyArgs.addLegalEnv(parts[0])
-			if !strings.Contains(parts[1], "about.json") {
-				if strings.HasSuffix(parts[1], ".json") {
-					fuzzyArgs.addLegalApp(strings.TrimSuffix(parts[1], ".json"))
-				}
-
-			}
-		}
-	}
-
 	return
 }
 
@@ -103,6 +76,7 @@ func (fuzzyArgs *FuzzyArgs) GetFuzzyApp(arg string) (app string, err error) {
 			app = fuzzyArgs.legalAppList[i]
 		}
 	}
+
 	return app, nil
 }
 
@@ -124,7 +98,119 @@ func (fuzzyArgs *FuzzyArgs) GetFuzzyEnv(arg string) (env string, err error) {
 			env = fuzzyArgs.legalEnvList[i]
 		}
 	}
+
 	return env, nil
+}
+
+func (fuzzyArgs *FuzzyArgs) getLegalEnvAppFileList() (err error) {
+
+	auroraConfig, err := auroraconfig.GetAuroraConfig(fuzzyArgs.configuration)
+	if err != nil {
+		return err
+	}
+	for filename := range auroraConfig.Files {
+		fuzzyArgs.addLegalFile(filename)
+		if strings.Contains(filename, "/") {
+			// We have a full path name
+			parts := strings.Split(filename, "/")
+			fuzzyArgs.addLegalEnv(parts[0])
+			if !strings.Contains(parts[1], "about.json") {
+				if strings.HasSuffix(parts[1], ".json") {
+					fuzzyArgs.addLegalApp(strings.TrimSuffix(parts[1], ".json"))
+				}
+
+			}
+		}
+	}
+
+	return
+}
+
+func (fuzzyArgs *FuzzyArgs) PopulateFuzzyFileList(args []string) (err error) {
+
+	if len(args) == 1 {
+		if strings.Contains(args[0], "/") {
+			// We have a full path name with a slash, split it and call ourselves recursively
+			parts := strings.Split(args[0], "/")
+			return fuzzyArgs.PopulateFuzzyFileList(parts)
+		}
+		// This should be a root file, search through the root file list
+		var found bool = false
+		for i := range fuzzyArgs.legalFileList {
+			if !strings.Contains(fuzzyArgs.legalFileList[i], "/") {
+				// ** TODO: Code from here!
+				if strings.Contains(fuzzyArgs.legalFileList[i], args[0]) {
+					if found {
+						err = errors.New("Duplicate file spec found")
+						return err
+					}
+					found = true
+					fuzzyArgs.filename = fuzzyArgs.legalFileList[i]
+				}
+			}
+		}
+		if found {
+			return nil
+		}
+	} else if len(args) == 2 {
+		// This is a file in an environment catalog
+		// Find the env and then check if there is a file in this env
+		var foundEnv bool = false
+		var env string = ""
+		// First check exact match
+		for i := range fuzzyArgs.legalEnvList {
+			if fuzzyArgs.legalEnvList[i] == args[0] {
+				foundEnv = true
+				env = fuzzyArgs.legalEnvList[i]
+			}
+		}
+		if !foundEnv {
+			// Check fuzzy match
+			for i := range fuzzyArgs.legalEnvList {
+				if strings.Contains(fuzzyArgs.legalEnvList[i], args[0]) {
+					if foundEnv {
+						err = errors.New("Duplicate environment spec found")
+						return err
+					}
+					foundEnv = true
+					env = fuzzyArgs.legalEnvList[i]
+				}
+			}
+		}
+
+		if !foundEnv {
+			err = errors.New("No matching env found")
+			return err
+		}
+		// Try to find the file in the found env
+		var foundFile bool = false
+		// First check exact match
+		for i := range fuzzyArgs.legalFileList {
+			if fuzzyArgs.legalFileList[i] == env+"/"+args[1] {
+				foundFile = true
+				fuzzyArgs.filename = fuzzyArgs.legalFileList[i]
+			}
+		}
+		if !foundFile {
+			for i := range fuzzyArgs.legalFileList {
+				if strings.Contains(fuzzyArgs.legalFileList[i], env+"/"+args[1]) {
+					if foundFile {
+						err = errors.New("Duplicate file spec found")
+						return err
+					}
+					foundFile = true
+					fuzzyArgs.filename = fuzzyArgs.legalFileList[i]
+				}
+			}
+		}
+		if !foundFile {
+			err = errors.New("No matching file found")
+		}
+
+	} else {
+		err = errors.New("Filspec usage: <env>/<file> | <env> <file>")
+	}
+	return
 }
 
 func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList(args []string) (err error) {
@@ -137,6 +223,10 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList(args []string) (err error) {
 			parts := strings.Split(args[i], "/")
 			env, err = fuzzyArgs.GetFuzzyEnv(parts[0])
 			if err != nil {
+				return err
+			}
+			if env == "" {
+				err = errors.New("No matching env found")
 				return err
 			}
 			app, err = fuzzyArgs.GetFuzzyApp(parts[1])
@@ -158,17 +248,16 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList(args []string) (err error) {
 			}
 		}
 		if env == "" && app == "" {
-			// None found, return error
-			err = errors.New(args[i] + ": not found")
+			err = errors.New("No match found for " + args[i])
 			return err
+		} else {
+			if env != "" {
+				fuzzyArgs.envList = append(fuzzyArgs.envList, env)
+			}
+			if app != "" {
+				fuzzyArgs.appList = append(fuzzyArgs.appList, app)
+			}
 		}
-		if env != "" {
-			fuzzyArgs.envList = append(fuzzyArgs.envList, env)
-		}
-		if app != "" {
-			fuzzyArgs.appList = append(fuzzyArgs.appList, app)
-		}
-
 	}
 	return
 }
@@ -237,43 +326,39 @@ func (fuzzyArgs *FuzzyArgs) App2File(app string) (filename string, err error) {
 
 // Func to get a filename if we expect the user to uniquely identify a file
 func (fuzzyArgs *FuzzyArgs) GetFile() (filename string, err error) {
-	if fuzzyArgs.IsLegalFile(filename) {
-		return filename, nil
-	}
-	env, err := fuzzyArgs.GetEnv()
-	if err != nil {
-		return "", err
-	}
-	app, err := fuzzyArgs.GetApp()
-	if err != nil {
-		return "", err
-	}
-	/*if env == "" {
-		// We need to find a unique env for a file
-		filename, err = fuzzyArgs.App2File(app)
-		if err != nil {
-			return "", err
-		}
-	}*/
 
-	if env == "" {
-		if app == "" {
-			filename = "about.json"
-		} else {
-			filename = app + ".json"
-		}
+	if fuzzyArgs.filename != "" {
+		return fuzzyArgs.filename, nil
 	} else {
-		if strings.Contains(filename, "about") {
-			filename = env + "/" + "about.json"
-		} else {
-			filename = env + "/" + app + ".json"
+		err = errors.New("Not found")
+		return "", err
+	}
+	return
+
+}
+
+func (fuzzyArgs *FuzzyArgs) addLegalFile(filename string) {
+
+	fuzzyArgs.legalFileList = append(fuzzyArgs.legalFileList, filename)
+	return
+}
+
+func (fuzzyArgs *FuzzyArgs) addLegalApp(app string) {
+	for i := range fuzzyArgs.legalAppList {
+		if fuzzyArgs.legalAppList[i] == app {
+			return
 		}
 	}
-	if fuzzyArgs.IsLegalFile(filename) {
-		return filename, nil
+	fuzzyArgs.legalAppList = append(fuzzyArgs.legalAppList, app)
+	return
+}
+
+func (fuzzyArgs *FuzzyArgs) addLegalEnv(env string) {
+	for i := range fuzzyArgs.legalEnvList {
+		if fuzzyArgs.legalEnvList[i] == env {
+			return
+		}
 	}
-
-	err = errors.New("No such file")
-	return "", err
-
+	fuzzyArgs.legalEnvList = append(fuzzyArgs.legalEnvList, env)
+	return
 }

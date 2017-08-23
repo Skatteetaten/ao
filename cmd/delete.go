@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+
 	pkgDelteCmd "github.com/skatteetaten/ao/pkg/deletecmd"
 	"github.com/spf13/cobra"
 )

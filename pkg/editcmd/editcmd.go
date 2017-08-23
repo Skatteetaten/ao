@@ -28,17 +28,8 @@ type EditcmdClass struct {
 func (editcmd *EditcmdClass) FuzzyEditFile(args []string) (string, error) {
 	var fuzzyArgs fuzzyargs.FuzzyArgs
 	fuzzyArgs.Init(editcmd.Configuration)
-	if len(args) > 0 {
-		filename := args[0]
-		if filename == "about" {
-			filename = "about.json"
-		}
-		if fuzzyArgs.IsLegalFile(filename) {
-			return editcmd.EditFile(filename)
-		}
-	}
 
-	if err := fuzzyArgs.PopulateFuzzyEnvAppList(args[0:]); err != nil {
+	if err := fuzzyArgs.PopulateFuzzyFileList(args); err != nil {
 		return "", err
 	}
 
