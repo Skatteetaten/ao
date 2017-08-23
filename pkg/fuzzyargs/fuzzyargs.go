@@ -126,13 +126,14 @@ func (fuzzyArgs *FuzzyArgs) getLegalEnvAppFileList() (err error) {
 	return
 }
 
-func (fuzzyArgs *FuzzyArgs) PopulateFuzzyFileList(args []string) (err error) {
+// Parse args, expect one or two args that describes a file
+func (fuzzyArgs *FuzzyArgs) PopulateFuzzyFile(args []string) (err error) {
 
 	if len(args) == 1 {
 		if strings.Contains(args[0], "/") {
 			// We have a full path name with a slash, split it and call ourselves recursively
 			parts := strings.Split(args[0], "/")
-			return fuzzyArgs.PopulateFuzzyFileList(parts)
+			return fuzzyArgs.PopulateFuzzyFile(parts)
 		}
 		// This should be a root file, search through the root file list
 		var found bool = false
@@ -213,7 +214,49 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyFileList(args []string) (err error) {
 	return
 }
 
+// Parse args, expect one or more arguments that describes envs and/or apps
 func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList(args []string) (err error) {
+	for i := range args {
+		var env string
+		var app string
+
+		if strings.Contains(args[i], "/") {
+			// We have a full path name with a slash, split it and try to match a specific env/app
+			parts := strings.Split(args[0], "/")
+			fuzzyArgs.PopulateFuzzyEnvAppList(parts)
+			// TODO: Match specific
+		} else {
+			// We have a single spec that is either an app or an env
+			env, err = fuzzyArgs.GetFuzzyEnv(args[i])
+			if err != nil {
+				return err
+			}
+			app, err = fuzzyArgs.GetFuzzyApp(args[i])
+			if err != nil {
+				return err
+			}
+			if env != "" && app != "" {
+				err = errors.New(args[i] + ": Not a unique identifier, matching both environment " + env + " and application " + app)
+				return err
+			}
+			if env == "" && app == "" {
+				err = errors.New("No match found for " + args[i])
+				return err
+			}
+			if env != "" {
+				fuzzyArgs.envList = append(fuzzyArgs.envList, env)
+			}
+			if app != "" {
+				fuzzyArgs.appList = append(fuzzyArgs.appList, app)
+			}
+		}
+
+	}
+
+	return
+}
+
+func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList_old(args []string) (err error) {
 
 	for i := range args {
 		var env string
