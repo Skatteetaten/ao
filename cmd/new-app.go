@@ -46,7 +46,7 @@ If the generate-app is set to false, the generator will not be called, and the c
 
 If the artifactid is not given, it will default to the appname.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var newappcmdObject newappcmd.NewappcmdClass
+		newappcmdObject := newappcmd.NewappcmdClass{Configuration: config}
 		output, err := newappcmdObject.NewappCommand(args, newappArtifactId, newappCluster, newappEnv, newappGroupId, newappFolder, newappOutputfolder, newappType, newappVersion, newappGenerateApp, &persistentOptions)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
