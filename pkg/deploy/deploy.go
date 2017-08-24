@@ -17,6 +17,9 @@ import (
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 )
 
+// TODO: Fyll inn envs ved deploy av en app
+// TODO: Match apps kun i de envs de finnes.   Innebærer at args må parses to ganger: Først for envs og så for apps
+
 const UsageString = "Usage: deploy <env> <app> <env/app> [--all] [--force] [-e env] [-a app] "
 
 type DeployCommand struct {
@@ -31,26 +34,6 @@ type DeployClass struct {
 	overrideJsons []string
 	auroraConfig  *serverapi_v2.AuroraConfig
 }
-
-/*func (deploy *DeployClass) addLegalApp(app string) {
-	for i := range deploy.legalAppList {
-		if deploy.legalAppList[i] == app {
-			return
-		}
-	}
-	deploy.legalAppList = append(deploy.legalAppList, app)
-	return
-}
-
-func (deploy *DeployClass) addLegalEnv(env string) {
-	for i := range deploy.legalEnvList {
-		if deploy.legalEnvList[i] == env {
-			return
-		}
-	}
-	deploy.legalEnvList = append(deploy.legalEnvList, env)
-	return
-}*/
 
 func (deploy *DeployClass) generateJson(
 	affiliation string, dryRun bool) (jsonStr string, err error) {
@@ -160,114 +143,6 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 	return
 }
 
-/*func (deploy *DeployClass) getLegalEnvAppList() (err error) {
-
-	for filename := range deploy.auroraConfig.Files {
-		if strings.Contains(filename, "/") {
-			// We have a full path name
-			parts := strings.Split(filename, "/")
-			deploy.addLegalEnv(parts[0])
-			if !strings.Contains(parts[1], "about.json") {
-				if strings.HasSuffix(parts[1], ".json") {
-					deploy.addLegalApp(strings.TrimSuffix(parts[1], ".json"))
-				}
-
-			}
-		}
-	}
-
-	return
-}
-
-// Try to match an argument with an app, returns "" if none found
-func (deploy *DeployClass) getFuzzyApp(arg string) (app string, err error) {
-	// First check for exact match
-	for i := range deploy.legalAppList {
-		if deploy.legalAppList[i] == arg {
-			return arg, nil
-		}
-	}
-	// No exact match found, look for an app name that contains the string
-	for i := range deploy.legalAppList {
-		if strings.Contains(deploy.legalAppList[i], arg) {
-			if app != "" {
-				err = errors.New(arg + ": Not a unique application identifier, matching " + app + " and " + deploy.legalAppList[i])
-				return "", err
-			}
-			app = deploy.legalAppList[i]
-		}
-	}
-	return app, nil
-}
-
-// Try to match an argument with an env, returns "" if none found
-func (deploy *DeployClass) getFuzzyEnv(arg string) (env string, err error) {
-	// First check for exact match
-	for i := range deploy.legalEnvList {
-		if deploy.legalEnvList[i] == arg {
-			return arg, nil
-		}
-	}
-	// No exact match found, look for an env name that contains the string
-	for i := range deploy.legalEnvList {
-		if strings.Contains(deploy.legalEnvList[i], arg) {
-			if env != "" {
-				err = errors.New(arg + ": Not a unique environment identifier, matching both " + env + " and " + deploy.legalEnvList[i])
-				return "", err
-			}
-			env = deploy.legalEnvList[i]
-		}
-	}
-	return env, nil
-}
-
-func (deploy *DeployClass) populateFuzzyEnvAppList(args []string) (err error) {
-
-	for i := range args {
-		var env string
-		var app string
-
-		if strings.Contains(args[i], "/") {
-			parts := strings.Split(args[i], "/")
-			env, err = deploy.getFuzzyEnv(parts[0])
-			if err != nil {
-				return err
-			}
-			app, err = deploy.getFuzzyApp(parts[1])
-			if err != nil {
-				return err
-			}
-		} else {
-			env, err = deploy.getFuzzyEnv(args[i])
-			if err != nil {
-				return err
-			}
-			app, err = deploy.getFuzzyApp(args[i])
-			if err != nil {
-				return err
-			}
-			if env != "" && app != "" {
-				err = errors.New(args[i] + ": Not a unique identifier, matching both environment " + env + " and application " + app)
-				return err
-			}
-		}
-		if env == "" && app == "" {
-			// None found, return error
-			err = errors.New(args[i] + ": not found")
-			return err
-		}
-		if env != "" {
-			deploy.envList = append(deploy.envList, env)
-		}
-		if app != "" {
-			deploy.appList = append(deploy.appList, app)
-		}
-
-	}
-	return
-}
-*/
-
 func (deploy *DeployClass) populateFlagsEnvAppList(appList []string, envList []string) (err error) {
 	var env string
 	var app string
@@ -286,7 +161,7 @@ func (deploy *DeployClass) populateFlagsEnvAppList(appList []string, envList []s
 	}
 
 	for i := range envList {
-		env, err = deploy.fuzzyArgs.GetFuzzyApp(envList[i])
+		env, err = deploy.fuzzyArgs.GetFuzzyEnv(envList[i])
 		if err != nil {
 			return err
 		}
@@ -329,7 +204,7 @@ func (deploy *DeployClass) validateDeploy(args []string, appList []string, envLi
 	// We will accept a mixed list of apps, envs and env/app strings and parse them
 	// Empty list is illegal
 
-	if len(args) == 0 {
+	if len(args) == 0 && len(appList) == 0 && len(envList) == 0 {
 		if !deployAll {
 			err = errors.New(UsageString)
 			return err

@@ -216,14 +216,17 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyFile(args []string) (err error) {
 
 // Parse args, expect one or more arguments that describes envs and/or apps
 func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList(args []string) (err error) {
+	var argIdentified []bool
+	argIdentified = make([]bool, len(args))
+
+	// First, parse envs
 	for i := range args {
 		var env string
 		var app string
-
 		if strings.Contains(args[i], "/") {
 			// We have a full path name with a slash, split it and try to match a specific env/app
 			parts := strings.Split(args[0], "/")
-			fuzzyArgs.PopulateFuzzyEnvAppList(parts)
+			fuzzyArgs.PopulateFuzzyEnvAppList(parts[0:0])
 			// TODO: Match specific
 		} else {
 			// We have a single spec that is either an app or an env
@@ -236,23 +239,44 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList(args []string) (err error) {
 				return err
 			}
 			if env != "" && app != "" {
-				err = errors.New(args[i] + ": Not a unique identifier, matching both environment " + env + " and application " + app)
-				return err
-			}
-			if env == "" && app == "" {
-				err = errors.New("No match found for " + args[i])
+				err = errors.New(args[i] + " matching both environment " + env + " and application " + app)
 				return err
 			}
 			if env != "" {
 				fuzzyArgs.AddEnv(env)
-			}
-			if app != "" {
-				fuzzyArgs.AddApp(app)
+				argIdentified[i] = true
 			}
 		}
 
 	}
 
+	for i := range args {
+		var app string
+		if strings.Contains(args[i], "/") {
+			// We have a full path name with a slash, split it and try to match a specific env/app
+			parts := strings.Split(args[0], "/")
+			fuzzyArgs.PopulateFuzzyEnvAppList(parts[1:1])
+			// TODO: Match specific
+		} else {
+			// We have a single spec that is either an app or an env
+			app, err = fuzzyArgs.GetFuzzyApp(args[i])
+			if err != nil {
+				return err
+			}
+			if app != "" {
+				fuzzyArgs.AddApp(app)
+				argIdentified[i] = true
+			}
+		}
+
+	}
+
+	for i := range argIdentified {
+		if !argIdentified[i] {
+			err = errors.New("No match found for " + args[i])
+			return err
+		}
+	}
 	return
 }
 
