@@ -12,6 +12,9 @@ import:
   version: ^0.8.0
 - package: github.com/stromland/coprompt
 - package: github.com/c-bata/go-prompt
+- package: github.com/pkg/term
+  subpackages:
+  - termios
 testImport:
 - package: gopkg.in/h2non/gock.v1
   version: ^1.0.6

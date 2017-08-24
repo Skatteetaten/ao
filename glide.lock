@@ -1,5 +1,5 @@
-hash: dca081613491b2e3ef24e07a674a2efb18932f54bf1dab7f2f2b9a23ed4e5f77
-updated: 2017-08-23T12:29:30.025689406+02:00
+hash: 35f32175e5d6cb7b253037f649379a407d9a3a31e97efd706070706c5fe2f79b
+updated: 2017-08-24T13:51:03.209821983+02:00
 imports:
 - name: github.com/c-bata/go-prompt
   version: ba233229562fbeebe1328788a6245cda9124af27
@@ -32,6 +32,10 @@ imports:
   version: 4692b8f9babfc93db58cc592ba2689d8736781de
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
+- name: github.com/pkg/term
+  version: b1f72af2d63057363398bec5873d16a98b453312
+  subpackages:
+  - termios
 - name: github.com/sergi/go-diff
   version: feef008d51ad2b3778f85d387ccf91735543008d
   subpackages:
