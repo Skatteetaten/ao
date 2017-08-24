@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stromland/coprompt"
 	"sort"
+	"strings"
 )
 
 var shellCmd = &cobra.Command{
@@ -36,9 +37,11 @@ func handleSuggestions(annotation string, _ prompt.Document) []prompt.Suggest {
 	switch annotation {
 	case "GetFiles":
 		return getFiles()
+	case "GetDeployments":
+		return getDeployments()
+	default:
+		return suggestions
 	}
-
-	return suggestions
 }
 
 var filesSuggestions []prompt.Suggest
@@ -60,4 +63,21 @@ func getFiles() []prompt.Suggest {
 	}
 
 	return filesSuggestions
+}
+
+var deploymentSuggestions []prompt.Suggest
+
+func getDeployments() []prompt.Suggest {
+	if len(deploymentSuggestions) > 0 {
+		return deploymentSuggestions
+	}
+
+	for _, s := range getFiles() {
+		if strings.Contains(s.Text, "/") && !strings.Contains(s.Text, "about") {
+			s.Text = strings.TrimSuffix(s.Text, ".json")
+			deploymentSuggestions = append(deploymentSuggestions, s)
+		}
+	}
+
+	return deploymentSuggestions
 }
