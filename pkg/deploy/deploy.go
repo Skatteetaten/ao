@@ -200,6 +200,26 @@ func (deploy *DeployClass) populateAllAppForEnv(env string) (err error) {
 	return
 }
 
+func (deploy *DeployClass) populateAllEnvForApp(app string) (err error) {
+
+	auroraConfig, err := auroraconfig.GetAuroraConfig(deploy.Configuration)
+	if err != nil {
+		return err
+	}
+
+	for filename := range auroraConfig.Files {
+		if strings.Contains(filename, "/") {
+			// We have a full path name
+			parts := strings.Split(filename, "/")
+			if strings.Contains(parts[1], app) {
+				deploy.fuzzyArgs.AddEnv(parts[0])
+			}
+		}
+	}
+
+	return
+}
+
 func (deploy *DeployClass) validateDeploy(args []string, appList []string, envList []string, deployAll bool, force bool) (err error) {
 	// We will accept a mixed list of apps, envs and env/app strings and parse them
 	// Empty list is illegal
@@ -251,16 +271,29 @@ func (deploy *DeployClass) validateDeploy(args []string, appList []string, envLi
 				return err
 			}
 		}
-		if !force {
-			response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.fuzzyArgs.GetApps())) + " applications in " + strconv.Itoa(len(deploy.fuzzyArgs.GetEnvs())) + " environments.  Are you sure?")
-			//			response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.appList)) + " applications in " + strconv.Itoa(len(deploy.envList)) + " environments.  Are you sure?")
+	}
+
+	if len(deploy.fuzzyArgs.GetEnvs()) == 0 && len(deploy.fuzzyArgs.GetApps()) > 0 {
+		fmt.Println("DEBUG: Prefill Env list")
+		// User have specified one or more apps, but not an environment list, so prefill it
+		for i := range deploy.fuzzyArgs.GetApps() {
+			fmt.Println("  DEBUG: App: " + deploy.fuzzyArgs.GetApps()[i])
+			err := deploy.populateAllEnvForApp(deploy.fuzzyArgs.GetApps()[i])
 			if err != nil {
 				return err
 			}
-			if response != "Y" {
-				err = errors.New("Operation cancelled by user")
-				return err
-			}
+		}
+	}
+
+	if !force {
+		response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.fuzzyArgs.GetApps())) + " applications in " + strconv.Itoa(len(deploy.fuzzyArgs.GetEnvs())) + " environments.  Are you sure?")
+		//			response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.appList)) + " applications in " + strconv.Itoa(len(deploy.envList)) + " environments.  Are you sure?")
+		if err != nil {
+			return err
+		}
+		if response != "Y" {
+			err = errors.New("Operation cancelled by user")
+			return err
 		}
 	}
 
