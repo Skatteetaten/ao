@@ -8,8 +8,8 @@ import (
 	"os/user"
 )
 
-var commitCmd = &cobra.Command{
-	Use:   "commit",
+var saveCmd = &cobra.Command{
+	Use:   "save",
 	Short: "Save changed, new and deleted files for AuroraConfig",
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -27,5 +27,5 @@ var commitCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(commitCmd)
+	RootCmd.AddCommand(saveCmd)
 }

@@ -4,13 +4,16 @@ import (
 	"fmt"
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/skatteetaten/ao/pkg/openshift"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	_ "go/token"
 	"os/user"
+	"os"
 )
 
-var cloneCmd = &cobra.Command{
-	Use:   "clone",
+var checkoutCmd = &cobra.Command{
+	Use:   "checkout",
 	Short: "Checkout AuroraConfig (git repository) for current affiliation",
 	Run: func(cmd *cobra.Command, args []string) {
 		affiliation := config.GetAffiliation()
@@ -23,24 +26,33 @@ var cloneCmd = &cobra.Command{
 		path, _ := cmd.LocalFlags().GetString("path")
 
 		if len(path) < 1 {
-			path = fmt.Sprintf("./%s", affiliation)
+			wd, _ := os.Getwd()
+			path = fmt.Sprintf("%s/%s", wd, affiliation)
 		}
 
 		if err := auroraconfig.Checkout(affiliation, username, path); err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		var configLocation = viper.GetString("HOME") + "/.ao.json"
+		config, _ := openshift.LoadOrInitiateConfigFile(configLocation, false)
+
+		if err := config.AddCheckoutPath(affiliation, path, configLocation); err != nil {
 			fmt.Println(err)
 		}
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(cloneCmd)
+	RootCmd.AddCommand(checkoutCmd)
 
 	defaultUsername := ""
 	if currentUser, err := user.Current(); err == nil {
 		defaultUsername = currentUser.Username
 	}
 
-	cloneCmd.Flags().StringP("affiliation", "a", "", "Affiliation to clone")
-	cloneCmd.Flags().StringP("path", "p", "", "Checkout repo to path")
-	cloneCmd.Flags().StringP("user", "u", defaultUsername, "Checkout repo as user")
+	checkoutCmd.Flags().StringP("affiliation", "a", "", "Affiliation to clone")
+	checkoutCmd.Flags().StringP("path", "p", "", "Checkout repo to path")
+	checkoutCmd.Flags().StringP("user", "u", defaultUsername, "Checkout repo as user")
 }

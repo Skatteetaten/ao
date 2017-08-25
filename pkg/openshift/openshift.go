@@ -43,9 +43,10 @@ type OpenshiftCluster struct {
 }
 
 type OpenshiftConfig struct {
-	APICluster  string              `json:"apiCluster"`
-	Affiliation string              `json:"affiliation"`
-	Clusters    []*OpenshiftCluster `json:"clusters"`
+	APICluster    string              `json:"apiCluster"`
+	Affiliation   string              `json:"affiliation"`
+	Clusters      []*OpenshiftCluster `json:"clusters"`
+	CheckoutPaths map[string]string   `json:"checkoutPaths"`
 }
 
 func Logout(configLocation string) (err error) {
@@ -126,6 +127,26 @@ func LoadOrInitiateConfigFile(configLocation string, useOcConfig bool) (*Openshi
 		return config, nil
 	}
 	return config, nil
+}
+
+func (c *OpenshiftConfig) AddCheckoutPath(affiliation string, path string, configLocation string) error {
+	if c.CheckoutPaths == nil {
+		c.CheckoutPaths = make(map[string]string)
+	}
+
+	c.CheckoutPaths[affiliation] = path
+
+	return c.write(configLocation)
+}
+
+func (c *OpenshiftConfig) RemoveCheckoutPath(affiliation string, configLocation string) error {
+	if c.CheckoutPaths == nil {
+		return errors.New("There are no checkout path to remove")
+	}
+
+	delete(c.CheckoutPaths, affiliation)
+
+	return c.write(configLocation)
 }
 
 func loadConfigFile(configLocation string) (*OpenshiftConfig, error) {
