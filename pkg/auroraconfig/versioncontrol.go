@@ -37,17 +37,25 @@ func Clone(affiliation string, username string, outputPath string) error {
 		return errors.Wrap(err, "Clone failed")
 	}
 
-	currentDir, _ := os.Getwd()
-	os.Chdir(outputPath)
+	return nil
+}
 
-	cmd := exec.Command("git", "branch", "--set-upstream-to=origin/master", "master")
-	if err = cmd.Run(); err != nil {
+func Pull(username string) error {
+	wd, _ := os.Getwd()
+
+	repository, err := git.PlainOpen(wd)
+	if err != nil {
 		return err
 	}
 
-	os.Chdir(currentDir)
+	basicAuth := authenticateUser(username)
+	wt, _ := repository.Worktree()
 
-	return nil
+	return wt.Pull(&git.PullOptions{
+		RemoteName: "origin",
+		Auth:       basicAuth,
+	})
+
 }
 
 func Commit(username string, config *configuration.ConfigurationClass) error {
@@ -80,16 +88,12 @@ func Commit(username string, config *configuration.ConfigurationClass) error {
 		return err
 	}
 
-	if err = exec.Command("git", "checkout", ".").Run(); err != nil {
+	wt, _ := repository.Worktree()
+	if err = wt.Checkout(&git.CheckoutOptions{Branch: "."}); err != nil {
 		return err
 	}
 
-	wt, _ := repository.Worktree()
-	wt.Pull(&git.PullOptions{
-		Auth: basicAuth,
-	})
-
-	return nil
+	return wt.Pull(&git.PullOptions{Auth: basicAuth})
 }
 
 func validateRepo(gitUrl string, repository *git.Repository) error {
@@ -164,7 +168,7 @@ Please revert them with: git reset HEAD^`)
 	}
 
 	if err := compareGitLog("HEAD..origin/master"); err != nil {
-		return errors.New(`Please update to latest configuration with: git pull`)
+		return errors.New(`Please update to latest configuration with: ao pull`)
 	}
 
 	return nil
