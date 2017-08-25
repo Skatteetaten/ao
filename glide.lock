@@ -1,5 +1,5 @@
-hash: 35f32175e5d6cb7b253037f649379a407d9a3a31e97efd706070706c5fe2f79b
-updated: 2017-08-24T13:51:03.209821983+02:00
+hash: 62ed26da2814975c4de2c5438b0d86f769550ba51099901a0b11d9504b088357
+updated: 2017-08-25T08:53:30.702847972+02:00
 imports:
 - name: github.com/c-bata/go-prompt
   version: ba233229562fbeebe1328788a6245cda9124af27
@@ -60,6 +60,8 @@ imports:
   - scanner
   - token
   - types
+- name: github.com/stromland/cobra-prompt
+  version: 4f1f5b3f14dce84c579f58137ae720d8804bb58f
 - name: github.com/stromland/coprompt
   version: e648c87113c6502b7f524964ed5358b15c4454d9
 - name: github.com/xanzy/ssh-agent

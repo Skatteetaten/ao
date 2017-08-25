@@ -4,7 +4,6 @@ import (
 	"fmt"
 	pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
 	"github.com/spf13/cobra"
-	"github.com/stromland/coprompt"
 )
 
 var getcmdObject = &pkgGetCmd.GetcmdClass{
@@ -25,7 +24,7 @@ var getFileCmd = &cobra.Command{
 	Short:   "Get file",
 	Aliases: []string{"files"},
 	Annotations: map[string]string{
-		coprompt.CALLBACK_ANNOTATION: "GetFiles",
+		CallbackAnnotation: "GetFiles",
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
