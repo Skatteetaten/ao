@@ -19,7 +19,7 @@ import (
 
 const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
 
-func Clone(affiliation string, username string, outputPath string) error {
+func Checkout(affiliation string, username string, outputPath string) error {
 
 	url := fmt.Sprintf(GIT_URL_FORMAT, username, affiliation)
 	fmt.Printf("Cloning AuroraConfig for affiliation %s\n", affiliation)
@@ -34,7 +34,7 @@ func Clone(affiliation string, username string, outputPath string) error {
 	})
 
 	if err != nil {
-		return errors.Wrap(err, "Clone failed")
+		return errors.Wrap(err, "Checkout failed")
 	}
 
 	return nil
@@ -58,7 +58,7 @@ func Pull(username string) error {
 
 }
 
-func Commit(username string, config *configuration.ConfigurationClass) error {
+func Save(username string, config *configuration.ConfigurationClass) error {
 
 	wd, _ := os.Getwd()
 

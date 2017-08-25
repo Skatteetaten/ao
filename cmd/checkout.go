@@ -11,7 +11,7 @@ import (
 
 var cloneCmd = &cobra.Command{
 	Use:   "clone",
-	Short: "Clone AuroraConfig (git repository) for current affiliation",
+	Short: "Checkout AuroraConfig (git repository) for current affiliation",
 	Run: func(cmd *cobra.Command, args []string) {
 		affiliation := config.GetAffiliation()
 
@@ -26,7 +26,7 @@ var cloneCmd = &cobra.Command{
 			path = fmt.Sprintf("./%s", affiliation)
 		}
 
-		if err := auroraconfig.Clone(affiliation, username, path); err != nil {
+		if err := auroraconfig.Checkout(affiliation, username, path); err != nil {
 			fmt.Println(err)
 		}
 	},
@@ -41,6 +41,6 @@ func init() {
 	}
 
 	cloneCmd.Flags().StringP("affiliation", "a", "", "Affiliation to clone")
-	cloneCmd.Flags().StringP("path", "p", "", "Clone repo to path")
-	cloneCmd.Flags().StringP("user", "u", defaultUsername, "Clone repo as user")
+	cloneCmd.Flags().StringP("path", "p", "", "Checkout repo to path")
+	cloneCmd.Flags().StringP("user", "u", defaultUsername, "Checkout repo as user")
 }

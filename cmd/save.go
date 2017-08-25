@@ -10,7 +10,7 @@ import (
 
 var commitCmd = &cobra.Command{
 	Use:   "commit",
-	Short: "Commit changed, new and deleted files for AuroraConfig",
+	Short: "Save changed, new and deleted files for AuroraConfig",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		defaultUsername := ""
@@ -18,10 +18,10 @@ var commitCmd = &cobra.Command{
 			defaultUsername = currentUser.Username
 		}
 
-		if err := auroraconfig.Commit(defaultUsername, config); err != nil {
+		if err := auroraconfig.Save(defaultUsername, config); err != nil {
 			fmt.Println(err.Error())
 		} else {
-			fmt.Println("Commit success")
+			fmt.Println("Save success")
 		}
 	},
 }
