@@ -18,7 +18,6 @@ var shellCmd = &cobra.Command{
 		shell := cobraprompt.CobraPrompt{
 			RootCmd:                RootCmd,
 			DynamicSuggestionsFunc: handleSuggestions,
-			ResetFlagsFlag:         true,
 			GoPromptOptions: []prompt.Option{
 				prompt.OptionTitle("Aurora OpenShift cli"),
 				prompt.OptionPrefix("ao[" + config.GetAffiliation() + "] "),
