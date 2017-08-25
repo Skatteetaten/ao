@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
@@ -95,7 +94,7 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 	}
 
 	var affiliation = deploy.Configuration.GetAffiliation()
-	json, err := deploy.generateJson(affiliation, persistentOptions.DryRun)
+	jsonStr, err := deploy.generateJson(affiliation, persistentOptions.DryRun)
 	if err != nil {
 		return "", err
 	}
@@ -104,9 +103,9 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 	var applicationResults []serverapi_v2.ApplicationResult
 
 	if localDryRun {
-		return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(json))), nil
+		return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 	} else {
-		responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, json, persistentOptions.ShowConfig,
+		responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
 			persistentOptions.ShowObjects, false, persistentOptions.Localhost,
 			persistentOptions.Verbose, deploy.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
 		if err != nil {
@@ -238,21 +237,8 @@ func (deploy *DeployClass) validateDeploy(args []string, appList []string, envLi
 
 	if deployAll {
 		deploy.fuzzyArgs.DeployAll()
-		if !force {
-
-			response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.fuzzyArgs.GetApps())) + " applications in " + strconv.Itoa(len(deploy.fuzzyArgs.GetEnvs())) + " environments.  Are you sure?")
-			if err != nil {
-				return err
-			}
-			if response != "Y" {
-				err = errors.New("Operation cancelled by user")
-				return err
-			}
-
-		}
-
 	} else {
-		err = deploy.fuzzyArgs.PopulateFuzzyEnvAppList(args)
+		err = deploy.fuzzyArgs.PopulateFuzzyEnvAppList(args, false)
 		if err != nil {
 			return err
 		}
@@ -274,10 +260,8 @@ func (deploy *DeployClass) validateDeploy(args []string, appList []string, envLi
 	}
 
 	if len(deploy.fuzzyArgs.GetEnvs()) == 0 && len(deploy.fuzzyArgs.GetApps()) > 0 {
-		fmt.Println("DEBUG: Prefill Env list")
 		// User have specified one or more apps, but not an environment list, so prefill it
 		for i := range deploy.fuzzyArgs.GetApps() {
-			fmt.Println("  DEBUG: App: " + deploy.fuzzyArgs.GetApps()[i])
 			err := deploy.populateAllEnvForApp(deploy.fuzzyArgs.GetApps()[i])
 			if err != nil {
 				return err
@@ -285,15 +269,17 @@ func (deploy *DeployClass) validateDeploy(args []string, appList []string, envLi
 		}
 	}
 
-	if !force {
-		response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.fuzzyArgs.GetApps())) + " applications in " + strconv.Itoa(len(deploy.fuzzyArgs.GetEnvs())) + " environments.  Are you sure?")
-		//			response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.appList)) + " applications in " + strconv.Itoa(len(deploy.envList)) + " environments.  Are you sure?")
-		if err != nil {
-			return err
-		}
-		if response != "Y" {
-			err = errors.New("Operation cancelled by user")
-			return err
+	if len(deploy.fuzzyArgs.GetEnvs()) > 1 || len(deploy.fuzzyArgs.GetApps()) > 1 {
+		if !force {
+			response, err := executil.PromptYNC(deploy.fuzzyArgs.GetDeploymentSummaryString() + "Are you sure?")
+			//			response, err := executil.PromptYNC("This will deploy " + strconv.Itoa(len(deploy.appList)) + " applications in " + strconv.Itoa(len(deploy.envList)) + " environments.  Are you sure?")
+			if err != nil {
+				return err
+			}
+			if response != "Y" {
+				err = errors.New("Operation cancelled by user")
+				return err
+			}
 		}
 	}
 

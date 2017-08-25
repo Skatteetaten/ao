@@ -1,6 +1,11 @@
 package fuzzyargs
 
-import "github.com/skatteetaten/ao/pkg/auroraconfig"
+import (
+	"strconv"
+	"text/tabwriter"
+
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
+)
 
 /*
 Module to create a list of apps and envs based upon user parameters from the command line.
@@ -31,6 +36,10 @@ Arguments types:
 import (
 	"errors"
 	"strings"
+
+	"fmt"
+
+	"bytes"
 
 	"github.com/skatteetaten/ao/pkg/configuration"
 )
@@ -139,10 +148,9 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyFile(args []string) (err error) {
 		var found bool = false
 		for i := range fuzzyArgs.legalFileList {
 			if !strings.Contains(fuzzyArgs.legalFileList[i], "/") {
-				// ** TODO: Code from here!
 				if strings.Contains(fuzzyArgs.legalFileList[i], args[0]) {
 					if found {
-						err = errors.New("Duplicate file spec found")
+						err = errors.New("Duplicate file spec found: " + args[0] + " matching both " + fuzzyArgs.filename + " and " + fuzzyArgs.legalFileList[i])
 						return err
 					}
 					found = true
@@ -170,7 +178,7 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyFile(args []string) (err error) {
 			for i := range fuzzyArgs.legalEnvList {
 				if strings.Contains(fuzzyArgs.legalEnvList[i], args[0]) {
 					if foundEnv {
-						err = errors.New("Duplicate environment spec found")
+						err = errors.New("Duplicate environment spec found: " + args[0] + " matching both " + env + " and " + fuzzyArgs.legalEnvList[i])
 						return err
 					}
 					foundEnv = true
@@ -196,7 +204,7 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyFile(args []string) (err error) {
 			for i := range fuzzyArgs.legalFileList {
 				if strings.Contains(fuzzyArgs.legalFileList[i], env+"/"+args[1]) {
 					if foundFile {
-						err = errors.New("Duplicate file spec found")
+						err = errors.New("Duplicate file spec found: " + args[1] + " matching both " + fuzzyArgs.filename + " and " + fuzzyArgs.legalFileList[i])
 						return err
 					}
 					foundFile = true
@@ -205,7 +213,7 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyFile(args []string) (err error) {
 			}
 		}
 		if !foundFile {
-			err = errors.New("No matching file found")
+			err = errors.New("No matching file found for " + args[1])
 		}
 
 	} else {
@@ -215,7 +223,7 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyFile(args []string) (err error) {
 }
 
 // Parse args, expect one or more arguments that describes envs and/or apps
-func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList(args []string) (err error) {
+func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList(args []string, slashArg bool) (err error) {
 	var i int
 	var env string
 	var app string
@@ -227,70 +235,92 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList(args []string) (err error) {
 
 	// First, parse envs
 	for i = range args {
-
 		if strings.Contains(string(args[i]), "/") {
 			// We have a full path name with a slash, split it and try to match a specific env/app
 			arg = args[i]
 			parts = strings.Split(arg, "/")
 
 			argArray[0] = parts[0]
-			err = fuzzyArgs.PopulateFuzzyEnvAppList(argArray)
+			err = fuzzyArgs.PopulateFuzzyEnvAppList(parts, true)
 			if err != nil {
 				return err
 			}
-			// TODO: Match specific
 		} else {
-			// We have a single spec that is either an app or an env
-			env, err = fuzzyArgs.GetFuzzyEnv(args[i])
-			if err != nil {
-				return err
+			if slashArg {
+				// Now we know that arg0 is and env and arg 1 is an app
+				env, err = fuzzyArgs.GetFuzzyEnv(args[i])
+				if err != nil {
+					return err
+				}
+				if i == 0 {
+					if env == "" {
+						err = errors.New(args[i] + " does not match any environemt")
+						return err
+					}
+					fuzzyArgs.AddEnv(env)
+				}
+
+				if i == 1 {
+					app, err = fuzzyArgs.GetFuzzyApp(args[i])
+					if err != nil {
+						return err
+					}
+					if app == "" {
+						err = errors.New(args[i] + " does not match any application")
+						return err
+					}
+					fuzzyArgs.AddApp(app)
+				}
+			} else {
+				// We have a single spec that is either an app or an env
+				env, err = fuzzyArgs.GetFuzzyEnv(args[i])
+				if err != nil {
+					return err
+				}
+				app, err = fuzzyArgs.GetFuzzyApp(args[i])
+				if err != nil {
+					return err
+				}
+
+				if env != "" && app != "" {
+					err = errors.New(args[i] + " matching both environment " + env + " and application " + app)
+					return err
+				}
+				if env == "" && app == "" {
+					err = errors.New(args[i] + " matching neither an environment nor an application")
+					return err
+				}
+				if env != "" {
+					fuzzyArgs.AddEnv(env)
+				}
 			}
-			app, err = fuzzyArgs.GetFuzzyApp(args[i])
-			if err != nil {
-				return err
-			}
-			if env != "" && app != "" {
-				err = errors.New(args[i] + " matching both environment " + env + " and application " + app)
-				return err
-			}
-			if env == "" && app == "" {
-				err = errors.New(args[i] + " matching neither an environment nor an application")
-				return err
-			}
-			if env != "" {
-				fuzzyArgs.AddEnv(env)
-			}
+
 		}
 
 	}
 
 	for i = range args {
-		if strings.Contains(args[i], "/") {
-			// We have a full path name with a slash, split it and try to match a specific env/app
-			arg = args[i]
-			parts = strings.Split(arg, "/")
-			argArray[0] = parts[1]
-			err = fuzzyArgs.PopulateFuzzyEnvAppList(argArray)
-			if err != nil {
-				return err
-			}
-			// TODO: Match specific
-		} else {
-			// We have a single spec that is either an app or an env
-			app, err = fuzzyArgs.GetFuzzyApp(args[i])
-			if err != nil {
-				return err
-			}
-			if app != "" {
-				fuzzyArgs.AddApp(app)
-			} else {
-				env, err = fuzzyArgs.GetFuzzyEnv(args[i])
-				if err != nil {
-					return err
-				}
-				if env == "" {
-					err = errors.New(args[i] + " matches neither an environment nor an application")
-					return err
+		if !strings.Contains(args[i], "/") {
+			if !slashArg {
+				{
+					// We have a single spec that is either an app or an env
+
+					app, err = fuzzyArgs.GetFuzzyApp(args[i])
+					if err != nil {
+						return err
+					}
+					if app != "" {
+						fuzzyArgs.AddApp(app)
+					} else {
+						env, err = fuzzyArgs.GetFuzzyEnv(args[i])
+						if err != nil {
+							return err
+						}
+						if env == "" {
+							err = errors.New(args[i] + " matches neither an environment nor an application")
+							return err
+						}
+					}
 				}
 			}
 		}
@@ -300,11 +330,23 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList(args []string) (err error) {
 }
 
 func (fuzzyArgs *FuzzyArgs) AddApp(app string) {
+	for i := range fuzzyArgs.appList {
+		if fuzzyArgs.appList[i] == app {
+			return
+		}
+	}
 	fuzzyArgs.appList = append(fuzzyArgs.appList, app)
+	return
 }
 
 func (fuzzyArgs *FuzzyArgs) AddEnv(env string) {
+	for i := range fuzzyArgs.envList {
+		if fuzzyArgs.envList[i] == env {
+			return
+		}
+	}
 	fuzzyArgs.envList = append(fuzzyArgs.envList, env)
+	return
 }
 
 func (fuzzyArgs *FuzzyArgs) DeployAll() {
@@ -312,55 +354,6 @@ func (fuzzyArgs *FuzzyArgs) DeployAll() {
 	fuzzyArgs.appList = fuzzyArgs.legalAppList
 }
 
-/*func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList_old(args []string) (err error) {
-
-	for i := range args {
-		var env string
-		var app string
-
-		if strings.Contains(args[i], "/") {
-			parts := strings.Split(args[i], "/")
-			env, err = fuzzyArgs.GetFuzzyEnv(parts[0])
-			if err != nil {
-				return err
-			}
-			if env == "" {
-				err = errors.New("No matching env found")
-				return err
-			}
-			app, err = fuzzyArgs.GetFuzzyApp(parts[1])
-			if err != nil {
-				return err
-			}
-		} else {
-			env, err = fuzzyArgs.GetFuzzyEnv(args[i])
-			if err != nil {
-				return err
-			}
-			app, err = fuzzyArgs.GetFuzzyApp(args[i])
-			if err != nil {
-				return err
-			}
-			if env != "" && app != "" {
-				err = errors.New(args[i] + ": Not a unique identifier, matching both environment " + env + " and application " + app)
-				return err
-			}
-		}
-		if env == "" && app == "" {
-			err = errors.New("No match found for " + args[i])
-			return err
-		} else {
-			if env != "" {
-				fuzzyArgs.envList = append(fuzzyArgs.envList, env)
-			}
-			if app != "" {
-				fuzzyArgs.appList = append(fuzzyArgs.appList, app)
-			}
-		}
-	}
-	return
-}
-*/
 func (fuzzyArgs *FuzzyArgs) GetApps() (apps []string) {
 	return fuzzyArgs.appList
 }
@@ -460,4 +453,37 @@ func (fuzzyArgs *FuzzyArgs) addLegalEnv(env string) {
 	}
 	fuzzyArgs.legalEnvList = append(fuzzyArgs.legalEnvList, env)
 	return
+}
+
+func (fuzzyArgs *FuzzyArgs) GetDeploymentSummaryString() (output string) {
+	output = "This will deploy " + strconv.Itoa(len(fuzzyArgs.GetApps())) + " applications in " + strconv.Itoa(len(fuzzyArgs.GetEnvs())) + " environments."
+
+	// var outputWriter io.Writer
+	outputBuffer := new(bytes.Buffer)
+
+	w := tabwriter.NewWriter(outputBuffer, 0, 5, 5, ' ', 0)
+	fmt.Fprintln(w, "ENVIRONEMENT\tAPPLICATION")
+	// Loop and print
+	var lineIndex int = 0
+
+	rows := len(fuzzyArgs.appList)
+	if len(fuzzyArgs.envList) > rows {
+		rows = len(fuzzyArgs.envList)
+	}
+
+	for lineIndex < rows {
+		if lineIndex < len(fuzzyArgs.envList) {
+			fmt.Fprint(w, fuzzyArgs.envList[lineIndex])
+		}
+		fmt.Fprint(w, "\t")
+		if lineIndex < len(fuzzyArgs.appList) {
+			fmt.Fprint(w, fuzzyArgs.appList[lineIndex])
+		}
+		fmt.Fprintln(w, "")
+		lineIndex++
+	}
+	w.Flush()
+
+	output += "\n" + outputBuffer.String()
+	return output
 }
