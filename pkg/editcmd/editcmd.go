@@ -29,7 +29,7 @@ func (editcmd *EditcmdClass) FuzzyEditFile(args []string) (string, error) {
 	var fuzzyArgs fuzzyargs.FuzzyArgs
 	fuzzyArgs.Init(editcmd.Configuration)
 
-	if err := fuzzyArgs.PopulateFuzzyFileList(args); err != nil {
+	if err := fuzzyArgs.PopulateFuzzyFile(args); err != nil {
 		return "", err
 	}
 

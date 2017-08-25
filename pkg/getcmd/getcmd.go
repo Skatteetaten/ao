@@ -39,7 +39,7 @@ func (getcmd *GetcmdClass) File(args []string) (string, error) {
 		return "", err
 	}
 
-	if err := fuzzyArgs.PopulateFuzzyFileList(args); err != nil {
+	if err := fuzzyArgs.PopulateFuzzyFile(args); err != nil {
 		return "", err
 	}
 
