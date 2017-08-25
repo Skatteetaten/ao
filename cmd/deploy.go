@@ -21,6 +21,7 @@ import (
 
 	"github.com/skatteetaten/ao/pkg/deploy"
 	"github.com/spf13/cobra"
+	"github.com/stromland/coprompt"
 )
 
 var appList []string
@@ -46,6 +47,9 @@ Using the -e flag, it is possible to limit the deploy to the specified environme
 Using the -a flag, it is possible to limit the deploy to the specified application.
 Both flags can be used to limit the deploy to a specific application in a specific environment.`,
 	Aliases: []string{"setup"},
+	Annotations: map[string]string{
+		coprompt.CALLBACK_ANNOTATION: "GetDeployments",
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		deploy := deploy.DeployClass{
 			Configuration: config,
