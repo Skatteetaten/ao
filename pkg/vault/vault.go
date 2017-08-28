@@ -154,6 +154,7 @@ func Permissions(vaultName string, config *configuration.ConfigurationClass,
 	if addGroup == "" && addUser == "" && removeGroup == "" && removeUser == "" {
 		// No flags given, list permissions
 		output, err = listPermissions(vault.Permissions.Users, vault.Permissions.Groups)
+		return output, err
 	}
 
 	// Save
