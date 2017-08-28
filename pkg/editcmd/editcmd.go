@@ -58,7 +58,7 @@ func (editcmd *EditcmdClass) EditSecret(vaultName string, secretName string) (st
 		_, err = auroraconfig.PutSecret(vaultName, secretName, modifiedSecret, version, editcmd.Configuration)
 	}
 
-	return modifiedSecret, err
+	return "", err
 }
 
 func addComments(content string, comments string) (commentedContent string, err error) {

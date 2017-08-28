@@ -60,8 +60,7 @@ var editSecretCmd = &cobra.Command{
 			return
 		}
 
-		if output, err := editcmdObject.EditSecret(args[0], args[1]); err == nil {
-			fmt.Println(output)
+		if _, err := editcmdObject.EditSecret(args[0], args[1]); err == nil {
 		} else {
 			fmt.Println(err)
 		}

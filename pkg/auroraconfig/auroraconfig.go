@@ -404,7 +404,7 @@ func deleteContent(apiEndpoint string, version string, configuration *configurat
 	var versionHeader = make(map[string]string)
 	versionHeader["AuroraConfigFileVersion"] = version
 
-	responses, err = serverapi_v2.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, "", true,
+	responses, err = serverapi_v2.CallApiWithHeaders(versionHeader, http.MethodDelete, apiEndpoint, "", true,
 		configuration.GetPersistentOptions().Localhost,
 		configuration.GetPersistentOptions().Verbose,
 		configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun, configuration.GetPersistentOptions().Debug,
