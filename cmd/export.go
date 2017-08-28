@@ -15,10 +15,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/exportcmd"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
+
+	"github.com/skatteetaten/ao/pkg/exportcmd"
+	"github.com/spf13/cobra"
 )
 
 var outputFolder string
@@ -49,6 +50,7 @@ by using the output-folder option.`,
 
 func init() {
 	RootCmd.AddCommand(exportCmd)
+	exportCmd.Hidden = true
 
 	// Here you will define your flags and configuration settings.
 
