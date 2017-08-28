@@ -16,10 +16,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/importcmd"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
+
+	"github.com/skatteetaten/ao/pkg/importcmd"
+	"github.com/spf13/cobra"
 )
 
 // importCmd represents the import command
@@ -47,6 +48,7 @@ var importCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(importCmd)
+	importCmd.Hidden = true
 
 	// Here you will define your flags and configuration settings.
 
