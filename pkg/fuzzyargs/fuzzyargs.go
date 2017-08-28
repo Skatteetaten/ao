@@ -2,7 +2,6 @@ package fuzzyargs
 
 import (
 	"strconv"
-	"text/tabwriter"
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 )
@@ -37,11 +36,8 @@ import (
 	"errors"
 	"strings"
 
-	"fmt"
-
-	"bytes"
-
 	"github.com/skatteetaten/ao/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/printutil"
 )
 
 type FuzzyArgs struct {
@@ -350,7 +346,7 @@ func (fuzzyArgs *FuzzyArgs) AddEnv(env string) {
 }
 
 func (fuzzyArgs *FuzzyArgs) DeployAll() {
-	fuzzyArgs.envList = fuzzyArgs.legalFileList
+	fuzzyArgs.envList = fuzzyArgs.legalEnvList
 	fuzzyArgs.appList = fuzzyArgs.legalAppList
 }
 
@@ -456,34 +452,14 @@ func (fuzzyArgs *FuzzyArgs) addLegalEnv(env string) {
 }
 
 func (fuzzyArgs *FuzzyArgs) GetDeploymentSummaryString() (output string) {
-	output = "This will deploy " + strconv.Itoa(len(fuzzyArgs.GetApps())) + " applications in " + strconv.Itoa(len(fuzzyArgs.GetEnvs())) + " environments."
+	output = "This will deploy " + strconv.Itoa(len(fuzzyArgs.GetApps())) + " applications in " + strconv.Itoa(len(fuzzyArgs.GetEnvs())) + " environments.\n"
 
-	// var outputWriter io.Writer
-	outputBuffer := new(bytes.Buffer)
+	var headers []string
+	headers = make([]string, 2)
+	headers[0] = "ENVIRONMENT"
+	headers[1] = "APPLICATION"
 
-	w := tabwriter.NewWriter(outputBuffer, 0, 5, 5, ' ', 0)
-	fmt.Fprintln(w, "ENVIRONEMENT\tAPPLICATION")
-	// Loop and print
-	var lineIndex int = 0
+	output += printutil.FormatTable(headers, fuzzyArgs.envList, fuzzyArgs.appList)
 
-	rows := len(fuzzyArgs.appList)
-	if len(fuzzyArgs.envList) > rows {
-		rows = len(fuzzyArgs.envList)
-	}
-
-	for lineIndex < rows {
-		if lineIndex < len(fuzzyArgs.envList) {
-			fmt.Fprint(w, fuzzyArgs.envList[lineIndex])
-		}
-		fmt.Fprint(w, "\t")
-		if lineIndex < len(fuzzyArgs.appList) {
-			fmt.Fprint(w, fuzzyArgs.appList[lineIndex])
-		}
-		fmt.Fprintln(w, "")
-		lineIndex++
-	}
-	w.Flush()
-
-	output += "\n" + outputBuffer.String()
 	return output
 }

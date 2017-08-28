@@ -1,48 +1,49 @@
 package printutil
 
 import (
+	"bytes"
 	"fmt"
-	"strconv"
+	"text/tabwriter"
 )
 
-func PrintTable(headers []string, columnValues ...[]string) (output string) {
-	columns := len(columnValues)
-	fmt.Println("DEBUG: columns: " + strconv.Itoa(columns))
+func FormatTable(headers []string, columnValues ...[]string) (output string) {
+
+	var maxRowNum = 0
 	for _, v := range columnValues {
-		fmt.Print(v[0] + " - ")
+		if len(v) > maxRowNum {
+			maxRowNum = len(v)
+		}
 	}
 
-	// Find max rownum in table
+	outputBuffer := new(bytes.Buffer)
+	w := tabwriter.NewWriter(outputBuffer, 0, 5, 5, ' ', 0)
 
-	/*
-		// var outputWriter io.Writer
-		outputBuffer := new(bytes.Buffer)
-
-		w := tabwriter.NewWriter(outputBuffer, 0, 5, 5, ' ', 0)
-		fmt.Fprintln(w, "ENVIRONEMENT\tAPPLICATION")
-		// Loop and print
-		var lineIndex int = 0
-
-		rows := len(fuzzyArgs.appList)
-		if len(fuzzyArgs.envList) > rows {
-			rows = len(fuzzyArgs.envList)
-		}
-
-		for lineIndex < rows {
-
-			if lineIndex < len(fuzzyArgs.envList) {
-				fmt.Fprint(w, fuzzyArgs.envList[lineIndex])
-			}
+	// Output headers
+	for hi := range headers {
+		if hi > 0 {
 			fmt.Fprint(w, "\t")
-			if lineIndex < len(fuzzyArgs.appList) {
-				fmt.Fprint(w, fuzzyArgs.appList[lineIndex])
-			}
-			fmt.Fprintln(w, "")
-			lineIndex++
 		}
-		w.Flush()
+		fmt.Fprint(w, headers[hi])
+	}
+	fmt.Fprintln(w, "")
 
-		output += "\n" + outputBuffer.String()
-	*/
-	return
+	// Output rows
+	var lineIndex int = 0
+	for lineIndex < maxRowNum {
+		for columnIndex := range columnValues {
+			if columnIndex > 0 {
+				fmt.Fprint(w, "\t")
+			}
+			if len(columnValues[columnIndex]) > lineIndex {
+				fmt.Fprint(w, columnValues[columnIndex][lineIndex])
+			}
+		}
+		lineIndex++
+		fmt.Fprintln(w, "")
+	}
+
+	w.Flush()
+	output = outputBuffer.String()
+	//fmt.Println("DEBUG: Len(output): " + strconv.Itoa(len(output)))  // Used to generate test result
+	return output
 }

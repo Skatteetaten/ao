@@ -115,7 +115,7 @@ func remove(list []string, value string) (newList []string, err error) {
 func listPermissions(user []string, group []string) (output string, err error) {
 	var headers []string = []string{"Users", "Groups"}
 
-	output = printutil.PrintTable(headers, user, group)
+	output = printutil.FormatTable(headers, user, group)
 	return output, nil
 }
 
