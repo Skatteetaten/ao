@@ -42,7 +42,8 @@ func GitCommand(args ...string) (string, error) {
 	}
 
 	for errScanner.Scan() {
-		fmt.Println(errScanner.Text())
+		msg := strings.TrimPrefix(errScanner.Text(), "fatal: ")
+		fmt.Println(msg)
 	}
 
 	err = command.Wait()
@@ -53,11 +54,7 @@ func GitCommand(args ...string) (string, error) {
 	return message, nil
 }
 
-func Checkout(affiliation string, username string, outputPath string) (string, error) {
-	url := fmt.Sprintf(GIT_URL_FORMAT, username, affiliation)
-	fmt.Printf("Cloning AuroraConfig for affiliation %s\n", affiliation)
-	fmt.Printf("%s\n\n", url)
-
+func Checkout(url string, outputPath string) (string, error) {
 	return GitCommand("clone", url, outputPath)
 }
 

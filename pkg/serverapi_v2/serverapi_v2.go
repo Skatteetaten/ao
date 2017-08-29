@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/openshift"
@@ -28,7 +27,7 @@ type ApplicationId struct {
 type OpenShiftResponse struct {
 	Kind          string `json:"kind"`
 	OperationType string `json:"operationType"` // CREATED, UPDATE eller NONE
-	Payload       struct {
+	Payload struct {
 		Kind string `json:"payload"`
 	} `json:"payload"`
 	ResponseBody json.RawMessage `json:"responseBody"`
@@ -76,9 +75,9 @@ type Response struct {
 type ResponseItemError struct {
 	Application string `json:"application"`
 	Environment string `json:"environment"`
-	Messages    []struct {
+	Messages []struct {
 		Message string `json:"message"`
-		Field   struct {
+		Field struct {
 			Path   string `json:"path"`
 			Value  string `json:"value"`
 			Source string `json:"source"`
@@ -107,7 +106,7 @@ type PingResult struct {
 }
 
 type Vault struct {
-	Name        string `json:"name"`
+	Name string `json:"name"`
 	Permissions struct {
 		Groups []string `json:"groups,omitempty"`
 		Users  []string `json:"users,omitempty"`
@@ -204,7 +203,7 @@ func ResponseItems2Vaults(response Response) (output string, err error) {
 func ApplicationResult2MessageString(applicationResult ApplicationResult) (output string, err error) {
 
 	output +=
-		//applicationResult.ApplicationId.ApplicationName +
+	//applicationResult.ApplicationId.ApplicationName +
 		applicationResult.AuroraDc.GroupId + "/" + applicationResult.AuroraDc.ArtifactId + "-" + applicationResult.AuroraDc.Version +
 			" deployed in " + applicationResult.AuroraDc.Cluster + "/" + applicationResult.AuroraDc.EnvName
 	return
@@ -327,10 +326,9 @@ func GetApiSetupUrl(clusterName string, apiEndpont string, localhost bool, apiAd
 	return apiAddress + apiEndpont
 }
 
-func CallApiShort(httpMethod string, apiEndpoint string, jsonRequestBody string, persistentOptions *cmdoptions.CommonCommandOptions) (map[string]string, error) {
+func CallApiShort(httpMethod string, apiEndpoint string, jsonRequestBody string, config *configuration.ConfigurationClass) (map[string]string, error) {
 
-	var config configuration.ConfigurationClass
-
+	persistentOptions := config.PersistentOptions
 	return CallApi(
 		httpMethod,
 		apiEndpoint,

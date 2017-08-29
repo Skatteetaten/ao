@@ -20,7 +20,6 @@ var checkoutCmd = &cobra.Command{
 			affiliation = affiliationFlag
 		}
 
-		username, _ := cmd.LocalFlags().GetString("user")
 		path, _ := cmd.LocalFlags().GetString("path")
 
 		if len(path) < 1 {
@@ -28,8 +27,18 @@ var checkoutCmd = &cobra.Command{
 			path = fmt.Sprintf("%s/%s", wd, affiliation)
 		}
 
-		if output, err := auroraconfig.Checkout(affiliation, username, path); err != nil {
-			fmt.Println("Repository exists")
+		url := ""
+		if gitUrlPattern, err := auroraconfig.GetGitLocation(config); err != nil {
+			fmt.Println(err)
+			return
+		} else {
+			url = fmt.Sprintf(gitUrlPattern, affiliation)
+		}
+
+		fmt.Printf("Cloning AuroraConfig for affiliation %s\n", affiliation)
+		fmt.Printf("From: %s\n\n", url)
+
+		if output, err := auroraconfig.Checkout(url, path); err != nil {
 			return
 		} else {
 			fmt.Print(output)
