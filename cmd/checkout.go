@@ -37,7 +37,10 @@ var checkoutCmd = &cobra.Command{
 
 		if err := aoConfig.AddCheckoutPath(affiliation, path, aoConfigLocation); err != nil {
 			fmt.Println(err)
+			return
 		}
+
+		fmt.Println("Checkout success")
 	},
 }
 

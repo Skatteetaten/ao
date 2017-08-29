@@ -17,7 +17,7 @@ func TestValidateRepo(t *testing.T) {
 	exec.Command("git", "init").Run()
 	exec.Command("git", "remote", "add", "origin", gitRemoteUrl).Run()
 
-	if err := ValidateRepo("aurora"); err != nil {
+	if err := ValidateRepo("aurora", "user"); err != nil {
 		t.Error(err)
 	}
 }

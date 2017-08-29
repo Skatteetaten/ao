@@ -13,7 +13,7 @@ var pullCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if output, err := auroraconfig.Pull(); err != nil {
-			fmt.Println(err.Error())
+			fmt.Println(err)
 		} else {
 			fmt.Print(output)
 		}

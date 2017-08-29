@@ -1,6 +1,7 @@
 package auroraconfig
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/configuration"
@@ -17,13 +18,29 @@ const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
 
 func GitCommand(args ...string) (string, error) {
 	command := exec.Command("git", args...)
-
-	out, err := command.Output()
+	cmdReader, err := command.StdoutPipe()
 	if err != nil {
 		return "", err
 	}
 
-	return string(out), nil
+	scanner := bufio.NewScanner(cmdReader)
+
+	err = command.Start()
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to start git command")
+	}
+
+	message := ""
+	for scanner.Scan() {
+		message = fmt.Sprintf("%s%s\n", message, scanner.Text())
+	}
+
+	err = command.Wait()
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to wait for git command")
+	}
+
+	return message, nil
 }
 
 func Checkout(affiliation string, username string, outputPath string) (string, error) {
@@ -35,12 +52,15 @@ func Checkout(affiliation string, username string, outputPath string) (string, e
 }
 
 func Pull() (string, error) {
-	return GitCommand("pull")
+	if output, err := GitCommand("pull"); err != nil {
+		return "", errors.New("Not a git repository")
+	} else {
+		return output, nil
+	}
 }
 
-func Save(config *configuration.ConfigurationClass) (string, error) {
-
-	if err := ValidateRepo(config.GetAffiliation()); err != nil {
+func Save(username string, config *configuration.ConfigurationClass) (string, error) {
+	if err := ValidateRepo(config.GetAffiliation(), username); err != nil {
 		return "", err
 	}
 
@@ -66,20 +86,25 @@ func Save(config *configuration.ConfigurationClass) (string, error) {
 	return Pull()
 }
 
-func UpdateLocalRepository(affiliation string, config *openshift.OpenshiftConfig) {
+func UpdateLocalRepository(affiliation string, config *openshift.OpenshiftConfig) error {
 	path := config.CheckoutPaths[affiliation]
 	if path == "" {
-		return
+		return errors.New("No local repository for affiliation " + affiliation)
 	}
 
 	wd, _ := os.Getwd()
-	os.Chdir(path)
-	Pull()
-	os.Chdir(wd)
+	if err := os.Chdir(path); err != nil {
+		return err
+	}
+
+	if _, err := Pull(); err != nil {
+		return err
+	}
+
+	return os.Chdir(wd)
 }
 
-func ValidateRepo(affiliation string) error {
-
+func ValidateRepo(affiliation, username string) error {
 	output, err := GitCommand("remote", "-v")
 	if err != nil {
 		return err
@@ -95,11 +120,10 @@ func ValidateRepo(affiliation string) error {
 		}
 	}
 
-	expectedUrl := fmt.Sprintf("git.aurora.skead.no/scm/ac/%s.git", affiliation)
-
-	if strings.Contains(expectedUrl, repoUrl) {
+	expectedUrl := fmt.Sprintf(GIT_URL_FORMAT, username, affiliation)
+	if repoUrl != expectedUrl {
 		message := fmt.Sprintf(`Wrong repository.
-Expected %s to contain %s`, repoUrl, expectedUrl)
+Expected remote to be %s, actual %s.`, expectedUrl, repoUrl)
 		return errors.New(message)
 	}
 
