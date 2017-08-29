@@ -70,6 +70,23 @@ var vaultPermissionsCmd = &cobra.Command{
 	},
 }
 
+var vaultImportCmd = &cobra.Command{
+	Use:   "import <catalog>",
+	Short: "Imports the contents of a set of files into a set of vaults",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) == 1 {
+			if output, err := vault.ImportVaults(args[0], config); err == nil {
+				fmt.Print(output)
+			} else {
+				fmt.Println(err.Error())
+			}
+		} else {
+			fmt.Println(cmd.UseLine())
+		}
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(vaultCmd)
 	vaultCmd.AddCommand(vaultCrateCmd)
@@ -80,4 +97,6 @@ func init() {
 	vaultPermissionsCmd.Flags().StringVarP(&vaultAddUser, "add-user", "", "", "Add a user permission to the vault")
 	vaultPermissionsCmd.Flags().StringVarP(&vaultRemoveUser, "remove-user", "", "", "Remove a user permission from the vault")
 	vaultCmd.AddCommand(vaultPermissionsCmd)
+
+	vaultCmd.AddCommand(vaultImportCmd)
 }

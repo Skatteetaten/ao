@@ -3,8 +3,13 @@ package vault
 import (
 	"errors"
 
+	"encoding/base64"
+	"io/ioutil"
+	"path/filepath"
+
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/printutil"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 )
@@ -164,4 +169,90 @@ func Permissions(vaultName string, config *configuration.ConfigurationClass,
 	}
 
 	return output, nil
+}
+
+func ImportVaults(catalogName string, config *configuration.ConfigurationClass) (output string, err error) {
+	vaults, err := vaultsFolder2VaultsArray(catalogName)
+	if err != nil {
+		return "", err
+	}
+
+	for _, vault := range vaults {
+		output, err = auroraconfig.PutVault(vault.Name, vault, "", config)
+		if err != nil {
+			return output, err
+		}
+	}
+
+	return
+}
+
+func vaultsFolder2VaultsArray(folderName string) (vaults []serverapi_v2.Vault, err error) {
+	folderCount, err := countFolders(folderName)
+	if err != nil {
+		return nil, err
+	}
+
+	vaults = make([]serverapi_v2.Vault, folderCount)
+
+	files, err := ioutil.ReadDir(folderName)
+	if err != nil {
+		return nil, err
+	}
+	vaultIndex := 0
+	for _, f := range files {
+		absolutePath := filepath.Join(folderName, f.Name())
+		if fileutil.IsLegalFileFolder(absolutePath) == fileutil.SpecIsFolder {
+			vaults[vaultIndex], err = secretsFolder2Vault(absolutePath)
+			if err != nil {
+				return nil, err
+			}
+			vaultIndex++
+		}
+	}
+
+	return vaults, nil
+}
+
+func secretsFolder2Vault(folderName string) (vault serverapi_v2.Vault, err error) {
+	vault.Name = filepath.Base(folderName)
+	vault.Secrets = make(map[string]string)
+	files, err := ioutil.ReadDir(folderName)
+	if err != nil {
+		return vault, err
+	}
+
+	vaultIndex := 0
+	for _, f := range files {
+		absolutePath := filepath.Join(folderName, f.Name())
+		if fileutil.IsLegalFileFolder(absolutePath) == fileutil.SpecIsFile {
+			// Read file content
+			secretContent, err := ioutil.ReadFile(absolutePath)
+			if err != nil {
+				return vault, err
+			}
+			secretContent64 := base64.StdEncoding.EncodeToString(secretContent)
+			secretName := filepath.Base(absolutePath)
+			vault.Secrets[secretName] = secretContent64
+			vaultIndex++
+		}
+	}
+
+	return
+}
+
+func countFolders(folderName string) (folderCount int, err error) {
+	files, err := ioutil.ReadDir(folderName)
+	if err != nil {
+		return 0, err
+	}
+	folderCount = 0
+	for _, f := range files {
+		absolutePath := filepath.Join(folderName, f.Name())
+		if fileutil.IsLegalFileFolder(absolutePath) == fileutil.SpecIsFolder {
+			folderCount++
+		}
+	}
+	return folderCount, nil
+
 }
