@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	pkgEditCmd "github.com/skatteetaten/ao/pkg/editcmd"
 	"github.com/spf13/cobra"
 	"github.com/stromland/coprompt"
@@ -25,6 +25,7 @@ var editCmd = &cobra.Command{
 
 		if output, err := editcmdObject.FuzzyEditFile(args); err == nil {
 			fmt.Println(output)
+			auroraconfig.UpdateLocalRepository(config.GetAffiliation(), aoConfig)
 		} else {
 			fmt.Println(err)
 		}
@@ -45,6 +46,7 @@ var editFileCmd = &cobra.Command{
 
 		if output, err := editcmdObject.FuzzyEditFile(args); err == nil {
 			fmt.Println(output)
+			auroraconfig.UpdateLocalRepository(config.GetAffiliation(), aoConfig)
 		} else {
 			fmt.Println(err)
 		}
@@ -60,7 +62,8 @@ var editSecretCmd = &cobra.Command{
 			return
 		}
 
-		if _, err := editcmdObject.EditSecret(args[0], args[1]); err == nil {
+		if output, err := editcmdObject.EditSecret(args[0], args[1]); err == nil {
+			fmt.Println(output)
 		} else {
 			fmt.Println(err)
 		}
@@ -77,7 +80,7 @@ var editVaultCmd = &cobra.Command{
 		}
 
 		if output, err := editcmdObject.EditVault(args[0]); err == nil {
-			fmt.Print(output)
+			fmt.Println(output)
 		} else {
 			fmt.Println(err)
 		}
