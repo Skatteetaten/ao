@@ -19,6 +19,8 @@ var persistentOptions cmdoptions.CommonCommandOptions
 var overrideValues []string
 var localDryRun bool
 
+var aoConfigLocation string
+var aoConfig *openshift.OpenshiftConfig
 var config = &configuration.ConfigurationClass{
 	PersistentOptions: &persistentOptions,
 }
@@ -119,7 +121,6 @@ func initConfig(useOcConfig bool) {
 	viper.AutomaticEnv()         // read in environment variables that match
 	viper.BindEnv("HOME")
 
-	var configLocation = viper.GetString("HOME") + "/.ao.json"
-	openshift.LoadOrInitiateConfigFile(configLocation, useOcConfig)
-
+	aoConfigLocation = viper.GetString("HOME") + "/.ao.json"
+	aoConfig, _ = openshift.LoadOrInitiateConfigFile(aoConfigLocation, useOcConfig)
 }
