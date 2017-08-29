@@ -16,13 +16,19 @@ import (
 
 const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
 
+// TODO: Add debug
 func GitCommand(args ...string) (string, error) {
 	command := exec.Command("git", args...)
 	cmdReader, err := command.StdoutPipe()
 	if err != nil {
 		return "", err
 	}
+	cmdErrRead, err := command.StderrPipe()
+	if err != nil {
+		return "", err
+	}
 
+	errScanner := bufio.NewScanner(cmdErrRead)
 	scanner := bufio.NewScanner(cmdReader)
 
 	err = command.Start()
@@ -33,6 +39,10 @@ func GitCommand(args ...string) (string, error) {
 	message := ""
 	for scanner.Scan() {
 		message = fmt.Sprintf("%s%s\n", message, scanner.Text())
+	}
+
+	for errScanner.Scan() {
+		fmt.Println(errScanner.Text())
 	}
 
 	err = command.Wait()
@@ -53,7 +63,7 @@ func Checkout(affiliation string, username string, outputPath string) (string, e
 
 func Pull() (string, error) {
 	if output, err := GitCommand("pull"); err != nil {
-		return "", errors.New("Not a git repository")
+		return "", errors.New("pull failed")
 	} else {
 		return output, nil
 	}
@@ -70,16 +80,28 @@ func Save(username string, config *configuration.ConfigurationClass) (string, er
 		return "", err
 	}
 
-	if err := checkRepoForChanges(); err != nil {
+	var statuses []string
+	if status, err := GitCommand("status", "-s"); err != nil {
+		return "", err
+	} else {
+		statuses = strings.Fields(status)
+	}
+
+	if err := checkRepoForChanges(statuses); err != nil {
 		return "", err
 	}
 
-	if err := handleAuroraConfigCommit(config); err != nil {
+	if err := handleAuroraConfigCommit(statuses, config); err != nil {
 		return "", err
 	}
 
 	// Delete untracked files
 	if _, err := GitCommand("clean", "-fd"); err != nil {
+		return "", err
+	}
+
+	// Reset branch before pull
+	if _, err := GitCommand("checkout", "."); err != nil {
 		return "", err
 	}
 
@@ -130,7 +152,7 @@ Expected remote to be %s, actual %s.`, expectedUrl, repoUrl)
 	return nil
 }
 
-func handleAuroraConfigCommit(config *configuration.ConfigurationClass) error {
+func handleAuroraConfigCommit(statuses []string, config *configuration.ConfigurationClass) error {
 	ac, err := GetAuroraConfig(config)
 
 	if err != nil {
@@ -141,7 +163,7 @@ func handleAuroraConfigCommit(config *configuration.ConfigurationClass) error {
 		return errors.Wrap(err, "Failed adding files to AuroraConfig")
 	}
 
-	removeFilesFromAuroraConfig(&ac)
+	removeFilesFromAuroraConfig(statuses, &ac)
 
 	if err = PutAuroraConfig(ac, config); err != nil {
 		return errors.Wrap(err, "Failed committing AuroraConfig")
@@ -150,14 +172,8 @@ func handleAuroraConfigCommit(config *configuration.ConfigurationClass) error {
 	return nil
 }
 
-func checkRepoForChanges() error {
-
-	status, err := GitCommand("status", "-s")
-	if err != nil {
-		return err
-	}
-
-	if len(status) == 0 {
+func checkRepoForChanges(statuses []string) error {
+	if len(statuses) == 0 {
 		return errors.New("Nothing to save")
 	}
 
@@ -166,7 +182,7 @@ func checkRepoForChanges() error {
 
 func fetchOrigin() (string, error) {
 
-	return GitCommand("fetch", "origin/master")
+	return GitCommand("fetch", "origin")
 }
 
 func checkForNewCommits() error {
@@ -219,18 +235,11 @@ func addFilesToAuroraConfig(ac *serverapi_v2.AuroraConfig) error {
 	})
 }
 
-func removeFilesFromAuroraConfig(ac *serverapi_v2.AuroraConfig) error {
-	status, err := GitCommand("status", "-s")
-	if err != nil {
-		return err
-	}
-
-	statuses := strings.Fields(status)
+func removeFilesFromAuroraConfig(statuses []string, ac *serverapi_v2.AuroraConfig) error {
 	for i, v := range statuses {
 		if v == "D" && len(statuses) > i+1 {
 			delete(ac.Files, statuses[i+1])
 		}
 	}
-
 	return nil
 }
