@@ -4,12 +4,13 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/skatteetaten/ao/pkg/openshift"
 	"github.com/skatteetaten/ao/pkg/updatecmd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"os"
-	"strings"
 )
 
 var userName string
@@ -41,7 +42,7 @@ var loginCmd = &cobra.Command{
 			}
 		}
 		initConfig(useCurrentOcLogin)
-		openshift.Login(configLocation, userName, affiliation, apiCluster)
+		openshift.Login(configLocation, userName, affiliation, apiCluster, persistentOptions.Localhost)
 		output, _ := updatecmd.UpdateSelf(args, !doUpdate, "", false)
 		if strings.Contains(output, "New version detected") {
 			fmt.Println(output)
