@@ -1,15 +1,12 @@
 package auroraconfig
 
 import (
+	"bufio"
 	"fmt"
-	"github.com/howeyc/gopass"
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/openshift"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -19,105 +16,121 @@ import (
 
 const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
 
-func Clone(affiliation string, username string, outputPath string) error {
+func GitCommand(args ...string) (string, error) {
+	command := exec.Command("git", args...)
+	cmdReader, err := command.StdoutPipe()
+	if err != nil {
+		return "", err
+	}
 
+	scanner := bufio.NewScanner(cmdReader)
+
+	err = command.Start()
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to start git command")
+	}
+
+	message := ""
+	for scanner.Scan() {
+		message = fmt.Sprintf("%s%s\n", message, scanner.Text())
+	}
+
+	err = command.Wait()
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to wait for git command")
+	}
+
+	return message, nil
+}
+
+func Checkout(affiliation string, username string, outputPath string) (string, error) {
 	url := fmt.Sprintf(GIT_URL_FORMAT, username, affiliation)
 	fmt.Printf("Cloning AuroraConfig for affiliation %s\n", affiliation)
 	fmt.Printf("%s\n\n", url)
 
-	basicAuth := authenticateUser(username)
-
-	_, err := git.PlainClone(outputPath, false, &git.CloneOptions{
-		URL:      url,
-		Progress: os.Stdout,
-		Auth:     basicAuth,
-	})
-
-	if err != nil {
-		return errors.Wrap(err, "Clone failed")
-	}
-
-	currentDir, _ := os.Getwd()
-	os.Chdir(outputPath)
-
-	cmd := exec.Command("git", "branch", "--set-upstream-to=origin/master", "master")
-	if err = cmd.Run(); err != nil {
-		return err
-	}
-
-	os.Chdir(currentDir)
-
-	return nil
+	return GitCommand("clone", url, outputPath)
 }
 
-func Commit(username string, config *configuration.ConfigurationClass) error {
+func Pull() (string, error) {
+	if output, err := GitCommand("pull"); err != nil {
+		return "", errors.New("Not a git repository")
+	} else {
+		return output, nil
+	}
+}
+
+func Save(username string, config *configuration.ConfigurationClass) (string, error) {
+	if err := ValidateRepo(config.GetAffiliation(), username); err != nil {
+		return "", err
+	}
+
+	fetchOrigin()
+
+	if err := checkForNewCommits(); err != nil {
+		return "", err
+	}
+
+	if err := checkRepoForChanges(); err != nil {
+		return "", err
+	}
+
+	if err := handleAuroraConfigCommit(config); err != nil {
+		return "", err
+	}
+
+	// Delete untracked files
+	if _, err := GitCommand("clean", "-fd"); err != nil {
+		return "", err
+	}
+
+	return Pull()
+}
+
+func UpdateLocalRepository(affiliation string, config *openshift.OpenshiftConfig) error {
+	path := config.CheckoutPaths[affiliation]
+	if path == "" {
+		return errors.New("No local repository for affiliation " + affiliation)
+	}
 
 	wd, _ := os.Getwd()
+	if err := os.Chdir(path); err != nil {
+		return err
+	}
 
-	repository, err := git.PlainOpen(wd)
+	if _, err := Pull(); err != nil {
+		return err
+	}
+
+	return os.Chdir(wd)
+}
+
+func ValidateRepo(affiliation, username string) error {
+	output, err := GitCommand("remote", "-v")
 	if err != nil {
 		return err
 	}
 
-	url := fmt.Sprintf(GIT_URL_FORMAT, username, config.GetAffiliation())
-	if err = validateRepo(url, repository); err != nil {
-		return err
+	remotes := strings.Fields(output)
+
+	var repoUrl string
+	for i, v := range remotes {
+		if v == "origin" && len(remotes) > i+1 {
+			repoUrl = remotes[i+1]
+			break
+		}
 	}
 
-	basicAuth := authenticateUser(username)
-	// returns error if repository is already up to date
-	fetchOrigin(repository, basicAuth)
-
-	if err = checkForNewCommits(); err != nil {
-		return err
-	}
-
-	if err = checkRepoForChanges(repository); err != nil {
-		return err
-	}
-
-	if err = handleAuroraConfigCommit(repository, config); err != nil {
-		return err
-	}
-
-	if err = exec.Command("git", "checkout", ".").Run(); err != nil {
-		return err
-	}
-
-	wt, _ := repository.Worktree()
-	wt.Pull(&git.PullOptions{
-		Auth: basicAuth,
-	})
-
-	return nil
-}
-
-func validateRepo(gitUrl string, repository *git.Repository) error {
-
-	remote, _ := repository.Remote("origin")
-	remoteUrl := remote.Config().URL
-
-	if gitUrl != remoteUrl {
+	expectedUrl := fmt.Sprintf(GIT_URL_FORMAT, username, affiliation)
+	if repoUrl != expectedUrl {
 		message := fmt.Sprintf(`Wrong repository.
-Expected remote to be %s
-But was %s`, gitUrl, remoteUrl)
+Expected remote to be %s, actual %s.`, expectedUrl, repoUrl)
 		return errors.New(message)
 	}
 
 	return nil
 }
 
-func authenticateUser(username string) *http.BasicAuth {
-	fmt.Print("Enter password: ")
-	password, _ := gopass.GetPasswdMasked()
-
-	fmt.Println()
-
-	return http.NewBasicAuth(username, string(password))
-}
-
-func handleAuroraConfigCommit(repository *git.Repository, config *configuration.ConfigurationClass) error {
-
+func handleAuroraConfigCommit(config *configuration.ConfigurationClass) error {
 	ac, err := GetAuroraConfig(config)
 
 	if err != nil {
@@ -128,8 +141,7 @@ func handleAuroraConfigCommit(repository *git.Repository, config *configuration.
 		return errors.Wrap(err, "Failed adding files to AuroraConfig")
 	}
 
-	head, _ := repository.Head()
-	removeFilesFromAuroraConfig(repository, &ac, head.Hash())
+	removeFilesFromAuroraConfig(&ac)
 
 	if err = PutAuroraConfig(ac, config); err != nil {
 		return errors.Wrap(err, "Failed committing AuroraConfig")
@@ -138,22 +150,23 @@ func handleAuroraConfigCommit(repository *git.Repository, config *configuration.
 	return nil
 }
 
-func checkRepoForChanges(repository *git.Repository) error {
-	wt, _ := repository.Worktree()
-	status, _ := wt.Status()
-	if status.IsClean() {
-		return errors.New("Nothing to commit")
+func checkRepoForChanges() error {
+
+	status, err := GitCommand("status", "-s")
+	if err != nil {
+		return err
+	}
+
+	if len(status) == 0 {
+		return errors.New("Nothing to save")
 	}
 
 	return nil
 }
 
-func fetchOrigin(repository *git.Repository, auth *http.BasicAuth) error {
+func fetchOrigin() (string, error) {
 
-	return repository.Fetch(&git.FetchOptions{
-		Auth:       auth,
-		RemoteName: "origin",
-	})
+	return GitCommand("fetch", "origin/master")
 }
 
 func checkForNewCommits() error {
@@ -164,22 +177,17 @@ Please revert them with: git reset HEAD^`)
 	}
 
 	if err := compareGitLog("HEAD..origin/master"); err != nil {
-		return errors.New(`Please update to latest configuration with: git pull`)
+		return errors.New(`Please update to latest configuration with: ao pull`)
 	}
 
 	return nil
 }
 
 func compareGitLog(compare string) error {
-
-	cmd := exec.Command("git", "log", compare, "--oneline")
-	out, err := cmd.Output()
-
+	output, err := GitCommand("log", compare, "--oneline")
 	if err != nil {
 		return err
 	}
-
-	output := string(out)
 
 	if len(output) > 0 {
 		return errors.New("new commits")
@@ -211,20 +219,18 @@ func addFilesToAuroraConfig(ac *serverapi_v2.AuroraConfig) error {
 	})
 }
 
-func removeFilesFromAuroraConfig(repository *git.Repository, ac *serverapi_v2.AuroraConfig, hash plumbing.Hash) error {
+func removeFilesFromAuroraConfig(ac *serverapi_v2.AuroraConfig) error {
+	status, err := GitCommand("status", "-s")
+	if err != nil {
+		return err
+	}
 
-	wt, _ := repository.Worktree()
-	status, _ := wt.Status()
-	commit, _ := repository.CommitObject(hash)
-
-	headFiles, _ := commit.Files()
-	return headFiles.ForEach(func(file *object.File) error {
-		code := status.File(file.Name).Worktree
-
-		if code == git.Deleted {
-			delete(ac.Files, file.Name)
+	statuses := strings.Fields(status)
+	for i, v := range statuses {
+		if v == "D" && len(statuses) > i+1 {
+			delete(ac.Files, statuses[i+1])
 		}
+	}
 
-		return nil
-	})
+	return nil
 }

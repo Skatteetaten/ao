@@ -2,6 +2,10 @@ package cmd
 
 import (
 	"fmt"
+
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
+
+
 	pkgEditCmd "github.com/skatteetaten/ao/pkg/editcmd"
 	"github.com/spf13/cobra"
 )
@@ -23,6 +27,7 @@ var editCmd = &cobra.Command{
 
 		if output, err := editcmdObject.FuzzyEditFile(args); err == nil {
 			fmt.Println(output)
+			auroraconfig.UpdateLocalRepository(config.GetAffiliation(), aoConfig)
 		} else {
 			fmt.Println(err)
 		}
@@ -43,6 +48,7 @@ var editFileCmd = &cobra.Command{
 
 		if output, err := editcmdObject.FuzzyEditFile(args); err == nil {
 			fmt.Println(output)
+			auroraconfig.UpdateLocalRepository(config.GetAffiliation(), aoConfig)
 		} else {
 			fmt.Println(err)
 		}
