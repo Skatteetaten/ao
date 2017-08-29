@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"fmt"
-
 	pkgEditCmd "github.com/skatteetaten/ao/pkg/editcmd"
 	"github.com/spf13/cobra"
-	"github.com/stromland/coprompt"
 )
 
 var editcmdObject = &pkgEditCmd.EditcmdClass{
@@ -35,7 +33,7 @@ var editFileCmd = &cobra.Command{
 	Use:   "file [env/]<filename>",
 	Short: "Edit a single configuration file",
 	Annotations: map[string]string{
-		coprompt.CALLBACK_ANNOTATION: "GetFiles",
+		CallbackAnnotation: "GetFiles",
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
@@ -60,7 +58,8 @@ var editSecretCmd = &cobra.Command{
 			return
 		}
 
-		if _, err := editcmdObject.EditSecret(args[0], args[1]); err == nil {
+		if output, err := editcmdObject.EditSecret(args[0], args[1]); err == nil {
+			fmt.Println(output)
 		} else {
 			fmt.Println(err)
 		}
@@ -77,7 +76,7 @@ var editVaultCmd = &cobra.Command{
 		}
 
 		if output, err := editcmdObject.EditVault(args[0]); err == nil {
-			fmt.Print(output)
+			fmt.Println(output)
 		} else {
 			fmt.Println(err)
 		}
