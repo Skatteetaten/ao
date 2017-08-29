@@ -357,7 +357,8 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 	var apiCluster *openshift.OpenshiftCluster
 
 	outputMap = make(map[string]string)
-	if localhost {
+	if localhost || openshiftConfig.Localhost {
+
 		apiAddress = GetApiAddress("", true)
 
 		apiCluster, err = openshiftConfig.GetApiCluster()

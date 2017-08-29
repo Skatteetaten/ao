@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/howeyc/gopass"
-	"github.com/skatteetaten/ao/pkg/kubernetes"
 	"io/ioutil"
 	"log"
 	"net"
@@ -15,6 +13,9 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/howeyc/gopass"
+	"github.com/skatteetaten/ao/pkg/kubernetes"
 )
 
 const (
@@ -47,6 +48,7 @@ type OpenshiftConfig struct {
 	Affiliation   string              `json:"affiliation"`
 	Clusters      []*OpenshiftCluster `json:"clusters"`
 	CheckoutPaths map[string]string   `json:"checkoutPaths"`
+	Localhost     bool                `json:"localhost"`
 }
 
 func Logout(configLocation string) (err error) {
@@ -68,7 +70,7 @@ func Logout(configLocation string) (err error) {
 	return
 }
 
-func Login(configLocation string, userName string, affiliation string, apiCluster string) {
+func Login(configLocation string, userName string, affiliation string, apiCluster string, localhost bool) {
 
 	//fmt.Println("Login in to all reachable cluster with userName", userName)
 	config, err := loadConfigFile(configLocation)
@@ -109,6 +111,10 @@ func Login(configLocation string, userName string, affiliation string, apiCluste
 			}
 		}
 	}
+	// IF localhost specified, then put that into the config
+	config.Localhost = localhost
+
+	// Write the config.
 	config.write(configLocation)
 }
 
