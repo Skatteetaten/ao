@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
+
+
 	pkgEditCmd "github.com/skatteetaten/ao/pkg/editcmd"
 	"github.com/spf13/cobra"
-	"github.com/stromland/coprompt"
 )
 
 var editcmdObject = &pkgEditCmd.EditcmdClass{
@@ -36,7 +38,7 @@ var editFileCmd = &cobra.Command{
 	Use:   "file [env/]<filename>",
 	Short: "Edit a single configuration file",
 	Annotations: map[string]string{
-		coprompt.CALLBACK_ANNOTATION: "GetFiles",
+		CallbackAnnotation: "GetFiles",
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {

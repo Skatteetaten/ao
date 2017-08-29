@@ -12,7 +12,10 @@ import (
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 	"strings"
+	"github.com/stromland/cobra-prompt"
 )
+
+const CallbackAnnotation = cobraprompt.CALLBACK_ANNOTATION
 
 // Cobra Flag variables
 var persistentOptions cmdoptions.CommonCommandOptions
