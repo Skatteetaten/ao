@@ -14,7 +14,7 @@ var deletecmdObject = &pkgDelteCmd.DeletecmdClass{
 }
 
 var deleteCmd = &cobra.Command{
-	Use:   "delete vault <vaultname> | secret <vaultname> <secretname> | app <appname> | env <envname> | deployment <envname> <appname> | file <filename>",
+	Use:   "delete secret <vaultname> <secretname> | app <appname> | env <envname> | deployment <envname> <appname> | file <filename>",
 	Short: "Delete a resource",
 	Long: `Delete a resource from the repository.
 Deleting a vault will delete all secrets.
@@ -32,20 +32,6 @@ Specifying the force flag will suppress the confirmation prompts, and delete all
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Usage()
-	},
-}
-
-var deleteVaultCmd = &cobra.Command{
-	Use:   "vault <vaultname>",
-	Short: "Delete vault",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) != 1 {
-			fmt.Println(cmd.UseLine())
-			return
-		}
-
-		deletecmdObject.DeleteVault(args[0])
 	},
 }
 
@@ -107,7 +93,6 @@ var deleteFileCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(deleteCmd)
-	deleteCmd.AddCommand(deleteVaultCmd)
 	deleteCmd.AddCommand(deleteAppCmd)
 	deleteCmd.AddCommand(deleteEnvCmd)
 	deleteCmd.AddCommand(deleteDeploymentCmd)

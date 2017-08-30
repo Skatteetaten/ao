@@ -7,9 +7,14 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"strings"
+
+	"encoding/json"
+
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
+	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/printutil"
 	"github.com/skatteetaten/ao/pkg/serverapi_v2"
 )
@@ -20,24 +25,39 @@ type Vault struct {
 }
 */
 
-func CreateVault(vaultname string, config *configuration.ConfigurationClass) (output string, err error) {
+func CreateVault(vaultname string, config *configuration.ConfigurationClass, folderName string, addUser string, addGroup string) (output string, err error) {
 	var vault serverapi_v2.Vault
 
-	exists, err := vaultExists(vaultname, config)
+	if folderName == "" {
+		vault.Name = vaultname
+		vault.Secrets = make(map[string]string)
+	} else {
+		vault, err = secretsFolder2Vault(folderName)
+		if err != nil {
+			return "", err
+		}
+		// Override vaultname if given
+		if vaultname != "" {
+			vault.Name = vaultname
+		}
+		// Add permissions if specified
+		if addUser != "" {
+			vault.Permissions.Users = append(vault.Permissions.Users, addUser)
+		}
+		if addGroup != "" {
+			vault.Permissions.Groups = append(vault.Permissions.Groups, addGroup)
+		}
+	}
+
+	exists, err := vaultExists(vault.Name, config)
 	if err != nil {
 		return "", err
 	}
 
 	if exists {
-		return "", errors.New("Error: Vault exists")
+		return "", errors.New("Error: Vault " + vault.Name + " exists")
 	}
 
-	vault.Name = vaultname
-	vault.Secrets = make(map[string]string)
-	//vault.Versions = make(map[string]string)
-	//vault.Permissions.Users = make([]string, 0)
-	//vault.Permissions.Groups = make([]string, 1)
-	//vault.Permissions.Groups[0] = "APP_PaaS_utv"
 	message, err := auroraconfig.PutVault(vaultname, vault, "", config)
 	if err != nil {
 		return "", errors.New(message)
@@ -231,14 +251,39 @@ func secretsFolder2Vault(folderName string) (vault serverapi_v2.Vault, err error
 			if err != nil {
 				return vault, err
 			}
-			secretContent64 := base64.StdEncoding.EncodeToString(secretContent)
-			secretName := filepath.Base(absolutePath)
-			vault.Secrets[secretName] = secretContent64
-			vaultIndex++
+			// Check for permissions file
+			if strings.Contains(filepath.Base(absolutePath), "permission") {
+				if !jsonutil.IsLegalJson(string(secretContent)) {
+					err = errors.New("Illegal JSON in permissions file " + absolutePath)
+					return vault, err
+				}
+				if len(vault.Permissions.Groups) == 0 && len(vault.Permissions.Users) == 0 {
+					vault.Permissions, err = permissionsJson2Permissions(string(secretContent))
+					if err != nil {
+						return vault, err
+					}
+				} else {
+					err = errors.New("Multiple permission files in a vault is not supported")
+					return vault, err
+				}
+			} else {
+				secretContent64 := base64.StdEncoding.EncodeToString(secretContent)
+				secretName := filepath.Base(absolutePath)
+				vault.Secrets[secretName] = secretContent64
+				vaultIndex++
+			}
 		}
 	}
 
 	return
+}
+
+func permissionsJson2Permissions(permissionJson string) (permissions serverapi_v2.PermissionsStruct, err error) {
+	err = json.Unmarshal([]byte(permissionJson), &permissions)
+	if err != nil {
+		return permissions, err
+	}
+	return permissions, err
 }
 
 func countFolders(folderName string) (folderCount int, err error) {

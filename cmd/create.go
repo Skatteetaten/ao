@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
+
 	"github.com/skatteetaten/ao/pkg/vault"
+	"github.com/spf13/cobra"
 )
 
 var createCmd = &cobra.Command{
@@ -20,7 +21,7 @@ var createVaultCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) == 1 {
-			vault.CreateVault(args[0], config)
+			vault.CreateVault(args[0], config, "", "", "")
 		} else {
 			fmt.Println(cmd.UseLine())
 		}
@@ -30,4 +31,5 @@ var createVaultCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(createCmd)
 	createCmd.AddCommand(createVaultCmd)
+	createCmd.Hidden = true
 }

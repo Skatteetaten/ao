@@ -106,14 +106,16 @@ type PingResult struct {
 	} `json:"items"`
 }
 
+type PermissionsStruct struct {
+	Groups []string `json:"groups,omitempty"`
+	Users  []string `json:"users,omitempty"`
+}
+
 type Vault struct {
-	Name        string `json:"name"`
-	Permissions struct {
-		Groups []string `json:"groups,omitempty"`
-		Users  []string `json:"users,omitempty"`
-	} `json:"permissions,omitempty"`
-	Secrets  map[string]string `json:"secrets""`
-	Versions map[string]string `json:"versions,omitempty"`
+	Name        string            `json:"name"`
+	Permissions PermissionsStruct `json:"permissions,omitempty"`
+	Secrets     map[string]string `json:"secrets""`
+	Versions    map[string]string `json:"versions,omitempty"`
 }
 
 const apiNotInstalledResponse = "Application is not available"

@@ -12,6 +12,8 @@ var vaultRemoveGroup string
 var vaultAddUser string
 var vaultRemoveUser string
 
+var vaultFolder string
+
 // vaultCmd represents the vault command
 var vaultCmd = &cobra.Command{
 	Use:   "vault",
@@ -23,13 +25,21 @@ vault create | edit | delete | permissions <vaultname>.`,
 	},
 }
 
-var vaultCrateCmd = &cobra.Command{
-	Use:   "create <vaultname>",
-	Short: "Create a vault",
+var vaultCreateCmd = &cobra.Command{
+	Use:   "create [<vaultname>] [-f <folder>]",
+	Short: "Creates a vault and optionally imports the contents of a set of secretfiles into a vault",
+	Long: `Create <vaultname> will create an empty vault.
+If the --folder / -f flag is given, ao will read all the files in <folder>, and each file will become a secret.
+The secret will be named the same as the file.
+If no vaultname is given, the vault will be named the same as the <folder>.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) == 1 {
-			vault.CreateVault(args[0], config)
+		if len(args) < 2 {
+			vaultname := ""
+			if len(args) == 1 {
+				vaultname = args[0]
+			}
+			vault.CreateVault(vaultname, config, vaultFolder, vaultAddUser, vaultAddGroup)
 		} else {
 			fmt.Println(cmd.UseLine())
 		}
@@ -70,9 +80,39 @@ var vaultPermissionsCmd = &cobra.Command{
 	},
 }
 
+var vaultDeleteCmd = &cobra.Command{
+	Use:   "delete <vaultname>",
+	Short: "Delete a vault",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) == 1 {
+			if err := deletecmdObject.DeleteVault(args[0]); err == nil { //  vault.Permissions(args[0], config, vaultAddGroup, vaultRemoveGroup, vaultAddUser, vaultRemoveUser); err == nil {
+			} else {
+				fmt.Println(err.Error())
+			}
+		} else {
+			fmt.Println(cmd.UseLine())
+		}
+	},
+}
+
 var vaultImportCmd = &cobra.Command{
 	Use:   "import <catalog>",
 	Short: "Imports the contents of a set of files into a set of vaults",
+	Long: `Import works on a set of folders, each of which will become a separate vault.
+Given the catalog structure:
+
+vaultsfolder
+  vault1
+    secretfile1
+    secretfile1
+  vault2
+    secretfile3
+
+Then the command
+	ao vault import vaultsfolder
+will create 2 vaults: vault1 and vault2.  Vault1 will contain 2 secrets: secretfile1 and secretfile2.
+Vault2 will contain 1 secret: secretfile3.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) == 1 {
@@ -89,7 +129,11 @@ var vaultImportCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(vaultCmd)
-	vaultCmd.AddCommand(vaultCrateCmd)
+	vaultCreateCmd.Flags().StringVarP(&vaultFolder, "folder", "f", "", "Creates a vault from a set of secret files")
+	vaultCreateCmd.Flags().StringVarP(&vaultAddUser, "user", "u", "", "Adds a permission for the given user")
+	vaultCreateCmd.Flags().StringVarP(&vaultAddGroup, "group", "g", "", "Adds a permission for the given group")
+
+	vaultCmd.AddCommand(vaultCreateCmd)
 	vaultCmd.AddCommand(vaultEditCmd)
 
 	vaultPermissionsCmd.Flags().StringVarP(&vaultAddGroup, "add-group", "", "", "Add a group permission to the vault")
@@ -97,6 +141,7 @@ func init() {
 	vaultPermissionsCmd.Flags().StringVarP(&vaultAddUser, "add-user", "", "", "Add a user permission to the vault")
 	vaultPermissionsCmd.Flags().StringVarP(&vaultRemoveUser, "remove-user", "", "", "Remove a user permission from the vault")
 	vaultCmd.AddCommand(vaultPermissionsCmd)
+	vaultCmd.AddCommand(vaultDeleteCmd)
 
 	vaultCmd.AddCommand(vaultImportCmd)
 }
