@@ -8,7 +8,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
@@ -71,17 +71,17 @@ func (importObj *ImportClass) ExecuteImport(args []string, localDryRun bool) (
 		if localDryRun {
 			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 		} else {
-			responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
+			responses, err = serverapi.CallApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, true, persistentOptions.Localhost,
 				persistentOptions.Verbose, importObj.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
 			if err != nil {
 				for server := range responses {
-					response, err := serverapi_v2.ParseResponse(responses[server])
+					response, err := serverapi.ParseResponse(responses[server])
 					if err != nil {
 						return "", err
 					}
 					if !response.Success {
-						output, err = serverapi_v2.ResponsItems2MessageString(response)
+						output, err = serverapi.ResponsItems2MessageString(response)
 					}
 				}
 				return output, nil

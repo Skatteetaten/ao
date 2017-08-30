@@ -5,7 +5,7 @@ import (
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/configuration"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 func (editcmd *EditcmdClass) EditVault(vaultname string) (output string, err error) {
@@ -25,7 +25,7 @@ func (editcmd *EditcmdClass) EditVault(vaultname string) (output string, err err
 }
 
 func putVaultString(vaultname string, vaultString string, version string, configuration *configuration.ConfigurationClass) (output string, err error) {
-	var vault serverapi_v2.Vault
+	var vault serverapi.Vault
 
 	err = json.Unmarshal([]byte(vaultString), &vault)
 	if err != nil {

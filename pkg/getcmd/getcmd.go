@@ -10,7 +10,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/fuzzyargs"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/kubernetes"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 type GetcmdClass struct {
@@ -95,7 +95,7 @@ func (getcmd *GetcmdClass) Clusters(clusterName string, allClusters bool) (strin
 }
 
 func (getcmd *GetcmdClass) Vaults() (string, error) {
-	var vaults []serverapi_v2.Vault
+	var vaults []serverapi.Vault
 
 	vaults, err := auroraconfig.GetVaultsArray(getcmd.Configuration)
 
@@ -113,7 +113,7 @@ func (getcmd *GetcmdClass) Vaults() (string, error) {
 }
 
 func (getcmd *GetcmdClass) Vault(vaultName string) (string, error) {
-	var vaults []serverapi_v2.Vault
+	var vaults []serverapi.Vault
 	vaults, err := auroraconfig.GetVaultsArray(getcmd.Configuration)
 
 	if err != nil {
@@ -134,7 +134,7 @@ func (getcmd *GetcmdClass) Vault(vaultName string) (string, error) {
 
 func (getcmd *GetcmdClass) Secret(vaultName string, secretName string) (string, error) {
 	var output string
-	var vaults []serverapi_v2.Vault
+	var vaults []serverapi.Vault
 	vaults, err := auroraconfig.GetVaultsArray(getcmd.Configuration)
 
 	if err != nil {

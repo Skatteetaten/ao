@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 	"net"
 	"sort"
 	"strconv"
@@ -30,14 +30,14 @@ func PingAddress(args []string, pingPort string, pingCluster string, config *con
 	}
 	argument += "&port=" + pingPort
 
-	result, err := serverapi_v2.CallConsole("netdebug", argument, verbose, debug, config.OpenshiftConfig)
+	result, err := serverapi.CallConsole("netdebug", argument, verbose, debug, config.OpenshiftConfig)
 	if err != nil {
 		return
 	}
 
 	resultStr := string(result)
-	var pingResult serverapi_v2.PingResult
-	pingResult, err = serverapi_v2.ParsePingResult(resultStr)
+	var pingResult serverapi.PingResult
+	pingResult, err = serverapi.ParsePingResult(resultStr)
 	if err != nil {
 		return
 	}

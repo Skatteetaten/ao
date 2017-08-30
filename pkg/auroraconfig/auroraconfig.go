@@ -10,7 +10,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 const InvalidConfigurationError = "Invalid configuration"
@@ -30,7 +30,7 @@ type ClientConfigResponse struct {
 
 func GetClientConfig(config *configuration.ConfigurationClass) (*ClientConfig, error) {
 	clientConfig := new(ClientConfig)
-	rawResponses, err := serverapi_v2.CallApiShort(http.MethodGet, "/clientconfig/", "", config)
+	rawResponses, err := serverapi.CallApiShort(http.MethodGet, "/clientconfig/", "", config)
 	if err != nil {
 		return clientConfig, nil
 	}
@@ -160,21 +160,21 @@ func GetFileList(configuration *configuration.ConfigurationClass) (filenames []s
 	return secretnames, nil
 }*/
 
-func GetVault(vaultname string, configuration *configuration.ConfigurationClass) (vault serverapi_v2.Vault, err error) {
+func GetVault(vaultname string, configuration *configuration.ConfigurationClass) (vault serverapi.Vault, err error) {
 	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/vault/" + vaultname
 	var responses map[string]string
-	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
+	responses, err = serverapi.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
 		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
 		configuration.GetPersistentOptions().Verbose, configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun,
 		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
 	if err != nil {
 		for server := range responses {
-			response, err := serverapi_v2.ParseResponse(responses[server])
+			response, err := serverapi.ParseResponse(responses[server])
 			if err != nil {
 				return vault, err
 			}
 			if !response.Success {
-				output, err := serverapi_v2.ResponsItems2MessageString(response)
+				output, err := serverapi.ResponsItems2MessageString(response)
 				if err != nil {
 					return vault, err
 				}
@@ -194,11 +194,11 @@ func GetVault(vaultname string, configuration *configuration.ConfigurationClass)
 	}
 
 	for server := range responses {
-		response, err := serverapi_v2.ParseResponse(responses[server])
+		response, err := serverapi.ParseResponse(responses[server])
 		if err != nil {
 			return vault, err
 		}
-		vault, err = serverapi_v2.ResponseItems2Vault(response)
+		vault, err = serverapi.ResponseItems2Vault(response)
 	}
 
 	return vault, err
@@ -207,18 +207,18 @@ func GetVault(vaultname string, configuration *configuration.ConfigurationClass)
 func GetVaults(configuration *configuration.ConfigurationClass) (output string, err error) {
 	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/vault"
 	var responses map[string]string
-	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
+	responses, err = serverapi.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
 		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
 		configuration.GetPersistentOptions().Verbose, configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun,
 		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
 	if err != nil {
 		for server := range responses {
-			response, err := serverapi_v2.ParseResponse(responses[server])
+			response, err := serverapi.ParseResponse(responses[server])
 			if err != nil {
 				return output, err
 			}
 			if !response.Success {
-				output, err := serverapi_v2.ResponsItems2MessageString(response)
+				output, err := serverapi.ResponsItems2MessageString(response)
 				if err != nil {
 					return output, err
 				}
@@ -240,11 +240,11 @@ func GetVaults(configuration *configuration.ConfigurationClass) (output string, 
 	}
 
 	for server := range responses {
-		response, err := serverapi_v2.ParseResponse(responses[server])
+		response, err := serverapi.ParseResponse(responses[server])
 		if err != nil {
 			return output, err
 		}
-		output, err = serverapi_v2.ResponseItems2Vaults(response)
+		output, err = serverapi.ResponseItems2Vaults(response)
 	}
 
 	return output, err
@@ -252,21 +252,21 @@ func GetVaults(configuration *configuration.ConfigurationClass) (output string, 
 	return
 }
 
-func GetVaultsArray(configuration *configuration.ConfigurationClass) (vaults []serverapi_v2.Vault, err error) {
+func GetVaultsArray(configuration *configuration.ConfigurationClass) (vaults []serverapi.Vault, err error) {
 	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/vault"
 	var responses map[string]string
-	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
+	responses, err = serverapi.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
 		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
 		configuration.GetPersistentOptions().Verbose, configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun,
 		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
 	if err != nil {
 		for server := range responses {
-			response, err := serverapi_v2.ParseResponse(responses[server])
+			response, err := serverapi.ParseResponse(responses[server])
 			if err != nil {
 				return vaults, err
 			}
 			if !response.Success {
-				output, err := serverapi_v2.ResponsItems2MessageString(response)
+				output, err := serverapi.ResponsItems2MessageString(response)
 				if err != nil {
 					return vaults, err
 				}
@@ -286,18 +286,18 @@ func GetVaultsArray(configuration *configuration.ConfigurationClass) (vaults []s
 	}
 
 	for server := range responses {
-		response, err := serverapi_v2.ParseResponse(responses[server])
+		response, err := serverapi.ParseResponse(responses[server])
 		if err != nil {
 			return vaults, err
 		}
-		vaults, err = serverapi_v2.ResponseItems2VaultsArray(response)
+		vaults, err = serverapi.ResponseItems2VaultsArray(response)
 	}
 
 	return vaults, err
 }
 
 func GetSecret(vaultName string, secretName string, configuration *configuration.ConfigurationClass) (output string, version string, err error) {
-	var vaults []serverapi_v2.Vault
+	var vaults []serverapi.Vault
 	vaults, err = GetVaultsArray(configuration)
 
 	for vaultindex := range vaults {
@@ -310,22 +310,22 @@ func GetSecret(vaultName string, secretName string, configuration *configuration
 	return
 }
 
-func GetAuroraConfig(configuration *configuration.ConfigurationClass) (auroraConfig serverapi_v2.AuroraConfig, err error) {
+func GetAuroraConfig(configuration *configuration.ConfigurationClass) (auroraConfig serverapi.AuroraConfig, err error) {
 	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/auroraconfig"
 	var responses map[string]string
 
-	responses, err = serverapi_v2.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
+	responses, err = serverapi.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
 		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
 		configuration.GetPersistentOptions().Verbose, configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun,
 		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
 	if err != nil {
 		for server := range responses {
-			response, err := serverapi_v2.ParseResponse(responses[server])
+			response, err := serverapi.ParseResponse(responses[server])
 			if err != nil {
 				return auroraConfig, err
 			}
 			if !response.Success {
-				output, err := serverapi_v2.ResponsItems2MessageString(response)
+				output, err := serverapi.ResponsItems2MessageString(response)
 				if err != nil {
 					return auroraConfig, err
 				}
@@ -344,18 +344,18 @@ func GetAuroraConfig(configuration *configuration.ConfigurationClass) (auroraCon
 	}
 
 	for server := range responses {
-		response, err := serverapi_v2.ParseResponse(responses[server])
+		response, err := serverapi.ParseResponse(responses[server])
 		if err != nil {
 			return auroraConfig, err
 		}
-		auroraConfig, err = serverapi_v2.ResponseItems2AuroraConfig(response)
+		auroraConfig, err = serverapi.ResponseItems2AuroraConfig(response)
 
 	}
 
 	return auroraConfig, nil
 }
 
-func PutAuroraConfig(auroraConfig serverapi_v2.AuroraConfig, configuration *configuration.ConfigurationClass) (err error) {
+func PutAuroraConfig(auroraConfig serverapi.AuroraConfig, configuration *configuration.ConfigurationClass) (err error) {
 	content, err := json.Marshal(auroraConfig)
 	if err != nil {
 		return err
@@ -379,7 +379,7 @@ func putContent(apiEndpoint string, content string, version string, configuratio
 	/* headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, api bool, localhost bool, verbose bool,
 	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string*/
 
-	responses, err = serverapi_v2.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, content, true,
+	responses, err = serverapi.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, content, true,
 		configuration.GetPersistentOptions().Localhost,
 		configuration.GetPersistentOptions().Verbose,
 		configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun, configuration.GetPersistentOptions().Debug,
@@ -395,12 +395,12 @@ func putContent(apiEndpoint string, content string, version string, configuratio
 		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)*/
 	if err != nil {
 		for server := range responses {
-			response, err := serverapi_v2.ParseResponse(responses[server])
+			response, err := serverapi.ParseResponse(responses[server])
 			if err != nil {
 				return "", err
 			}
 			if !response.Success {
-				validationMessages, _ := serverapi_v2.ResponsItems2MessageString(response)
+				validationMessages, _ := serverapi.ResponsItems2MessageString(response)
 				return validationMessages, errors.New(InvalidConfigurationError)
 			}
 		}
@@ -422,7 +422,7 @@ func PutSecret(vaultname string, secretname string, secret string, version strin
 	return putContent(apiEndpoint, encodedSecret, version, configuration)
 }
 
-func PutVault(vaultname string, vault serverapi_v2.Vault, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
+func PutVault(vaultname string, vault serverapi.Vault, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
 	var apiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/vault/"
 
 	content, err := json.Marshal(vault)
@@ -437,7 +437,7 @@ func deleteContent(apiEndpoint string, version string, configuration *configurat
 	var versionHeader = make(map[string]string)
 	versionHeader["AuroraConfigFileVersion"] = version
 
-	responses, err = serverapi_v2.CallApiWithHeaders(versionHeader, http.MethodDelete, apiEndpoint, "", true,
+	responses, err = serverapi.CallApiWithHeaders(versionHeader, http.MethodDelete, apiEndpoint, "", true,
 		configuration.GetPersistentOptions().Localhost,
 		configuration.GetPersistentOptions().Verbose,
 		configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun, configuration.GetPersistentOptions().Debug,
@@ -445,12 +445,12 @@ func deleteContent(apiEndpoint string, version string, configuration *configurat
 
 	if err != nil {
 		for server := range responses {
-			response, err := serverapi_v2.ParseResponse(responses[server])
+			response, err := serverapi.ParseResponse(responses[server])
 			if err != nil {
 				return "", err
 			}
 			if !response.Success {
-				validationMessages, _ := serverapi_v2.ResponsItems2MessageString(response)
+				validationMessages, _ := serverapi.ResponsItems2MessageString(response)
 				return validationMessages, errors.New(validationMessages)
 			}
 		}

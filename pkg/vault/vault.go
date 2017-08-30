@@ -16,17 +16,17 @@ import (
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/printutil"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 /*
 type Vault struct {
-	vaults []serverapi_v2.Vault
+	vaults []serverapi.Vault
 }
 */
 
 func CreateVault(vaultname string, config *configuration.ConfigurationClass, folderName string, addUser string, addGroup string) (output string, err error) {
-	var vault serverapi_v2.Vault
+	var vault serverapi.Vault
 
 	if folderName == "" {
 		vault.Name = vaultname
@@ -66,7 +66,7 @@ func CreateVault(vaultname string, config *configuration.ConfigurationClass, fol
 }
 
 func vaultExists(vaultname string, config *configuration.ConfigurationClass) (exists bool, err error) {
-	var vaults []serverapi_v2.Vault
+	var vaults []serverapi.Vault
 	vaults, err = auroraconfig.GetVaultsArray(config)
 	if err != nil {
 		return false, err
@@ -90,7 +90,7 @@ func (this *Vault)getVaults(config *configuration.ConfigurationClass) (err error
 
 }
 
-func getVaultIndex(vaultName string, vaults []serverapi_v2.Vault) (vaultIndex int, err error) {
+func getVaultIndex(vaultName string, vaults []serverapi.Vault) (vaultIndex int, err error) {
 	var found bool
 	for i := range vaults {
 		if vaults[i].Name == vaultName {
@@ -147,7 +147,7 @@ func listPermissions(user []string, group []string) (output string, err error) {
 func Permissions(vaultName string, config *configuration.ConfigurationClass,
 	addGroup string, removeGroup string, addUser string, removeUser string) (output string, err error) {
 
-	var vault serverapi_v2.Vault
+	var vault serverapi.Vault
 	vault, err = auroraconfig.GetVault(vaultName, config)
 	if err != nil {
 		return "", err
@@ -207,13 +207,13 @@ func ImportVaults(catalogName string, config *configuration.ConfigurationClass) 
 	return
 }
 
-func vaultsFolder2VaultsArray(folderName string) (vaults []serverapi_v2.Vault, err error) {
+func vaultsFolder2VaultsArray(folderName string) (vaults []serverapi.Vault, err error) {
 	folderCount, err := countFolders(folderName)
 	if err != nil {
 		return nil, err
 	}
 
-	vaults = make([]serverapi_v2.Vault, folderCount)
+	vaults = make([]serverapi.Vault, folderCount)
 
 	files, err := ioutil.ReadDir(folderName)
 	if err != nil {
@@ -234,7 +234,7 @@ func vaultsFolder2VaultsArray(folderName string) (vaults []serverapi_v2.Vault, e
 	return vaults, nil
 }
 
-func secretsFolder2Vault(folderName string) (vault serverapi_v2.Vault, err error) {
+func secretsFolder2Vault(folderName string) (vault serverapi.Vault, err error) {
 	vault.Name = filepath.Base(folderName)
 	vault.Secrets = make(map[string]string)
 	files, err := ioutil.ReadDir(folderName)
@@ -278,7 +278,7 @@ func secretsFolder2Vault(folderName string) (vault serverapi_v2.Vault, err error
 	return
 }
 
-func permissionsJson2Permissions(permissionJson string) (permissions serverapi_v2.PermissionsStruct, err error) {
+func permissionsJson2Permissions(permissionJson string) (permissions serverapi.PermissionsStruct, err error) {
 	err = json.Unmarshal([]byte(permissionJson), &permissions)
 	if err != nil {
 		return permissions, err

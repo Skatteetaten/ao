@@ -1,4 +1,4 @@
-package serverapi_v2
+package serverapi
 
 import (
 	"bytes"
