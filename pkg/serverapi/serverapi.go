@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	"time"
+
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/openshift"
@@ -431,13 +433,15 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 
 	if debug {
 		fmt.Println("REQUEST:")
-		fmt.Println("\tURL: " + url)
+		fmt.Print("\t" + httpMethod)
+		fmt.Println(" URL: " + url)
 		fmt.Println("\tToken: " + token)
 		if combindedJson == "" {
 			fmt.Println("\tNo JSON Payload")
 		} else {
 			fmt.Println("\tJSON Payload: \n" + jsonutil.PrettyPrintJson(combindedJson))
 		}
+
 	}
 	var jsonStr = []byte(combindedJson)
 
@@ -462,6 +466,7 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 
 	client := &http.Client{}
 
+	startTime := time.Now()
 	resp, err := client.Do(req)
 	if err != nil {
 		if verbose {
@@ -470,6 +475,7 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 		errorstring := fmt.Sprintf("Error connecting to the Boober service on %v: %v", url, err)
 		return makeResponse(errorstring, false)
 	}
+	requestTime := time.Since(startTime)
 
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -477,13 +483,14 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 
 	if debug {
 		fmt.Println("RESPONSE:")
-		fmt.Println("\tResponse status: " + strconv.Itoa(resp.StatusCode))
+
 		if jsonutil.IsLegalJson(output) {
 			fmt.Println(jsonutil.PrettyPrintJson(output))
 		} else {
 			fmt.Println(output)
 		}
-
+		fmt.Println("\tResponse status: " + strconv.Itoa(resp.StatusCode))
+		fmt.Println("\tResponse time: " + strconv.FormatFloat(requestTime.Seconds(), 'f', 2, 64) + " sec")
 	}
 
 	if jsonutil.IsLegalJson(output) {
