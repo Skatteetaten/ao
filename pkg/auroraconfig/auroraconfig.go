@@ -15,6 +15,36 @@ import (
 
 const InvalidConfigurationError = "Invalid configuration"
 
+func GetGitLocation(config *configuration.ConfigurationClass) (string, error) {
+	rawResponses, err := serverapi_v2.CallApiShort(http.MethodGet, "/clientconfig/", "", config)
+	if err != nil {
+		return "", nil
+	}
+
+	type ClientConfig struct {
+		GitUrlPattern string `json:"gitUrlPattern"`
+	}
+
+	type ClientConfigResponse struct {
+		Success bool           `json:"success"`
+		Message string         `json:"message"`
+		Items   []ClientConfig `json:"items"`
+		Count   int            `json:"count"`
+	}
+
+	var response ClientConfigResponse
+	for _, v := range rawResponses {
+		json.Unmarshal([]byte(v), &response)
+		break
+	}
+
+	if len(response.Items) < 0 {
+		return "", errors.New("No GitUrlPattern")
+	}
+
+	return response.Items[0].GitUrlPattern, nil
+}
+
 func GetContent(filename string, configuration *configuration.ConfigurationClass) (content string, version string, err error) {
 	auroraConfig, err := GetAuroraConfig(configuration)
 	if err != nil {

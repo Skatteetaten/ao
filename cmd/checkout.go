@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 	_ "go/token"
 	"os"
+	"strings"
 )
 
 var checkoutCmd = &cobra.Command{
@@ -20,7 +21,6 @@ var checkoutCmd = &cobra.Command{
 			affiliation = affiliationFlag
 		}
 
-		username, _ := cmd.LocalFlags().GetString("user")
 		path, _ := cmd.LocalFlags().GetString("path")
 
 		if len(path) < 1 {
@@ -28,8 +28,12 @@ var checkoutCmd = &cobra.Command{
 			path = fmt.Sprintf("%s/%s", wd, affiliation)
 		}
 
-		if output, err := auroraconfig.Checkout(affiliation, username, path); err != nil {
-			fmt.Println("Repository exists")
+		url := getGitUrl(affiliation, userName)
+
+		fmt.Printf("Cloning AuroraConfig for affiliation %s\n", affiliation)
+		fmt.Printf("From: %s\n\n", url)
+
+		if output, err := auroraconfig.Checkout(url, path); err != nil {
 			return
 		} else {
 			fmt.Print(output)
@@ -42,6 +46,22 @@ var checkoutCmd = &cobra.Command{
 
 		fmt.Println("Checkout success")
 	},
+}
+
+func getGitUrl(affiliation, user string) string {
+	gitUrlPattern, err := auroraconfig.GetGitLocation(config)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+
+	if !strings.Contains(gitUrlPattern, "https://") {
+		return fmt.Sprintf(gitUrlPattern, affiliation)
+	}
+
+	host := strings.TrimPrefix(gitUrlPattern, "https://")
+	newPattern := fmt.Sprintf("https://%s@%s", user, host)
+	return fmt.Sprintf(newPattern, affiliation)
 }
 
 func init() {

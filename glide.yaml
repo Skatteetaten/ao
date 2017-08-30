@@ -1,9 +1,5 @@
 package: github.com/skatteetaten/ao
 import:
-- package: gopkg.in/src-d/go-git.v4
-  version: ^4.0.0-rc9
-  subpackages:
-  - plumbing/transport/http
 - package: github.com/howeyc/gopass
 - package: github.com/spf13/cobra
 - package: github.com/spf13/viper
