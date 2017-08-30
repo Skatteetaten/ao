@@ -57,8 +57,8 @@ func Pull() (string, error) {
 	}
 }
 
-func Save(username string, config *configuration.ConfigurationClass) (string, error) {
-	if err := ValidateRepo(config.GetAffiliation(), username); err != nil {
+func Save(url string, config *configuration.ConfigurationClass) (string, error) {
+	if err := ValidateRepo(url); err != nil {
 		return "", err
 	}
 
@@ -114,7 +114,7 @@ func UpdateLocalRepository(affiliation string, config *openshift.OpenshiftConfig
 	return os.Chdir(wd)
 }
 
-func ValidateRepo(affiliation, username string) error {
+func ValidateRepo(expectedUrl string) error {
 	output, err := GitCommand("remote", "-v")
 	if err != nil {
 		return err
@@ -130,7 +130,6 @@ func ValidateRepo(affiliation, username string) error {
 		}
 	}
 
-	expectedUrl := fmt.Sprintf(GIT_URL_FORMAT, username, affiliation)
 	if repoUrl != expectedUrl {
 		message := fmt.Sprintf(`Wrong repository.
 Expected remote to be %s, actual %s.`, expectedUrl, repoUrl)
