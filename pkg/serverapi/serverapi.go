@@ -27,7 +27,7 @@ type ApplicationId struct {
 type OpenShiftResponse struct {
 	Kind          string `json:"kind"`
 	OperationType string `json:"operationType"` // CREATED, UPDATE eller NONE
-	Payload struct {
+	Payload       struct {
 		Kind string `json:"payload"`
 	} `json:"payload"`
 	ResponseBody json.RawMessage `json:"responseBody"`
@@ -75,9 +75,9 @@ type Response struct {
 type ResponseItemError struct {
 	Application string `json:"application"`
 	Environment string `json:"environment"`
-	Messages []struct {
+	Messages    []struct {
 		Message string `json:"message"`
-		Field struct {
+		Field   struct {
 			Path   string `json:"path"`
 			Value  string `json:"value"`
 			Source string `json:"source"`
@@ -205,7 +205,7 @@ func ResponseItems2Vaults(response Response) (output string, err error) {
 func ApplicationResult2MessageString(applicationResult ApplicationResult) (output string, err error) {
 
 	output +=
-	//applicationResult.ApplicationId.ApplicationName +
+		//applicationResult.ApplicationId.ApplicationName +
 		applicationResult.AuroraDc.GroupId + "/" + applicationResult.AuroraDc.ArtifactId + "-" + applicationResult.AuroraDc.Version +
 			" deployed in " + applicationResult.AuroraDc.Cluster + "/" + applicationResult.AuroraDc.EnvName
 	return
