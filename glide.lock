@@ -1,5 +1,5 @@
-hash: 62ed26da2814975c4de2c5438b0d86f769550ba51099901a0b11d9504b088357
-updated: 2017-08-29T14:05:15.863540573+02:00
+hash: 0eeae33bdb2bbe87451210401f36eb4e9cc4931f2a269630caeb24ca4b4feffa
+updated: 2017-08-29T15:19:39.564012775+02:00
 imports:
 - name: github.com/c-bata/go-prompt
   version: ba233229562fbeebe1328788a6245cda9124af27
@@ -62,10 +62,6 @@ imports:
   subpackages:
   - transform
   - unicode/norm
-- name: gopkg.in/src-d/go-git.v4
-  version: 8ddbecf782c2e340fd85bb4ba4d00dc73d749f87
-  subpackages:
-  - plumbing/transport/http
 - name: gopkg.in/yaml.v2
   version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
 testImports:

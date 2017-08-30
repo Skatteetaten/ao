@@ -13,7 +13,8 @@ var saveCmd = &cobra.Command{
 	Short: "Save changed, new and deleted files for AuroraConfig",
 	Run: func(cmd *cobra.Command, args []string) {
 		user, _ := cmd.Flags().GetString("user")
-		if _, err := auroraconfig.Save(user, config); err != nil {
+		url := getGitUrl(config.GetAffiliation(), user)
+		if _, err := auroraconfig.Save(url, config); err != nil {
 			fmt.Println(err.Error())
 		} else {
 			fmt.Println("Save success")

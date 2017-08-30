@@ -16,8 +16,10 @@ import (
 
 const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
 
+// TODO: Add debug
 func GitCommand(args ...string) (string, error) {
 	command := exec.Command("git", args...)
+	command.Stderr = os.Stderr
 	cmdReader, err := command.StdoutPipe()
 	if err != nil {
 		return "", err
@@ -43,24 +45,20 @@ func GitCommand(args ...string) (string, error) {
 	return message, nil
 }
 
-func Checkout(affiliation string, username string, outputPath string) (string, error) {
-	url := fmt.Sprintf(GIT_URL_FORMAT, username, affiliation)
-	fmt.Printf("Cloning AuroraConfig for affiliation %s\n", affiliation)
-	fmt.Printf("%s\n\n", url)
-
+func Checkout(url string, outputPath string) (string, error) {
 	return GitCommand("clone", url, outputPath)
 }
 
 func Pull() (string, error) {
 	if output, err := GitCommand("pull"); err != nil {
-		return "", errors.New("Not a git repository")
+		return "", errors.New("pull failed")
 	} else {
 		return output, nil
 	}
 }
 
-func Save(username string, config *configuration.ConfigurationClass) (string, error) {
-	if err := ValidateRepo(config.GetAffiliation(), username); err != nil {
+func Save(url string, config *configuration.ConfigurationClass) (string, error) {
+	if err := ValidateRepo(url); err != nil {
 		return "", err
 	}
 
@@ -70,16 +68,28 @@ func Save(username string, config *configuration.ConfigurationClass) (string, er
 		return "", err
 	}
 
-	if err := checkRepoForChanges(); err != nil {
+	var statuses []string
+	if status, err := GitCommand("status", "-s"); err != nil {
+		return "", err
+	} else {
+		statuses = strings.Fields(status)
+	}
+
+	if err := checkRepoForChanges(statuses); err != nil {
 		return "", err
 	}
 
-	if err := handleAuroraConfigCommit(config); err != nil {
+	if err := handleAuroraConfigCommit(statuses, config); err != nil {
 		return "", err
 	}
 
 	// Delete untracked files
 	if _, err := GitCommand("clean", "-fd"); err != nil {
+		return "", err
+	}
+
+	// Reset branch before pull
+	if _, err := GitCommand("checkout", "."); err != nil {
 		return "", err
 	}
 
@@ -104,7 +114,7 @@ func UpdateLocalRepository(affiliation string, config *openshift.OpenshiftConfig
 	return os.Chdir(wd)
 }
 
-func ValidateRepo(affiliation, username string) error {
+func ValidateRepo(expectedUrl string) error {
 	output, err := GitCommand("remote", "-v")
 	if err != nil {
 		return err
@@ -120,7 +130,6 @@ func ValidateRepo(affiliation, username string) error {
 		}
 	}
 
-	expectedUrl := fmt.Sprintf(GIT_URL_FORMAT, username, affiliation)
 	if repoUrl != expectedUrl {
 		message := fmt.Sprintf(`Wrong repository.
 Expected remote to be %s, actual %s.`, expectedUrl, repoUrl)
@@ -130,7 +139,7 @@ Expected remote to be %s, actual %s.`, expectedUrl, repoUrl)
 	return nil
 }
 
-func handleAuroraConfigCommit(config *configuration.ConfigurationClass) error {
+func handleAuroraConfigCommit(statuses []string, config *configuration.ConfigurationClass) error {
 	ac, err := GetAuroraConfig(config)
 
 	if err != nil {
@@ -141,7 +150,7 @@ func handleAuroraConfigCommit(config *configuration.ConfigurationClass) error {
 		return errors.Wrap(err, "Failed adding files to AuroraConfig")
 	}
 
-	removeFilesFromAuroraConfig(&ac)
+	removeFilesFromAuroraConfig(statuses, &ac)
 
 	if err = PutAuroraConfig(ac, config); err != nil {
 		return errors.Wrap(err, "Failed committing AuroraConfig")
@@ -150,14 +159,8 @@ func handleAuroraConfigCommit(config *configuration.ConfigurationClass) error {
 	return nil
 }
 
-func checkRepoForChanges() error {
-
-	status, err := GitCommand("status", "-s")
-	if err != nil {
-		return err
-	}
-
-	if len(status) == 0 {
+func checkRepoForChanges(statuses []string) error {
+	if len(statuses) == 0 {
 		return errors.New("Nothing to save")
 	}
 
@@ -166,7 +169,7 @@ func checkRepoForChanges() error {
 
 func fetchOrigin() (string, error) {
 
-	return GitCommand("fetch", "origin/master")
+	return GitCommand("fetch", "origin")
 }
 
 func checkForNewCommits() error {
@@ -219,18 +222,11 @@ func addFilesToAuroraConfig(ac *serverapi_v2.AuroraConfig) error {
 	})
 }
 
-func removeFilesFromAuroraConfig(ac *serverapi_v2.AuroraConfig) error {
-	status, err := GitCommand("status", "-s")
-	if err != nil {
-		return err
-	}
-
-	statuses := strings.Fields(status)
+func removeFilesFromAuroraConfig(statuses []string, ac *serverapi_v2.AuroraConfig) error {
 	for i, v := range statuses {
 		if v == "D" && len(statuses) > i+1 {
 			delete(ac.Files, statuses[i+1])
 		}
 	}
-
 	return nil
 }

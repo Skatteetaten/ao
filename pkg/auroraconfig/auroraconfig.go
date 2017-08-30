@@ -15,6 +15,39 @@ import (
 
 const InvalidConfigurationError = "Invalid configuration"
 
+type ClientConfig struct {
+	GitUrlPattern    string `json:"gitUrlPattern"`
+	OpenShiftCluster string `json:"openshiftCluster"`
+	OpenShiftUrl     string `json:"openshiftUrl"`
+}
+
+type ClientConfigResponse struct {
+	Success bool           `json:"success"`
+	Message string         `json:"message"`
+	Items   []ClientConfig `json:"items"`
+	Count   int            `json:"count"`
+}
+
+func GetClientConfig(config *configuration.ConfigurationClass) (*ClientConfig, error) {
+	clientConfig := new(ClientConfig)
+	rawResponses, err := serverapi_v2.CallApiShort(http.MethodGet, "/clientconfig/", "", config)
+	if err != nil {
+		return clientConfig, nil
+	}
+
+	var response ClientConfigResponse
+	for _, v := range rawResponses {
+		json.Unmarshal([]byte(v), &response)
+		break
+	}
+
+	if len(response.Items) < 0 {
+		return clientConfig, errors.New("No GitUrlPattern")
+	}
+
+	return &response.Items[0], nil
+}
+
 func GetContent(filename string, configuration *configuration.ConfigurationClass) (content string, version string, err error) {
 	auroraConfig, err := GetAuroraConfig(configuration)
 	if err != nil {
