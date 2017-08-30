@@ -49,11 +49,12 @@ var checkoutCmd = &cobra.Command{
 }
 
 func getGitUrl(affiliation, user string) string {
-	gitUrlPattern, err := auroraconfig.GetGitLocation(config)
+	clientConfig, err := auroraconfig.GetClientConfig(config)
 	if err != nil {
 		fmt.Println(err)
 		return ""
 	}
+	gitUrlPattern := clientConfig.GitUrlPattern
 
 	if !strings.Contains(gitUrlPattern, "https://") {
 		return fmt.Sprintf(gitUrlPattern, affiliation)

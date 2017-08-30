@@ -15,21 +15,24 @@ import (
 
 const InvalidConfigurationError = "Invalid configuration"
 
-func GetGitLocation(config *configuration.ConfigurationClass) (string, error) {
+type ClientConfig struct {
+	GitUrlPattern    string `json:"gitUrlPattern"`
+	OpenShiftCluster string `json:"openshiftCluster"`
+	OpenShiftUrl     string `json:"openshiftUrl"`
+}
+
+type ClientConfigResponse struct {
+	Success bool           `json:"success"`
+	Message string         `json:"message"`
+	Items   []ClientConfig `json:"items"`
+	Count   int            `json:"count"`
+}
+
+func GetClientConfig(config *configuration.ConfigurationClass) (*ClientConfig, error) {
+	clientConfig := new(ClientConfig)
 	rawResponses, err := serverapi_v2.CallApiShort(http.MethodGet, "/clientconfig/", "", config)
 	if err != nil {
-		return "", nil
-	}
-
-	type ClientConfig struct {
-		GitUrlPattern string `json:"gitUrlPattern"`
-	}
-
-	type ClientConfigResponse struct {
-		Success bool           `json:"success"`
-		Message string         `json:"message"`
-		Items   []ClientConfig `json:"items"`
-		Count   int            `json:"count"`
+		return clientConfig, nil
 	}
 
 	var response ClientConfigResponse
@@ -39,10 +42,10 @@ func GetGitLocation(config *configuration.ConfigurationClass) (string, error) {
 	}
 
 	if len(response.Items) < 0 {
-		return "", errors.New("No GitUrlPattern")
+		return clientConfig, errors.New("No GitUrlPattern")
 	}
 
-	return response.Items[0].GitUrlPattern, nil
+	return &response.Items[0], nil
 }
 
 func GetContent(filename string, configuration *configuration.ConfigurationClass) (content string, version string, err error) {
