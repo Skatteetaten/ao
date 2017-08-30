@@ -19,16 +19,12 @@ const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
 // TODO: Add debug
 func GitCommand(args ...string) (string, error) {
 	command := exec.Command("git", args...)
+	command.Stderr = os.Stderr
 	cmdReader, err := command.StdoutPipe()
 	if err != nil {
 		return "", err
 	}
-	cmdErrRead, err := command.StderrPipe()
-	if err != nil {
-		return "", err
-	}
 
-	errScanner := bufio.NewScanner(cmdErrRead)
 	scanner := bufio.NewScanner(cmdReader)
 
 	err = command.Start()
@@ -39,11 +35,6 @@ func GitCommand(args ...string) (string, error) {
 	message := ""
 	for scanner.Scan() {
 		message = fmt.Sprintf("%s%s\n", message, scanner.Text())
-	}
-
-	for errScanner.Scan() {
-		msg := strings.TrimPrefix(errScanner.Text(), "fatal: ")
-		fmt.Println(msg)
 	}
 
 	err = command.Wait()
