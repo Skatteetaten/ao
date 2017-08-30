@@ -13,7 +13,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/executil"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 const UsageString = "Usage: new-app <appname>"
@@ -138,7 +138,7 @@ func (newappcmd *NewappcmdClass) generateEnvApp(appname string, env string, depl
 	return payload, filename
 }
 
-func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi_v2.AuroraConfig, env string, appname string, groupid string, deploymentType string, cluster string) (mergedConfig serverapi_v2.AuroraConfig, err error) {
+func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi.AuroraConfig, env string, appname string, groupid string, deploymentType string, cluster string) (mergedConfig serverapi.AuroraConfig, err error) {
 
 	// Check if root about.json exists, if not exit with error
 	_, rootExist := config.Files["about.json"]

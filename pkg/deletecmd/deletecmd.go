@@ -5,7 +5,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/executil"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 	"strings"
 )
 
@@ -218,7 +218,7 @@ func (deletecmd *DeletecmdClass) isFileDeleted(filename string) bool {
 	return false
 }
 
-func (deletecmd *DeletecmdClass) deleteFilesInList(auroraConfig serverapi_v2.AuroraConfig) error {
+func (deletecmd *DeletecmdClass) deleteFilesInList(auroraConfig serverapi.AuroraConfig) error {
 	// Delete all files in list
 	for i := range deletecmd.deleteFileList {
 		delete(auroraConfig.Files, deletecmd.deleteFileList[i])

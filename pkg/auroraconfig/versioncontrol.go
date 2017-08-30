@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/openshift"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -199,7 +199,7 @@ func compareGitLog(compare string) error {
 	return nil
 }
 
-func addFilesToAuroraConfig(ac *serverapi_v2.AuroraConfig) error {
+func addFilesToAuroraConfig(ac *serverapi.AuroraConfig) error {
 	wd, _ := os.Getwd()
 
 	return filepath.Walk(wd, func(path string, info os.FileInfo, err error) error {
@@ -222,7 +222,7 @@ func addFilesToAuroraConfig(ac *serverapi_v2.AuroraConfig) error {
 	})
 }
 
-func removeFilesFromAuroraConfig(statuses []string, ac *serverapi_v2.AuroraConfig) error {
+func removeFilesFromAuroraConfig(statuses []string, ac *serverapi.AuroraConfig) error {
 	for i, v := range statuses {
 		if v == "D" && len(statuses) > i+1 {
 			delete(ac.Files, statuses[i+1])

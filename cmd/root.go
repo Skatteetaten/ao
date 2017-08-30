@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"os"
 	"github.com/skatteetaten/ao/pkg/configuration"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 	"strings"
 	"github.com/stromland/cobra-prompt"
 )
@@ -54,7 +54,7 @@ This application has two main parts.
 			}
 		}
 
-		if valid := serverapi_v2.ValidateLogin(config.OpenshiftConfig); !valid {
+		if valid := serverapi.ValidateLogin(config.OpenshiftConfig); !valid {
 			fmt.Println("Not logged in, please use ao login")
 			os.Exit(1)
 		}

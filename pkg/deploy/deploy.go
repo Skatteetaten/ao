@@ -13,7 +13,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/executil"
 	"github.com/skatteetaten/ao/pkg/fuzzyargs"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
-	"github.com/skatteetaten/ao/pkg/serverapi_v2"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 // TODO: Fyll inn envs ved deploy av en app
@@ -31,7 +31,7 @@ type DeployClass struct {
 	setupCommand  DeployCommand
 	fuzzyArgs     fuzzyargs.FuzzyArgs
 	overrideJsons []string
-	auroraConfig  *serverapi_v2.AuroraConfig
+	auroraConfig  *serverapi.AuroraConfig
 }
 
 func (deploy *DeployClass) generateJson(
@@ -100,36 +100,36 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 	}
 	var apiEndpoint string = "/affiliation/" + affiliation + "/deploy"
 	var responses map[string]string
-	var applicationResults []serverapi_v2.ApplicationResult
+	var applicationResults []serverapi.ApplicationResult
 
 	if localDryRun {
 		return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 	} else {
-		responses, err = serverapi_v2.CallApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
+		responses, err = serverapi.CallApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
 			persistentOptions.ShowObjects, false, persistentOptions.Localhost,
 			persistentOptions.Verbose, deploy.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
 		if err != nil {
 			for server := range responses {
-				response, err := serverapi_v2.ParseResponse(responses[server])
+				response, err := serverapi.ParseResponse(responses[server])
 				if err != nil {
 					return "", err
 				}
 				if !response.Success {
-					output, err = serverapi_v2.ResponsItems2MessageString(response)
+					output, err = serverapi.ResponsItems2MessageString(response)
 				}
 			}
 			return output, nil
 		}
 		for server := range responses {
-			response, err := serverapi_v2.ParseResponse(responses[server])
+			response, err := serverapi.ParseResponse(responses[server])
 			if err != nil {
 				return "", err
 			}
 			if response.Success {
-				applicationResults, err = serverapi_v2.ResponseItems2ApplicationResults(response)
+				applicationResults, err = serverapi.ResponseItems2ApplicationResults(response)
 			}
 			for applicationResultIndex := range applicationResults {
-				out, err := serverapi_v2.ApplicationResult2MessageString(applicationResults[applicationResultIndex])
+				out, err := serverapi.ApplicationResult2MessageString(applicationResults[applicationResultIndex])
 				if err != nil {
 					return out, err
 				}
