@@ -141,7 +141,14 @@ func Login(configLocation string, userName string, affiliation string, apiCluste
 func LoadOrInitiateConfigFile(configLocation string, useOcConfig bool) (*OpenshiftConfig, error) {
 	config, err := loadConfigFile(configLocation)
 
-	if err != nil {
+	var booberUrlFound bool
+	for i := range config.Clusters {
+		if config.Clusters[i].BooberUrl != "" {
+			booberUrlFound = true
+		}
+	}
+
+	if err != nil || !booberUrlFound {
 		//fmt.Println("No config file found, initializing new config")
 		config, err := newConfig(useOcConfig)
 		if err != nil {
@@ -234,6 +241,7 @@ func (this *OpenshiftConfig) write(configLocation string) error {
 	return nil
 }
 
+// Generates config based upon searching for OpenShift nodes
 func newConfig(useOcConfig bool) (config *OpenshiftConfig, err error) {
 	//fmt.Println("Pinging all clusters and noting which clusters are active in this profile")
 
@@ -274,11 +282,9 @@ func newConfig(useOcConfig bool) (config *OpenshiftConfig, err error) {
 
 	if config != nil {
 		for i := range config.Clusters {
-			taxNorwayClusterFound = true
 			config.Clusters[i].BooberUrl = getApiUrl(config.Clusters[i].Name, false)
 			config.Clusters[i].ConsoleUrl = getConsoleUrl(config.Clusters[i].Name)
 		}
-
 	}
 	return
 }
