@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+
 	pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
 	"github.com/spf13/cobra"
 )
@@ -20,8 +21,19 @@ var getCmd = &cobra.Command{
 }
 
 var getFileCmd = &cobra.Command{
-	Use:     "file [envname] <filename>",
-	Short:   "Get file",
+	Use:   "file [envname] <filename>",
+	Short: "Get file",
+	Long: `Prints the content of the file to standard output.
+Environmentnames and filenames can be abbrevated, and can be specified either as separate strings,
+or on a env/file basis.
+
+Given that a file called superapp-test/about.json exists in the repository, the command
+
+	ao get file test ab
+
+will print the file.
+
+If no argument is given, the command will list all the files in the repository.`,
 	Aliases: []string{"files"},
 	Annotations: map[string]string{
 		CallbackAnnotation: "GetFiles",
@@ -46,8 +58,12 @@ var getFileCmd = &cobra.Command{
 }
 
 var getVaultCmd = &cobra.Command{
-	Use:     "vault [vaultname]",
-	Short:   "Get vault",
+	Use:   "vault [vaultname]",
+	Short: "Get vault",
+	Long: `If no argument is given, the command will list the vaults in the current affiliation, along with the
+numer of secrets in the vault.
+If a vaultname is specified, the command will list the secrets in the given vault.
+To access a secret, use the get secret command.`,
 	Aliases: []string{"vaults"},
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -71,6 +87,7 @@ var getVaultCmd = &cobra.Command{
 var getSecretCmd = &cobra.Command{
 	Use:   "secret <vault> <secret>",
 	Short: "Get secret",
+	Long:  `The command will print the content of the secret to standard out.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) != 2 {
@@ -87,8 +104,14 @@ var getSecretCmd = &cobra.Command{
 }
 
 var getClusterCmd = &cobra.Command{
-	Use:     "cluster [clustername]",
-	Short:   "Get cluster",
+	Use:   "cluster [clustername]",
+	Short: "Get cluster",
+	Long: `The command will list the reachable OpenShift clusters defined in the configuration file (~/ao.json).
+If the --all flag is specified, all clusters will be listed.
+The API cluster is the one used to serve configuration requests.  All the commands except Deploy will only use the
+API cluster.
+The Deploy command will send the same request to all the reachable clusters, allowing each to filter deploys
+intended for that particular cluster.`,
 	Aliases: []string{"clusters"},
 	Run: func(cmd *cobra.Command, args []string) {
 		clusterName := ""
@@ -109,6 +132,7 @@ var getClusterCmd = &cobra.Command{
 var getKubeConfigCmd = &cobra.Command{
 	Use:   "kubeconfig",
 	Short: "Get kubeconfig",
+	Long:  `The command will list the contents of the OC configuration.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if output, err := getcmdObject.KubeConfig(); err == nil {
 			fmt.Println(output)
@@ -121,6 +145,7 @@ var getKubeConfigCmd = &cobra.Command{
 var getOcLoginCmd = &cobra.Command{
 	Use:   "oclogin",
 	Short: "Get oclogin",
+	Long:  `The command will print info about the current OC login.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if output, err := getcmdObject.OcLogin(); err == nil {
 			fmt.Println(output)

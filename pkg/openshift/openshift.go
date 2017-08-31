@@ -142,9 +142,11 @@ func LoadOrInitiateConfigFile(configLocation string, useOcConfig bool) (*Openshi
 	config, err := loadConfigFile(configLocation)
 
 	var booberUrlFound bool
-	for i := range config.Clusters {
-		if config.Clusters[i].BooberUrl != "" {
-			booberUrlFound = true
+	if config != nil {
+		for i := range config.Clusters {
+			if config.Clusters[i].BooberUrl != "" {
+				booberUrlFound = true
+			}
 		}
 	}
 
