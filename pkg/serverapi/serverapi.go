@@ -315,21 +315,6 @@ func ValidateLogin(openshiftConfig *openshift.OpenshiftConfig) (output bool) {
 	return true
 }
 
-func GetApiAddress(clusterName string, localhost bool) (apiAddress string) {
-	if localhost {
-		apiAddress = "http://" + localhostAddress + ":" + localhostPort
-	} else {
-		apiAddress = "http://boober-aurora." + clusterName + ".paas.skead.no"
-	}
-	return
-}
-func GetApiSetupUrl(clusterName string, apiEndpont string, localhost bool, apiAddress string) string {
-	if apiAddress == "" {
-		apiAddress = GetApiAddress(clusterName, localhost)
-	}
-	return apiAddress + apiEndpont
-}
-
 func CallApiShort(httpMethod string, apiEndpoint string, jsonRequestBody string, config *configuration.ConfigurationClass) (map[string]string, error) {
 
 	persistentOptions := config.PersistentOptions
@@ -349,10 +334,12 @@ func CallApiShort(httpMethod string, apiEndpoint string, jsonRequestBody string,
 		persistentOptions.Token)
 }
 
+/*
 func CallApiWithConfig(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, configuration *configuration.ConfigurationClass) (outputMap map[string]string, err error) {
 	//return CallApiWithHeaders (headers, httpMethod, apiEndpoint, combindedJson, api,  )
 	return
 }
+*/
 
 func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, api bool, localhost bool, verbose bool,
 	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (outputMap map[string]string, err error) {
@@ -361,7 +348,7 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 	outputMap = make(map[string]string)
 	if localhost || openshiftConfig.Localhost {
 
-		apiAddress = GetApiAddress("", true)
+		apiAddress = "http://" + localhostAddress + ":" + localhostPort
 
 		apiCluster, err = openshiftConfig.GetApiCluster()
 		if token == "" {
@@ -370,7 +357,8 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 			}
 		}
 		output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
-			GetApiSetupUrl(apiAddress, apiEndpoint, localhost, apiAddress), token, dryRun, debug)
+			apiAddress+apiEndpoint,
+			token, dryRun, debug)
 		outputMap[openshiftConfig.Clusters[0].Name] = output
 		if err != nil {
 			return outputMap, err
@@ -381,8 +369,12 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 		for i := range openshiftConfig.Clusters {
 			if openshiftConfig.Clusters[i].Reachable {
 				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
+					if openshiftConfig.Clusters[i].BooberUrl == "" {
+						err = errors.New("Boober URL is not configured, please log in again")
+						return outputMap, err
+					}
 					output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
-						GetApiSetupUrl(openshiftConfig.Clusters[i].Name, apiEndpoint, localhost, apiAddress),
+						openshiftConfig.Clusters[i].BooberUrl+apiEndpoint,
 						openshiftConfig.Clusters[i].Token, dryRun, debug)
 					outputMap[openshiftConfig.Clusters[i].Name] = output
 

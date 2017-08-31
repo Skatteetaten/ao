@@ -37,10 +37,12 @@ var (
 )
 
 type OpenshiftCluster struct {
-	Name      string `json:"name"`
-	Url       string `json:"url"`
-	Token     string `json:"token"`
-	Reachable bool   `json:"reachable"`
+	Name       string `json:"name"`
+	Url        string `json:"url"`
+	Token      string `json:"token"`
+	Reachable  bool   `json:"reachable"`
+	BooberUrl  string `json:"booberUrl"`
+	ConsoleUrl string `json:"consoleUrl"`
 }
 
 type OpenshiftConfig struct {
@@ -49,6 +51,24 @@ type OpenshiftConfig struct {
 	Clusters      []*OpenshiftCluster `json:"clusters"`
 	CheckoutPaths map[string]string   `json:"checkoutPaths"`
 	Localhost     bool                `json:"localhost"`
+}
+
+func getConsoleUrl(clusterName string) (consoleAddress string) {
+	consoleAddress = "http://console-aurora." + clusterName + ".paas.skead.no"
+	//consoleAddress = "http://console-paas-espen-dev." + clusterName + ".paas.skead.no"
+	return consoleAddress
+}
+
+func getApiUrl(clusterName string, localhost bool) (apiAddress string) {
+	const localhostAddress = "localhost"
+	const localhostPort = "8080"
+
+	if localhost {
+		apiAddress = "http://" + localhostAddress + ":" + localhostPort
+	} else {
+		apiAddress = "http://boober-aurora." + clusterName + ".paas.skead.no"
+	}
+	return apiAddress
 }
 
 func Logout(configLocation string) (err error) {
@@ -121,7 +141,14 @@ func Login(configLocation string, userName string, affiliation string, apiCluste
 func LoadOrInitiateConfigFile(configLocation string, useOcConfig bool) (*OpenshiftConfig, error) {
 	config, err := loadConfigFile(configLocation)
 
-	if err != nil {
+	var booberUrlFound bool
+	for i := range config.Clusters {
+		if config.Clusters[i].BooberUrl != "" {
+			booberUrlFound = true
+		}
+	}
+
+	if err != nil || !booberUrlFound {
 		//fmt.Println("No config file found, initializing new config")
 		config, err := newConfig(useOcConfig)
 		if err != nil {
@@ -214,6 +241,7 @@ func (this *OpenshiftConfig) write(configLocation string) error {
 	return nil
 }
 
+// Generates config based upon searching for OpenShift nodes
 func newConfig(useOcConfig bool) (config *OpenshiftConfig, err error) {
 	//fmt.Println("Pinging all clusters and noting which clusters are active in this profile")
 
@@ -239,6 +267,7 @@ func newConfig(useOcConfig bool) (config *OpenshiftConfig, err error) {
 
 	if taxNorwayClusterFound {
 		fmt.Println("Running in a Norwegian Tax Compliant environment; default cluster config created")
+
 	} else {
 		config, err = getOcClusters()
 		if err != nil || config == nil {
@@ -251,6 +280,12 @@ func newConfig(useOcConfig bool) (config *OpenshiftConfig, err error) {
 		fmt.Println("OC config detected; default cluster config created")
 	}
 
+	if config != nil {
+		for i := range config.Clusters {
+			config.Clusters[i].BooberUrl = getApiUrl(config.Clusters[i].Name, false)
+			config.Clusters[i].ConsoleUrl = getConsoleUrl(config.Clusters[i].Name)
+		}
+	}
 	return
 }
 
