@@ -5,7 +5,6 @@ import (
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 
-
 	pkgEditCmd "github.com/skatteetaten/ao/pkg/editcmd"
 	"github.com/spf13/cobra"
 )
@@ -17,7 +16,12 @@ var editcmdObject = &pkgEditCmd.EditcmdClass{
 var editCmd = &cobra.Command{
 	Use:   "edit [env/]file",
 	Short: "Edit a single configuration file or a secret in a vault",
-	Long:  `Edit a single configuration file or a secret in a vault.`,
+	Long: `Edit a single configuration file or a secret in a vault.
+The file can be specified using unique shortened name, so given that the file superapp-test/about.json exists, then the command
+
+	ao edit test/about
+
+will edit this file, if there is no other file matching the same shortening.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 1 {
@@ -37,6 +41,12 @@ var editCmd = &cobra.Command{
 var editFileCmd = &cobra.Command{
 	Use:   "file [env/]<filename>",
 	Short: "Edit a single configuration file",
+	Long: `Edit a single configuration file or a secret in a vault.
+The file can be specified using unique shortened name, so given that the file superapp-test/about.json exists, then the command
+
+	ao edit test/about
+
+will edit this file, if there is no other file matching the same shortening.`,
 	Annotations: map[string]string{
 		CallbackAnnotation: "GetFiles",
 	},
@@ -58,6 +68,9 @@ var editFileCmd = &cobra.Command{
 var editSecretCmd = &cobra.Command{
 	Use:   "secret <vaultname> <secretname>",
 	Short: "Edit a secret in a vault",
+	Long: `This command will edit the content of the given secret in a vault.
+If the given vault does not exist, it will be created.
+If the given secret does not exist in the vault, it will be created.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 2 {
 			cmd.Usage()
@@ -75,6 +88,9 @@ var editSecretCmd = &cobra.Command{
 var editVaultCmd = &cobra.Command{
 	Use:   "vault <vaultname>",
 	Short: "Edit a vault",
+	Long: `This command will edit the content of the given vault.
+The editor will present a JSON view of the vault.
+The secrets will be presented as Base64 encoded strings.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			cmd.Usage()
@@ -94,4 +110,5 @@ func init() {
 	editCmd.AddCommand(editFileCmd)
 	editCmd.AddCommand(editSecretCmd)
 	editCmd.AddCommand(editVaultCmd)
+	editVaultCmd.Hidden = true
 }

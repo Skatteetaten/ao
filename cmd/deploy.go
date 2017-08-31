@@ -41,10 +41,45 @@ environment to match the specifications in the stored configuration.
 
 If no changes is detected, no updates to OpenShift will be done (except for an update of the resourceVersion in the BuildConfig).
 
-As per default, all applications in all environments will be deployed.
 Using the -e flag, it is possible to limit the deploy to the specified environment.
 Using the -a flag, it is possible to limit the deploy to the specified application.
-Both flags can be used to limit the deploy to a specific application in a specific environment.`,
+Both flags can be used to limit the deploy to a specific application in a specific environment.
+
+The --all flag will deploy all applications in all environements.
+
+In addition, the command accepts a mixed list of applications and environments on the command line.
+The names may be shortened; the command will search the current affiliation for unique matches.
+
+If you have 2 environments named superapp-test and superapp-prod, both containing the applications superapp and niceapp,
+then the command
+
+	ao deploy test
+
+will deploy superapp and niceapp in the superapp-test environment.
+
+The command
+
+	ao deploy nice pro
+
+will deploy niceapp in the superapp-prod environment.
+
+However, the command
+
+	ao deploy superapp
+
+will fail, because superapp match both an application and an environment.  Use the -a og -e flag to specify.
+
+It is also possible to specify the env and app in the form app/env, so the command
+
+	ao deploy app-test/nic
+
+will deploy niceapp in the superapp-test environment.
+
+If the command will result in multiple deploys, a confirmation dialog will be shown, listing the result of the command.
+The list will contain all the affected applications and environments.  Please note that the two columns are not correlated.
+The --force flag will override this, and execute the deploy without confirmation.
+
+`,
 	Aliases: []string{"setup"},
 	Annotations: map[string]string{
 		CallbackAnnotation: "GetDeployments",

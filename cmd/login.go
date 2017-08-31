@@ -24,7 +24,15 @@ var doUpdate bool
 var loginCmd = &cobra.Command{
 	Use:   "login <Affiliation>",
 	Short: "Login to openshift clusters",
-	Long:  `This command will log in to all avilable clusters and store the tokens in the .ao.json config file `,
+	Long: `This command will log in to all available clusters and store the tokens in the .ao.json config file.
+If the .ao.json config file does not exist, it will be created.
+The command will first check for OpenShift clusters based upon the naming convention implemented by the
+NTA.
+If these clusters are not found, then the command will use the clusters defined in the OC konfig (cubekonfig).
+
+The --recreate-config flag forces the recreation of .ao.json and will overwrite the previous file.
+The --use-current-oclogin will force the creation of config based upon the OC config, even in a NTA environment.
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			fmt.Println("Please specify affiliation to log in to")
