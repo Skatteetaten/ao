@@ -32,6 +32,10 @@ If these clusters are not found, then the command will use the clusters defined 
 
 The --recreate-config flag forces the recreation of .ao.json and will overwrite the previous file.
 The --use-current-oclogin will force the creation of config based upon the OC config, even in a NTA environment.
+It is possible to switch API cluster by using the --apicluster flag.
+
+The login command will check for available updates.  The --do-update option will make login do the update if
+one is available.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
@@ -63,7 +67,7 @@ func init() {
 	viper.BindEnv("USER")
 	viper.BindEnv("HOME")
 	loginCmd.Flags().StringVarP(&userName, "username", "u", viper.GetString("USER"), "the username to log in with, standard is $USER")
-	loginCmd.Flags().StringVarP(&tokenFile, "tokenfile", "", "", "Read OC token from this file")
+	//loginCmd.Flags().StringVarP(&tokenFile, "tokenfile", "", "", "Read OC token from this file")
 	loginCmd.Flags().BoolVarP(&recreateConfig, "recreate-config", "", false, "Removes current cluster config and recreates")
 	loginCmd.Flags().BoolVarP(&useCurrentOcLogin, "use-current-oclogin", "", false, "Recreates config based on current OC login")
 	loginCmd.Flags().StringVarP(&apiCluster, "apicluster", "a", "", "Set a specific API cluster to use")
