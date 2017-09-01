@@ -373,9 +373,12 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 						err = errors.New("Boober URL is not configured, please log in again")
 						return outputMap, err
 					}
+					if token == "" {
+						token = openshiftConfig.Clusters[i].Token
+					}
 					output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
 						openshiftConfig.Clusters[i].BooberUrl+apiEndpoint,
-						openshiftConfig.Clusters[i].Token, dryRun, debug)
+						token, dryRun, debug)
 					outputMap[openshiftConfig.Clusters[i].Name] = output
 
 					if err != nil {
