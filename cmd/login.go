@@ -37,11 +37,15 @@ The login command will check for available updates.  The --do-update option will
 one is available.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		var affiliation string
 		if len(args) != 1 {
-			fmt.Println("Please specify affiliation to log in to")
-			os.Exit(1)
+			if !recreateConfig && !useCurrentOcLogin { // && !recreateConfig && !useCurrentOcLogin
+				fmt.Println("Please specify affiliation to log in to")
+				os.Exit(1)
+			}
+		} else {
+			affiliation = args[0]
 		}
-		affiliation := args[0]
 		var configLocation = viper.GetString("HOME") + "/.ao.json"
 		if recreateConfig || useCurrentOcLogin {
 			err := os.Remove(configLocation)
@@ -53,7 +57,9 @@ one is available.
 			}
 		}
 		initConfig(useCurrentOcLogin)
-		openshift.Login(configLocation, userName, affiliation, apiCluster, persistentOptions.Localhost)
+		if !recreateConfig && !useCurrentOcLogin {
+			openshift.Login(configLocation, userName, affiliation, apiCluster, persistentOptions.Localhost)
+		}
 		output, _ := updatecmd.UpdateSelf(args, !doUpdate, "", false)
 		if strings.Contains(output, "New version detected") {
 			fmt.Println(output)

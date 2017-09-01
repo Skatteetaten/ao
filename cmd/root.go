@@ -4,14 +4,15 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
+	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/openshift"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"os"
-	"github.com/skatteetaten/ao/pkg/configuration"
-	"github.com/skatteetaten/ao/pkg/serverapi"
-	"strings"
 	"github.com/stromland/cobra-prompt"
 )
 
@@ -43,7 +44,7 @@ This application has two main parts.
 2. apply the aoc configuration to the clusters
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		commandsWithoutLogin := []string{"login", "logout", "version", "update", "help"}
+		commandsWithoutLogin := []string{"login", "logout", "version", "update", "help", "deploy"}
 
 		commands := strings.Split(cmd.CommandPath(), " ")
 		if len(commands) > 1 {

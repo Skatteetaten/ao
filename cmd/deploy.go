@@ -29,6 +29,7 @@ var overrideJson []string
 var deployAllFlag bool
 var forceDeployFlag bool
 var deployVersion string
+var deployAffiliation string
 
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
@@ -89,7 +90,7 @@ The --force flag will override this, and execute the deploy without confirmation
 			Configuration: config,
 		}
 
-		output, err := deploy.ExecuteDeploy(args, overrideJson, appList, envList, &persistentOptions, localDryRun, deployAllFlag, forceDeployFlag, deployVersion)
+		output, err := deploy.ExecuteDeploy(args, overrideJson, appList, envList, &persistentOptions, localDryRun, deployAllFlag, forceDeployFlag, deployVersion, deployAffiliation)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -128,4 +129,6 @@ func init() {
 		"v", "", "Will update the version tag in the app of base configuration file prior to deploy, depending on which file contains the version tag.  If both files "+
 			"files contains the tag, the tag will be updated in the app configuration file.")
 
+	deployCmd.Flags().StringVarP(&deployAffiliation, "affiliation",
+		"", "", "Overrides the logged in affiliation")
 }
