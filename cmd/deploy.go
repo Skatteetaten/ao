@@ -29,6 +29,7 @@ var overrideJson []string
 var deployAllFlag bool
 var forceDeployFlag bool
 var deployVersion string
+var deployAffiliation string
 
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
@@ -89,7 +90,7 @@ The --force flag will override this, and execute the deploy without confirmation
 			Configuration: config,
 		}
 
-		output, err := deploy.ExecuteDeploy(args, overrideJson, appList, envList, &persistentOptions, localDryRun, deployAllFlag, forceDeployFlag, deployVersion)
+		output, err := deploy.ExecuteDeploy(args, overrideJson, appList, envList, &persistentOptions, localDryRun, deployAllFlag, forceDeployFlag, deployVersion, deployAffiliation)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -128,15 +129,6 @@ func init() {
 		"v", "", "Will update the version tag in the app of base configuration file prior to deploy, depending on which file contains the version tag.  If both files "+
 			"files contains the tag, the tag will be updated in the app configuration file.")
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// deployCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// deployCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	// File flag, supports multiple instances of the flag
-
+	deployCmd.Flags().StringVarP(&deployAffiliation, "affiliation",
+		"", "", "Overrides the logged in affiliation")
 }
