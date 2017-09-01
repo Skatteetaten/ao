@@ -315,7 +315,7 @@ func ValidateLogin(openshiftConfig *openshift.OpenshiftConfig) (output bool) {
 	return true
 }
 
-func CallApiShort(httpMethod string, apiEndpoint string, jsonRequestBody string, config *configuration.ConfigurationClass) (map[string]string, error) {
+func CallApiShort(httpMethod string, apiEndpoint string, jsonRequestBody string, config *configuration.ConfigurationClass) (response Response, err error) {
 
 	persistentOptions := config.PersistentOptions
 	return CallApi(
@@ -332,6 +332,7 @@ func CallApiShort(httpMethod string, apiEndpoint string, jsonRequestBody string,
 		persistentOptions.Debug,
 		persistentOptions.ServerApi,
 		persistentOptions.Token)
+
 }
 
 /*
@@ -342,10 +343,9 @@ func CallApiWithConfig(headers map[string]string, httpMethod string, apiEndpoint
 */
 
 func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, api bool, localhost bool, verbose bool,
-	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (outputMap map[string]string, err error) {
+	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (response Response, err error) {
 	var apiCluster *openshift.OpenshiftCluster
 
-	outputMap = make(map[string]string)
 	if localhost || openshiftConfig.Localhost {
 
 		apiAddress = "http://" + localhostAddress + ":" + localhostPort
@@ -359,43 +359,38 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 		output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
 			apiAddress+apiEndpoint,
 			token, dryRun, debug)
-		outputMap[openshiftConfig.Clusters[0].Name] = output
 		if err != nil {
-			return outputMap, err
+			return response, err
 		}
+		response, err = ParseResponse(output)
 	} else {
-		var errorString string = ""
-		var newlineErr string = ""
 		for i := range openshiftConfig.Clusters {
 			if openshiftConfig.Clusters[i].Reachable {
-				if !api || openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
+				if openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
 					if openshiftConfig.Clusters[i].BooberUrl == "" {
 						err = errors.New("Boober URL is not configured, please log in again")
-						return outputMap, err
+						return response, err
 					}
 					output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
 						openshiftConfig.Clusters[i].BooberUrl+apiEndpoint,
 						openshiftConfig.Clusters[i].Token, dryRun, debug)
-					outputMap[openshiftConfig.Clusters[i].Name] = output
-
 					if err != nil {
-						errorString += newlineErr + err.Error()
-						newlineErr = "\n"
+						return response, err
 					}
+					response, err = ParseResponse(output)
+					return response, err
+
 				}
 			}
 		}
-		if errorString != "" {
-			err = errors.New(errorString)
-			return outputMap, err
-		}
 	}
-	return outputMap, nil
+	err = errors.New("No reachable Boober API defined")
+	return response, err
 
 }
 
 func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
-	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (outputMap map[string]string, err error) {
+	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (response Response, err error) {
 	var headers = make(map[string]string)
 	return CallApiWithHeaders(headers, httpMethod, apiEndpoint, combindedJson, api, localhost, verbose,
 		openshiftConfig, dryRun, debug, apiAddress, token)
@@ -510,46 +505,6 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 		return makeResponse(errorstring, false)
 	}
 
-	/*	if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusBadRequest) {
-			var errorstring string
-			if !strings.Contains(output, apiNotInstalledResponse) {
-				errorstring = fmt.Sprintf("Internal error on %v: %v", url, output)
-			}
-			if verbose {
-				if strings.Contains(output, apiNotInstalledResponse) {
-					fmt.Println("WARN.  Boober not available")
-				} else {
-					fmt.Println("FAIL.  Internal error")
-				}
-			}
-			err = errors.New(fmt.Sprintf(errorstring))
-
-			return "{}", err
-		}
-
-		if resp.StatusCode == http.StatusBadRequest {
-			// We have a validation situation, give error.  Expecting JSON formatted output
-			if verbose {
-				fmt.Println("FAIL.  Error in configuration")
-			}
-			fmt.Println("DEBUG: " + output)
-			if output == "" {
-				var returnResponse Response
-				returnResponse.Success = false
-				returnResponse.Count = 0
-				returnResponse.Message = badRequestString
-				returnOutput, err := json.Marshal(returnResponse)
-				if err != nil {
-					return "", errors.New(badRequestString)
-				}
-				output = string(returnOutput)
-				return output, errors.New(badRequestString)
-			}
-			err = errors.New(fmt.Sprintf(output))
-
-			return "{}", err
-		}
-	*/
 	if verbose {
 		fmt.Println("OK")
 	}

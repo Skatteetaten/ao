@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"path/filepath"
+
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/serverapi"
-	"io/ioutil"
-	"net/http"
-	"path/filepath"
 )
 
 type ImportClass struct {
@@ -56,7 +57,6 @@ func (importObj *ImportClass) ExecuteImport(args []string, localDryRun bool) (
 	var repo = args[0]
 
 	var absolutePath string
-	var responses map[string]string
 
 	absolutePath, _ = filepath.Abs(repo)
 
@@ -71,20 +71,15 @@ func (importObj *ImportClass) ExecuteImport(args []string, localDryRun bool) (
 		if localDryRun {
 			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 		} else {
-			responses, err = serverapi.CallApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
+			response, err := serverapi.CallApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
 				persistentOptions.ShowObjects, true, persistentOptions.Localhost,
 				persistentOptions.Verbose, importObj.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
 			if err != nil {
-				for server := range responses {
-					response, err := serverapi.ParseResponse(responses[server])
-					if err != nil {
-						return "", err
-					}
-					if !response.Success {
-						output, err = serverapi.ResponsItems2MessageString(response)
-					}
+				if !response.Success {
+					output, err = serverapi.ResponsItems2MessageString(response)
+					return "", err
 				}
-				return output, nil
+
 			}
 		}
 	}

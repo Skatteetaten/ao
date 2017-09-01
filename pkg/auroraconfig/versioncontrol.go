@@ -3,15 +3,16 @@ package auroraconfig
 import (
 	"bufio"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/pkg/configuration"
-	"github.com/skatteetaten/ao/pkg/openshift"
-	"github.com/skatteetaten/ao/pkg/serverapi"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/openshift"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"

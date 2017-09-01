@@ -3,12 +3,13 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/skatteetaten/ao/pkg/auroraconfig"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	_ "go/token"
 	"os"
 	"strings"
+
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var checkoutCmd = &cobra.Command{

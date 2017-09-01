@@ -14,7 +14,6 @@ import (
 )
 
 var userName string
-var tokenFile string
 var recreateConfig bool
 var useCurrentOcLogin bool
 var apiCluster string
