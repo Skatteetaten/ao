@@ -41,6 +41,12 @@ type DeploymentDescriptor struct {
 	Parameters   map[string]string `json:"parameters"`
 }
 
+type Field struct {
+	Path   string `json:"path"`
+	Value  string `json:"value"`
+	Source string `json:"source"`
+}
+
 type AuroraDeploymentConfig struct {
 	SchemaVersion        string               `json:"schemaVersion"`
 	Affiliation          string               `json:"affiliation"`
@@ -48,10 +54,8 @@ type AuroraDeploymentConfig struct {
 	Type                 string               `json:"type"`
 	Name                 string               `json:"name"`
 	EnvName              string               `json:"envName"`
-	Groups               []string             `json:"groups"`
-	Users                []string             `json:"users"`
-	Replicas             int                  `json:"replicas"`
-	Secrets              map[string]string    `json:"secrets"`
+	Permissions          PermissionsStruct    `json:"permissions"`
+	Fields               Field                `json:"field"`
 	Config               map[string]string    `json:"config"`
 	GroupId              string               `json:"groupId"`
 	ArtifactId           string               `json:"artifactId"`
@@ -394,7 +398,7 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 }
 
 // Call all reachable Boober instances
-func CallDeployWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, api bool, localhost bool, verbose bool,
+func CallDeployWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, localhost bool, verbose bool,
 	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (responses []Response, err error) {
 	var apiCluster *openshift.OpenshiftCluster
 

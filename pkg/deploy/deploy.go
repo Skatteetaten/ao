@@ -102,32 +102,18 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 		return "", err
 	}
 	var apiEndpoint string = "/affiliation/" + affiliation + "/deploy"
-	//var applicationResults []serverapi.ApplicationResult
 
 	if localDryRun {
 		return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 	} else {
 		var headers map[string]string
 
-		_, err := serverapi.CallDeployWithHeaders(headers, http.MethodPut, apiEndpoint, jsonStr, false, false, persistentOptions.Verbose,
-			deploy.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, "", "")
+		_, err := serverapi.CallDeployWithHeaders(headers, http.MethodPut, apiEndpoint, jsonStr, persistentOptions.Localhost, persistentOptions.Verbose,
+			deploy.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
 
 		if err != nil {
 			return "", err
 		}
-		/*for _, response := range responses {
-
-
-
-			for applicationResultIndex := range applicationResults {
-				out, err := serverapi.ApplicationResult2MessageString(applicationResults[applicationResultIndex])
-				if err != nil {
-					return out, err
-				}
-				output += out
-			}
-		}*/
-
 	}
 
 	return
