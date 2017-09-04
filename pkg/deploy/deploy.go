@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
@@ -100,36 +101,24 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 	if err != nil {
 		return "", err
 	}
-	//var apiEndpoint string = "/affiliation/" + affiliation + "/deploy"
-	var responses map[string]string
-	var applicationResults []serverapi.ApplicationResult
+	var apiEndpoint string = "/affiliation/" + affiliation + "/deploy"
+	//var applicationResults []serverapi.ApplicationResult
 
 	if localDryRun {
 		return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 	} else {
-		/*responses, err = serverapi.callApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
-		persistentOptions.ShowObjects, false, persistentOptions.Localhost,
-		persistentOptions.Verbose, deploy.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)*/
+		var headers map[string]string
+
+		_, err := serverapi.CallDeployWithHeaders(headers, http.MethodPut, apiEndpoint, jsonStr, false, false, persistentOptions.Verbose,
+			deploy.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, "", "")
+
 		if err != nil {
-			for server := range responses {
-				response, err := serverapi.ParseResponse(responses[server])
-				if err != nil {
-					return "", err
-				}
-				if !response.Success {
-					output, err = serverapi.ResponsItems2MessageString(response)
-				}
-			}
-			return output, nil
+			return "", err
 		}
-		for server := range responses {
-			response, err := serverapi.ParseResponse(responses[server])
-			if err != nil {
-				return "", err
-			}
-			if response.Success {
-				applicationResults, err = serverapi.ResponseItems2ApplicationResults(response)
-			}
+		/*for _, response := range responses {
+
+
+
 			for applicationResultIndex := range applicationResults {
 				out, err := serverapi.ApplicationResult2MessageString(applicationResults[applicationResultIndex])
 				if err != nil {
@@ -137,7 +126,7 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 				}
 				output += out
 			}
-		}
+		}*/
 
 	}
 

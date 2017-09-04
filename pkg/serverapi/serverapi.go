@@ -342,6 +342,7 @@ func CallApiWithConfig(headers map[string]string, httpMethod string, apiEndpoint
 }
 */
 
+// Call the API Boober instance
 func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, api bool, localhost bool, verbose bool,
 	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (response Response, err error) {
 	var apiCluster *openshift.OpenshiftCluster
@@ -389,6 +390,53 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 	}
 	err = errors.New("No reachable Boober API defined")
 	return response, err
+
+}
+
+// Call all reachable Boober instances
+func CallDeployWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, api bool, localhost bool, verbose bool,
+	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (responses []Response, err error) {
+	var apiCluster *openshift.OpenshiftCluster
+
+	if localhost || openshiftConfig.Localhost {
+
+		apiAddress = "http://" + localhostAddress + ":" + localhostPort
+
+		apiCluster, err = openshiftConfig.GetApiCluster()
+		if token == "" {
+			if apiCluster != nil {
+				token = apiCluster.Token
+			}
+		}
+		output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
+			apiAddress+apiEndpoint,
+			token, dryRun, debug)
+		if err != nil {
+			return nil, err
+		}
+		response, err := ParseResponse(output)
+		responses = append(responses, response)
+		return responses, nil
+	} else {
+		for i := range openshiftConfig.Clusters {
+			if openshiftConfig.Clusters[i].Reachable {
+				if openshiftConfig.Clusters[i].BooberUrl != "" {
+					if token == "" {
+						token = openshiftConfig.Clusters[i].Token
+					}
+					output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
+						openshiftConfig.Clusters[i].BooberUrl+apiEndpoint,
+						openshiftConfig.Clusters[i].Token, dryRun, debug)
+					if err != nil {
+						return nil, err
+					}
+					response, err := ParseResponse(output)
+					responses = append(responses, response)
+				}
+			}
+		}
+	}
+	return responses, err
 
 }
 
