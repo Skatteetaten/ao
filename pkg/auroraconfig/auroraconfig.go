@@ -81,20 +81,18 @@ func GetFileList(configuration *configuration.ConfigurationClass) (filenames []s
 func GetAuroraConfig(configuration *configuration.ConfigurationClass) (auroraConfig serverapi.AuroraConfig, err error) {
 	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/auroraconfig"
 
-	response, err := serverapi.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
-		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
-		configuration.GetPersistentOptions().Verbose, configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun,
-		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
+	response, err := serverapi.CallApi(http.MethodGet, apiEndpoint, "", configuration)
 	if err != nil {
-		if !response.Success {
-			output, err := serverapi.ResponsItems2MessageString(response)
-			if err != nil {
-				return auroraConfig, err
-			}
-			err = errors.New(output)
-			return auroraConfig, err
+		return auroraConfig, err
+	}
 
+	if !response.Success {
+		output, err := serverapi.ResponsItems2MessageString(response)
+		if err != nil {
+			return auroraConfig, err
 		}
+		err = errors.New(output)
+		return auroraConfig, err
 
 	}
 
@@ -123,17 +121,15 @@ func putContent(apiEndpoint string, content string, version string, configuratio
 	var versionHeader = make(map[string]string)
 	versionHeader["AuroraConfigFileVersion"] = version
 
-	response, err := serverapi.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, content, true,
-		configuration.GetPersistentOptions().Localhost,
-		configuration.GetPersistentOptions().Verbose,
-		configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun, configuration.GetPersistentOptions().Debug,
-		configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
+	response, err := serverapi.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, content, configuration)
 
 	if err != nil {
-		if !response.Success {
-			validationMessages, _ := serverapi.ResponsItems2MessageString(response)
-			return validationMessages, errors.New(InvalidConfigurationError)
-		}
+		return "", err
+	}
+
+	if !response.Success {
+		validationMessages, _ := serverapi.ResponsItems2MessageString(response)
+		return validationMessages, errors.New(InvalidConfigurationError)
 	}
 
 	return
@@ -166,17 +162,15 @@ func deleteContent(apiEndpoint string, version string, configuration *configurat
 	var versionHeader = make(map[string]string)
 	versionHeader["AuroraConfigFileVersion"] = version
 
-	response, err := serverapi.CallApiWithHeaders(versionHeader, http.MethodDelete, apiEndpoint, "", true,
-		configuration.GetPersistentOptions().Localhost,
-		configuration.GetPersistentOptions().Verbose,
-		configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun, configuration.GetPersistentOptions().Debug,
-		configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
+	response, err := serverapi.CallApiWithHeaders(versionHeader, http.MethodDelete, apiEndpoint, "", configuration)
 
 	if err != nil {
-		if !response.Success {
-			validationMessages, _ := serverapi.ResponsItems2MessageString(response)
-			return validationMessages, errors.New(validationMessages)
-		}
+		return "", err
+	}
+
+	if !response.Success {
+		validationMessages, _ := serverapi.ResponsItems2MessageString(response)
+		return validationMessages, errors.New(validationMessages)
 	}
 
 	return

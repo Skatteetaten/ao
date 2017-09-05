@@ -319,25 +319,10 @@ func ValidateLogin(openshiftConfig *openshift.OpenshiftConfig) (output bool) {
 	return true
 }
 
-func CallApiShort(httpMethod string, apiEndpoint string, jsonRequestBody string, config *configuration.ConfigurationClass) (response Response, err error) {
+/*func CallApiShort(httpMethod string, apiEndpoint string, jsonRequestBody string, config *configuration.ConfigurationClass) (response Response, err error) {
 
-	persistentOptions := config.PersistentOptions
-	return CallApi(
-		httpMethod,
-		apiEndpoint,
-		jsonRequestBody,
-		persistentOptions.ShowConfig,
-		persistentOptions.ShowObjects,
-		false,
-		persistentOptions.Localhost,
-		persistentOptions.Verbose,
-		config.OpenshiftConfig,
-		persistentOptions.DryRun,
-		persistentOptions.Debug,
-		persistentOptions.ServerApi,
-		persistentOptions.Token)
-
-}
+	return CallApi(httpMethod, apiEndpoint, jsonRequestBody, config)
+}*/
 
 /*
 func CallApiWithConfig(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, configuration *configuration.ConfigurationClass) (outputMap map[string]string, err error) {
@@ -346,38 +331,98 @@ func CallApiWithConfig(headers map[string]string, httpMethod string, apiEndpoint
 }
 */
 
+/*
+typical call
+response, err := serverapi.CallApiWithHeaders(versionHeader, http.MethodDelete, apiEndpoint, "",
+true,
+configuration.GetPersistentOptions().Localhost,
+configuration.GetPersistentOptions().Verbose,
+configuration.OpenshiftConfig,
+configuration.GetPersistentOptions().DryRun,
+configuration.GetPersistentOptions().Debug,
+configuration.GetPersistentOptions().ServerApi,
+configuration.GetPersistentOptions().Token)
+*/
+
+func getApiClusterAddress(configuration *configuration.ConfigurationClass) (clusterAddress string, err error) {
+	for i := range configuration.OpenshiftConfig.Clusters {
+		if configuration.OpenshiftConfig.Clusters[i].Reachable {
+			if configuration.OpenshiftConfig.Clusters[i].Name == configuration.OpenshiftConfig.APICluster {
+				if configuration.OpenshiftConfig.Clusters[i].BooberUrl == "" {
+					err = errors.New("Boober URL is not configured, please log in again")
+					return "", err
+				}
+				return configuration.OpenshiftConfig.Clusters[i].BooberUrl, nil
+			}
+		}
+	}
+	err = errors.New("No Boober API defined.")
+	return "", err
+}
+
+func CallApi(httpMethod string, apiEndpoint string, combindedJson string,
+	configuration *configuration.ConfigurationClass) (response Response, err error) {
+	var headers = make(map[string]string)
+	return CallApiWithHeaders(headers, httpMethod, apiEndpoint, combindedJson, configuration)
+}
+
 // Call the API Boober instance
-func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, api bool, localhost bool, verbose bool,
-	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (response Response, err error) {
+func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string,
+	configuration *configuration.ConfigurationClass) (response Response, err error) {
 	var apiCluster *openshift.OpenshiftCluster
 
-	if localhost || openshiftConfig.Localhost {
+	var token string
+	var apiAddress string
+
+	apiCluster, err = configuration.OpenshiftConfig.GetApiCluster()
+	if configuration.PersistentOptions.Token == "" {
+		if apiCluster != nil {
+			token = apiCluster.Token
+		}
+	} else {
+		token = configuration.PersistentOptions.Token
+	}
+
+	// TODO: Simplify, the apiAddress is the only difference between the two branches of the main if.
+	if configuration.PersistentOptions.Localhost || configuration.OpenshiftConfig.Localhost {
+		apiAddress = "http://" + localhostAddress + ":" + localhostPort
+	} else {
+		apiAddress, err = getApiClusterAddress(configuration)
+		if err != nil {
+			return response, err
+		}
+	}
+
+	output, err := callApiInstance(headers, httpMethod, combindedJson, configuration.PersistentOptions.Verbose,
+		apiAddress+apiEndpoint,
+		token, configuration.PersistentOptions.DryRun, configuration.PersistentOptions.Debug)
+	if err != nil {
+		return response, err
+	}
+	response, err = ParseResponse(output)
+	return response, err
+
+	/*if configuration.PersistentOptions.Localhost || configuration.OpenshiftConfig.Localhost {
 
 		apiAddress = "http://" + localhostAddress + ":" + localhostPort
 
-		apiCluster, err = openshiftConfig.GetApiCluster()
-		if token == "" {
-			if apiCluster != nil {
-				token = apiCluster.Token
-			}
-		}
-		output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
+		output, err := callApiInstance(headers, httpMethod, combindedJson, configuration.PersistentOptions.Verbose,
 			apiAddress+apiEndpoint,
-			token, dryRun, debug)
+			token, configuration.PersistentOptions.DryRun, configuration.PersistentOptions.Debug)
 		if err != nil {
 			return response, err
 		}
 		response, err = ParseResponse(output)
 	} else {
 		for i := range openshiftConfig.Clusters {
-			if openshiftConfig.Clusters[i].Reachable {
-				if openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
-					if openshiftConfig.Clusters[i].BooberUrl == "" {
+			if configuration.OpenshiftConfig.Clusters[i].Reachable {
+				if configuration.OpenshiftConfig.Clusters[i].Name == configuration.OpenshiftConfig.APICluster {
+					if configuration.OpenshiftConfig.Clusters[i].BooberUrl == "" {
 						err = errors.New("Boober URL is not configured, please log in again")
 						return response, err
 					}
 					if token == "" {
-						token = openshiftConfig.Clusters[i].Token
+						token = configuration.OpenshiftConfig.Clusters[i].Token
 					}
 					output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
 						openshiftConfig.Clusters[i].BooberUrl+apiEndpoint,
@@ -393,7 +438,7 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 		}
 	}
 	err = errors.New("No reachable Boober API defined")
-	return response, err
+	return response, err*/
 
 }
 
@@ -442,13 +487,6 @@ func CallDeployWithHeaders(headers map[string]string, httpMethod string, apiEndp
 	}
 	return responses, err
 
-}
-
-func CallApi(httpMethod string, apiEndpoint string, combindedJson string, showConfig bool, showObjects bool, api bool, localhost bool, verbose bool,
-	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (response Response, err error) {
-	var headers = make(map[string]string)
-	return CallApiWithHeaders(headers, httpMethod, apiEndpoint, combindedJson, api, localhost, verbose,
-		openshiftConfig, dryRun, debug, apiAddress, token)
 }
 
 func makeResponse(message string, success bool) (responseStr string, err error) {

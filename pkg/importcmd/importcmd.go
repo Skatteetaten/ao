@@ -71,9 +71,7 @@ func (importObj *ImportClass) ExecuteImport(args []string, localDryRun bool) (
 		if localDryRun {
 			return fmt.Sprintf("%v", string(jsonutil.PrettyPrintJson(jsonStr))), nil
 		} else {
-			response, err := serverapi.CallApi(http.MethodPut, apiEndpoint, jsonStr, persistentOptions.ShowConfig,
-				persistentOptions.ShowObjects, true, persistentOptions.Localhost,
-				persistentOptions.Verbose, importObj.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
+			response, err := serverapi.CallApi(http.MethodPut, apiEndpoint, jsonStr, importObj.Configuration)
 			if err != nil {
 				if !response.Success {
 					output, err = serverapi.ResponsItems2MessageString(response)

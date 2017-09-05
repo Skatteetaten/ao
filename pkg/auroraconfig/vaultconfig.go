@@ -47,10 +47,7 @@ func GetAllVaults(outputFolder string, configuration *configuration.Configuratio
 func GetVault(vaultname string, configuration *configuration.ConfigurationClass) (vault serverapi.Vault, err error) {
 	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/vault/" + vaultname
 
-	response, err := serverapi.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
-		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
-		configuration.GetPersistentOptions().Verbose, configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun,
-		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
+	response, err := serverapi.CallApi(http.MethodGet, apiEndpoint, "", configuration)
 	if err != nil {
 		output, err := serverapi.ResponsItems2MessageString(response)
 		if err != nil {
@@ -67,10 +64,7 @@ func GetVault(vaultname string, configuration *configuration.ConfigurationClass)
 
 func GetVaults(configuration *configuration.ConfigurationClass) (output string, err error) {
 	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/vault"
-	response, err := serverapi.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
-		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
-		configuration.GetPersistentOptions().Verbose, configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun,
-		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
+	response, err := serverapi.CallApi(http.MethodGet, apiEndpoint, "", configuration)
 	if err != nil {
 		if !response.Success {
 			output, err := serverapi.ResponsItems2MessageString(response)
@@ -93,10 +87,7 @@ func GetVaults(configuration *configuration.ConfigurationClass) (output string, 
 
 func GetVaultsArray(configuration *configuration.ConfigurationClass) (vaults []serverapi.Vault, err error) {
 	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/vault"
-	response, err := serverapi.CallApi(http.MethodGet, apiEndpoint, "", configuration.GetPersistentOptions().ShowConfig,
-		configuration.GetPersistentOptions().ShowObjects, true, configuration.GetPersistentOptions().Localhost,
-		configuration.GetPersistentOptions().Verbose, configuration.OpenshiftConfig, configuration.GetPersistentOptions().DryRun,
-		configuration.GetPersistentOptions().Debug, configuration.GetPersistentOptions().ServerApi, configuration.GetPersistentOptions().Token)
+	response, err := serverapi.CallApi(http.MethodGet, apiEndpoint, "", configuration)
 	if err != nil {
 		if !response.Success {
 			output, err := serverapi.ResponsItems2MessageString(response)
