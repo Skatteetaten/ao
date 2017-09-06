@@ -113,7 +113,7 @@ If no argument is given, the command will list all the files in the repository.`
 		}
 
 		if err == nil {
-			fmt.Println(output)
+			fmt.Print(output)
 		} else {
 			fmt.Println(err)
 		}
