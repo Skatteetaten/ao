@@ -90,7 +90,7 @@ func Save(url string, config *configuration.ConfigurationClass) (string, error) 
 	}
 
 	// Reset branch before pull
-	if _, err := GitCommand("reset", "."); err != nil {
+	if _, err := GitCommand("reset", "--hard"); err != nil {
 		return "", errors.Wrap(err, "Failed to clean repo")
 	}
 
