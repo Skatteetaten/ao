@@ -50,11 +50,31 @@ func Checkout(url string, outputPath string) (string, error) {
 }
 
 func Pull() (string, error) {
-	if output, err := GitCommand("pull"); err != nil {
-		return "", errors.Wrap(err, "Failed to pull new config")
-	} else {
-		return output, nil
+	statuses, err := getStatuses()
+	if err != nil {
+		return "", err
 	}
+
+	if len(statuses) == 0 {
+		return GitCommand("pull")
+	}
+
+	GitCommand("stash")
+	GitCommand("pull")
+	GitCommand("stash", "pop")
+
+	return "", nil
+}
+
+func getStatuses() ([]string, error) {
+	var statuses []string
+	if status, err := GitCommand("status", "-s"); err != nil {
+		return statuses, errors.Wrap(err, "Failed to get status from repo")
+	} else {
+		statuses = strings.Fields(status)
+	}
+
+	return statuses, nil
 }
 
 func Save(url string, config *configuration.ConfigurationClass) (string, error) {
@@ -62,11 +82,9 @@ func Save(url string, config *configuration.ConfigurationClass) (string, error) 
 		return "", errors.Wrap(err, "Failed to validate repo")
 	}
 
-	var statuses []string
-	if status, err := GitCommand("status", "-s"); err != nil {
-		return "", errors.Wrap(err, "Failed to get status from repo")
-	} else {
-		statuses = strings.Fields(status)
+	statuses, err := getStatuses()
+	if err != nil {
+		return "", err
 	}
 
 	if !isCleanRepo() {
@@ -90,7 +108,7 @@ func Save(url string, config *configuration.ConfigurationClass) (string, error) 
 	}
 
 	// Reset branch before pull
-	if _, err := GitCommand("reset", "."); err != nil {
+	if _, err := GitCommand("reset", "--hard"); err != nil {
 		return "", errors.Wrap(err, "Failed to clean repo")
 	}
 
