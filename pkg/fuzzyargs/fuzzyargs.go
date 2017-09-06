@@ -40,14 +40,20 @@ import (
 	"github.com/skatteetaten/ao/pkg/printutil"
 )
 
+type legalDeployStruct struct {
+	envName string
+	appName string
+}
+
 type FuzzyArgs struct {
-	configuration *configuration.ConfigurationClass
-	appList       []string
-	envList       []string
-	filename      string
-	legalAppList  []string
-	legalEnvList  []string
-	legalFileList []string
+	configuration   *configuration.ConfigurationClass
+	appList         []string
+	envList         []string
+	filename        string
+	legalDeployList []legalDeployStruct
+	legalAppList    []string
+	legalEnvList    []string
+	legalFileList   []string
 }
 
 // ** Initialize **
@@ -79,6 +85,23 @@ func (fuzzyArgs *FuzzyArgs) GetFuzzyApp(arg string) (app string, err error) {
 				return "", err
 			}
 			app = fuzzyArgs.legalAppList[i]
+		}
+	}
+
+	return app, nil
+}
+
+// Try to match an argument with an app in an specific env, returns "" if none found
+func (fuzzyArgs *FuzzyArgs) GetFuzzyDeploy(env string, arg string) (app string, err error) {
+	for i := range fuzzyArgs.legalDeployList {
+		if fuzzyArgs.legalDeployList[i].envName == env {
+			if strings.Contains(fuzzyArgs.legalDeployList[i].appName, arg) {
+				if app != "" {
+					err = errors.New(arg + ": Not a unique application identifier, matching " + app + " and " + fuzzyArgs.legalDeployList[i].appName)
+					return "", err
+				}
+				app = fuzzyArgs.legalDeployList[i].appName
+			}
 		}
 	}
 
@@ -122,6 +145,7 @@ func (fuzzyArgs *FuzzyArgs) getLegalEnvAppFileList() (err error) {
 			if !strings.Contains(parts[1], "about.json") {
 				if strings.HasSuffix(parts[1], ".json") {
 					fuzzyArgs.addLegalApp(strings.TrimSuffix(parts[1], ".json"))
+					fuzzyArgs.addLegalDeploy(parts[0], strings.TrimSuffix(parts[1], ".json"))
 				}
 
 			}
@@ -243,21 +267,24 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyEnvAppList(args []string, slashArg bool
 			}
 		} else {
 			if slashArg {
-				// Now we know that arg0 is and env and arg 1 is an app
-				env, err = fuzzyArgs.GetFuzzyEnv(args[i])
-				if err != nil {
-					return err
-				}
 				if i == 0 {
-					if env == "" {
-						err = errors.New(args[i] + " does not match any environemt")
+					// Now we know that arg0 is and env and arg 1 is an app
+					env, err = fuzzyArgs.GetFuzzyEnv(args[i])
+					if err != nil {
 						return err
 					}
-					fuzzyArgs.AddEnv(env)
+					if i == 0 {
+						if env == "" {
+							err = errors.New(args[i] + " does not match any environemt")
+							return err
+						}
+						fuzzyArgs.AddEnv(env)
+					}
 				}
 
 				if i == 1 {
-					app, err = fuzzyArgs.GetFuzzyApp(args[i])
+					//app, err = fuzzyArgs.GetFuzzyApp(args[i])
+					app, err = fuzzyArgs.GetFuzzyDeploy(env, args[1])
 					if err != nil {
 						return err
 					}
@@ -449,6 +476,13 @@ func (fuzzyArgs *FuzzyArgs) addLegalEnv(env string) {
 	}
 	fuzzyArgs.legalEnvList = append(fuzzyArgs.legalEnvList, env)
 	return
+}
+
+func (fuzzyArgs *FuzzyArgs) addLegalDeploy(env string, app string) {
+	var newDeploy legalDeployStruct
+	newDeploy.appName = app
+	newDeploy.envName = env
+	fuzzyArgs.legalDeployList = append(fuzzyArgs.legalDeployList, newDeploy)
 }
 
 func (fuzzyArgs *FuzzyArgs) GetDeploymentSummaryString() (output string) {
