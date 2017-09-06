@@ -48,19 +48,19 @@ type Field struct {
 }
 
 type AuroraDeploymentConfig struct {
-	SchemaVersion        string               `json:"schemaVersion"`
-	Affiliation          string               `json:"affiliation"`
-	Cluster              string               `json:"cluster"`
-	Type                 string               `json:"type"`
-	Name                 string               `json:"name"`
-	EnvName              string               `json:"envName"`
-	Permissions          PermissionsStruct    `json:"permissions"`
-	Fields               Field                `json:"field"`
-	Config               map[string]string    `json:"config"`
-	GroupId              string               `json:"groupId"`
-	ArtifactId           string               `json:"artifactId"`
-	Version              string               `json:"version"`
-	Route                bool                 `json:"route"`
+	SchemaVersion string            `json:"schemaVersion"`
+	Affiliation   string            `json:"affiliation"`
+	Cluster       string            `json:"cluster"`
+	Type          string            `json:"type"`
+	Name          string            `json:"name"`
+	EnvName       string            `json:"envName"`
+	Permissions   PermissionsStruct `json:"permissions"`
+	Fields        Field             `json:"field"`
+	Config        map[string]string `json:"config"`
+	GroupId       string            `json:"groupId"`
+	ArtifactId    string            `json:"artifactId"`
+	Version       string            `json:"version"`
+	//Route                bool                 `json:"route"`
 	DeploymentStrategy   string               `json:"deploymentStrategy"`
 	DeploymentDescriptor DeploymentDescriptor `json:"deploymentDescriptor"`
 }

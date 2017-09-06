@@ -1,9 +1,6 @@
 package auroraconfig
 
 import (
-	"errors"
-	"strconv"
-
 	"encoding/json"
 
 	"github.com/skatteetaten/ao/pkg/serverapi"
@@ -15,17 +12,25 @@ type ApplicationResult struct {
 	OpenShiftResponses []serverapi.OpenShiftResponse
 }
 
-func Response2ApplicationResult(response serverapi.Response) (applicationResult *ApplicationResult, err error) {
-	if len(response.Items) != 1 {
-		err = errors.New("Illegal response from Boober: Expected 1 Application Result record, got " + strconv.Itoa(len(response.Items)))
-		return nil, err
+func Response2ApplicationResults(response serverapi.Response) (applicationResults []ApplicationResult, err error) {
+
+	applicationResults = make([]ApplicationResult, len(response.Items))
+	for i := range response.Items {
+		err = json.Unmarshal(response.Items[i], &applicationResults[i])
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	applicationResult = new(ApplicationResult)
-	err = json.Unmarshal(response.Items[0], &applicationResult)
-	if err != nil {
-		return nil, err
-	}
+	return applicationResults, nil
+}
 
-	return applicationResult, nil
+func ReportApplicationResuts(applicationResults []ApplicationResult) (output string) {
+	var newLine = ""
+	for _, applicationResult := range applicationResults {
+		output += newLine + "Deploy id: " + applicationResult.DeployId + "\n"
+		output += "\tApplication: " + applicationResult.AuroraDc.EnvName + "/" + applicationResult.AuroraDc.Name
+		newLine = "\n"
+	}
+	return
 }
