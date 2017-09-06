@@ -123,14 +123,36 @@ func (getcmd *GetcmdClass) Files() (output string, err error) {
 }
 
 func formatFileList(files []string) (output string) {
-	var headers []string = []string{"NAME"}
-	sort.Strings(files)
-	output = printutil.FormatTable(headers, files)
+	var headers []string = []string{"FILE/FOLDER", "FILE"}
+	var parentCol []string
+	var childCol []string
 
-	/*output = "NAME"
-	for fileindex := range files {
-		output += "\n" + files[fileindex]
-	}*/
+	sort.Strings(files)
+
+	// List all files first
+	for _, file := range files {
+		if !strings.Contains(file, "/") {
+			parentCol = append(parentCol, file)
+			childCol = append(childCol, "")
+		}
+	}
+
+	// Then list folders
+	var previousParent string
+	for _, file := range files {
+		if strings.Contains(file, "/") {
+			parts := strings.Split(file, "/")
+			if previousParent != parts[0] {
+				parentCol = append(parentCol, parts[0])
+				previousParent = parts[0]
+			} else {
+				parentCol = append(parentCol, "")
+			}
+			childCol = append(childCol, parts[1])
+		}
+	}
+	output = printutil.FormatTable(headers, parentCol, childCol)
+
 	return output
 }
 
