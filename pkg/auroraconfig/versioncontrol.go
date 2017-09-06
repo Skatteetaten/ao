@@ -59,9 +59,15 @@ func Pull() (string, error) {
 		return GitCommand("pull")
 	}
 
-	GitCommand("stash")
-	GitCommand("pull")
-	GitCommand("stash", "pop")
+	if _, err := GitCommand("stash"); err != nil {
+		return "", err
+	}
+	if _, err := GitCommand("pull"); err != nil {
+		return "", err
+	}
+	if _, err := GitCommand("stash", "pop"); err != nil {
+		return "", errors.New("Merge conflict")
+	}
 
 	return "", nil
 }
@@ -90,7 +96,7 @@ func Save(url string, config *configuration.ConfigurationClass) (string, error) 
 	if !isCleanRepo() {
 		fetchOrigin()
 		if err := checkForNewCommits(); err != nil {
-			return "", errors.Wrap(err, "Failed to check for new commits")
+			return "", err
 		}
 	}
 
@@ -227,18 +233,39 @@ func compareGitLog(compare string) error {
 	return nil
 }
 
+func FindGitPath(path string) (string, bool) {
+	current := fmt.Sprintf("%s/.git", path)
+	if _, err := os.Stat(current); err == nil {
+		return path, true
+	}
+
+	paths := strings.Split(path, "/")
+	length := len(paths)
+	if length == 1 {
+		return "", false
+	}
+
+	next := strings.Join(paths[:length-1], "/")
+	return FindGitPath(next)
+}
+
 func addFilesToAuroraConfig(ac *serverapi.AuroraConfig) error {
+
 	wd, _ := os.Getwd()
+	gitRoot, found := FindGitPath(wd)
+	if !found {
+		return errors.New("Could not find git")
+	}
 
-	return filepath.Walk(wd, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(gitRoot, func(path string, info os.FileInfo, err error) error {
 
-		filename := strings.TrimPrefix(path, wd+"/")
+		filename := strings.TrimPrefix(path, gitRoot+"/")
 
 		if strings.Contains(filename, ".git") || strings.Contains(filename, ".secret") || info.IsDir() {
 			return nil
 		}
 
-		file, err := ioutil.ReadFile(wd + "/" + filename)
+		file, err := ioutil.ReadFile(gitRoot + "/" + filename)
 
 		if err != nil {
 			return errors.Wrap(err, "Could not read file "+filename)
