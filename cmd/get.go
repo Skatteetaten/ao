@@ -20,6 +20,69 @@ var getCmd = &cobra.Command{
 	},
 }
 
+var getDeploymentsCmd = &cobra.Command{
+	Use:     "deployment",
+	Short:   "get deployments",
+	Long:    `Lists the deployments defined in the Auroraconfig`,
+	Aliases: []string{"deployments", "dep", "deps", "all"},
+	Run: func(cmd *cobra.Command, args []string) {
+
+		var output string
+		var err error
+
+		output, err = getcmdObject.Deployments("")
+
+		if err == nil {
+			fmt.Print(output)
+		} else {
+			fmt.Println(err)
+		}
+	},
+}
+
+var getAppsCmd = &cobra.Command{
+	Use:     "app",
+	Short:   "get app",
+	Long:    `Lists the apps defined in the Auroraconfig`,
+	Aliases: []string{"apps"},
+	Run: func(cmd *cobra.Command, args []string) {
+
+		var output string
+		var err error
+
+		if len(args) == 0 {
+			output, err = getcmdObject.Apps()
+		} else {
+			output, err = getcmdObject.Deployments(args[0])
+		}
+		if err == nil {
+			fmt.Print(output)
+		} else {
+			fmt.Println(err)
+		}
+	},
+}
+
+var getEnvsCmd = &cobra.Command{
+	Use:     "env",
+	Short:   "get env",
+	Long:    `Lists the envs defined in the Auroraconfig`,
+	Aliases: []string{"envs"},
+	Run: func(cmd *cobra.Command, args []string) {
+
+		var output string
+		var err error
+
+		output, err = getcmdObject.Envs()
+
+		if err == nil {
+			fmt.Print(output)
+		} else {
+			fmt.Println(err)
+		}
+	},
+}
+
 var getFileCmd = &cobra.Command{
 	Use:   "file [envname] <filename>",
 	Short: "Get file",
@@ -163,6 +226,9 @@ func init() {
 	getCmd.AddCommand(getClusterCmd)
 	getCmd.AddCommand(getKubeConfigCmd)
 	getCmd.AddCommand(getOcLoginCmd)
+	getCmd.AddCommand(getAppsCmd)
+	getCmd.AddCommand(getEnvsCmd)
+	getCmd.AddCommand(getDeploymentsCmd)
 
 	getClusterCmd.Flags().BoolP("all",
 		"a", false, "Show all clusters, not just the reachable ones")
