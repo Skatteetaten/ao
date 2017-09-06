@@ -3,6 +3,8 @@ package getcmd
 import (
 	"encoding/base64"
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/configuration"
@@ -15,6 +17,94 @@ import (
 
 type GetcmdClass struct {
 	Configuration *configuration.ConfigurationClass
+}
+
+func (getcmd *GetcmdClass) Deployments(env string) (output string, err error) {
+	var fuzzyArgs fuzzyargs.FuzzyArgs
+
+	err = fuzzyArgs.Init(getcmd.Configuration)
+	if err != nil {
+		return "", err
+	}
+	/*if env != "" {
+		env, err = fuzzyArgs.GetFuzzyEnv(env)
+		if err != nil {
+			return "", err
+		}
+	}*/
+	return formatDeploymentList(env, fuzzyArgs.LegalEnvList, fuzzyArgs.LegalDeployList), nil
+}
+
+func formatDeploymentList(envArg string, envList []string, appList []fuzzyargs.LegalDeployStruct) (output string) {
+
+	var headers []string = []string{"ENV", "APP"}
+	var envs []string
+	var apps []string
+
+	sort.Strings(envList)
+	for _, env := range envList {
+		if strings.Contains(env, envArg) || envArg == "" {
+			var unsortedApps []string
+			for i := range appList {
+				if appList[i].EnvName == env {
+					unsortedApps = append(unsortedApps, appList[i].AppName)
+				}
+			}
+			sort.Strings(unsortedApps)
+			var priorEnv string
+			for _, app := range unsortedApps {
+				if env != priorEnv {
+					envs = append(envs, env)
+					priorEnv = env
+				} else {
+					envs = append(envs, "")
+				}
+				apps = append(apps, app)
+			}
+		}
+	}
+
+	output = printutil.FormatTable(headers, envs, apps)
+
+	return
+}
+
+func (getcmd *GetcmdClass) Apps() (output string, err error) {
+	var fuzzyArgs fuzzyargs.FuzzyArgs
+
+	err = fuzzyArgs.Init(getcmd.Configuration)
+	if err != nil {
+		return "", err
+	}
+	return formatAppList(fuzzyArgs.LegalAppList), nil
+}
+
+func formatAppList(appList []string) (output string) {
+
+	var headers []string = []string{"APP"}
+	sort.Strings(appList)
+	output = printutil.FormatTable(headers, appList)
+
+	return
+}
+
+func (getcmd *GetcmdClass) Envs() (output string, err error) {
+	var fuzzyArgs fuzzyargs.FuzzyArgs
+
+	err = fuzzyArgs.Init(getcmd.Configuration)
+	if err != nil {
+		return "", err
+	}
+	return formatEnvList(fuzzyArgs.LegalEnvList), nil
+}
+
+func formatEnvList(envList []string) (output string) {
+
+	var headers []string = []string{"ENV"}
+	sort.Strings(envList)
+	output = printutil.FormatTable(headers, envList)
+
+	return
 }
 
 func (getcmd *GetcmdClass) Files() (output string, err error) {
@@ -33,10 +123,14 @@ func (getcmd *GetcmdClass) Files() (output string, err error) {
 }
 
 func formatFileList(files []string) (output string) {
-	output = "NAME"
+	var headers []string = []string{"NAME"}
+	sort.Strings(files)
+	output = printutil.FormatTable(headers, files)
+
+	/*output = "NAME"
 	for fileindex := range files {
 		output += "\n" + files[fileindex]
-	}
+	}*/
 	return output
 }
 
