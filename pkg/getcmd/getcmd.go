@@ -6,10 +6,10 @@ import (
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/configuration"
-	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/fuzzyargs"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/kubernetes"
+	"github.com/skatteetaten/ao/pkg/printutil"
 	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
@@ -17,20 +17,39 @@ type GetcmdClass struct {
 	Configuration *configuration.ConfigurationClass
 }
 
-func (getcmd *GetcmdClass) Files() (string, error) {
-	var files []string
-	files, err := auroraconfig.GetFileList(getcmd.Configuration)
-
+func (getcmd *GetcmdClass) Files() (output string, err error) {
+	auroraConfig, err := auroraconfig.GetAuroraConfig(getcmd.Configuration)
 	if err != nil {
 		return "", err
 	}
 
-	output := "NAME"
+	files := getFileList(&auroraConfig)
+	if err != nil {
+		return "", err
+	}
+
+	output = formatFileList(files)
+	return output, nil
+}
+
+func formatFileList(files []string) (output string) {
+	output = "NAME"
 	for fileindex := range files {
 		output += "\n" + files[fileindex]
 	}
+	return output
+}
 
-	return output, nil
+func getFileList(auroraConfig *serverapi.AuroraConfig) (filenames []string) {
+
+	filenames = make([]string, len(auroraConfig.Files))
+
+	var filenameIndex = 0
+	for filename := range auroraConfig.Files {
+		filenames[filenameIndex] = filename
+		filenameIndex++
+	}
+	return filenames
 }
 
 func (getcmd *GetcmdClass) File(args []string) (string, error) {
@@ -59,37 +78,48 @@ func (getcmd *GetcmdClass) File(args []string) (string, error) {
 	return output, err
 }
 
-func (getcmd *GetcmdClass) Clusters(clusterName string, allClusters bool) (string, error) {
+func (getcmd *GetcmdClass) Clusters(clusterName string, allClusters bool) (output string, err error) {
 	var displayClusterName string
 	const tab = " "
 
+	var headers []string = []string{"CLUSTER NAME", "REACHABLE", "LOGGED IN", "API", "URL"}
+	var clusterNames []string
+	var reachable []string
+	var loggedIn []string
+	var api []string
+	var url []string
+
 	openshiftConfig := getcmd.Configuration.OpenshiftConfig
-	output := "CLUSTER NAME         REACHABLE  LOGGED IN  API  URL"
 	for i := range openshiftConfig.Clusters {
 		if openshiftConfig.Clusters[i].Reachable || allClusters {
 			displayClusterName = openshiftConfig.Clusters[i].Name
 			if displayClusterName == clusterName || clusterName == "" {
-				var apiColumn = fileutil.RightPad("", 4)
-				if openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
-					apiColumn = fileutil.RightPad("Yes", 4)
-				}
-				var reachableColumn = fileutil.RightPad("", 10)
+				clusterNames = append(clusterNames, openshiftConfig.Clusters[i].Name)
+				reachableColumn := ""
 				if openshiftConfig.Clusters[i].Reachable {
-					reachableColumn = fileutil.RightPad("Yes", 10)
+					reachableColumn = "Yes"
 				}
-				var urlColumn = ""
-				displayClusterName = fileutil.RightPad(displayClusterName, 20)
-				urlColumn = openshiftConfig.Clusters[i].Url
+				reachable = append(reachable, reachableColumn)
 
-				loggedInColumn := fileutil.RightPad("", 10)
+				loggedInColumn := ""
 				if openshiftConfig.Clusters[i].HasValidToken() {
-					loggedInColumn = fileutil.RightPad("Yes", 10)
+					loggedInColumn = "Yes"
 				}
-				output += "\n" + displayClusterName + tab + reachableColumn + tab + loggedInColumn + tab + apiColumn + tab + urlColumn
+				loggedIn = append(loggedIn, loggedInColumn)
+
+				apiColumn := ""
+				if openshiftConfig.Clusters[i].Name == openshiftConfig.APICluster {
+					apiColumn = "Yes"
+				}
+				api = append(api, apiColumn)
+
+				url = append(url, openshiftConfig.Clusters[i].Url)
+
 			}
 		}
-
 	}
+
+	output = printutil.FormatTable(headers, clusterNames, reachable, loggedIn, api, url)
 
 	return output, nil
 }
