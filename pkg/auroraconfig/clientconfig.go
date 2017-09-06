@@ -34,7 +34,7 @@ func response2ClientConfig(response serverapi.Response) (clientConfig *ClientCon
 
 func GetClientConfig(config *configuration.ConfigurationClass) (clientConfig *ClientConfig, err error) {
 
-	response, err := serverapi.CallApiShort(http.MethodGet, "/clientconfig/", "", config)
+	response, err := serverapi.CallApi(http.MethodGet, "/clientconfig/", "", config)
 	if err != nil {
 		return clientConfig, nil
 	}
