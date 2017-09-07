@@ -51,13 +51,13 @@ type AuroraConfigPayload struct {
 	Name       string `json:"name,omitempty"`
 	Version    string `json:"version,omitempty"`
 	Replicas   string `json:"replicas,omitempty"`
-	Flags struct {
+	Flags      struct {
 		Rolling bool `json:"rolling,omitempty"`
 		Cert    bool `json:"cert,omitempty"`
 	} `json:"flags,omitempty"`
-	Route struct {
-		Generate bool `json:"generate,omitempty"`
-	} `json:"route,omitempty"`
+	//Route struct {
+	//Generate bool `json:"generate,omitempty"`
+	//} `json:"route,omitempty"`
 	Type    string `json:"type,omitempty"`
 	Cluster string `json:"cluster,omitempty"`
 }
@@ -123,7 +123,7 @@ func (newappcmd *NewappcmdClass) generateApp(appname string, groupid string) (pa
 	payload.Replicas = "1"
 	payload.Flags.Rolling = true
 	payload.Flags.Cert = true
-	payload.Route.Generate = true
+	//payload.Route.Generate = true
 
 	return payload, filename
 }
