@@ -19,7 +19,7 @@ var vaultCmd = &cobra.Command{
 	Use:   "vault",
 	Short: "Create and perform operations on a vault",
 	Long: `Usage:
-vault create | edit | delete | permissions <vaultname>.`,
+vault create | edit | delete | permissions | rename <vaultname> [<new vaultname>].`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Usage()
 	},
@@ -86,7 +86,25 @@ var vaultDeleteCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) == 1 {
-			if err := deletecmdObject.DeleteVault(args[0]); err == nil { //  vault.Permissions(args[0], config, vaultAddGroup, vaultRemoveGroup, vaultAddUser, vaultRemoveUser); err == nil {
+			if err := deletecmdObject.DeleteVault(args[0]); err == nil {
+			} else {
+				fmt.Println(err.Error())
+			}
+		} else {
+			fmt.Println(cmd.UseLine())
+		}
+	},
+}
+
+var vaultRenameCmd = &cobra.Command{
+	Use:   "rename <vaultname> <new vaultname>",
+	Short: "Rename a vault",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) == 2 {
+
+			if output, err := vault.Rename(args[0], args[1], config); err == nil {
+				fmt.Println(output)
 			} else {
 				fmt.Println(err.Error())
 			}
@@ -135,6 +153,7 @@ func init() {
 
 	vaultCmd.AddCommand(vaultCreateCmd)
 	vaultCmd.AddCommand(vaultEditCmd)
+	vaultCmd.AddCommand(vaultRenameCmd)
 
 	vaultPermissionsCmd.Flags().StringVarP(&vaultAddGroup, "add-group", "", "", "Add a group permission to the vault")
 	vaultPermissionsCmd.Flags().StringVarP(&vaultRemoveGroup, "remove-group", "", "", "Remove a group permission from the vault")
