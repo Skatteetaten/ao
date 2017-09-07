@@ -15,8 +15,8 @@ var editcmdObject = &pkgEditCmd.EditcmdClass{
 
 var editCmd = &cobra.Command{
 	Use:   "edit [env/]file",
-	Short: "Edit a single configuration file or a secret in a vault",
-	Long: `Edit a single configuration file or a secret in a vault.
+	Short: "Edit a single file in the AuroraConfig repository, or a secret in a vault",
+	Long: `Edit a single file in the AuroraConfig repository, or a secret in a vault.
 The file can be specified using unique shortened name, so given that the file superapp-test/about.json exists, then the command
 
 	ao edit test/about

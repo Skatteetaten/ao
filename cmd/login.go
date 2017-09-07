@@ -22,7 +22,7 @@ var doUpdate bool
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
 	Use:   "login <Affiliation>",
-	Short: "Login to openshift clusters",
+	Short: "Login to all available openshift clusters",
 	Long: `This command will log in to all available clusters and store the tokens in the .ao.json config file.
 If the .ao.json config file does not exist, it will be created.
 The command will first check for OpenShift clusters based upon the naming convention implemented by the

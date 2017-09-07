@@ -13,7 +13,7 @@ var getcmdObject = &pkgGetCmd.GetcmdClass{
 
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "Retrieves information from the repository",
+	Short: "Retrieves information from the AuroraConfig repository",
 	Long:  `Can be used to retrieve one file or all the files from the respository.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Usage()
@@ -166,70 +166,14 @@ var getSecretCmd = &cobra.Command{
 	},
 }
 
-var getClusterCmd = &cobra.Command{
-	Use:   "cluster [clustername]",
-	Short: "Get cluster",
-	Long: `The command will list the reachable OpenShift clusters defined in the configuration file (~/ao.json).
-If the --all flag is specified, all clusters will be listed.
-The API cluster is the one used to serve configuration requests.  All the commands except Deploy will only use the
-API cluster.
-The Deploy command will send the same request to all the reachable clusters, allowing each to filter deploys
-intended for that particular cluster.`,
-	Aliases: []string{"clusters"},
-	Run: func(cmd *cobra.Command, args []string) {
-		clusterName := ""
-
-		if len(args) > 0 {
-			clusterName = args[0]
-		}
-
-		allClusters, _ := cmd.Flags().GetBool("all")
-		if output, err := getcmdObject.Clusters(clusterName, allClusters); err == nil {
-			fmt.Println(output)
-		} else {
-			fmt.Println(err)
-		}
-	},
-}
-
-var getKubeConfigCmd = &cobra.Command{
-	Use:   "kubeconfig",
-	Short: "Get kubeconfig",
-	Long:  `The command will list the contents of the OC configuration.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if output, err := getcmdObject.KubeConfig(); err == nil {
-			fmt.Println(output)
-		} else {
-			fmt.Println(err)
-		}
-	},
-}
-
-var getOcLoginCmd = &cobra.Command{
-	Use:   "oclogin",
-	Short: "Get oclogin",
-	Long:  `The command will print info about the current OC login.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if output, err := getcmdObject.OcLogin(); err == nil {
-			fmt.Println(output)
-		} else {
-			fmt.Println(err)
-		}
-	},
-}
-
 func init() {
 	RootCmd.AddCommand(getCmd)
 	getCmd.AddCommand(getFileCmd)
 	getCmd.AddCommand(getVaultCmd)
 	getCmd.AddCommand(getSecretCmd)
-	getCmd.AddCommand(getClusterCmd)
-	getCmd.AddCommand(getKubeConfigCmd)
-	getCmd.AddCommand(getOcLoginCmd)
+
 	getCmd.AddCommand(getAppsCmd)
 	getCmd.AddCommand(getEnvsCmd)
 	getCmd.AddCommand(getDeploymentsCmd)
 
-	getClusterCmd.Flags().BoolP("all",
-		"a", false, "Show all clusters, not just the reachable ones")
 }

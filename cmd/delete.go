@@ -14,11 +14,9 @@ var deletecmdObject = &pkgDelteCmd.DeletecmdClass{
 }
 
 var deleteCmd = &cobra.Command{
-	Use:   "delete secret <vaultname> <secretname> | app <appname> | env <envname> | deployment <envname> <appname> | file <filename>",
+	Use:   "delete app <appname> | env <envname> | deployment <envname> <appname> | file <filename>",
 	Short: "Delete a resource",
-	Long: `Delete a resource from the repository.
-Deleting a vault will delete all secrets.
-
+	Long: `Delete a resource from the AuroraConfig repository.
 Deleting an app will delete the app from all environments it is deployed to.  If this leaves any environment emtpy, the command will also delete the about.json file in the env folder.
 Deleting an environment will delete all the applications in the given env.  If any application is not deployed in another env, the root app.json file is deleted as well.
 Deleting a deployment will delete a specific app from a specific environment.  If the app does not exist in another environment, the root app.json file is deleted as well.  If no other apps are deployed in the given environment, the about.json file are deleted as well
