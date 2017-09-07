@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"strings"
+
 	"github.com/skatteetaten/ao/pkg/vault"
 	"github.com/spf13/cobra"
 )
@@ -47,15 +49,35 @@ If no vaultname is given, the vault will be named the same as the <folder>.`,
 }
 
 var vaultEditCmd = &cobra.Command{
-	Use:   "edit <vaultname>",
-	Short: "Edit a vault",
+	Use:   "edit <vaultname> | <vaultname>/<secretname>",
+	Short: "Edit a vault or a secret",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 1 {
+		var vaultname string
+		var secretname string
+		var output string
+		var err error
+		if len(args) == 1 {
+			if strings.Contains(args[0], "/") {
+				parts := strings.Split(args[0], "/")
+				vaultname = parts[0]
+				secretname = parts[1]
+			} else {
+				vaultname = args[0]
+			}
+		} else if len(args) == 2 {
+			vaultname = args[0]
+			secretname = args[1]
+		} else {
 			cmd.Usage()
 			return
 		}
 
-		if output, err := editcmdObject.EditVault(args[0]); err == nil {
+		if secretname != "" {
+			output, err = editcmdObject.EditSecret(vaultname, secretname)
+		} else {
+			output, err = editcmdObject.EditVault(vaultname)
+		}
+		if err == nil {
 			fmt.Print(output)
 		} else {
 			fmt.Println(err)
