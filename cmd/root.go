@@ -35,12 +35,12 @@ var config = &configuration.ConfigurationClass{
 var RootCmd = &cobra.Command{
 	Use:   "ao",
 	Short: "Aurora Openshift CLI",
-	Long: `A command line interface that interacts with the Boober serverapi
+	Long: `A command line interface that interacts with the Boober API
 to enable the user to manipulate the Aurora Config for an affiliation, and to
  deploy one or more application.
 
 This application has two main parts.
-1. manage the aoc configuration via cli
+1. manage the AuroraConfig configuration via cli
 2. apply the aoc configuration to the clusters
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
