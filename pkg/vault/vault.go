@@ -40,13 +40,13 @@ func CreateVault(vaultname string, config *configuration.ConfigurationClass, fol
 		if vaultname != "" {
 			vault.Name = vaultname
 		}
-		// Add permissions if specified
-		if addUser != "" {
-			vault.Permissions.Users = append(vault.Permissions.Users, addUser)
-		}
-		if addGroup != "" {
-			vault.Permissions.Groups = append(vault.Permissions.Groups, addGroup)
-		}
+	}
+	// Add permissions if specified
+	if addUser != "" {
+		vault.Permissions.Users = append(vault.Permissions.Users, addUser)
+	}
+	if addGroup != "" {
+		vault.Permissions.Groups = append(vault.Permissions.Groups, addGroup)
 	}
 
 	exists, err := vaultExists(vault.Name, config)
