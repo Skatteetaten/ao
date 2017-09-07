@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
-
 	"os"
+	"strings"
 
 	pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var admcmdObject = &pkgGetCmd.GetcmdClass{
@@ -50,7 +51,7 @@ intended for that particular cluster.`,
 
 var getKubeConfigCmd = &cobra.Command{
 	Use:   "kubeconfig",
-	Short: "Get kubeconfig",
+	Short: "adm kubeconfig",
 	Long:  `The command will list the contents of the OC configuration.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if output, err := admcmdObject.KubeConfig(); err == nil {
@@ -63,7 +64,7 @@ var getKubeConfigCmd = &cobra.Command{
 
 var getOcLoginCmd = &cobra.Command{
 	Use:   "oclogin",
-	Short: "Get oclogin",
+	Short: "adm oclogin",
 	Long:  `The command will print info about the current OC login.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if output, err := admcmdObject.OcLogin(); err == nil {
@@ -71,6 +72,24 @@ var getOcLoginCmd = &cobra.Command{
 		} else {
 			fmt.Println(err)
 		}
+	},
+}
+
+var recreateConfigCmd = &cobra.Command{
+	Use:   "recreate-config",
+	Short: "adm recreate-config",
+	Long:  `The command will recreate the .ao.json file.`,
+	Run: func(cmd *cobra.Command, args []string) {
+
+		var configLocation = viper.GetString("HOME") + "/.ao.json"
+		err := os.Remove(configLocation)
+		if err != nil {
+			if !strings.Contains(err.Error(), "no such file or directory") {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
+		}
+		initConfig(useCurrentOcLogin)
 	},
 }
 
@@ -103,4 +122,7 @@ func init() {
 
 	getClusterCmd.Flags().BoolP("all",
 		"a", false, "Show all clusters, not just the reachable ones")
+
+	admCmd.AddCommand(recreateConfigCmd)
+	recreateConfigCmd.Flags().BoolVarP(&useCurrentOcLogin, "use-current-oclogin", "", false, "Recreates config based on current OC login")
 }
