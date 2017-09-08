@@ -171,6 +171,33 @@ Vault2 will contain 1 secret: secretfile3.`,
 	},
 }
 
+var vaultGetCmd = &cobra.Command{
+	Use:   "get [vaultname]",
+	Short: "get",
+	Long: `If no argument is given, the command will list the vaults in the current affiliation, along with the
+numer of secrets in the vault.
+If a vaultname is specified, the command will list the secrets in the given vault.
+To access a secret, use the get secret command.`,
+	Aliases: []string{"vaults"},
+	Run: func(cmd *cobra.Command, args []string) {
+
+		var output string
+		var err error
+
+		if len(args) == 0 {
+			output, err = getcmdObject.Vaults(showSecretContent)
+		} else {
+			output, err = getcmdObject.Vault(args[0])
+		}
+
+		if err == nil {
+			fmt.Println(output)
+		} else {
+			fmt.Println(err)
+		}
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(vaultCmd)
 	vaultCreateCmd.Flags().StringVarP(&vaultFolder, "folder", "f", "", "Creates a vault from a set of secret files")
@@ -189,4 +216,8 @@ func init() {
 	vaultCmd.AddCommand(vaultDeleteCmd)
 
 	vaultCmd.AddCommand(vaultImportCmd)
+
+	vaultCmd.AddCommand(vaultGetCmd)
+	vaultGetCmd.Flags().BoolVarP(&showSecretContent, "show-secret-content", "s", false,
+		"This flag will print the content of the secrets in the vaults")
 }
