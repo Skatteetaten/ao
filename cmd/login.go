@@ -57,9 +57,9 @@ one is available.
 			}
 		}
 		initConfig(useCurrentOcLogin)
-		if !recreateConfig && !useCurrentOcLogin {
-			openshift.Login(configLocation, userName, affiliation, apiCluster, persistentOptions.Localhost)
-		}
+		//		if !recreateConfig && !useCurrentOcLogin {
+		openshift.Login(configLocation, userName, affiliation, apiCluster, persistentOptions.Localhost)
+		//		}
 		output, _ := updatecmd.UpdateSelf(args, !doUpdate, "", false)
 		if strings.Contains(output, "New version detected") {
 			fmt.Println(output)
