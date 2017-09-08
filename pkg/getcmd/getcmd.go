@@ -2,7 +2,6 @@ package getcmd
 
 import (
 	"encoding/base64"
-	"fmt"
 	"sort"
 	"strings"
 
@@ -240,22 +239,51 @@ func (getcmd *GetcmdClass) Clusters(clusterName string, allClusters bool) (outpu
 	return output, nil
 }
 
-func (getcmd *GetcmdClass) Vaults() (string, error) {
+func (getcmd *GetcmdClass) Vaults() (output string, err error) {
 	var vaults []serverapi.Vault
+	var headers []string = []string{"VAULT NAME", "SECRET NAME"}
+	var sortedVaultNames []string
+	var vaultNames []string
+	var secretNames []string
 
-	vaults, err := auroraconfig.GetVaultsArray(getcmd.Configuration)
+	vaults, err = auroraconfig.GetVaultsArray(getcmd.Configuration)
 
 	if err != nil {
 		return "", err
 	}
 
-	output := "VAULT (Secrets)"
+	sortedVaultNames = make([]string, len(vaults))
+	for i, vault := range vaults {
+		sortedVaultNames[i] = vault.Name
+	}
+
+	sort.Strings(sortedVaultNames)
+	for _, vaultName := range sortedVaultNames {
+		vaultNames = append(vaultNames, vaultName)
+		// Find all secrets in the vault
+		for _, vault := range vaults {
+			if vault.Name == vaultName {
+				secretCount := 0
+				for secretName := range vault.Secrets {
+					secretNames = append(secretNames, secretName)
+					if secretCount > 0 {
+						vaultNames = append(vaultNames, "")
+					}
+					secretCount++
+				}
+			}
+		}
+	}
+
+	output = printutil.FormatTable(headers, vaultNames, secretNames)
+
+	/*output := "VAULT (Secrets)"
 	for vaultindex := range vaults {
 		numberOfSecrets := len(vaults[vaultindex].Secrets)
 		output += "\n" + vaults[vaultindex].Name + " (" + fmt.Sprintf("%d", numberOfSecrets) + ")"
-	}
+	}*/
 
-	return output, err
+	return output, nil
 }
 
 func (getcmd *GetcmdClass) Vault(vaultName string) (string, error) {
