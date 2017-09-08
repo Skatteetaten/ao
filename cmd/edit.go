@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 
@@ -65,50 +66,50 @@ will edit this file, if there is no other file matching the same shortening.`,
 	},
 }
 
-var editSecretCmd = &cobra.Command{
-	Use:   "secret <vaultname> <secretname>",
-	Short: "Edit a secret in a vault",
-	Long: `This command will edit the content of the given secret in a vault.
-If the given vault does not exist, it will be created.
-If the given secret does not exist in the vault, it will be created.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 2 {
-			cmd.Usage()
-			return
-		}
-
-		if output, err := editcmdObject.EditSecret(args[0], args[1]); err == nil {
-			fmt.Println(output)
-		} else {
-			fmt.Println(err)
-		}
-	},
-}
-
 var editVaultCmd = &cobra.Command{
-	Use:   "vault <vaultname>",
-	Short: "Edit a vault",
+	Use:   "vault <vaultname> | <vaultname>/<secretname> | <vaultname> <secretname>",
+	Short: "Edit a vault or a secret in a vault",
 	Long: `This command will edit the content of the given vault.
 The editor will present a JSON view of the vault.
-The secrets will be presented as Base64 encoded strings.`,
+The secrets will be presented as Base64 encoded strings.
+If secret-name is given, the editor will present the decoded secret string for editing.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 1 {
+		var vaultname string
+		var secretname string
+		var output string
+		var err error
+		if len(args) == 1 {
+			if strings.Contains(args[0], "/") {
+				parts := strings.Split(args[0], "/")
+				vaultname = parts[0]
+				secretname = parts[1]
+			} else {
+				vaultname = args[0]
+			}
+		} else if len(args) == 2 {
+			vaultname = args[0]
+			secretname = args[1]
+		} else {
 			cmd.Usage()
 			return
 		}
 
-		if output, err := editcmdObject.EditVault(args[0]); err == nil {
-			fmt.Println(output)
+		if secretname != "" {
+			output, err = editcmdObject.EditSecret(vaultname, secretname)
+		} else {
+			output, err = editcmdObject.EditVault(vaultname)
+		}
+		if err == nil {
+			fmt.Print(output)
 		} else {
 			fmt.Println(err)
 		}
+
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(editCmd)
 	editCmd.AddCommand(editFileCmd)
-	editCmd.AddCommand(editSecretCmd)
 	editCmd.AddCommand(editVaultCmd)
-	editVaultCmd.Hidden = true
 }

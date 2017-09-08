@@ -49,8 +49,12 @@ If no vaultname is given, the vault will be named the same as the <folder>.`,
 }
 
 var vaultEditCmd = &cobra.Command{
-	Use:   "edit <vaultname> | <vaultname>/<secretname>",
+	Use:   "edit <vaultname> | <vaultname>/<secretname> | <vaultname> <secretname>",
 	Short: "Edit a vault or a secret",
+	Long: `This command will edit the content of the given vault.
+The editor will present a JSON view of the vault.
+The secrets will be presented as Base64 encoded strings.
+If secret-name is given, the editor will present the decoded secret string for editing.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var vaultname string
 		var secretname string

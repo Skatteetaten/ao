@@ -14,7 +14,7 @@ var deletecmdObject = &pkgDelteCmd.DeletecmdClass{
 }
 
 var deleteCmd = &cobra.Command{
-	Use:   "delete app <appname> | env <envname> | deployment <envname> <appname> | file <filename>",
+	Use:   "delete app <appname> | env <envname> | deployment <envname> <appname> | file <filename> | vault <vaultname>",
 	Short: "Delete a resource",
 	Long: `Delete a resource from the AuroraConfig repository.
 Deleting an app will delete the app from all environments it is deployed to.  If this leaves any environment emtpy, the command will also delete the about.json file in the env folder.
@@ -89,12 +89,29 @@ var deleteFileCmd = &cobra.Command{
 	},
 }
 
+var deleteVaultCmd = &cobra.Command{
+	Use:   "vault <vaultname>",
+	Short: "Delete a vault",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) == 1 {
+			if err := deletecmdObject.DeleteVault(args[0]); err == nil {
+			} else {
+				fmt.Println(err.Error())
+			}
+		} else {
+			fmt.Println(cmd.UseLine())
+		}
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(deleteCmd)
 	deleteCmd.AddCommand(deleteAppCmd)
 	deleteCmd.AddCommand(deleteEnvCmd)
 	deleteCmd.AddCommand(deleteDeploymentCmd)
 	deleteCmd.AddCommand(deleteFileCmd)
+	deleteCmd.AddCommand(deleteVaultCmd)
 
 	deleteCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "ignore nonexistent files and arguments, never prompt")
 }
