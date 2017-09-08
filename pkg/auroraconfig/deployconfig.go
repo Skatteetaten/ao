@@ -52,7 +52,7 @@ type AuroraBuild struct {
 	Version         string `json:"version"`
 	OutputKind      string `json:"outputKind"`
 	OutputName      string `json:"outputName"`
-	Triggers        string `json:"triggers"`
+	Triggers        bool   `json:"triggers"`
 	BuildSuffix     string `json:"buildSuffix"`
 }
 
