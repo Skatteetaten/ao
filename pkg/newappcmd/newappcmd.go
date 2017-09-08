@@ -39,6 +39,7 @@ type GeneratorAuroraOpenshift struct {
 		PackageName string `json:"packageName,omitempty"`
 		Description string `json:"description,omitempty"`
 		Oracle      bool   `json:"oracle,omitempty"`
+		DbName      string `json:"dbName,omitempty"`
 		Spock       bool   `json:"spock,omitempty"`
 		Maintainer  string `json:"maintainer,omitempty"`
 		BaseName    string `json:"baseName,omitempty"`
@@ -50,6 +51,8 @@ type Route struct {
 	Path string `json:"path,omitempty"`
 }
 
+type AuroraConfig map[string]AuroraConfigPayload
+
 type AuroraConfigPayload struct {
 	GroupId    string `json:"groupId,omitempty"`
 	ArtifactId string `json:"artifactId,omitempty"`
@@ -60,9 +63,10 @@ type AuroraConfigPayload struct {
 		Rolling bool `json:"rolling,omitempty"`
 		Cert    bool `json:"cert,omitempty"`
 	} `json:"flags,omitempty"`
-	Route   map[string]Route `json:"route,omitempty"`
-	Type    string           `json:"type,omitempty"`
-	Cluster string           `json:"cluster,omitempty"`
+	Route    map[string]Route  `json:"route,omitempty"`
+	Type     string            `json:"type,omitempty"`
+	Cluster  string            `json:"cluster,omitempty"`
+	Database map[string]string `json:"database,omitempty"`
 }
 
 type NewappcmdClass struct {
@@ -130,22 +134,25 @@ func (newappcmd *NewappcmdClass) generateApp(appname string, groupid string) (pa
 
 	var route Route
 	payload.Route[appname] = route
-	//payload.Route.Generate = true
 
 	return payload, filename
 }
 
-func (newappcmd *NewappcmdClass) generateEnvApp(appname string, env string, deploymentType string, cluster string) (payload AuroraConfigPayload, filename string) {
+func (newappcmd *NewappcmdClass) generateEnvApp(appname string, env string, deploymentType string, cluster string, dbName string) (payload AuroraConfigPayload, filename string) {
 	filename = env + "/" + appname + ".json"
 	payload.Type = deploymentType
 	payload.Cluster = cluster
 	if deploymentType == deploymentTypeDevelopment {
 		payload.Version = "1.0-SNAPSHOT"
 	}
+	if dbName != "" {
+		payload.Database = make(map[string]string)
+		payload.Database[dbName] = "auto"
+	}
 	return payload, filename
 }
 
-func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi.AuroraConfig, env string, appname string, groupid string, deploymentType string, cluster string) (mergedConfig serverapi.AuroraConfig, err error) {
+func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi.AuroraConfig, env string, appname string, groupid string, deploymentType string, cluster string, dbName string) (mergedConfig serverapi.AuroraConfig, err error) {
 
 	// Check if root about.json exists, if not exit with error
 	_, rootExist := config.Files["about.json"]
@@ -162,6 +169,8 @@ func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi.AuroraCo
 		if err != nil {
 			return
 		}
+		fmt.Println(envAboutFilename)
+		fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[envAboutFilename])))
 	}
 
 	// Merge app
@@ -170,14 +179,17 @@ func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi.AuroraCo
 	if err != nil {
 		return
 	}
+	fmt.Println(appFilename)
+	fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[appFilename])))
 
 	// Merge env/app
-	envapp, envappFilename := newappcmd.generateEnvApp(appname, env, deploymentType, cluster)
+	envapp, envappFilename := newappcmd.generateEnvApp(appname, env, deploymentType, cluster, dbName)
 	config.Files[envappFilename], err = json.Marshal(envapp)
 	if err != nil {
 		return
 	}
-
+	fmt.Println(envappFilename)
+	fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[envappFilename])))
 	return config, err
 }
 
@@ -198,6 +210,7 @@ func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string,
 		artifactid = appname
 	}
 
+	var dbName string
 	if generateApp {
 		var generatorValues GeneratorAuroraOpenshift
 		empty, err := fileutil.IsFolderEmpty(folder)
@@ -214,6 +227,10 @@ func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string,
 		}
 
 		groupid = generatorValues.GeneratorAuroraOpenshift.PackageName
+		database := generatorValues.GeneratorAuroraOpenshift.Oracle
+		if database {
+			dbName = generatorValues.GeneratorAuroraOpenshift.DbName
+		}
 	}
 
 	// Get current aurora config
@@ -223,7 +240,7 @@ func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string,
 	}
 
 	// Merge new app into aurora config
-	mergedAuroraConfig, err := newappcmd.mergeIntoAuroraConfig(auroraConfig, env, appname, groupid, deploymentType, cluster)
+	mergedAuroraConfig, err := newappcmd.mergeIntoAuroraConfig(auroraConfig, env, appname, groupid, deploymentType, cluster, dbName)
 	if err != nil {
 		return "", err
 	}
