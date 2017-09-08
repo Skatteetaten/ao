@@ -239,12 +239,16 @@ func (getcmd *GetcmdClass) Clusters(clusterName string, allClusters bool) (outpu
 	return output, nil
 }
 
-func (getcmd *GetcmdClass) Vaults() (output string, err error) {
+func (getcmd *GetcmdClass) Vaults(showSecretContent bool) (output string, err error) {
 	var vaults []serverapi.Vault
 	var headers []string = []string{"VAULT NAME", "SECRET NAME"}
+	if showSecretContent {
+		headers = append(headers, "SECRET CONTENT")
+	}
 	var sortedVaultNames []string
 	var vaultNames []string
 	var secretNames []string
+	var secretContent []string
 
 	vaults, err = auroraconfig.GetVaultsArray(getcmd.Configuration)
 
@@ -270,12 +274,30 @@ func (getcmd *GetcmdClass) Vaults() (output string, err error) {
 						vaultNames = append(vaultNames, "")
 					}
 					secretCount++
+					if showSecretContent {
+						decodedSecret, err := base64.StdEncoding.DecodeString(vault.Secrets[secretName])
+						decodedSecretStr := string(decodedSecret)
+						if strings.Contains(decodedSecretStr, "\n") {
+							parts := strings.Split(decodedSecretStr, "\n")
+							if len(parts) > 0 {
+								decodedSecretStr = parts[0] + " ..."
+							}
+						}
+						if err != nil {
+							return "", err
+						}
+						secretContent = append(secretContent, decodedSecretStr)
+					}
 				}
 			}
 		}
 	}
 
-	output = printutil.FormatTable(headers, vaultNames, secretNames)
+	if showSecretContent {
+		output = printutil.FormatTable(headers, vaultNames, secretNames, secretContent)
+	} else {
+		output = printutil.FormatTable(headers, vaultNames, secretNames)
+	}
 
 	/*output := "VAULT (Secrets)"
 	for vaultindex := range vaults {

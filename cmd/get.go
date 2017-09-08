@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var showSecretContent bool
+
 var getcmdObject = &pkgGetCmd.GetcmdClass{
 	Configuration: config,
 }
@@ -134,7 +136,7 @@ To access a secret, use the get secret command.`,
 		var err error
 
 		if len(args) == 0 {
-			output, err = getcmdObject.Vaults()
+			output, err = getcmdObject.Vaults(showSecretContent)
 		} else {
 			output, err = getcmdObject.Vault(args[0])
 		}
@@ -175,5 +177,8 @@ func init() {
 	getCmd.AddCommand(getAppsCmd)
 	getCmd.AddCommand(getEnvsCmd)
 	getCmd.AddCommand(getDeploymentsCmd)
+
+	getVaultCmd.Flags().BoolVarP(&showSecretContent, "show-secret-content", "s", false,
+		"This flag will print the content of the secrets in the vaults")
 
 }
