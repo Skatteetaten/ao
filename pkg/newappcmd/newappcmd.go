@@ -45,6 +45,11 @@ type GeneratorAuroraOpenshift struct {
 	} `json:"generator-aurora-openshift,omitempty"`
 }
 
+type Route struct {
+	Host string `json:"host,omitempty"`
+	Path string `json:"path,omitempty"`
+}
+
 type AuroraConfigPayload struct {
 	GroupId    string `json:"groupId,omitempty"`
 	ArtifactId string `json:"artifactId,omitempty"`
@@ -55,11 +60,9 @@ type AuroraConfigPayload struct {
 		Rolling bool `json:"rolling,omitempty"`
 		Cert    bool `json:"cert,omitempty"`
 	} `json:"flags,omitempty"`
-	//Route struct {
-	//Generate bool `json:"generate,omitempty"`
-	//} `json:"route,omitempty"`
-	Type    string `json:"type,omitempty"`
-	Cluster string `json:"cluster,omitempty"`
+	Route   map[string]Route `json:"route,omitempty"`
+	Type    string           `json:"type,omitempty"`
+	Cluster string           `json:"cluster,omitempty"`
 }
 
 type NewappcmdClass struct {
@@ -123,6 +126,10 @@ func (newappcmd *NewappcmdClass) generateApp(appname string, groupid string) (pa
 	payload.Replicas = "1"
 	payload.Flags.Rolling = true
 	payload.Flags.Cert = true
+	payload.Route = make(map[string]Route)
+
+	var route Route
+	payload.Route[appname] = route
 	//payload.Route.Generate = true
 
 	return payload, filename
