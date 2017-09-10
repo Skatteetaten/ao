@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright 2016 The Kubernetes Authors.
 #
@@ -24,7 +24,19 @@ TARGETS=$(for d in "$@"; do echo ./$d/...; done)
 
 echo "Running tests:"
 go test -i -installsuffix "static" ${TARGETS}
-go test -installsuffix "static" ${TARGETS}
+if [ -z "${JUNIT_REPORT+x}" ]; then
+    go test -installsuffix "static" ${TARGETS}
+else
+    go test -v -installsuffix "static" ${TARGETS} | go-junit-report > ${JUNIT_REPORT}
+fi
+
+if [ -n "${COBERTURA_REPORT+x}" ]; then
+    gocov test ${TARGETS} | gocov-xml > ${COBERTURA_REPORT}
+fi
+
+
+
+
 echo
 
 echo -n "Checking gofmt: "

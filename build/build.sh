@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright 2016 The Kubernetes Authors.
 #
@@ -17,7 +17,6 @@
 set -o errexit
 set -o nounset
 set -o pipefail
-
 if [ -z "${PKG}" ]; then
     echo "PKG must be set"
     exit 1
@@ -39,9 +38,10 @@ export GOARCH="${ARCH}"
 # So for now, we filter on our own dependencies
 #
 
-PACKAGES=$(go list ./... | grep "ao/cmd\|ao/pkg\|ao$" | xargs echo)
+PACKAGES=$(go list ./... | grep "ao/pkg\|ao$\|ao/cmd" | xargs echo)
 go install                                                         \
     -installsuffix "static"                                        \
-    -ldflags "-X ${PKG}/pkg/versionutil.version=${VERSION} -X ${PKG}/pkg/versionutil.branch=${BRANCH} -X ${PKG}/pkg/versionutil.buildstamp=${BUILDSTAMP} -X ${PKG}/pkg/versionutil.githash=${GITHASH}" \
+    -ldflags "-X ${PKG}/pkg/version.VERSION=${VERSION}" \
+    -gcflags='-B -l' \
     ${PACKAGES}
 
