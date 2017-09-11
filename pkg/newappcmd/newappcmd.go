@@ -169,8 +169,10 @@ func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi.AuroraCo
 		if err != nil {
 			return
 		}
-		fmt.Println(envAboutFilename)
-		fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[envAboutFilename])))
+		if newappcmd.Configuration.PersistentOptions.Verbose {
+			fmt.Println(envAboutFilename)
+			fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[envAboutFilename])))
+		}
 	}
 
 	// Merge app
@@ -179,8 +181,10 @@ func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi.AuroraCo
 	if err != nil {
 		return
 	}
-	fmt.Println(appFilename)
-	fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[appFilename])))
+	if newappcmd.Configuration.PersistentOptions.Verbose {
+		fmt.Println(appFilename)
+		fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[appFilename])))
+	}
 
 	// Merge env/app
 	envapp, envappFilename := newappcmd.generateEnvApp(appname, env, deploymentType, cluster, dbName)
@@ -188,8 +192,10 @@ func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi.AuroraCo
 	if err != nil {
 		return
 	}
-	fmt.Println(envappFilename)
-	fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[envappFilename])))
+	if newappcmd.Configuration.PersistentOptions.Verbose {
+		fmt.Println(envappFilename)
+		fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[envappFilename])))
+	}
 	return config, err
 }
 

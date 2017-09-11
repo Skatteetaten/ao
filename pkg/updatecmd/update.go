@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 )
 
-const ao5Url = "http://ao-update-service-paas-ao-update.utv.paas.skead.no"
+	const ao5Url = "http://ao-update-service-paas-ao-update.utv.paas.skead.no"
 
 func InstallAuroraOpenshiftGenerator() (err error) {
 	const gitExec = "git"
