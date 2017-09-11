@@ -29,6 +29,19 @@ if [ -z "${VERSION}" ]; then
     echo "VERSION must be set"
     exit 1
 fi
+if [ -z "${GITHASH}" ]; then
+    echo "GITHASH must be set"
+    exit 1
+fi
+if [ -z "${BUILDSTAMP}" ]; then
+    echo "BUILDSTAMP must be set"
+    exit 1
+fi
+if [ -z "${BRANCH}" ]; then
+    echo "BRANCH must be set"
+    exit 1
+fi
+
 
 export CGO_ENABLED=0
 export GOARCH="${ARCH}"
@@ -41,7 +54,7 @@ export GOARCH="${ARCH}"
 PACKAGES=$(go list ./... | grep "ao/pkg\|ao$\|ao/cmd" | xargs echo)
 go install                                                         \
     -installsuffix "static"                                        \
-    -ldflags "-X ${PKG}/pkg/version.VERSION=${VERSION}" \
+    -ldflags "-X ${PKG}/pkg/versionutil.version=${VERSION} -X ${PKG}/pkg/versionutil.branch=${BRANCH} -X ${PKG}/pkg/versionutil.buildstamp=${BUILDSTAMP} -X ${PKG}/pkg/versionutil.githash=${GITHASH}" \
     -gcflags='-B -l' \
     ${PACKAGES}
 

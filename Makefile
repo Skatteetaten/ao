@@ -30,14 +30,19 @@ SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
 #ARCH := amd64
 ARCH := amd64
 
-VERSION := unset
-
-
 GOPATH := $(shell pwd)/.go
 
 GOSRC := $(shell pwd)/.go/src
 
 GOBIN := $(shell pwd)/bin/$(ARCH)
+
+VERSION := $(shell git describe --tags --always --dirty)
+
+BRANCH := $(shell git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+
+BUILDSTAMP := $(shell date '+%Y-%m-%d_%H:%M:%S%p')
+
+GITHASH := $(shell git rev-parse HEAD)
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all containers, see the 'all-container' rule.
@@ -61,6 +66,9 @@ bin-file:
 	        ARCH=$(ARCH)                                                   \
 	        PKG=$(PKG)                                                     \
 	        VERSION=$(VERSION)                                             \
+	        BRANCH=$(BRANCH)                                               \
+	        BUILDSTAMP=$(BUILDSTAMP)                                       \
+	        GITHASH=$(GITHASH)                                             \
 	        ./build/build.sh                                               \
 	    "
 
