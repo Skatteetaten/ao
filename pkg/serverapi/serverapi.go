@@ -540,6 +540,9 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 		return "", errors.New(fmt.Sprintf("Internal error in NewRequest: %v", err))
 	}
 
+
+
+
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Add("dryrun", fmt.Sprintf("%v", dryRun))
 
