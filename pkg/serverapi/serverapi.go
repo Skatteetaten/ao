@@ -508,7 +508,13 @@ func makeResponse(message string, success bool) (responseStr string, err error) 
 func callApiInstance(headers map[string]string, httpMethod string, combindedJson string, verbose bool, url string, token string, dryRun bool, debug bool) (output string, err error) {
 
 	if verbose {
-		fmt.Print("Sending config to Boober at " + url + "... ")
+		var infoString string
+		if httpMethod == http.MethodPut {
+			infoString = "Sending config to"
+		} else {
+			infoString = "Getting config from"
+		}
+		fmt.Print(infoString + " Boober at " + url + "... ")
 	}
 
 	if debug {
@@ -533,6 +539,9 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Internal error in NewRequest: %v", err))
 	}
+
+
+
 
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Add("dryrun", fmt.Sprintf("%v", dryRun))

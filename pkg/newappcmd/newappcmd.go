@@ -7,6 +7,10 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"strconv"
+
+	"os"
+
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
@@ -43,6 +47,8 @@ type GeneratorAuroraOpenshift struct {
 		Spock       bool   `json:"spock,omitempty"`
 		Maintainer  string `json:"maintainer,omitempty"`
 		BaseName    string `json:"baseName,omitempty"`
+		Namespace   string `json:"namespace,omitempty"`
+		Affiliation string `json:"affiliation,omitempty"`
 	} `json:"generator-aurora-openshift,omitempty"`
 }
 
@@ -169,8 +175,10 @@ func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi.AuroraCo
 		if err != nil {
 			return
 		}
-		fmt.Println(envAboutFilename)
-		fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[envAboutFilename])))
+		if newappcmd.Configuration.PersistentOptions.Verbose {
+			fmt.Println(envAboutFilename)
+			fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[envAboutFilename])))
+		}
 	}
 
 	// Merge app
@@ -179,8 +187,10 @@ func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi.AuroraCo
 	if err != nil {
 		return
 	}
-	fmt.Println(appFilename)
-	fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[appFilename])))
+	if newappcmd.Configuration.PersistentOptions.Verbose {
+		fmt.Println(appFilename)
+		fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[appFilename])))
+	}
 
 	// Merge env/app
 	envapp, envappFilename := newappcmd.generateEnvApp(appname, env, deploymentType, cluster, dbName)
@@ -188,12 +198,54 @@ func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi.AuroraCo
 	if err != nil {
 		return
 	}
-	fmt.Println(envappFilename)
-	fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[envappFilename])))
+	if newappcmd.Configuration.PersistentOptions.Verbose {
+		fmt.Println(envappFilename)
+		fmt.Println(jsonutil.PrettyPrintJson(string(config.Files[envappFilename])))
+	}
 	return config, err
 }
 
-func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string, cluster string, env string, groupid string, folder string, outputFolder string, deploymentType string, version string, generateApp bool, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (newappcmd *NewappcmdClass) executeDeploy(foldername string) (err error) {
+	const deployScript = "openshift-deploy.sh"
+	const shellCmd = "bash"
+	deployCmd, err := filepath.Abs(filepath.Join(foldername, deployScript))
+	if err != nil {
+		return err
+	}
+
+	err = executil.RunInteractively(shellCmd, foldername, deployCmd)
+	if err != nil {
+		return err
+	}
+
+	return
+}
+
+/*
+"packageName": "no.skatteetaten.aurora.demo",
+"description": "",
+"oracle": false,
+"spock": true,
+"controllerExample": true,
+"maintainer": "HaakonKlausen <hakon.klausen@skatteetaten.no>",
+"namespace": "haakonklausen",
+"kafkaSink": true,
+"kafkaSource": false,
+"reactive": false,
+"baseName": "foobar",
+"affiliation": "paas"
+*/
+
+func (newappcmd *NewappcmdClass) printGeneratorValues(gv *GeneratorAuroraOpenshift) (err error) {
+	fmt.Println("Generating config for application " + gv.GeneratorAuroraOpenshift.Affiliation + "-" +
+		gv.GeneratorAuroraOpenshift.Namespace + "/" + gv.GeneratorAuroraOpenshift.BaseName)
+	fmt.Println("\tPackage name: " + gv.GeneratorAuroraOpenshift.PackageName)
+	fmt.Println("\tOracle: " + strconv.FormatBool(gv.GeneratorAuroraOpenshift.Oracle))
+	fmt.Println("\tSpock: " + strconv.FormatBool(gv.GeneratorAuroraOpenshift.Spock))
+	return
+}
+
+func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string, cluster string, env string, groupid string, folder string, outputFolder string, deploymentType string, version string, generateApp bool, persistentOptions *cmdoptions.CommonCommandOptions, deploy bool) (output string, err error) {
 
 	err = validateNewappCommand(args, artifactid, cluster, env, groupid, folder, outputFolder, deploymentType, version, generateApp)
 	if err != nil {
@@ -212,6 +264,17 @@ func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string,
 
 	var dbName string
 	if generateApp {
+		folder = filepath.Join(folder, appname)
+		if fileutil.IsLegalFileFolder(folder) != fileutil.SpecIllegal {
+			err = errors.New("Application folder " + folder + " exists.")
+			return "", err
+		}
+
+		err = os.Mkdir(folder, os.FileMode(0755))
+		if err != nil {
+			return "", err
+		}
+
 		var generatorValues GeneratorAuroraOpenshift
 		empty, err := fileutil.IsFolderEmpty(folder)
 		if err != nil {
@@ -231,25 +294,42 @@ func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string,
 		if database {
 			dbName = generatorValues.GeneratorAuroraOpenshift.DbName
 		}
+		if env == "" {
+			env = generatorValues.GeneratorAuroraOpenshift.Namespace
+		}
+		newappcmd.printGeneratorValues(&generatorValues)
 	}
 
 	// Get current aurora config
+	fmt.Println("Getting Auroraconfig...")
 	auroraConfig, err := auroraconfig.GetAuroraConfig(newappcmd.Configuration)
 	if err != nil {
 		return "", err
 	}
 
 	// Merge new app into aurora config
+	fmt.Println("Merging new application config...")
 	mergedAuroraConfig, err := newappcmd.mergeIntoAuroraConfig(auroraConfig, env, appname, groupid, deploymentType, cluster, dbName)
 	if err != nil {
 		return "", err
 	}
 
 	// Update aurora config in boober
+	fmt.Println("Updating AuroraConfig...")
 	err = auroraconfig.PutAuroraConfig(mergedAuroraConfig, newappcmd.Configuration)
 	if err != nil {
 		return "", err
 	}
+
+	// Execute deploy if flagged
+	if deploy {
+		fmt.Println("Executing deploy...")
+		err = newappcmd.executeDeploy(folder)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	return
 }
 
@@ -273,20 +353,20 @@ func validateNewappCommand(args []string, artifactid string, cluster string, env
 			return err
 		}
 		// Check for valid folder
-		if fileutil.IsLegalFileFolder(folder) != fileutil.SpecIsFolder {
+		/*if fileutil.IsLegalFileFolder(folder) != fileutil.SpecIsFolder {
 			err = errors.New(IllegalFolder)
 			return err
-		}
+		}*/
 
 		// Check for empty folder
-		isempty, err := fileutil.IsFolderEmpty(folder)
+		/*isempty, err := fileutil.IsFolderEmpty(folder)
 		if err != nil {
 			return err
 		}
 		if !isempty {
 			err = errors.New(FolderNotEmpty)
 			return err
-		}
+		}*/
 	} else {
 
 		// Check that we have a version if type is deployment
