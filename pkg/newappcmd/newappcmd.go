@@ -43,6 +43,7 @@ type GeneratorAuroraOpenshift struct {
 		Spock       bool   `json:"spock,omitempty"`
 		Maintainer  string `json:"maintainer,omitempty"`
 		BaseName    string `json:"baseName,omitempty"`
+		Namespace   string `json:"namespace,omitempty"`
 	} `json:"generator-aurora-openshift,omitempty"`
 }
 
@@ -199,7 +200,23 @@ func (newappcmd *NewappcmdClass) mergeIntoAuroraConfig(config serverapi.AuroraCo
 	return config, err
 }
 
-func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string, cluster string, env string, groupid string, folder string, outputFolder string, deploymentType string, version string, generateApp bool, persistentOptions *cmdoptions.CommonCommandOptions) (output string, err error) {
+func (newappcmd *NewappcmdClass) executeDeploy(foldername string) (err error) {
+	const deployScript = "openshift-deploy.sh"
+	const shellCmd = "bash"
+	deployCmd, err := filepath.Abs(filepath.Join(foldername, deployScript))
+	if err != nil {
+		return err
+	}
+
+	err = executil.RunInteractively(shellCmd, foldername, deployCmd)
+	if err != nil {
+		return err
+	}
+
+	return
+}
+
+func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string, cluster string, env string, groupid string, folder string, outputFolder string, deploymentType string, version string, generateApp bool, persistentOptions *cmdoptions.CommonCommandOptions, deploy bool) (output string, err error) {
 
 	err = validateNewappCommand(args, artifactid, cluster, env, groupid, folder, outputFolder, deploymentType, version, generateApp)
 	if err != nil {
@@ -237,6 +254,9 @@ func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string,
 		if database {
 			dbName = generatorValues.GeneratorAuroraOpenshift.DbName
 		}
+		if env == "" {
+			env = generatorValues.GeneratorAuroraOpenshift.Namespace
+		}
 	}
 
 	// Get current aurora config
@@ -256,6 +276,15 @@ func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string,
 	if err != nil {
 		return "", err
 	}
+
+	// Execute deploy if flagged
+	if deploy {
+		err = newappcmd.executeDeploy(folder)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	return
 }
 
