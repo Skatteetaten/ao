@@ -475,7 +475,7 @@ func CallDeployWithHeaders(headers map[string]string, httpMethod string, apiEndp
 					}
 					output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
 						openshiftConfig.Clusters[i].BooberUrl+apiEndpoint,
-						openshiftConfig.Clusters[i].Token, dryRun, debug)
+						token, dryRun, debug)
 					if err != nil {
 						return nil, err
 					}
@@ -539,9 +539,6 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Internal error in NewRequest: %v", err))
 	}
-
-
-
 
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Add("dryrun", fmt.Sprintf("%v", dryRun))
