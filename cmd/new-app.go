@@ -76,7 +76,7 @@ func init() {
 	// newAppCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	newAppCmd.Flags().BoolVarP(&newappGenerateApp, "generate-app", "", true, "Calls the Yeoman generator to generate a sample app")
-	newAppCmd.Flags().StringVarP(&newappFolder, "folder", "f", ".", "Specifies the folder name for the Yeoman generator.  Calls the generator to prompt for input, and then reads the values from the config files.")
+	newAppCmd.Flags().StringVarP(&newappFolder, "folder", "f", ".", "Specifies the parent folder name for the Yeoman generator.  An application  folder will be created in this folder.  Calls the generator to prompt for input, and then reads the values from the config files.")
 	newAppCmd.Flags().StringVarP(&newappType, "type", "t", "development", "Type of deploy: development or deploy")
 	newAppCmd.Flags().StringVarP(&newappGroupId, "groupid", "g", "", "GroupID for the application")
 	newAppCmd.Flags().StringVarP(&newappArtifactId, "artifactid", "a", "", "Artifact ID for the application")

@@ -9,6 +9,8 @@ import (
 
 	"strconv"
 
+	"os"
+
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
@@ -262,6 +264,17 @@ func (newappcmd *NewappcmdClass) NewappCommand(args []string, artifactid string,
 
 	var dbName string
 	if generateApp {
+		folder = filepath.Join(folder, appname)
+		if fileutil.IsLegalFileFolder(folder) != fileutil.SpecIllegal {
+			err = errors.New("Application folder " + folder + " exists.")
+			return "", err
+		}
+
+		err = os.Mkdir(folder, os.FileMode(0755))
+		if err != nil {
+			return "", err
+		}
+
 		var generatorValues GeneratorAuroraOpenshift
 		empty, err := fileutil.IsFolderEmpty(folder)
 		if err != nil {
@@ -340,20 +353,20 @@ func validateNewappCommand(args []string, artifactid string, cluster string, env
 			return err
 		}
 		// Check for valid folder
-		if fileutil.IsLegalFileFolder(folder) != fileutil.SpecIsFolder {
+		/*if fileutil.IsLegalFileFolder(folder) != fileutil.SpecIsFolder {
 			err = errors.New(IllegalFolder)
 			return err
-		}
+		}*/
 
 		// Check for empty folder
-		isempty, err := fileutil.IsFolderEmpty(folder)
+		/*isempty, err := fileutil.IsFolderEmpty(folder)
 		if err != nil {
 			return err
 		}
 		if !isempty {
 			err = errors.New(FolderNotEmpty)
 			return err
-		}
+		}*/
 	} else {
 
 		// Check that we have a version if type is deployment
