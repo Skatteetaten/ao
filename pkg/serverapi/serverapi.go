@@ -506,7 +506,6 @@ func makeResponse(message string, success bool) (responseStr string, err error) 
 }
 
 func callApiInstance(headers map[string]string, httpMethod string, combindedJson string, verbose bool, url string, token string, dryRun bool, debug bool) (output string, err error) {
-
 	if verbose {
 		var infoString string
 		if httpMethod == http.MethodPut {

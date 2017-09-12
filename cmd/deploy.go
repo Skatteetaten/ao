@@ -131,4 +131,5 @@ func init() {
 
 	deployCmd.Flags().StringVarP(&deployAffiliation, "affiliation",
 		"", "", "Overrides the logged in affiliation")
+
 }
