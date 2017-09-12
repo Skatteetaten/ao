@@ -26,7 +26,7 @@ func TestVaultsFolder2VaultsArray(t *testing.T) {
 		t.Errorf("Error in TestImport: %v", err.Error())
 	}
 	if len(vaults) != expectedVaultArraySize {
-		t.Errorf("vaultsFolder2VaultsArray returned unexpected result, expected %v, got %v", expectedVaultArraySize, len(vaults))
+		t.Errorf("vaultsFolder2VaultsArray returned unexpected result, expected %v, got %v.  Vaultname[0] = %v", expectedVaultArraySize, len(vaults), vaults[0].Name)
 	}
 
 }
