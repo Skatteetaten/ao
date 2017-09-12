@@ -119,7 +119,7 @@ type PermissionsStruct struct {
 type Vault struct {
 	Name        string            `json:"name"`
 	Permissions PermissionsStruct `json:"permissions,omitempty"`
-	Secrets     map[string]string `json:"secrets""`
+	Secrets     map[string]string `json:"secrets"`
 	Versions    map[string]string `json:"versions,omitempty"`
 }
 
