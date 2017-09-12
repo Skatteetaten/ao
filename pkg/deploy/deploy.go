@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"strings"
 
-	"strconv"
-
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
