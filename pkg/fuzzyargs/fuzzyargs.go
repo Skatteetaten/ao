@@ -448,8 +448,6 @@ func (fuzzyArgs *FuzzyArgs) GetFile() (filename string, err error) {
 		err = errors.New("Not found")
 		return "", err
 	}
-	return
-
 }
 
 func (fuzzyArgs *FuzzyArgs) addLegalFile(filename string) {

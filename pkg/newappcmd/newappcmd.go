@@ -94,7 +94,6 @@ func readGeneratorValues(foldername string) (generatorValues GeneratorAuroraOpen
 
 	if !jsonutil.IsLegalJson(string(filecontent)) {
 		return generatorValues, errors.New(IllegalJson)
-		return generatorValues, err
 	}
 
 	err = json.Unmarshal(filecontent, &generatorValues)
