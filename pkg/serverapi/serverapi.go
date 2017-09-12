@@ -3,7 +3,6 @@ package serverapi
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/openshift"
@@ -443,50 +443,52 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 }
 
 // Call all reachable Boober instances
-func CallDeployWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, localhost bool, verbose bool,
-	openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) (responses []Response, err error) {
-	var apiCluster *openshift.OpenshiftCluster
-
+func CallDeployWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, localhost bool, verbose bool, openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) ([]Response, error) {
 	if localhost || openshiftConfig.Localhost {
-
 		apiAddress = "http://" + localhostAddress + ":" + localhostPort
 
-		apiCluster, err = openshiftConfig.GetApiCluster()
-		if token == "" {
-			if apiCluster != nil {
-				token = apiCluster.Token
-			}
+		apiCluster, err := openshiftConfig.GetApiCluster()
+		if token == "" && apiCluster != nil {
+			token = apiCluster.Token
 		}
-		output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
-			apiAddress+apiEndpoint,
-			token, dryRun, debug)
+		output, err := callApiInstance(headers, httpMethod, combindedJson, verbose, apiAddress+apiEndpoint, token, dryRun, debug)
 		if err != nil {
 			return nil, err
 		}
 		response, err := ParseResponse(output)
-		responses = append(responses, response)
-		return responses, nil
-	} else {
-		for i := range openshiftConfig.Clusters {
-			if openshiftConfig.Clusters[i].Reachable {
-				if openshiftConfig.Clusters[i].BooberUrl != "" {
-					if token == "" {
-						token = openshiftConfig.Clusters[i].Token
-					}
-					output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
-						openshiftConfig.Clusters[i].BooberUrl+apiEndpoint,
-						token, dryRun, debug)
-					if err != nil {
-						return nil, err
-					}
-					response, err := ParseResponse(output)
-					responses = append(responses, response)
-				}
+
+		return []Response{response}, nil
+	}
+
+	resp := make(chan *Response)
+	defer close(resp)
+	callCount := 0
+	for _, cluster := range openshiftConfig.Clusters {
+		if cluster.Reachable && cluster.BooberUrl != "" {
+			if token == "" {
+				token = cluster.Token
+
 			}
+			callCount++
+			url := cluster.BooberUrl + apiEndpoint
+			go func() {
+				output, err := callApiInstance(headers, httpMethod, combindedJson, verbose, url, token, dryRun, debug)
+				if err != nil && verbose {
+					fmt.Println(err)
+				}
+				response, _ := ParseResponse(string(output))
+				resp <- &response
+			}()
 		}
 	}
-	return responses, err
 
+	responses := []Response{}
+	for i := 0; i < callCount; i++ {
+		r := <-resp
+		responses = append(responses, *r)
+	}
+
+	return responses, nil
 }
 
 func makeResponse(message string, success bool) (responseStr string, err error) {
