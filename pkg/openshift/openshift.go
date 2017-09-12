@@ -138,7 +138,7 @@ func Login(configLocation string, userName string, affiliation string, apiCluste
 	config.write(configLocation)
 }
 
-func LoadOrInitiateConfigFile(configLocation string, useOcConfig bool) (*OpenshiftConfig, error) {
+func LoadOrInitiateConfigFile(configLocation string, useOcConfig bool, loginCluster string) (*OpenshiftConfig, error) {
 	config, err := loadConfigFile(configLocation)
 
 	var booberUrlFound bool
@@ -152,7 +152,7 @@ func LoadOrInitiateConfigFile(configLocation string, useOcConfig bool) (*Openshi
 
 	if err != nil || !booberUrlFound {
 		//fmt.Println("No config file found, initializing new config")
-		config, err := newConfig(useOcConfig)
+		config, err := newConfig(useOcConfig, loginCluster)
 		if err != nil {
 			return nil, err
 		}
@@ -244,13 +244,19 @@ func (this *OpenshiftConfig) write(configLocation string) error {
 }
 
 // Generates config based upon searching for OpenShift nodes
-func newConfig(useOcConfig bool) (config *OpenshiftConfig, err error) {
+func newConfig(useOcConfig bool, loginCluster string) (config *OpenshiftConfig, err error) {
 	//fmt.Println("Pinging all clusters and noting which clusters are active in this profile")
 
 	var taxNorwayClusterFound = false
 	if !useOcConfig {
 		ch := make(chan *OpenshiftCluster)
-		clusters := []string{"utv", "test", "prod", "utv-relay", "test-relay", "prod-relay", "qa"}
+		var clusters []string
+		if loginCluster != "" {
+			clusters = []string{loginCluster}
+		} else {
+			clusters = []string{"utv", "test", "prod", "utv-relay", "test-relay", "prod-relay", "qa"}
+		}
+
 		for _, c := range clusters {
 			cluster := fmt.Sprintf(urlPattern, c)
 			go newOpenshiftCluster(c, cluster, ch)

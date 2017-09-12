@@ -56,7 +56,7 @@ one is available.
 				}
 			}
 		}
-		initConfig(useCurrentOcLogin)
+		initConfig(useCurrentOcLogin, loginCluster)
 		//		if !recreateConfig && !useCurrentOcLogin {
 		openshift.Login(configLocation, userName, affiliation, apiCluster, persistentOptions.Localhost)
 		//		}
@@ -77,4 +77,5 @@ func init() {
 	loginCmd.Flags().BoolVarP(&useCurrentOcLogin, "use-current-oclogin", "", false, "Recreates config based on current OC login")
 	loginCmd.Flags().StringVarP(&apiCluster, "apicluster", "a", "", "Set a specific API cluster to use")
 	loginCmd.Flags().BoolVarP(&doUpdate, "do-update", "", false, "Do an update if available")
+	loginCmd.Flags().StringVarP(&loginCluster, "cluster", "c", "", "Limit config to the given cluster")
 }
