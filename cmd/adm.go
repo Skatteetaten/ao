@@ -14,6 +14,8 @@ var admcmdObject = &pkgGetCmd.GetcmdClass{
 	Configuration: config,
 }
 
+var loginCluster string
+
 var admCmd = &cobra.Command{
 	Use:   "adm",
 	Short: "Perform administrative commands on AO or other resources not related to vaults of AuroraConfig",
@@ -89,7 +91,7 @@ var recreateConfigCmd = &cobra.Command{
 				os.Exit(1)
 			}
 		}
-		initConfig(useCurrentOcLogin)
+		initConfig(useCurrentOcLogin, loginCluster)
 	},
 }
 
@@ -125,4 +127,5 @@ func init() {
 
 	admCmd.AddCommand(recreateConfigCmd)
 	recreateConfigCmd.Flags().BoolVarP(&useCurrentOcLogin, "use-current-oclogin", "", false, "Recreates config based on current OC login")
+	recreateConfigCmd.Flags().StringVarP(&loginCluster, "cluster", "c", "", "Limit recreate-config to the given Tax Norway cluster")
 }

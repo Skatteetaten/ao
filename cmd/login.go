@@ -56,9 +56,9 @@ one is available.
 				}
 			}
 		}
-		initConfig(useCurrentOcLogin)
+		initConfig(useCurrentOcLogin, loginCluster)
 		//		if !recreateConfig && !useCurrentOcLogin {
-		openshift.Login(configLocation, userName, affiliation, apiCluster, persistentOptions.Localhost)
+		openshift.Login(configLocation, userName, affiliation, apiCluster, persistentOptions.Localhost, loginCluster)
 		//		}
 		output, _ := updatecmd.UpdateSelf(args, !doUpdate, "", false)
 		if strings.Contains(output, "New version detected") {
@@ -77,4 +77,5 @@ func init() {
 	loginCmd.Flags().BoolVarP(&useCurrentOcLogin, "use-current-oclogin", "", false, "Recreates config based on current OC login")
 	loginCmd.Flags().StringVarP(&apiCluster, "apicluster", "a", "", "Set a specific API cluster to use")
 	loginCmd.Flags().BoolVarP(&doUpdate, "do-update", "", false, "Do an update if available")
+	loginCmd.Flags().StringVarP(&loginCluster, "cluster", "c", "", "Limit login to the given Tax Norway cluster")
 }
