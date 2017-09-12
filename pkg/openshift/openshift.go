@@ -90,7 +90,7 @@ func Logout(configLocation string) (err error) {
 	return
 }
 
-func Login(configLocation string, userName string, affiliation string, apiCluster string, localhost bool) {
+func Login(configLocation string, userName string, affiliation string, apiCluster string, localhost bool, loginCluster string) {
 
 	//fmt.Println("Login in to all reachable cluster with userName", userName)
 	config, err := loadConfigFile(configLocation)
@@ -108,6 +108,10 @@ func Login(configLocation string, userName string, affiliation string, apiCluste
 		}
 		if cluster.HasValidToken() {
 			//fmt.Println("Cluster ", cluster.Name, " has a valid token")
+			continue
+		}
+		if loginCluster != "" && cluster.Name != loginCluster {
+			// User will limit login to the given cluster
 			continue
 		}
 		if password == "" {

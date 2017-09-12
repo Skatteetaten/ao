@@ -27,7 +27,7 @@ var affiliationCmd = &cobra.Command{
 		} else {
 			affiliation = args[0]
 		}
-		openshift.Login(configLocation, userName, affiliation, apiCluster, persistentOptions.Localhost)
+		openshift.Login(configLocation, userName, affiliation, apiCluster, persistentOptions.Localhost, loginCluster)
 		if affiliationSave {
 			user, _ := cmd.Flags().GetString("user")
 			url := getGitUrl(config.GetAffiliation(), user)
@@ -46,4 +46,5 @@ func init() {
 		"Save updates on the affiliation to the local git repository")
 	viper.BindEnv("USER")
 	affiliationCmd.Flags().StringP("user", "u", viper.GetString("USER"), "Save AuroraConfig as user")
+	affiliationCmd.Flags().StringVarP(&loginCluster, "cluster", "c", "", "Limit login to the given Tax Norway cluster")
 }
