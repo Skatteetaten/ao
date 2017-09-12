@@ -20,7 +20,6 @@ const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
 // TODO: Add debug
 func GitCommand(args ...string) (string, error) {
 	command := exec.Command("git", args...)
-	command.Stderr = os.Stderr
 	cmdReader, err := command.StdoutPipe()
 	if err != nil {
 		return "", err
@@ -52,7 +51,7 @@ func Checkout(url string, outputPath string) (string, error) {
 
 func Pull() (string, error) {
 	if output, err := GitCommand("pull"); err != nil {
-		return "", errors.New("pull failed")
+		return "", errors.Wrap(err, "Failed to pull new config")
 	} else {
 		return output, nil
 	}
@@ -60,20 +59,21 @@ func Pull() (string, error) {
 
 func Save(url string, config *configuration.ConfigurationClass) (string, error) {
 	if err := ValidateRepo(url); err != nil {
-		return "", err
-	}
-
-	fetchOrigin()
-
-	if err := checkForNewCommits(); err != nil {
-		return "", err
+		return "", errors.Wrap(err, "Failed to validate repo")
 	}
 
 	var statuses []string
 	if status, err := GitCommand("status", "-s"); err != nil {
-		return "", err
+		return "", errors.Wrap(err, "Failed to get status from repo")
 	} else {
 		statuses = strings.Fields(status)
+	}
+
+	if !isCleanRepo() {
+		fetchOrigin()
+		if err := checkForNewCommits(); err != nil {
+			return "", errors.Wrap(err, "Failed to check for new commits")
+		}
 	}
 
 	if err := checkRepoForChanges(statuses); err != nil {
@@ -81,20 +81,29 @@ func Save(url string, config *configuration.ConfigurationClass) (string, error) 
 	}
 
 	if err := handleAuroraConfigCommit(statuses, config); err != nil {
-		return "", err
+		return "", errors.Wrap(err, "Failed to save AuroraConfig")
 	}
 
 	// Delete untracked files
 	if _, err := GitCommand("clean", "-fd"); err != nil {
-		return "", err
+		return "", errors.Wrap(err, "Failed to delete untracked files")
 	}
 
 	// Reset branch before pull
-	if _, err := GitCommand("checkout", "."); err != nil {
-		return "", err
+	if _, err := GitCommand("reset", "--hard"); err != nil {
+		return "", errors.Wrap(err, "Failed to clean repo")
 	}
 
 	return Pull()
+}
+
+func isCleanRepo() bool {
+	_, err := GitCommand("log")
+	if err != nil {
+		return true
+	}
+
+	return false
 }
 
 func UpdateLocalRepository(affiliation string, config *openshift.OpenshiftConfig) error {
