@@ -127,5 +127,5 @@ func init() {
 
 	admCmd.AddCommand(recreateConfigCmd)
 	recreateConfigCmd.Flags().BoolVarP(&useCurrentOcLogin, "use-current-oclogin", "", false, "Recreates config based on current OC login")
-	recreateConfigCmd.Flags().StringVarP(&loginCluster, "cluster", "c", "", "Limit config to the given cluster")
+	recreateConfigCmd.Flags().StringVarP(&loginCluster, "cluster", "c", "", "Limit recreate-config to the given Tax Norway cluster")
 }
