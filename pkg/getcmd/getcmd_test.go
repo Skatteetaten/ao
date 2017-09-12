@@ -2,7 +2,9 @@ package getcmd
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
+	"unicode"
 
 	"github.com/skatteetaten/ao/pkg/serverapi"
 )
@@ -13,8 +15,8 @@ func TestFormatFileList(t *testing.T) {
 	files[0] = "fil1"
 	files[1] = "fil2"
 
-	expected := "NAME\nfil1\nfil2"
-	result := formatFileList(files)
+	expected := stripSpaces("FILE/FOLDERFILE\nfil1\nfil2")
+	result := stripSpaces(formatFileList(files))
 
 	if result != expected {
 		t.Errorf("Expected %v, got %v", expected, result)
@@ -39,4 +41,15 @@ func TestGetFileList(t *testing.T) {
 			t.Errorf("File %v does not exist in auroraConfig", result[i])
 		}
 	}
+}
+
+func stripSpaces(str string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			// if the character is a space, drop it
+			return -1
+		}
+		// else keep it in the string
+		return r
+	}, str)
 }

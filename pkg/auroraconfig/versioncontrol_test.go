@@ -1,10 +1,10 @@
 package auroraconfig
 
 import (
-	"testing"
 	"fmt"
-	"os/exec"
 	"os"
+	"os/exec"
+	"testing"
 )
 
 func TestValidateRepo(t *testing.T) {
