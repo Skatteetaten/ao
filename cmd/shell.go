@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
+
 	"github.com/c-bata/go-prompt"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/spf13/cobra"
-	"sort"
-	"strings"
-	"encoding/json"
 	"github.com/stromland/cobra-prompt"
 )
 

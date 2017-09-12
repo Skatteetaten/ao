@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"strings"
+
 	"github.com/skatteetaten/ao/pkg/vault"
 	"github.com/spf13/cobra"
 )
@@ -19,7 +21,7 @@ var vaultCmd = &cobra.Command{
 	Use:   "vault",
 	Short: "Create and perform operations on a vault",
 	Long: `Usage:
-vault create | edit | delete | permissions <vaultname>.`,
+vault create | edit | delete | permissions | rename <vaultname> [<new vaultname>].`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Usage()
 	},
@@ -47,15 +49,39 @@ If no vaultname is given, the vault will be named the same as the <folder>.`,
 }
 
 var vaultEditCmd = &cobra.Command{
-	Use:   "edit <vaultname>",
-	Short: "Edit a vault",
+	Use:   "edit <vaultname> | <vaultname>/<secretname> | <vaultname> <secretname>",
+	Short: "Edit a vault or a secret",
+	Long: `This command will edit the content of the given vault.
+The editor will present a JSON view of the vault.
+The secrets will be presented as Base64 encoded strings.
+If secret-name is given, the editor will present the decoded secret string for editing.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 1 {
+		var vaultname string
+		var secretname string
+		var output string
+		var err error
+		if len(args) == 1 {
+			if strings.Contains(args[0], "/") {
+				parts := strings.Split(args[0], "/")
+				vaultname = parts[0]
+				secretname = parts[1]
+			} else {
+				vaultname = args[0]
+			}
+		} else if len(args) == 2 {
+			vaultname = args[0]
+			secretname = args[1]
+		} else {
 			cmd.Usage()
 			return
 		}
 
-		if output, err := editcmdObject.EditVault(args[0]); err == nil {
+		if secretname != "" {
+			output, err = editcmdObject.EditSecret(vaultname, secretname)
+		} else {
+			output, err = editcmdObject.EditVault(vaultname)
+		}
+		if err == nil {
 			fmt.Print(output)
 		} else {
 			fmt.Println(err)
@@ -86,7 +112,25 @@ var vaultDeleteCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) == 1 {
-			if err := deletecmdObject.DeleteVault(args[0]); err == nil { //  vault.Permissions(args[0], config, vaultAddGroup, vaultRemoveGroup, vaultAddUser, vaultRemoveUser); err == nil {
+			if err := deletecmdObject.DeleteVault(args[0]); err == nil {
+			} else {
+				fmt.Println(err.Error())
+			}
+		} else {
+			fmt.Println(cmd.UseLine())
+		}
+	},
+}
+
+var vaultRenameCmd = &cobra.Command{
+	Use:   "rename <vaultname> <new vaultname>",
+	Short: "Rename a vault",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) == 2 {
+
+			if output, err := vault.Rename(args[0], args[1], config); err == nil {
+				fmt.Println(output)
 			} else {
 				fmt.Println(err.Error())
 			}
@@ -127,6 +171,33 @@ Vault2 will contain 1 secret: secretfile3.`,
 	},
 }
 
+var vaultGetCmd = &cobra.Command{
+	Use:   "get [vaultname]",
+	Short: "get",
+	Long: `If no argument is given, the command will list the vaults in the current affiliation, along with the
+numer of secrets in the vault.
+If a vaultname is specified, the command will list the secrets in the given vault.
+To access a secret, use the get secret command.`,
+	Aliases: []string{"vaults"},
+	Run: func(cmd *cobra.Command, args []string) {
+
+		var output string
+		var err error
+
+		if len(args) == 0 {
+			output, err = getcmdObject.Vaults(showSecretContent)
+		} else {
+			output, err = getcmdObject.Vault(args[0])
+		}
+
+		if err == nil {
+			fmt.Println(output)
+		} else {
+			fmt.Println(err)
+		}
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(vaultCmd)
 	vaultCreateCmd.Flags().StringVarP(&vaultFolder, "folder", "f", "", "Creates a vault from a set of secret files")
@@ -135,6 +206,7 @@ func init() {
 
 	vaultCmd.AddCommand(vaultCreateCmd)
 	vaultCmd.AddCommand(vaultEditCmd)
+	vaultCmd.AddCommand(vaultRenameCmd)
 
 	vaultPermissionsCmd.Flags().StringVarP(&vaultAddGroup, "add-group", "", "", "Add a group permission to the vault")
 	vaultPermissionsCmd.Flags().StringVarP(&vaultRemoveGroup, "remove-group", "", "", "Remove a group permission from the vault")
@@ -144,4 +216,8 @@ func init() {
 	vaultCmd.AddCommand(vaultDeleteCmd)
 
 	vaultCmd.AddCommand(vaultImportCmd)
+
+	vaultCmd.AddCommand(vaultGetCmd)
+	vaultGetCmd.Flags().BoolVarP(&showSecretContent, "show-secret-content", "s", false,
+		"This flag will print the content of the secrets in the vaults")
 }

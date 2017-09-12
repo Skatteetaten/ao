@@ -72,7 +72,6 @@ func (deploy *DeployClass) generateJson(
 
 func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, applist []string, envList []string,
 	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool, deployAll bool, force bool, deployVersion string, affiliation string) (output string, err error) {
-
 	if affiliation != "" {
 		deploy.Configuration.OpenshiftConfig.Affiliation = affiliation
 	}
@@ -108,15 +107,26 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 	} else {
 		var headers map[string]string
 
-		_, err := serverapi.CallDeployWithHeaders(headers, http.MethodPut, apiEndpoint, jsonStr, persistentOptions.Localhost, persistentOptions.Verbose,
+		responses, err := serverapi.CallDeployWithHeaders(headers, http.MethodPut, apiEndpoint, jsonStr, persistentOptions.Localhost, persistentOptions.Verbose,
 			deploy.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
 
 		if err != nil {
 			return "", err
 		}
+
+		var newline = ""
+		for _, response := range responses {
+			applicationResults, err := auroraconfig.Response2ApplicationResults(response)
+			if err != nil {
+				return "", err
+			}
+			output += newline + auroraconfig.ReportApplicationResuts(applicationResults)
+			newline = "\n"
+		}
+
 	}
 
-	return
+	return output, nil
 }
 
 func (deploy *DeployClass) populateFlagsEnvAppList(appList []string, envList []string) (err error) {

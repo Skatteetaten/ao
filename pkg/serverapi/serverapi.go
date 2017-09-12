@@ -48,19 +48,19 @@ type Field struct {
 }
 
 type AuroraDeploymentConfig struct {
-	SchemaVersion        string               `json:"schemaVersion"`
-	Affiliation          string               `json:"affiliation"`
-	Cluster              string               `json:"cluster"`
-	Type                 string               `json:"type"`
-	Name                 string               `json:"name"`
-	EnvName              string               `json:"envName"`
-	Permissions          PermissionsStruct    `json:"permissions"`
-	Fields               Field                `json:"field"`
-	Config               map[string]string    `json:"config"`
-	GroupId              string               `json:"groupId"`
-	ArtifactId           string               `json:"artifactId"`
-	Version              string               `json:"version"`
-	Route                bool                 `json:"route"`
+	SchemaVersion string            `json:"schemaVersion"`
+	Affiliation   string            `json:"affiliation"`
+	Cluster       string            `json:"cluster"`
+	Type          string            `json:"type"`
+	Name          string            `json:"name"`
+	EnvName       string            `json:"envName"`
+	Permissions   PermissionsStruct `json:"permissions"`
+	Fields        Field             `json:"field"`
+	Config        map[string]string `json:"config"`
+	GroupId       string            `json:"groupId"`
+	ArtifactId    string            `json:"artifactId"`
+	Version       string            `json:"version"`
+	//Route                bool                 `json:"route"`
 	DeploymentStrategy   string               `json:"deploymentStrategy"`
 	DeploymentDescriptor DeploymentDescriptor `json:"deploymentDescriptor"`
 }
@@ -456,6 +456,7 @@ func CallDeployWithHeaders(headers map[string]string, httpMethod string, apiEndp
 			return nil, err
 		}
 		response, err := ParseResponse(output)
+
 		return []Response{response}, nil
 	}
 
@@ -466,6 +467,7 @@ func CallDeployWithHeaders(headers map[string]string, httpMethod string, apiEndp
 		if cluster.Reachable && cluster.BooberUrl != "" {
 			if token == "" {
 				token = cluster.Token
+
 			}
 			callCount++
 			url := cluster.BooberUrl + apiEndpoint
@@ -506,9 +508,14 @@ func makeResponse(message string, success bool) (responseStr string, err error) 
 }
 
 func callApiInstance(headers map[string]string, httpMethod string, combindedJson string, verbose bool, url string, token string, dryRun bool, debug bool) (output string, err error) {
-
 	if verbose {
-		fmt.Print("Sending config to Boober at " + url + "... ")
+		var infoString string
+		if httpMethod == http.MethodPut {
+			infoString = "Sending config to"
+		} else {
+			infoString = "Getting config from"
+		}
+		fmt.Print(infoString + " Boober at " + url + "... ")
 	}
 
 	if debug {
