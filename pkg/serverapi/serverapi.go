@@ -164,7 +164,7 @@ func ResponseItems2ApplicationResults(response Response) (applicationResults []A
 func ResponseItems2AuroraConfig(response Response) (auroraConfig AuroraConfig, err error) {
 
 	if response.Count > 1 {
-		err = errors.New("Internal error: Multiple items not supported in AOC")
+		err = errors.New("Internal error: Multiple items not supported in AO")
 		return
 	}
 	for item := range response.Items {

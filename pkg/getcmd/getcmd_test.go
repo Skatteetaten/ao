@@ -4,10 +4,78 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
-	"unicode"
 
 	"github.com/skatteetaten/ao/pkg/serverapi"
+	"github.com/skatteetaten/ao/pkg/fuzzyargs"
+	"github.com/skatteetaten/ao/pkg/jsonutil"
 )
+
+func TestDeployments(t *testing.T) {
+	//var getcmd *GetcmdClass
+	//getcmd = new(GetcmdClass)
+
+	// TODO: Refactor method
+}
+
+func TestFormatDeploymentList(t *testing.T) {
+	var envList []string
+	var appList []fuzzyargs.LegalDeployStruct
+
+	envList = make([]string, 2)
+	appList = make([]fuzzyargs.LegalDeployStruct, 2)
+
+	envList[0] = "test"
+	envList[1] = "prod"
+
+	appList[0].AppName = "myapp"
+	appList[0].EnvName = "test"
+	appList[1].AppName = "myotherapp"
+	appList[1].EnvName = "prod"
+
+	deploymentList := formatDeploymentList("", envList, appList)
+	if !strings.Contains(deploymentList, "test") {
+		t.Errorf("Deploymentlist does not contain test env")
+	}
+
+	if !strings.Contains(deploymentList, "ENV") {
+		t.Errorf("Deploymentlist missing header ENV")
+	}
+}
+
+func TestApps (t *testing.T) {
+	// TODO: Refactor method
+}
+
+func TestFormatAppList (t *testing.T) {
+	var appList []string
+	appList = make([]string, 1)
+	appList[0] = "myapp"
+
+	output := formatAppList(appList)
+	if !strings.Contains(output, "myapp") {
+		t.Errorf("Missing app: %v", "myapp")
+	}
+}
+
+
+func TestEnvs(t *testing.T) {
+	// TODO: Refactor method
+}
+
+func TestFormatEnvList (t *testing.T) {
+	var envList []string
+	envList = make([]string, 1)
+	envList[0] = "myenv"
+
+	output := formatEnvList(envList)
+	if !strings.Contains(output, "myenv") {
+		t.Errorf("Missing env: %v", "myenv")
+	}
+}
+
+func TestFiles(t *testing.T) {
+	// TODO; Refactor method
+}
 
 func TestFormatFileList(t *testing.T) {
 	var files []string
@@ -15,8 +83,8 @@ func TestFormatFileList(t *testing.T) {
 	files[0] = "fil1"
 	files[1] = "fil2"
 
-	expected := stripSpaces("FILE/FOLDERFILE\nfil1\nfil2")
-	result := stripSpaces(formatFileList(files))
+	expected := jsonutil.StripSpaces("FILE/FOLDERFILE\nfil1\nfil2")
+	result := jsonutil.StripSpaces(formatFileList(files))
 
 	if result != expected {
 		t.Errorf("Expected %v, got %v", expected, result)
@@ -43,13 +111,31 @@ func TestGetFileList(t *testing.T) {
 	}
 }
 
-func stripSpaces(str string) string {
-	return strings.Map(func(r rune) rune {
-		if unicode.IsSpace(r) {
-			// if the character is a space, drop it
-			return -1
-		}
-		// else keep it in the string
-		return r
-	}, str)
+func TestFile(t *testing.T) {
+	// TODO: Refactor
 }
+
+func TestClusters(t *testing.T) {
+	// TODO: Refactor
+}
+
+func TestVaults(t *testing.T) {
+	// TODO: Refactor
+}
+
+func TestVault(t *testing.T) {
+	// TODO: Refactor
+}
+
+func TestSecret(t *testing.T) {
+	// TODO: Refactor
+}
+
+func TestKubeConfig(t *testing.T) {
+	// TODO: Refactor
+}
+
+func TestOcLogin(t *testing.T) {
+	// TODO: Refactor
+}
+
