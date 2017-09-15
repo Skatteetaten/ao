@@ -5,16 +5,21 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fuzzyargs"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 func TestDeployments(t *testing.T) {
-	//var getcmd *GetcmdClass
-	//getcmd = new(GetcmdClass)
-
-	// TODO: Refactor method
+	var getcmd *GetcmdClass
+	getcmd = new(GetcmdClass)
+	getcmd.Configuration = configuration.NewTestConfiguration()
+	_, err := getcmd.Deployments("")
+	if err != nil {
+		t.Errorf("Error in Deployments: %v", err.Error())
+	}
+	// TODO: More tests after test data is available
 }
 
 func TestFormatDeploymentList(t *testing.T) {
@@ -43,7 +48,14 @@ func TestFormatDeploymentList(t *testing.T) {
 }
 
 func TestApps(t *testing.T) {
-	// TODO: Refactor method
+	var getcmd *GetcmdClass
+	getcmd = new(GetcmdClass)
+	getcmd.Configuration = configuration.NewTestConfiguration()
+	_, err := getcmd.Apps()
+	if err != nil {
+		t.Errorf("Error in Apps: %v", err.Error())
+	}
+	// TODO: More tests after test data is available
 }
 
 func TestFormatAppList(t *testing.T) {
@@ -58,7 +70,14 @@ func TestFormatAppList(t *testing.T) {
 }
 
 func TestEnvs(t *testing.T) {
-	// TODO: Refactor method
+	var getcmd *GetcmdClass
+	getcmd = new(GetcmdClass)
+	getcmd.Configuration = configuration.NewTestConfiguration()
+	_, err := getcmd.Envs()
+	if err != nil {
+		t.Errorf("Error in Envs: %v", err.Error())
+	}
+	// TODO: More tests after test data is available
 }
 
 func TestFormatEnvList(t *testing.T) {
@@ -73,7 +92,14 @@ func TestFormatEnvList(t *testing.T) {
 }
 
 func TestFiles(t *testing.T) {
-	// TODO; Refactor method
+	var getcmd *GetcmdClass
+	getcmd = new(GetcmdClass)
+	getcmd.Configuration = configuration.NewTestConfiguration()
+	_, err := getcmd.Files()
+	if err != nil {
+		t.Errorf("Error in Files: %v", err.Error())
+	}
+	// TODO: More tests after test data is available
 }
 
 func TestFormatFileList(t *testing.T) {
@@ -111,15 +137,39 @@ func TestGetFileList(t *testing.T) {
 }
 
 func TestFile(t *testing.T) {
-	// TODO: Refactor
+	var getcmd *GetcmdClass
+	getcmd = new(GetcmdClass)
+	getcmd.Configuration = configuration.NewTestConfiguration()
+	var args []string
+	args = make([]string, 1)
+	args[0] = "foobar.json"
+	_, err := getcmd.File(args)
+	if err == nil {
+		t.Errorf("Illegal file did not return err")
+	}
+	// TODO: More tests after test data is available
 }
 
 func TestClusters(t *testing.T) {
-	// TODO: Refactor
+	var getcmd *GetcmdClass
+	getcmd = new(GetcmdClass)
+	getcmd.Configuration = configuration.NewTestConfiguration()
+	_, err := getcmd.Clusters("", true)
+	if err != nil {
+		t.Errorf("Error in Clusters: %v", err.Error())
+	}
+	// TODO: More tests after test data is available
 }
 
 func TestVaults(t *testing.T) {
-	// TODO: Refactor
+	var getcmd *GetcmdClass
+	getcmd = new(GetcmdClass)
+	getcmd.Configuration = configuration.NewTestConfiguration()
+	_, err := getcmd.Vaults(false)
+	if err != nil {
+		t.Errorf("Error in Vaults: %v", err.Error())
+	}
+	// TODO: More tests after test data is available
 }
 
 func TestVault(t *testing.T) {

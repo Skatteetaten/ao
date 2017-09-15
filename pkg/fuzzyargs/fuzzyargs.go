@@ -2,8 +2,6 @@ package fuzzyargs
 
 import (
 	"strconv"
-
-	"github.com/skatteetaten/ao/pkg/auroraconfig"
 )
 
 /*
@@ -36,8 +34,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/printutil"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 type LegalDeployStruct struct {
@@ -46,7 +44,7 @@ type LegalDeployStruct struct {
 }
 
 type FuzzyArgs struct {
-	configuration   *configuration.ConfigurationClass
+	//configuration   *configuration.ConfigurationClass
 	appList         []string
 	envList         []string
 	filename        string
@@ -57,9 +55,9 @@ type FuzzyArgs struct {
 }
 
 // ** Initialize **
-func (fuzzyArgs *FuzzyArgs) Init(configuration *configuration.ConfigurationClass) (err error) {
-	fuzzyArgs.configuration = configuration
-	err = fuzzyArgs.getLegalEnvAppFileList()
+func (fuzzyArgs *FuzzyArgs) Init(auroraConfig *serverapi.AuroraConfig) (err error) {
+	//fuzzyArgs.configuration = configuration
+	err = fuzzyArgs.getLegalEnvAppFileList(auroraConfig)
 	if err != nil {
 		return err
 	}
@@ -130,12 +128,8 @@ func (fuzzyArgs *FuzzyArgs) GetFuzzyEnv(arg string) (env string, err error) {
 	return env, nil
 }
 
-func (fuzzyArgs *FuzzyArgs) getLegalEnvAppFileList() (err error) {
+func (fuzzyArgs *FuzzyArgs) getLegalEnvAppFileList(auroraConfig *serverapi.AuroraConfig) (err error) {
 
-	auroraConfig, err := auroraconfig.GetAuroraConfig(fuzzyArgs.configuration)
-	if err != nil {
-		return err
-	}
 	for filename := range auroraConfig.Files {
 		fuzzyArgs.addLegalFile(filename)
 		if strings.Contains(filename, "/") {

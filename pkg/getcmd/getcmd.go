@@ -21,7 +21,17 @@ type GetcmdClass struct {
 func (getcmd *GetcmdClass) Deployments(env string) (output string, err error) {
 	var fuzzyArgs fuzzyargs.FuzzyArgs
 
-	err = fuzzyArgs.Init(getcmd.Configuration)
+	request := auroraconfig.GetAuroraConfigRequest(getcmd.Configuration)
+	response, err := serverapi.CallApiWithRequest(request, getcmd.Configuration)
+	if err != nil {
+		return "", err
+	}
+	auroraConfig, err := auroraconfig.Response2AuroraConfig(response)
+	if err != nil {
+		return "", err
+	}
+
+	err = fuzzyArgs.Init(&auroraConfig)
 	if err != nil {
 		return "", err
 	}
@@ -66,10 +76,21 @@ func formatDeploymentList(envArg string, envList []string, appList []fuzzyargs.L
 func (getcmd *GetcmdClass) Apps() (output string, err error) {
 	var fuzzyArgs fuzzyargs.FuzzyArgs
 
-	err = fuzzyArgs.Init(getcmd.Configuration)
+	request := auroraconfig.GetAuroraConfigRequest(getcmd.Configuration)
+	response, err := serverapi.CallApiWithRequest(request, getcmd.Configuration)
 	if err != nil {
 		return "", err
 	}
+	auroraConfig, err := auroraconfig.Response2AuroraConfig(response)
+	if err != nil {
+		return "", err
+	}
+
+	err = fuzzyArgs.Init(&auroraConfig)
+	if err != nil {
+		return "", err
+	}
+
 	return formatAppList(fuzzyArgs.LegalAppList), nil
 }
 
@@ -85,10 +106,21 @@ func formatAppList(appList []string) (output string) {
 func (getcmd *GetcmdClass) Envs() (output string, err error) {
 	var fuzzyArgs fuzzyargs.FuzzyArgs
 
-	err = fuzzyArgs.Init(getcmd.Configuration)
+	request := auroraconfig.GetAuroraConfigRequest(getcmd.Configuration)
+	response, err := serverapi.CallApiWithRequest(request, getcmd.Configuration)
 	if err != nil {
 		return "", err
 	}
+	auroraConfig, err := auroraconfig.Response2AuroraConfig(response)
+	if err != nil {
+		return "", err
+	}
+
+	err = fuzzyArgs.Init(&auroraConfig)
+	if err != nil {
+		return "", err
+	}
+
 	return formatEnvList(fuzzyArgs.LegalEnvList), nil
 }
 
@@ -102,7 +134,12 @@ func formatEnvList(envList []string) (output string) {
 }
 
 func (getcmd *GetcmdClass) Files() (output string, err error) {
-	auroraConfig, err := auroraconfig.GetAuroraConfig(getcmd.Configuration)
+	request := auroraconfig.GetAuroraConfigRequest(getcmd.Configuration)
+	response, err := serverapi.CallApiWithRequest(request, getcmd.Configuration)
+	if err != nil {
+		return "", err
+	}
+	auroraConfig, err := auroraconfig.Response2AuroraConfig(response)
 	if err != nil {
 		return "", err
 	}
@@ -164,7 +201,18 @@ func getFileList(auroraConfig *serverapi.AuroraConfig) (filenames []string) {
 
 func (getcmd *GetcmdClass) File(args []string) (string, error) {
 	var fuzzyArgs fuzzyargs.FuzzyArgs
-	if err := fuzzyArgs.Init(getcmd.Configuration); err != nil {
+	request := auroraconfig.GetAuroraConfigRequest(getcmd.Configuration)
+	response, err := serverapi.CallApiWithRequest(request, getcmd.Configuration)
+	if err != nil {
+		return "", err
+	}
+	auroraConfig, err := auroraconfig.Response2AuroraConfig(response)
+	if err != nil {
+		return "", err
+	}
+
+	err = fuzzyArgs.Init(&auroraConfig)
+	if err != nil {
 		return "", err
 	}
 
@@ -235,7 +283,7 @@ func (getcmd *GetcmdClass) Clusters(clusterName string, allClusters bool) (outpu
 }
 
 func (getcmd *GetcmdClass) Vaults(showSecretContent bool) (output string, err error) {
-	var vaults []serverapi.Vault
+	var vaults []auroraconfig.Vault
 	var headers []string = []string{"VAULT NAME", "SECRET NAME"}
 	if showSecretContent {
 		headers = append(headers, "SECRET CONTENT")
@@ -304,7 +352,7 @@ func (getcmd *GetcmdClass) Vaults(showSecretContent bool) (output string, err er
 }
 
 func (getcmd *GetcmdClass) Vault(vaultName string) (string, error) {
-	var vaults []serverapi.Vault
+	var vaults []auroraconfig.Vault
 	vaults, err := auroraconfig.GetVaultsArray(getcmd.Configuration)
 
 	if err != nil {
@@ -325,7 +373,7 @@ func (getcmd *GetcmdClass) Vault(vaultName string) (string, error) {
 
 func (getcmd *GetcmdClass) Secret(vaultName string, secretName string) (string, error) {
 	var output string
-	var vaults []serverapi.Vault
+	var vaults []auroraconfig.Vault
 	vaults, err := auroraconfig.GetVaultsArray(getcmd.Configuration)
 
 	if err != nil {

@@ -116,12 +116,12 @@ type PermissionsStruct struct {
 	Users  []string `json:"users,omitempty"`
 }
 
-type Vault struct {
+/*type Vault struct {
 	Name        string            `json:"name"`
 	Permissions PermissionsStruct `json:"permissions,omitempty"`
 	Secrets     map[string]string `json:"secrets"`
 	Versions    map[string]string `json:"versions,omitempty"`
-}
+}*/
 
 const apiNotInstalledResponse = "Application is not available"
 const localhostAddress = "localhost"
@@ -176,6 +176,7 @@ func ResponseItems2AuroraConfig(response Response) (auroraConfig AuroraConfig, e
 	return
 }
 
+/*
 func ResponseItems2VaultsArray(response Response) (vaults []Vault, err error) {
 	vaults = make([]Vault, len(response.Items))
 
@@ -186,9 +187,9 @@ func ResponseItems2VaultsArray(response Response) (vaults []Vault, err error) {
 		}
 	}
 	return
-}
+}*/
 
-func ResponseItems2Vault(response Response) (vault Vault, err error) {
+/*func ResponseItems2Vault(response Response) (vault Vault, err error) {
 
 	for item := range response.Items {
 		err = json.Unmarshal([]byte(response.Items[item]), &vault)
@@ -197,7 +198,7 @@ func ResponseItems2Vault(response Response) (vault Vault, err error) {
 		}
 	}
 	return
-}
+}*/
 
 func ResponseItems2Vaults(response Response) (output string, err error) {
 	var newline string = ""

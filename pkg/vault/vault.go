@@ -26,7 +26,7 @@ type Vault struct {
 */
 
 func CreateVault(vaultname string, config *configuration.ConfigurationClass, folderName string, addUser string, addGroup string) (output string, err error) {
-	var vault serverapi.Vault
+	var vault auroraconfig.Vault
 
 	if folderName == "" {
 		vault.Name = vaultname
@@ -66,7 +66,7 @@ func CreateVault(vaultname string, config *configuration.ConfigurationClass, fol
 }
 
 func vaultExists(vaultname string, config *configuration.ConfigurationClass) (exists bool, err error) {
-	var vaults []serverapi.Vault
+	var vaults []auroraconfig.Vault
 	vaults, err = auroraconfig.GetVaultsArray(config)
 	if err != nil {
 		return false, err
@@ -144,7 +144,7 @@ func listPermissions(user []string, group []string) (output string, err error) {
 	return output, nil
 }
 
-func vaults2Exists(vaultName string, vaults []serverapi.Vault) (exists bool) {
+func vaults2Exists(vaultName string, vaults []auroraconfig.Vault) (exists bool) {
 	for _, vault := range vaults {
 		if vault.Name == vaultName {
 			return true
@@ -169,7 +169,7 @@ func Rename(vaultName string, newVaultName string, config *configuration.Configu
 		return "", err
 	}
 
-	var vault serverapi.Vault
+	var vault auroraconfig.Vault
 	vault, err = auroraconfig.GetVault(vaultName, config)
 	if err != nil {
 		return "", err
@@ -189,7 +189,7 @@ func Rename(vaultName string, newVaultName string, config *configuration.Configu
 func Permissions(vaultName string, config *configuration.ConfigurationClass,
 	addGroup string, removeGroup string, addUser string, removeUser string) (output string, err error) {
 
-	var vault serverapi.Vault
+	var vault auroraconfig.Vault
 	vault, err = auroraconfig.GetVault(vaultName, config)
 	if err != nil {
 		return "", err
@@ -249,13 +249,13 @@ func ImportVaults(catalogName string, config *configuration.ConfigurationClass) 
 	return
 }
 
-func vaultsFolder2VaultsArray(folderName string) (vaults []serverapi.Vault, err error) {
+func vaultsFolder2VaultsArray(folderName string) (vaults []auroraconfig.Vault, err error) {
 	folderCount, err := countFolders(folderName)
 	if err != nil {
 		return nil, err
 	}
 
-	vaults = make([]serverapi.Vault, folderCount)
+	vaults = make([]auroraconfig.Vault, folderCount)
 
 	files, err := ioutil.ReadDir(folderName)
 	if err != nil {
@@ -276,7 +276,7 @@ func vaultsFolder2VaultsArray(folderName string) (vaults []serverapi.Vault, err 
 	return vaults, nil
 }
 
-func secretsFolder2Vault(folderName string) (vault serverapi.Vault, err error) {
+func secretsFolder2Vault(folderName string) (vault auroraconfig.Vault, err error) {
 	vault.Name = filepath.Base(folderName)
 	vault.Secrets = make(map[string]string)
 	files, err := ioutil.ReadDir(folderName)

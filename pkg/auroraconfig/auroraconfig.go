@@ -173,14 +173,6 @@ func PutSecret(vaultname string, secretname string, secret string, version strin
 	return putContent(apiEndpoint, encodedSecret, version, configuration)
 }
 
-func PutVault(vaultname string, vault serverapi.Vault, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
-	var apiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/vault/"
-
-	content, err := json.Marshal(vault)
-
-	return putContent(apiEndpoint, string(content), version, configuration)
-
-}
 
 func deleteContent(apiEndpoint string, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
 

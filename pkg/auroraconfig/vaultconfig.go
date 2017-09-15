@@ -12,6 +12,13 @@ import (
 	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
+type Vault struct {
+	Name        string                      `json:"name"`
+	Permissions serverapi.PermissionsStruct `json:"permissions,omitempty"`
+	Secrets     map[string]string           `json:"secrets"`
+	Versions    map[string]string           `json:"versions,omitempty"`
+}
+
 func GetAllVaults(outputFolder string, configuration *configuration.ConfigurationClass) (output string, err error) {
 	vaults, err := GetVaultsArray(configuration)
 	if err != nil {
@@ -44,7 +51,16 @@ func GetAllVaults(outputFolder string, configuration *configuration.Configuratio
 	return output, err
 }
 
-func GetVault(vaultname string, configuration *configuration.ConfigurationClass) (vault serverapi.Vault, err error) {
+func PutVault(vaultname string, vault Vault, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
+	var apiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/vault/"
+
+	content, err := json.Marshal(vault)
+
+	return putContent(apiEndpoint, string(content), version, configuration)
+
+}
+
+func GetVault(vaultname string, configuration *configuration.ConfigurationClass) (vault Vault, err error) {
 
 	vaults, err := GetVaultsArray(configuration)
 
@@ -100,7 +116,26 @@ func GetVaults(configuration *configuration.ConfigurationClass) (output string, 
 	return output, err
 }
 
-func GetVaultsArray(configuration *configuration.ConfigurationClass) (vaults []serverapi.Vault, err error) {
+func GetVaultRequest(configuration *configuration.ConfigurationClass) (request *serverapi.Request) {
+	request = new(serverapi.Request)
+	request.Method = http.MethodGet
+	request.ApiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/vault"
+	return request
+}
+
+func ResponseItems2VaultsArray(response serverapi.Response) (vaults []Vault, err error) {
+	vaults = make([]Vault, len(response.Items))
+
+	for item := range response.Items {
+		err = json.Unmarshal([]byte(response.Items[item]), &vaults[item])
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func GetVaultsArray(configuration *configuration.ConfigurationClass) (vaults []Vault, err error) {
 	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/vault"
 	response, err := serverapi.CallApi(http.MethodGet, apiEndpoint, "", configuration)
 	if err != nil {
@@ -116,13 +151,13 @@ func GetVaultsArray(configuration *configuration.ConfigurationClass) (vaults []s
 
 	}
 
-	vaults, err = serverapi.ResponseItems2VaultsArray(response)
+	vaults, err = ResponseItems2VaultsArray(response)
 
 	return vaults, err
 }
 
 func GetSecret(vaultName string, secretName string, configuration *configuration.ConfigurationClass) (output string, version string, err error) {
-	var vaults []serverapi.Vault
+	var vaults []Vault
 	vaults, err = GetVaultsArray(configuration)
 
 	for vaultindex := range vaults {
