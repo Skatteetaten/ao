@@ -85,7 +85,7 @@ func GetAuroraConfigRequest(configuration *configuration.ConfigurationClass) (re
 	return request
 }
 
-func Response2AuroraConfig (response serverapi.Response) (auroraConfig serverapi.AuroraConfig, err error) {
+func Response2AuroraConfig(response serverapi.Response) (auroraConfig serverapi.AuroraConfig, err error) {
 
 	if !response.Success {
 		output, err := serverapi.ResponsItems2MessageString(response)

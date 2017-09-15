@@ -5,11 +5,11 @@ import (
 )
 
 type Request struct {
-	ApiEndpoint 	string
-	Method  		string
-	Headers 		map[string]string
-	Payload 		string
-	Testing 		bool
+	ApiEndpoint string
+	Method      string
+	Headers     map[string]string
+	Payload     string
+	Testing     bool
 }
 
 func CallApiWithRequest(request *Request, config *configuration.ConfigurationClass) (result Response, err error) {

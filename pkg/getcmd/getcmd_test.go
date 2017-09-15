@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/skatteetaten/ao/pkg/serverapi"
 	"github.com/skatteetaten/ao/pkg/fuzzyargs"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 func TestDeployments(t *testing.T) {
@@ -42,11 +42,11 @@ func TestFormatDeploymentList(t *testing.T) {
 	}
 }
 
-func TestApps (t *testing.T) {
+func TestApps(t *testing.T) {
 	// TODO: Refactor method
 }
 
-func TestFormatAppList (t *testing.T) {
+func TestFormatAppList(t *testing.T) {
 	var appList []string
 	appList = make([]string, 1)
 	appList[0] = "myapp"
@@ -57,12 +57,11 @@ func TestFormatAppList (t *testing.T) {
 	}
 }
 
-
 func TestEnvs(t *testing.T) {
 	// TODO: Refactor method
 }
 
-func TestFormatEnvList (t *testing.T) {
+func TestFormatEnvList(t *testing.T) {
 	var envList []string
 	envList = make([]string, 1)
 	envList[0] = "myenv"
@@ -138,4 +137,3 @@ func TestKubeConfig(t *testing.T) {
 func TestOcLogin(t *testing.T) {
 	// TODO: Refactor
 }
-

@@ -1,15 +1,15 @@
 package auroraconfig
 
 import (
-	"testing"
+	"encoding/json"
 	"github.com/skatteetaten/ao/pkg/configuration"
-	"net/http"
+	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/openshift"
 	"github.com/skatteetaten/ao/pkg/serverapi"
-	"encoding/json"
 	"io/ioutil"
-	"github.com/skatteetaten/ao/pkg/jsonutil"
+	"net/http"
 	"strings"
+	"testing"
 )
 
 func TestGetAuroraConfigRequest(t *testing.T) {
@@ -31,7 +31,7 @@ func TestGetAuroraConfigRequest(t *testing.T) {
 func TestResponse2AuroraConfig(t *testing.T) {
 	var response serverapi.Response
 	response.Count = 1
-	response.Items = make([]json.RawMessage,1)
+	response.Items = make([]json.RawMessage, 1)
 
 	jsonContent, err := ioutil.ReadFile("Testfiles/auroraconfig1file.json")
 	if err != nil {

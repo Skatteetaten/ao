@@ -25,12 +25,7 @@ func (getcmd *GetcmdClass) Deployments(env string) (output string, err error) {
 	if err != nil {
 		return "", err
 	}
-	/*if env != "" {
-		env, err = fuzzyArgs.GetFuzzyEnv(env)
-		if err != nil {
-			return "", err
-		}
-	}*/
+
 	return formatDeploymentList(env, fuzzyArgs.LegalEnvList, fuzzyArgs.LegalDeployList), nil
 }
 
