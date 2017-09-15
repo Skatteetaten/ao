@@ -293,8 +293,12 @@ func (getcmd *GetcmdClass) Vaults(showSecretContent bool) (output string, err er
 	var secretNames []string
 	var secretContent []string
 
-	vaults, err = auroraconfig.GetVaultsArray(getcmd.Configuration)
-
+	request := auroraconfig.GetVaultRequest(getcmd.Configuration)
+	response, err := serverapi.CallApiWithRequest(request, getcmd.Configuration)
+	if err != nil {
+		return "", err
+	}
+	vaults, err = auroraconfig.ResponseItems2VaultsArray(response)
 	if err != nil {
 		return "", err
 	}
@@ -341,12 +345,6 @@ func (getcmd *GetcmdClass) Vaults(showSecretContent bool) (output string, err er
 	} else {
 		output = printutil.FormatTable(headers, vaultNames, secretNames)
 	}
-
-	/*output := "VAULT (Secrets)"
-	for vaultindex := range vaults {
-		numberOfSecrets := len(vaults[vaultindex].Secrets)
-		output += "\n" + vaults[vaultindex].Name + " (" + fmt.Sprintf("%d", numberOfSecrets) + ")"
-	}*/
 
 	return output, nil
 }
