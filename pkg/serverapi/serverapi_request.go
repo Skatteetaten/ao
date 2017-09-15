@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 
 	"github.com/skatteetaten/ao/pkg/configuration"
+	"strings"
+	"errors"
+	"io/ioutil"
 )
 
 type Request struct {
@@ -16,16 +19,39 @@ type Request struct {
 
 func CallApiWithRequest(request *Request, config *configuration.ConfigurationClass) (result Response, err error) {
 	if config.Testing {
-		return generateTestRequest(request.Method, request.ApiEndpoint, request.Payload)
+		return generateTestResponse(request.Method, request.ApiEndpoint, request.Payload)
 	} else {
 		return CallApiWithHeaders(request.Headers, request.Method, request.ApiEndpoint, request.Payload, config)
 	}
 }
 
-func generateTestRequest(method string, ApiEndpoint string, Payload string) (result Response, err error) {
-	result.Items = make([]json.RawMessage, 0)
+func generateTestResponse(method string, apiEndpoint string, Payload string) (result Response, err error) {
+	testFileName, err := getTestFileName(apiEndpoint)
+	if err != nil {
+		return result, err
+	}
+
+	content, err := ioutil.ReadFile(testFileName)
+	if err != nil {
+		return result, err
+	}
+
+	result.Items = make([]json.RawMessage, 1)
+	result.Items[0] = content
 	result.Success = true
-	result.Count = 0
-	result.Message = "Testing"
+	result.Count = 1
+	result.Message = "Success"
 	return
+}
+
+func getTestFileName(ApiEndpoint string) (testFileName string, err error) {
+	if strings.Contains(ApiEndpoint, "auroraconfig") {
+		testFileName = "../serverapi/Testfiles/auroraconfig.json"
+	} else if strings.Contains(ApiEndpoint, "vault") {
+		testFileName = "../serverapi/Testfiles/vault.json"
+	} else {
+		err = errors.New("Illegal API endpoint for testing: " + ApiEndpoint)
+		return "", err
+	}
+	return testFileName, nil
 }
