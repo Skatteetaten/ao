@@ -168,6 +168,8 @@ func ResponseItems2AuroraConfig(response Response) (auroraConfig AuroraConfig, e
 		return
 	}
 	for item := range response.Items {
+		ds := string(response.Items[item])
+		fmt.Println(ds)
 		err = json.Unmarshal([]byte(response.Items[item]), &auroraConfig)
 		if err != nil {
 			return

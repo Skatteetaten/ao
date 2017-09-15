@@ -3,10 +3,11 @@ package serverapi
 import (
 	"encoding/json"
 
-	"github.com/skatteetaten/ao/pkg/configuration"
-	"strings"
 	"errors"
 	"io/ioutil"
+	"strings"
+
+	"github.com/skatteetaten/ao/pkg/configuration"
 )
 
 type Request struct {
@@ -18,7 +19,7 @@ type Request struct {
 }
 
 func CallApiWithRequest(request *Request, config *configuration.ConfigurationClass) (result Response, err error) {
-	if config.Testing {
+	if config.Testing || 1 == 1 {
 		return generateTestResponse(request.Method, request.ApiEndpoint, request.Payload)
 	} else {
 		return CallApiWithHeaders(request.Headers, request.Method, request.ApiEndpoint, request.Payload, config)
@@ -36,11 +37,15 @@ func generateTestResponse(method string, apiEndpoint string, Payload string) (re
 		return result, err
 	}
 
-	result.Items = make([]json.RawMessage, 1)
+	err = json.Unmarshal(content, &result)
+	if err != nil {
+		return result, err
+	}
+	/*result.Items = make([]json.RawMessage, 1)
 	result.Items[0] = content
 	result.Success = true
 	result.Count = 1
-	result.Message = "Success"
+	result.Message = "Success"*/
 	return
 }
 
