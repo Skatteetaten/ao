@@ -88,7 +88,7 @@ func getStatuses() ([]string, error) {
 
 func Save(url string, config *configuration.ConfigurationClass) (string, error) {
 	if err := ValidateRepo(url); err != nil {
-		return "", errors.Wrap(err, "Failed to validate repo")
+		return "", err
 	}
 
 	statuses, err := getStatuses()
@@ -157,8 +157,16 @@ func ValidateRepo(expectedUrl string) error {
 		return err
 	}
 
-	remotes := strings.Fields(output)
+	extractAffiliation := func(url string) string {
+		split := strings.Split(url, "/")
+		length := len(split)
+		if length == 0 {
+			return ""
+		}
+		return strings.TrimSuffix(split[length-1], ".git")
+	}
 
+	remotes := strings.Fields(output)
 	var repoUrl string
 	for i, v := range remotes {
 		if v == "origin" && len(remotes) > i+1 {
@@ -167,9 +175,12 @@ func ValidateRepo(expectedUrl string) error {
 		}
 	}
 
-	if repoUrl != expectedUrl {
+	expectedAffiliation := extractAffiliation(expectedUrl)
+	repoAffiliation := extractAffiliation(repoUrl)
+
+	if expectedAffiliation != repoAffiliation {
 		message := fmt.Sprintf(`Wrong repository.
-Expected remote to be %s, actual %s.`, expectedUrl, repoUrl)
+Expected affliation to be %s, but was %s.`, expectedAffiliation, repoAffiliation)
 		return errors.New(message)
 	}
 
