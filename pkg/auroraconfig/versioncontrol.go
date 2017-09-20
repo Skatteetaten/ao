@@ -39,6 +39,9 @@ func GitCommand(args ...string) (string, error) {
 
 	err = command.Wait()
 	if err != nil {
+		if message != "" {
+			return "", errors.New(message)
+		}
 		return "", errors.Wrap(err, "Failed to wait for git command")
 	}
 
@@ -66,7 +69,7 @@ func Pull() (string, error) {
 		return "", err
 	}
 	if _, err := GitCommand("stash", "pop"); err != nil {
-		return "", errors.New("Merge conflict")
+		return "", err
 	}
 
 	return "", nil
