@@ -2,10 +2,10 @@ package auroraconfig
 
 import (
 	"fmt"
-	"os"
+	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/openshift"
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
+	"os"
 	"os/exec"
 	"testing"
 )
@@ -14,7 +14,7 @@ const REPO_PATH = "/tmp/ao/testRepo"
 
 var testConfig *configuration.ConfigurationClass = &configuration.ConfigurationClass{
 	OpenshiftConfig: &openshift.OpenshiftConfig{
-		Localhost: true,
+		Localhost:   true,
 		Affiliation: "aurora",
 	},
 	PersistentOptions: &cmdoptions.CommonCommandOptions{
@@ -32,7 +32,6 @@ func repoSetup(gitRemoteUrl string) {
 	exec.Command("git", "remote", "add", "origin", gitRemoteUrl).Run()
 }
 
-
 func TestValidateRepo(t *testing.T) {
 	gitRemoteUrl := fmt.Sprintf(GIT_URL_FORMAT, "user", testConfig.GetAffiliation())
 	repoSetup(gitRemoteUrl)
@@ -46,14 +45,14 @@ func TestFindGitPath(t *testing.T) {
 	gitRemoteUrl := fmt.Sprintf(GIT_URL_FORMAT, "user", testConfig.GetAffiliation())
 	repoSetup(gitRemoteUrl)
 
-	test := REPO_PATH+"/random/test"
+	test := REPO_PATH + "/random/test"
 
 	os.MkdirAll(test, 0755)
 	os.Chdir(test)
 
 	wd, _ := os.Getwd()
 	path, found := FindGitPath(wd)
-	if !found || path != REPO_PATH{
+	if !found || path != REPO_PATH {
 		t.Error("Expected git repo to be found")
 	}
 }
