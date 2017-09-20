@@ -37,16 +37,13 @@ func generateTestResponse(method string, apiEndpoint string, Payload string) (re
 		return result, err
 	}
 
-	err = json.Unmarshal(content, &result)
-	if err != nil {
-		return result, err
-	}
-	/*result.Items = make([]json.RawMessage, 1)
-	result.Items[0] = content
+	result.Items = make ([]json.RawMessage, 1)
+	result.Items[0] = json.RawMessage(content)
 	result.Success = true
 	result.Count = 1
-	result.Message = "Success"*/
-	return
+	result.Message = "Success"
+
+	return result, nil
 }
 
 func getTestFileName(ApiEndpoint string) (testFileName string, err error) {
