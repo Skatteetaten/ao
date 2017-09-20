@@ -34,8 +34,8 @@ var deployAffiliation string
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
 	Use:   "deploy",
-	Short: "Deploy applications in the current affiliation",
-	Long: `Deploy applications in the current affiliation.
+	Short: "Deploy applications for the current affiliation",
+	Long: `Deploy applications for the current affiliation.
 
 A Deploy will compare the stored configuration with the running projects in OpenShift, and update the OpenShift
 environment to match the specifications in the stored configuration.
@@ -131,4 +131,5 @@ func init() {
 
 	deployCmd.Flags().StringVarP(&deployAffiliation, "affiliation",
 		"", "", "Overrides the logged in affiliation")
+
 }

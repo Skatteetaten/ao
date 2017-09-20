@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright 2016 The Kubernetes Authors.
 #
@@ -17,7 +17,6 @@
 set -o errexit
 set -o nounset
 set -o pipefail
-
 if [ -z "${PKG}" ]; then
     echo "PKG must be set"
     exit 1
@@ -30,6 +29,19 @@ if [ -z "${VERSION}" ]; then
     echo "VERSION must be set"
     exit 1
 fi
+if [ -z "${GITHASH}" ]; then
+    echo "GITHASH must be set"
+    exit 1
+fi
+if [ -z "${BUILDSTAMP}" ]; then
+    echo "BUILDSTAMP must be set"
+    exit 1
+fi
+if [ -z "${BRANCH}" ]; then
+    echo "BRANCH must be set"
+    exit 1
+fi
+
 
 export CGO_ENABLED=0
 export GOARCH="${ARCH}"
@@ -39,9 +51,10 @@ export GOARCH="${ARCH}"
 # So for now, we filter on our own dependencies
 #
 
-PACKAGES=$(go list ./... | grep "ao/cmd\|ao/pkg\|ao$" | xargs echo)
+PACKAGES=$(go list ./... | grep "ao/pkg\|ao$\|ao/cmd" | xargs echo)
 go install                                                         \
-    -installsuffix "static"                                        \
     -ldflags "-X ${PKG}/pkg/versionutil.version=${VERSION} -X ${PKG}/pkg/versionutil.branch=${BRANCH} -X ${PKG}/pkg/versionutil.buildstamp=${BUILDSTAMP} -X ${PKG}/pkg/versionutil.githash=${GITHASH}" \
+    -gcflags='-B -l' \
+    -pkgdir=${GOPATH}/pkg \
     ${PACKAGES}
 

@@ -22,7 +22,7 @@ var doUpdate bool
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
 	Use:   "login <Affiliation>",
-	Short: "Login to openshift clusters",
+	Short: "Login to all available openshift clusters",
 	Long: `This command will log in to all available clusters and store the tokens in the .ao.json config file.
 If the .ao.json config file does not exist, it will be created.
 The command will first check for OpenShift clusters based upon the naming convention implemented by the
@@ -56,10 +56,10 @@ one is available.
 				}
 			}
 		}
-		initConfig(useCurrentOcLogin)
-		if !recreateConfig && !useCurrentOcLogin {
-			openshift.Login(configLocation, userName, affiliation, apiCluster, persistentOptions.Localhost)
-		}
+		initConfig(useCurrentOcLogin, loginCluster)
+		//		if !recreateConfig && !useCurrentOcLogin {
+		openshift.Login(configLocation, userName, affiliation, apiCluster, persistentOptions.Localhost, loginCluster)
+		//		}
 		output, _ := updatecmd.UpdateSelf(args, !doUpdate, "", false)
 		if strings.Contains(output, "New version detected") {
 			fmt.Println(output)
@@ -77,4 +77,5 @@ func init() {
 	loginCmd.Flags().BoolVarP(&useCurrentOcLogin, "use-current-oclogin", "", false, "Recreates config based on current OC login")
 	loginCmd.Flags().StringVarP(&apiCluster, "apicluster", "a", "", "Set a specific API cluster to use")
 	loginCmd.Flags().BoolVarP(&doUpdate, "do-update", "", false, "Do an update if available")
+	loginCmd.Flags().StringVarP(&loginCluster, "cluster", "c", "", "Limit login to the given Tax Norway cluster")
 }

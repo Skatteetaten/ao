@@ -45,7 +45,22 @@ func GetAllVaults(outputFolder string, configuration *configuration.Configuratio
 }
 
 func GetVault(vaultname string, configuration *configuration.ConfigurationClass) (vault serverapi.Vault, err error) {
-	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/vault/" + vaultname
+
+	vaults, err := GetVaultsArray(configuration)
+
+	if err != nil {
+		return vault, err
+	}
+	for _, vault := range vaults {
+		if vault.Name == vaultname {
+			return vault, nil
+		}
+	}
+
+	err = errors.New(vaultname + ": No such vault")
+	return vault, err
+
+	/*var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/vault/" + vaultname
 
 	response, err := serverapi.CallApi(http.MethodGet, apiEndpoint, "", configuration)
 	if err != nil {
@@ -59,7 +74,7 @@ func GetVault(vaultname string, configuration *configuration.ConfigurationClass)
 	}
 	vault, err = serverapi.ResponseItems2Vault(response)
 
-	return vault, err
+	return vault, err*/
 }
 
 func GetVaults(configuration *configuration.ConfigurationClass) (output string, err error) {

@@ -1,0 +1,20 @@
+hash: ad30e9267d68c2c6d02c84810d4ee7c9fcaea8385f38157a76a05436a8fd2895
+updated: 2017-08-23T09:45:11.109857252+02:00
+imports:
+- name: github.com/howeyc/gopass
+  version: bf9dde6d0d2c004a008c27aaee91170c786f6db8
+- name: github.com/pkg/errors
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
+- name: github.com/spf13/cobra
+  version: 2df9a531813370438a4d79bfc33e21f58063ed87
+- name: github.com/spf13/viper
+  version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
+- name: gopkg.in/src-d/go-git.v4
+  version: 8ddbecf782c2e340fd85bb4ba4d00dc73d749f87
+  subpackages:
+  - plumbing/transport/http
+- name: gopkg.in/yaml.v2
+  version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
+testImports:
+- name: gopkg.in/h2non/gock.v1
+  version: 84d599244901620fb3eb96473eb9e50619f69b47

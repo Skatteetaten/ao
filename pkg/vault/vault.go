@@ -40,13 +40,13 @@ func CreateVault(vaultname string, config *configuration.ConfigurationClass, fol
 		if vaultname != "" {
 			vault.Name = vaultname
 		}
-		// Add permissions if specified
-		if addUser != "" {
-			vault.Permissions.Users = append(vault.Permissions.Users, addUser)
-		}
-		if addGroup != "" {
-			vault.Permissions.Groups = append(vault.Permissions.Groups, addGroup)
-		}
+	}
+	// Add permissions if specified
+	if addUser != "" {
+		vault.Permissions.Users = append(vault.Permissions.Users, addUser)
+	}
+	if addGroup != "" {
+		vault.Permissions.Groups = append(vault.Permissions.Groups, addGroup)
 	}
 
 	exists, err := vaultExists(vault.Name, config)
@@ -144,6 +144,48 @@ func listPermissions(user []string, group []string) (output string, err error) {
 	return output, nil
 }
 
+func vaults2Exists(vaultName string, vaults []serverapi.Vault) (exists bool) {
+	for _, vault := range vaults {
+		if vault.Name == vaultName {
+			return true
+		}
+	}
+	return false
+}
+
+func Rename(vaultName string, newVaultName string, config *configuration.ConfigurationClass) (output string, err error) {
+
+	vaults, err := auroraconfig.GetVaultsArray(config)
+	if err != nil {
+		return "", err
+	}
+	if !vaults2Exists(vaultName, vaults) {
+		err = errors.New(vaultName + ": No such vault")
+		return "", err
+	}
+
+	if vaults2Exists(newVaultName, vaults) {
+		err = errors.New("Cannot rename to an existing vaultname: " + newVaultName)
+		return "", err
+	}
+
+	var vault serverapi.Vault
+	vault, err = auroraconfig.GetVault(vaultName, config)
+	if err != nil {
+		return "", err
+	}
+
+	vault.Name = newVaultName
+	output, err = auroraconfig.PutVault(newVaultName, vault, "", config)
+	if err != nil {
+		return "", err
+	}
+	_, err = auroraconfig.DeleteVault(vaultName, config)
+	if err != nil {
+		return "", err
+	}
+	return output, nil
+}
 func Permissions(vaultName string, config *configuration.ConfigurationClass,
 	addGroup string, removeGroup string, addUser string, removeUser string) (output string, err error) {
 

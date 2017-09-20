@@ -15,11 +15,12 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/skatteetaten/ao/pkg/newappcmd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log"
-	"os"
 )
 
 var newappType string
@@ -32,6 +33,7 @@ var newappEnv string
 var newappOutputfolder string
 var newappFolder string
 var newappGenerateApp bool
+var newappDeploy bool
 
 // newAppCmd represents the newApp command
 var newAppCmd = &cobra.Command{
@@ -47,7 +49,7 @@ If the generate-app is set to false, the generator will not be called, and the c
 If the artifactid is not given, it will default to the appname.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		newappcmdObject := newappcmd.NewappcmdClass{Configuration: config}
-		output, err := newappcmdObject.NewappCommand(args, newappArtifactId, newappCluster, newappEnv, newappGroupId, newappFolder, newappOutputfolder, newappType, newappVersion, newappGenerateApp, &persistentOptions)
+		output, err := newappcmdObject.NewappCommand(args, newappArtifactId, newappCluster, newappEnv, newappGroupId, newappFolder, newappOutputfolder, newappType, newappVersion, newappGenerateApp, &persistentOptions, newappDeploy)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -74,12 +76,13 @@ func init() {
 	// newAppCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	newAppCmd.Flags().BoolVarP(&newappGenerateApp, "generate-app", "", true, "Calls the Yeoman generator to generate a sample app")
-	newAppCmd.Flags().StringVarP(&newappFolder, "folder", "f", ".", "Specifies the folder name for the Yeoman generator.  Calls the generator to prompt for input, and then reads the values from the config files.")
+	newAppCmd.Flags().StringVarP(&newappFolder, "folder", "f", ".", "Specifies the parent folder name for the Yeoman generator.  An application  folder will be created in this folder.  Calls the generator to prompt for input, and then reads the values from the config files.")
 	newAppCmd.Flags().StringVarP(&newappType, "type", "t", "development", "Type of deploy: development or deploy")
 	newAppCmd.Flags().StringVarP(&newappGroupId, "groupid", "g", "", "GroupID for the application")
 	newAppCmd.Flags().StringVarP(&newappArtifactId, "artifactid", "a", "", "Artifact ID for the application")
 	newAppCmd.Flags().StringVarP(&newappVersion, "version", "v", "latest", "Version for the application")
 	newAppCmd.Flags().StringVarP(&newappCluster, "cluster", "c", "", "OpenShift Clustername target, defaults to AOC API cluster")
-	newAppCmd.Flags().StringVarP(&newappEnv, "env", "e", viper.GetString("USER"), "Environment folder for the config, defaults to username")
+	newAppCmd.Flags().StringVarP(&newappEnv, "env", "e", "", "Environment folder for the config, override generator value if set")
 	newAppCmd.Flags().StringVarP(&newappOutputfolder, "output-folder", "o", "", "If specified the files are generated in this folder instead of being sent to Boober")
+	newAppCmd.Flags().BoolVarP(&newappDeploy, "deploy", "d", false, "Initiate a deploy after app generation")
 }

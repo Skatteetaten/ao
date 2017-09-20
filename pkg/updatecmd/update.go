@@ -3,12 +3,13 @@ package updatecmd
 import (
 	"errors"
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/executil"
-	"github.com/skatteetaten/ao/pkg/versionutil"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/skatteetaten/ao/pkg/executil"
+	"github.com/skatteetaten/ao/pkg/versionutil"
 )
 
 const ao5Url = "http://ao-update-service-paas-ao-update.utv.paas.skead.no"

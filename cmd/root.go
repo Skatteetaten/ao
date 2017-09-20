@@ -35,16 +35,16 @@ var config = &configuration.ConfigurationClass{
 var RootCmd = &cobra.Command{
 	Use:   "ao",
 	Short: "Aurora Openshift CLI",
-	Long: `A command line interface that interacts with the Boober serverapi
+	Long: `A command line interface that interacts with the Boober API
 to enable the user to manipulate the Aurora Config for an affiliation, and to
  deploy one or more application.
 
 This application has two main parts.
-1. manage the aoc configuration via cli
+1. manage the AuroraConfig configuration via cli
 2. apply the aoc configuration to the clusters
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		commandsWithoutLogin := []string{"login", "logout", "version", "update", "help", "deploy"}
+		commandsWithoutLogin := []string{"login", "logout", "version", "update", "help", "deploy", "adm"}
 
 		commands := strings.Split(cmd.CommandPath(), " ")
 		if len(commands) > 1 {
@@ -116,15 +116,15 @@ func init() {
 // initConfig reads in config file and ENV variables if set.
 
 func initConfigCobra() {
-	initConfig(false)
+	initConfig(false, "")
 }
 
-func initConfig(useOcConfig bool) {
+func initConfig(useOcConfig bool, loginCluster string) {
 	viper.SetConfigName(".ao")   // name of config file (without extension)
 	viper.AddConfigPath("$HOME") // adding home directory as first search path
 	viper.AutomaticEnv()         // read in environment variables that match
 	viper.BindEnv("HOME")
 
 	aoConfigLocation = viper.GetString("HOME") + "/.ao.json"
-	aoConfig, _ = openshift.LoadOrInitiateConfigFile(aoConfigLocation, useOcConfig)
+	aoConfig, _ = openshift.LoadOrInitiateConfigFile(aoConfigLocation, useOcConfig, loginCluster)
 }

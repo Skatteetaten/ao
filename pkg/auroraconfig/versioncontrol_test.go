@@ -1,13 +1,13 @@
 package auroraconfig
 
 import (
-	"testing"
 	"fmt"
-	"os/exec"
 	"os"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/openshift"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
+	"os/exec"
+	"testing"
 )
 
 const REPO_PATH = "/tmp/ao/testRepo"
