@@ -446,7 +446,10 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 }
 
 // Call all reachable Boober instances
-func CallDeployWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, localhost bool, verbose bool, openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool, apiAddress string, token string) ([]Response, error) {
+func CallDeployWithHeaders(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string,
+	localhost bool, verbose bool, openshiftConfig *openshift.OpenshiftConfig, dryRun bool, debug bool,
+	apiAddress string, token string, clusterOnly string, apiClusterOnly bool) ([]Response, error) {
+
 	if localhost || openshiftConfig.Localhost {
 		apiAddress = "http://" + localhostAddress + ":" + localhostPort
 
@@ -467,10 +470,11 @@ func CallDeployWithHeaders(headers map[string]string, httpMethod string, apiEndp
 	defer close(resp)
 	callCount := 0
 	for _, cluster := range openshiftConfig.Clusters {
-		if cluster.Reachable && cluster.BooberUrl != "" {
+		if cluster.Reachable && cluster.BooberUrl != "" &&
+			(cluster.Name == clusterOnly || clusterOnly == "") &&
+			(cluster.Name == openshiftConfig.APICluster || apiClusterOnly == false) {
 			if token == "" {
 				token = cluster.Token
-
 			}
 			callCount++
 			url := cluster.BooberUrl + apiEndpoint
