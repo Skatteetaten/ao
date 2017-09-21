@@ -71,10 +71,14 @@ func (deploy *DeployClass) generateJson(
 }
 
 func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, applist []string, envList []string,
-	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool, deployAll bool, force bool, deployVersion string, affiliation string) (output string, err error) {
+	persistentOptions *cmdoptions.CommonCommandOptions, localDryRun bool, deployAll bool, force bool,
+		deployVersion string, affiliation string,
+	cluster string, apiClusterOnly bool) (output string, err error) {
+
 	if affiliation != "" {
 		deploy.Configuration.OpenshiftConfig.Affiliation = affiliation
 	}
+
 	ac, err := auroraconfig.GetAuroraConfig(deploy.Configuration)
 	if err != nil {
 		return "", err
@@ -108,7 +112,7 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 		var headers map[string]string
 
 		responses, err := serverapi.CallDeployWithHeaders(headers, http.MethodPut, apiEndpoint, jsonStr, persistentOptions.Localhost, persistentOptions.Verbose,
-			deploy.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
+			deploy.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token, cluster, apiClusterOnly)
 
 		if err != nil {
 			var newline = ""

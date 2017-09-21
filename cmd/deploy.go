@@ -30,6 +30,8 @@ var deployAllFlag bool
 var forceDeployFlag bool
 var deployVersion string
 var deployAffiliation string
+var deployCluster string
+var deployApiClusterOnly bool
 
 // deployCmd represents the deploy command
 var deployCmd = &cobra.Command{
@@ -90,7 +92,7 @@ The --force flag will override this, and execute the deploy without confirmation
 			Configuration: config,
 		}
 
-		output, err := deploy.ExecuteDeploy(args, overrideJson, appList, envList, &persistentOptions, localDryRun, deployAllFlag, forceDeployFlag, deployVersion, deployAffiliation)
+		output, err := deploy.ExecuteDeploy(args, overrideJson, appList, envList, &persistentOptions, localDryRun, deployAllFlag, forceDeployFlag, deployVersion, deployAffiliation, deployCluster, deployApiClusterOnly)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())
@@ -131,5 +133,11 @@ func init() {
 
 	deployCmd.Flags().StringVarP(&deployAffiliation, "affiliation",
 		"", "", "Overrides the logged in affiliation")
+
+	deployCmd.Flags().StringVarP(&deployCluster, "cluster", "c", "",
+		"Limit deploy to given clustername")
+
+	deployCmd.Flags().BoolVarP(&deployApiClusterOnly, "api-cluster-only", "", false,
+		"Limit deploy to the API cluster")
 
 }
