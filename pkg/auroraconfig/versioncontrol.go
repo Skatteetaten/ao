@@ -11,6 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/openshift"
 	"github.com/skatteetaten/ao/pkg/serverapi"
 )
@@ -283,6 +284,11 @@ func addFilesToAuroraConfig(ac *serverapi.AuroraConfig) error {
 
 		if err != nil {
 			return errors.Wrap(err, "Could not read file "+filename)
+		}
+
+		if !jsonutil.IsLegalJson(string(file)) {
+			err = errors.New("Illegal JSON in file " + filename)
+			return err
 		}
 
 		ac.Files[filename] = file
