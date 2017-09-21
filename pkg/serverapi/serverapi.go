@@ -82,8 +82,9 @@ type ResponseItemError struct {
 	Application string `json:"application"`
 	Environment string `json:"environment"`
 	Messages    []struct {
-		Message string `json:"message"`
-		Field   struct {
+		Message  string `json:"message"`
+		FileName string `json:"fileName"`
+		Field    struct {
 			Path   string `json:"path"`
 			Value  string `json:"value"`
 			Source string `json:"source"`
@@ -221,18 +222,19 @@ func ResponsItems2MessageString(response Response) (output string, err error) {
 	if response.Message != "" {
 		output = response.Message
 	}
-
 	for item := range response.Items {
 		var responseItemError ResponseItemError
 		err = json.Unmarshal([]byte(response.Items[item]), &responseItemError)
 		if err != nil {
-			return
+			return "", err
 		}
 		output = output + "\n\t" + responseItemError.Environment + "/" + responseItemError.Application + ":"
 
 		for message := range responseItemError.Messages {
-			output = output + "\n\t\t" + responseItemError.Messages[message].Field.Path + " (" +
-				responseItemError.Messages[message].Field.Value + ") in " + responseItemError.Messages[message].Field.Source
+			if responseItemError.Messages[message].Field.Path != "" {
+				output = output + "\n\t\t" + responseItemError.Messages[message].Field.Path + " (" +
+					responseItemError.Messages[message].Field.Value + ") in " + responseItemError.Messages[message].Field.Source
+			}
 			output = output + "\n\t\t\t" + responseItemError.Messages[message].Message
 		}
 	}
@@ -397,6 +399,7 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 		apiAddress+apiEndpoint,
 		token, configuration.PersistentOptions.DryRun, configuration.PersistentOptions.Debug)
 	if err != nil {
+		response, err = ParseResponse(output)
 		return response, err
 	}
 	response, err = ParseResponse(output)

@@ -111,16 +111,33 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 			deploy.Configuration.OpenshiftConfig, persistentOptions.DryRun, persistentOptions.Debug, persistentOptions.ServerApi, persistentOptions.Token)
 
 		if err != nil {
+			var newline = ""
+			for _, response := range responses {
+				validationMessages, err := serverapi.ResponsItems2MessageString(response)
+				if err != nil {
+					return "", err
+				}
+				output += newline + validationMessages
+				newline = "\n"
+			}
 			return "", err
 		}
 
 		var newline = ""
 		for _, response := range responses {
-			applicationResults, err := auroraconfig.Response2ApplicationResults(response)
-			if err != nil {
-				return "", err
+			if !response.Success {
+				validationMessages, err := serverapi.ResponsItems2MessageString(response)
+				if err != nil {
+					return "", err
+				}
+				output += newline + validationMessages
+			} else {
+				applicationResults, err := auroraconfig.Response2ApplicationResults(response)
+				if err != nil {
+					return "", err
+				}
+				output += newline + auroraconfig.ReportApplicationResuts(applicationResults)
 			}
-			output += newline + auroraconfig.ReportApplicationResuts(applicationResults)
 			newline = "\n"
 		}
 
