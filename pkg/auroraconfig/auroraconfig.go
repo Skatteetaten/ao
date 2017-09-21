@@ -124,12 +124,16 @@ func putContent(apiEndpoint string, content string, version string, configuratio
 	response, err := serverapi.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, content, configuration)
 
 	if err != nil {
-		return "", err
+		validationMessages, err := serverapi.ResponsItems2MessageString(response)
+		if err != nil {
+			return "", err
+		}
+		return validationMessages, errors.New(InvalidConfigurationError + "\n" + validationMessages)
 	}
 
 	if !response.Success {
 		validationMessages, _ := serverapi.ResponsItems2MessageString(response)
-		return validationMessages, errors.New(InvalidConfigurationError)
+		return validationMessages, errors.New(InvalidConfigurationError + "\n" + validationMessages)
 	}
 
 	return
