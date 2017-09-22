@@ -19,7 +19,7 @@ type Request struct {
 }
 
 func CallApiWithRequest(request *Request, config *configuration.ConfigurationClass) (result Response, err error) {
-	if config.Testing || 1 == 1 {
+	if config.Testing {
 		return generateTestResponse(request.Method, request.ApiEndpoint, request.Payload)
 	} else {
 		return CallApiWithHeaders(request.Headers, request.Method, request.ApiEndpoint, request.Payload, config)
