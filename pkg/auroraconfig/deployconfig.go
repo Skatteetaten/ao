@@ -17,7 +17,7 @@ type Mount struct {
 	Type       string            `json:"type"`
 	MountName  string            `json:"mountName"`
 	VolumeName string            `json:"volumeName"`
-	Exist      string            `json:"exist"`
+	Exist      bool              `json:"exist"`
 	Content    map[string]string `json:"content"`
 }
 
