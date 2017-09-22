@@ -116,13 +116,6 @@ type PermissionsStruct struct {
 	Users  []string `json:"users,omitempty"`
 }
 
-/*type Vault struct {
-	Name        string            `json:"name"`
-	Permissions PermissionsStruct `json:"permissions,omitempty"`
-	Secrets     map[string]string `json:"secrets"`
-	Versions    map[string]string `json:"versions,omitempty"`
-}*/
-
 const apiNotInstalledResponse = "Application is not available"
 const localhostAddress = "localhost"
 const localhostPort = "8080"
@@ -177,30 +170,6 @@ func ResponseItems2AuroraConfig(response Response) (auroraConfig AuroraConfig, e
 	}
 	return
 }
-
-/*
-func ResponseItems2VaultsArray(response Response) (vaults []Vault, err error) {
-	vaults = make([]Vault, len(response.Items))
-
-	for item := range response.Items {
-		err = json.Unmarshal([]byte(response.Items[item]), &vaults[item])
-		if err != nil {
-			return
-		}
-	}
-	return
-}*/
-
-/*func ResponseItems2Vault(response Response) (vault Vault, err error) {
-
-	for item := range response.Items {
-		err = json.Unmarshal([]byte(response.Items[item]), &vault)
-		if err != nil {
-			return
-		}
-	}
-	return
-}*/
 
 func ResponseItems2Vaults(response Response) (output string, err error) {
 	var newline string = ""
@@ -322,31 +291,6 @@ func ValidateLogin(openshiftConfig *openshift.OpenshiftConfig) (output bool) {
 	return true
 }
 
-/*func CallApiShort(httpMethod string, apiEndpoint string, jsonRequestBody string, config *configuration.ConfigurationClass) (response Response, err error) {
-
-	return CallApi(httpMethod, apiEndpoint, jsonRequestBody, config)
-}*/
-
-/*
-func CallApiWithConfig(headers map[string]string, httpMethod string, apiEndpoint string, combindedJson string, configuration *configuration.ConfigurationClass) (outputMap map[string]string, err error) {
-	//return CallApiWithHeaders (headers, httpMethod, apiEndpoint, combindedJson, api,  )
-	return
-}
-*/
-
-/*
-typical call
-response, err := serverapi.CallApiWithHeaders(versionHeader, http.MethodDelete, apiEndpoint, "",
-true,
-configuration.GetPersistentOptions().Localhost,
-configuration.GetPersistentOptions().Verbose,
-configuration.OpenshiftConfig,
-configuration.GetPersistentOptions().DryRun,
-configuration.GetPersistentOptions().Debug,
-configuration.GetPersistentOptions().ServerApi,
-configuration.GetPersistentOptions().Token)
-*/
-
 func getApiClusterAddress(configuration *configuration.ConfigurationClass) (clusterAddress string, err error) {
 	for i := range configuration.OpenshiftConfig.Clusters {
 		if configuration.OpenshiftConfig.Clusters[i].Reachable {
@@ -404,44 +348,6 @@ func CallApiWithHeaders(headers map[string]string, httpMethod string, apiEndpoin
 	}
 	response, err = ParseResponse(output)
 	return response, err
-
-	/*if configuration.PersistentOptions.Localhost || configuration.OpenshiftConfig.Localhost {
-
-		apiAddress = "http://" + localhostAddress + ":" + localhostPort
-
-		output, err := callApiInstance(headers, httpMethod, combindedJson, configuration.PersistentOptions.Verbose,
-			apiAddress+apiEndpoint,
-			token, configuration.PersistentOptions.DryRun, configuration.PersistentOptions.Debug)
-		if err != nil {
-			return response, err
-		}
-		response, err = ParseResponse(output)
-	} else {
-		for i := range openshiftConfig.Clusters {
-			if configuration.OpenshiftConfig.Clusters[i].Reachable {
-				if configuration.OpenshiftConfig.Clusters[i].Name == configuration.OpenshiftConfig.APICluster {
-					if configuration.OpenshiftConfig.Clusters[i].BooberUrl == "" {
-						err = errors.New("Boober URL is not configured, please log in again")
-						return response, err
-					}
-					if token == "" {
-						token = configuration.OpenshiftConfig.Clusters[i].Token
-					}
-					output, err := callApiInstance(headers, httpMethod, combindedJson, verbose,
-						openshiftConfig.Clusters[i].BooberUrl+apiEndpoint,
-						openshiftConfig.Clusters[i].Token, dryRun, debug)
-					if err != nil {
-						return response, err
-					}
-					response, err = ParseResponse(output)
-					return response, err
-
-				}
-			}
-		}
-	}
-	err = errors.New("No reachable Boober API defined")
-	return response, err*/
 
 }
 
