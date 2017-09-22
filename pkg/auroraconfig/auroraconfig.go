@@ -78,6 +78,31 @@ func GetFileList(configuration *configuration.ConfigurationClass) (filenames []s
 	return filenames, nil
 }
 
+func GetAuroraConfigRequest(configuration *configuration.ConfigurationClass) (request *serverapi.Request) {
+	request = new(serverapi.Request)
+	request.Method = http.MethodGet
+	request.ApiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/auroraconfig"
+	return request
+}
+
+func Response2AuroraConfig(response serverapi.Response) (auroraConfig serverapi.AuroraConfig, err error) {
+
+	if !response.Success {
+		output, err := serverapi.ResponsItems2MessageString(response)
+		if err != nil {
+			return auroraConfig, err
+		}
+		err = errors.New(output)
+		return auroraConfig, err
+
+	}
+
+	auroraConfig, err = serverapi.ResponseItems2AuroraConfig(response)
+
+	return auroraConfig, nil
+
+}
+
 func GetAuroraConfig(configuration *configuration.ConfigurationClass) (auroraConfig serverapi.AuroraConfig, err error) {
 	var apiEndpoint string = "/affiliation/" + configuration.GetAffiliation() + "/auroraconfig"
 
@@ -150,15 +175,6 @@ func PutSecret(vaultname string, secretname string, secret string, version strin
 
 	encodedSecret := base64.StdEncoding.EncodeToString([]byte(secret))
 	return putContent(apiEndpoint, encodedSecret, version, configuration)
-}
-
-func PutVault(vaultname string, vault serverapi.Vault, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
-	var apiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/vault/"
-
-	content, err := json.Marshal(vault)
-
-	return putContent(apiEndpoint, string(content), version, configuration)
-
 }
 
 func deleteContent(apiEndpoint string, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {

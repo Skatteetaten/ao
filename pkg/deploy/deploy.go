@@ -238,7 +238,17 @@ func (deploy *DeployClass) validateDeploy(args []string, appList []string, envLi
 		}
 	}
 
-	err = deploy.fuzzyArgs.Init(deploy.Configuration)
+	request := auroraconfig.GetAuroraConfigRequest(deploy.Configuration)
+	response, err := serverapi.CallApiWithRequest(request, deploy.Configuration)
+	if err != nil {
+		return err
+	}
+	auroraConfig, err := auroraconfig.Response2AuroraConfig(response)
+	if err != nil {
+		return err
+	}
+
+	err = deploy.fuzzyArgs.Init(&auroraConfig)
 	if err != nil {
 		return err
 	}

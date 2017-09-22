@@ -11,6 +11,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/fuzzyargs"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 const commentString = "# "
@@ -27,7 +28,20 @@ type EditcmdClass struct {
 
 func (editcmd *EditcmdClass) FuzzyEditFile(args []string) (string, error) {
 	var fuzzyArgs fuzzyargs.FuzzyArgs
-	fuzzyArgs.Init(editcmd.Configuration)
+	request := auroraconfig.GetAuroraConfigRequest(editcmd.Configuration)
+	response, err := serverapi.CallApiWithRequest(request, editcmd.Configuration)
+	if err != nil {
+		return "", err
+	}
+	auroraConfig, err := auroraconfig.Response2AuroraConfig(response)
+	if err != nil {
+		return "", err
+	}
+
+	err = fuzzyArgs.Init(&auroraConfig)
+	if err != nil {
+		return "", err
+	}
 
 	if err := fuzzyArgs.PopulateFuzzyFile(args); err != nil {
 		return "", err

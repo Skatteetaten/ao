@@ -14,6 +14,16 @@ type ConfigurationClass struct {
 	configLocation    string
 	apiClusterIndex   int
 	apiClusterName    string
+	apiClusterUrl     string
+	Testing           bool
+}
+
+func NewTestConfiguration() (config *ConfigurationClass) {
+	config = new(ConfigurationClass)
+	config.OpenshiftConfig = new(openshift.OpenshiftConfig)
+	config.PersistentOptions = new(cmdoptions.CommonCommandOptions)
+	config.Testing = true
+	return config
 }
 
 func (configuration *ConfigurationClass) Init() error {
@@ -32,6 +42,7 @@ func (configuration *ConfigurationClass) Init() error {
 		for i := range configuration.OpenshiftConfig.Clusters {
 			if configuration.OpenshiftConfig.Clusters[i].Name == configuration.OpenshiftConfig.APICluster {
 				configuration.apiClusterIndex = i
+				configuration.apiClusterUrl = configuration.OpenshiftConfig.Clusters[i].BooberUrl
 				break
 			}
 		}
