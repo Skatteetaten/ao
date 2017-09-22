@@ -85,7 +85,7 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 	}
 	deploy.auroraConfig = &ac
 
-	err = deploy.validateDeploy(args, applist, envList, deployAll, force)
+	err = deploy.validateDeploy(args, applist, envList, deployAll, force, &ac)
 	if err != nil {
 		return "", err
 	}
@@ -135,14 +135,19 @@ func (deploy *DeployClass) ExecuteDeploy(args []string, overrideJsons []string, 
 					return "", err
 				}
 				output += newline + validationMessages
+				newline = "\n"
 			} else {
 				applicationResults, err := auroraconfig.Response2ApplicationResults(response)
 				if err != nil {
 					return "", err
 				}
-				output += newline + auroraconfig.ReportApplicationResuts(applicationResults)
+				line := auroraconfig.ReportApplicationResuts(applicationResults)
+				if line != "" {
+					output += newline + auroraconfig.ReportApplicationResuts(applicationResults)
+					newline = "\n"
+				}
 			}
-			newline = "\n"
+
 		}
 
 	}
@@ -227,7 +232,7 @@ func (deploy *DeployClass) populateAllEnvForApp(app string) (err error) {
 	return
 }
 
-func (deploy *DeployClass) validateDeploy(args []string, appList []string, envList []string, deployAll bool, force bool) (err error) {
+func (deploy *DeployClass) validateDeploy(args []string, appList []string, envList []string, deployAll bool, force bool, auroraConfig *serverapi.AuroraConfig) (err error) {
 	// We will accept a mixed list of apps, envs and env/app strings and parse them
 	// Empty list is illegal
 
@@ -238,17 +243,7 @@ func (deploy *DeployClass) validateDeploy(args []string, appList []string, envLi
 		}
 	}
 
-	request := auroraconfig.GetAuroraConfigRequest(deploy.Configuration)
-	response, err := serverapi.CallApiWithRequest(request, deploy.Configuration)
-	if err != nil {
-		return err
-	}
-	auroraConfig, err := auroraconfig.Response2AuroraConfig(response)
-	if err != nil {
-		return err
-	}
-
-	err = deploy.fuzzyArgs.Init(&auroraConfig)
+	err = deploy.fuzzyArgs.Init(auroraConfig)
 	if err != nil {
 		return err
 	}

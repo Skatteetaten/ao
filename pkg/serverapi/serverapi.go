@@ -382,13 +382,14 @@ func CallDeployWithHeaders(headers map[string]string, httpMethod string, apiEndp
 		if cluster.Reachable && cluster.BooberUrl != "" &&
 			(cluster.Name == clusterOnly || clusterOnly == "") &&
 			(cluster.Name == openshiftConfig.APICluster || apiClusterOnly == false) {
-			if token == "" {
-				token = cluster.Token
+			instanceToken := token
+			if instanceToken == "" {
+				instanceToken = cluster.Token
 			}
 			callCount++
 			url := cluster.BooberUrl + apiEndpoint
 			go func() {
-				output, err := callApiInstance(headers, httpMethod, combindedJson, verbose, url, token, dryRun, debug)
+				output, err := callApiInstance(headers, httpMethod, combindedJson, verbose, url, instanceToken, dryRun, debug)
 				if err != nil && verbose {
 					fmt.Println(err)
 				}
@@ -431,7 +432,7 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 		} else {
 			infoString = "Getting config from"
 		}
-		fmt.Print(infoString + " Boober at " + url + "... ")
+		fmt.Println(infoString + " Boober at " + url + "... ")
 	}
 
 	if debug {
@@ -519,10 +520,6 @@ func callApiInstance(headers map[string]string, httpMethod string, combindedJson
 			fmt.Println(errorstring)
 		}
 		return makeResponse(errorstring, false)
-	}
-
-	if verbose {
-		fmt.Println("OK")
 	}
 
 	return
