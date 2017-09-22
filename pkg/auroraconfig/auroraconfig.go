@@ -173,7 +173,6 @@ func PutSecret(vaultname string, secretname string, secret string, version strin
 	return putContent(apiEndpoint, encodedSecret, version, configuration)
 }
 
-
 func deleteContent(apiEndpoint string, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
 
 	var versionHeader = make(map[string]string)

@@ -37,7 +37,7 @@ func generateTestResponse(method string, apiEndpoint string, Payload string) (re
 		return result, err
 	}
 
-	result.Items = make ([]json.RawMessage, 1)
+	result.Items = make([]json.RawMessage, 1)
 	result.Items[0] = json.RawMessage(content)
 	result.Success = true
 	result.Count = 1
