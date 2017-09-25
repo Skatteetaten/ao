@@ -20,6 +20,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
+const rollingDeploymentStrategy = "rolling"
 const UsageString = "Usage: new-app <appname>"
 const AppnameNeeded = "Missing appname parameter "
 const MissingArgumentFormat = "Missing %v"
@@ -60,16 +61,16 @@ type Route struct {
 type AuroraConfig map[string]AuroraConfigPayload
 
 type AuroraConfigPayload struct {
-	GroupId    string `json:"groupId,omitempty"`
-	ArtifactId string `json:"artifactId,omitempty"`
-	Name       string `json:"name,omitempty"`
-	Version    string `json:"version,omitempty"`
-	Replicas   string `json:"replicas,omitempty"`
-	Flags      struct {
-		Rolling bool `json:"rolling,omitempty"`
-		Cert    bool `json:"cert,omitempty"`
-	} `json:"flags,omitempty"`
-	Route    map[string]Route  `json:"route,omitempty"`
+	GroupId        string `json:"groupId,omitempty"`
+	ArtifactId     string `json:"artifactId,omitempty"`
+	Name           string `json:"name,omitempty"`
+	Version        string `json:"version,omitempty"`
+	Replicas       string `json:"replicas,omitempty"`
+	Certificate    bool   `json:"certificate,omitempty"`
+	DeployStrategy struct {
+		Type string `json:"type,omitempty"`
+	} `json:"deployStrategy,omitempty"`
+	Route    bool              `json:"route,omitempty"`
 	Type     string            `json:"type,omitempty"`
 	Cluster  string            `json:"cluster,omitempty"`
 	Database map[string]string `json:"database,omitempty"`
@@ -133,12 +134,9 @@ func (newappcmd *NewappcmdClass) generateApp(appname string, groupid string) (pa
 	payload.Name = appname
 	payload.Version = "1"
 	payload.Replicas = "1"
-	payload.Flags.Rolling = true
-	payload.Flags.Cert = true
-	payload.Route = make(map[string]Route)
-
-	var route Route
-	payload.Route[appname] = route
+	payload.DeployStrategy.Type = rollingDeploymentStrategy
+	payload.Certificate = true
+	payload.Route = true
 
 	return payload, filename
 }
@@ -219,21 +217,6 @@ func (newappcmd *NewappcmdClass) executeDeploy(foldername string) (err error) {
 
 	return
 }
-
-/*
-"packageName": "no.skatteetaten.aurora.demo",
-"description": "",
-"oracle": false,
-"spock": true,
-"controllerExample": true,
-"maintainer": "HaakonKlausen <hakon.klausen@skatteetaten.no>",
-"namespace": "haakonklausen",
-"kafkaSink": true,
-"kafkaSource": false,
-"reactive": false,
-"baseName": "foobar",
-"affiliation": "paas"
-*/
 
 func (newappcmd *NewappcmdClass) printGeneratorValues(gv *GeneratorAuroraOpenshift) (err error) {
 	fmt.Println("Generating config for application " + gv.GeneratorAuroraOpenshift.Affiliation + "-" +
