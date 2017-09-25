@@ -22,6 +22,13 @@ type ClientConfigResponse struct {
 	Count   int            `json:"count"`
 }
 
+func GetClientConfigRequest(configuration *configuration.ConfigurationClass) (request *serverapi.Request) {
+	request = new(serverapi.Request)
+	request.Method = http.MethodGet
+	request.ApiEndpoint = "/clientconfig/"
+	return request
+}
+
 func response2ClientConfig(response serverapi.Response) (clientConfig *ClientConfig, err error) {
 	clientConfig = new(ClientConfig)
 	if len(response.Items) != 1 {
@@ -33,8 +40,10 @@ func response2ClientConfig(response serverapi.Response) (clientConfig *ClientCon
 }
 
 func GetClientConfig(config *configuration.ConfigurationClass) (clientConfig *ClientConfig, err error) {
+	request := GetClientConfigRequest(config)
 
-	response, err := serverapi.CallApi(http.MethodGet, "/clientconfig/", "", config)
+	response, err := serverapi.CallApiWithRequest(request, config)
+	//response, err := serverapi.CallApi(http.MethodGet, "/clientconfig/", "", config)
 	if err != nil {
 		return clientConfig, nil
 	}
