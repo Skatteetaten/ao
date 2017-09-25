@@ -93,6 +93,11 @@ func (fuzzyArgs *FuzzyArgs) GetFuzzyApp(arg string) (app string, err error) {
 func (fuzzyArgs *FuzzyArgs) GetFuzzyDeploy(env string, arg string) (app string, err error) {
 	for i := range fuzzyArgs.LegalDeployList {
 		if fuzzyArgs.LegalDeployList[i].EnvName == env {
+			// First check for exact math
+			if fuzzyArgs.LegalDeployList[i].AppName == arg {
+				app = arg
+				return app, nil
+			}
 			if strings.Contains(fuzzyArgs.LegalDeployList[i].AppName, arg) {
 				if app != "" {
 					err = errors.New(arg + ": Not a unique application identifier, matching " + app + " and " + fuzzyArgs.LegalDeployList[i].AppName)
