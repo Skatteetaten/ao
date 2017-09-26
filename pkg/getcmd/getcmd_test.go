@@ -5,8 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"fmt"
-
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fuzzyargs"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
@@ -57,13 +55,12 @@ func TestApps(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error in Apps: %v", err.Error())
 	}
-	if len(apps) != 4 {
-		t.Errorf("No apps found: %v", len(apps))
-		for i := range apps {
-			fmt.Println(apps[i])
-		}
+	if len(apps) < 5 {
+		t.Errorf("No apps found: %v", apps)
 	}
-	// TODO: More tests after test data is available
+	if !strings.Contains(apps, "console") {
+		t.Errorf("Console not in list %v: ", apps)
+	}
 }
 
 func TestFormatAppList(t *testing.T) {
@@ -81,11 +78,16 @@ func TestEnvs(t *testing.T) {
 	var getcmd *GetcmdClass
 	getcmd = new(GetcmdClass)
 	getcmd.Configuration = configuration.NewTestConfiguration()
-	_, err := getcmd.Envs()
+	envs, err := getcmd.Envs()
 	if err != nil {
 		t.Errorf("Error in Envs: %v", err.Error())
 	}
-	// TODO: More tests after test data is available
+	if len(envs) < 5 {
+		t.Errorf("No envs found: %v", envs)
+	}
+	if !strings.Contains(envs, "event") {
+		t.Errorf("event not in list")
+	}
 }
 
 func TestFormatEnvList(t *testing.T) {
@@ -103,11 +105,16 @@ func TestFiles(t *testing.T) {
 	var getcmd *GetcmdClass
 	getcmd = new(GetcmdClass)
 	getcmd.Configuration = configuration.NewTestConfiguration()
-	_, err := getcmd.Files()
+	files, err := getcmd.Files()
 	if err != nil {
 		t.Errorf("Error in Files: %v", err.Error())
 	}
-	// TODO: More tests after test data is available
+	if len(files) < 10 {
+		t.Errorf("No files found: %v", files)
+	}
+	if !strings.Contains(files, "console.json") {
+		t.Errorf("Missing file console.json: %v", files)
+	}
 }
 
 func TestFormatFileList(t *testing.T) {
@@ -155,7 +162,14 @@ func TestFile(t *testing.T) {
 	if err == nil {
 		t.Errorf("Illegal file did not return err")
 	}
-	// TODO: More tests after test data is available
+	args[0] = "console.json"
+	file, err := getcmd.File(args)
+	if err != nil {
+		t.Errorf("Legal file did return err: %v", err.Error())
+	}
+	if !strings.Contains(file, "aurora.console") {
+		t.Errorf("Illegal file content: missing aurora.console: %v", file)
+	}
 }
 
 func TestClusters(t *testing.T) {
