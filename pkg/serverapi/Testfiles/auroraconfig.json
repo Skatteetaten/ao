@@ -1,7 +1,3 @@
-{
-  "success": true,
-  "message": "OK",
-  "items": [
     {
       "files": {
         "espen-dev-qa/console.json": {
@@ -676,6 +672,3 @@
         "jz.json": "7440254"
       }
     }
-  ],
-  "count": 1
-}

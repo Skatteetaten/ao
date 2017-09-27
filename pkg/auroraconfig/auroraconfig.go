@@ -14,11 +14,7 @@ import (
 
 const InvalidConfigurationError = "Invalid configuration"
 
-func GetContent(filename string, configuration *configuration.ConfigurationClass) (content string, version string, err error) {
-	auroraConfig, err := GetAuroraConfig(configuration)
-	if err != nil {
-		return
-	}
+func GetContent(filename string, auroraConfig *serverapi.AuroraConfig) (content string, version string, err error) {
 	var fileFound bool = false
 
 	_, fileFound = auroraConfig.Files[filename]

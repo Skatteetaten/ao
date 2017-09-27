@@ -1,0 +1,18 @@
+{
+  "name": "potus",
+  "permissions": {
+    "groups": [
+      "testgroup"
+    ],
+    "users": [
+      "testuser"
+    ]
+  },
+  "secrets": {
+    "potus.properties": "VmVrdDoxMjAKSVE6MjAK"
+  },
+  "versions": {
+    ".permissions": "857b982",
+    "potus.properties": "f388147"
+  }
+}

@@ -2,6 +2,7 @@ package editcmd
 
 import (
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 func (editcmd *EditcmdClass) EditFile(filename string) (output string, err error) {
@@ -9,7 +10,16 @@ func (editcmd *EditcmdClass) EditFile(filename string) (output string, err error
 	var content string
 	var version string
 
-	content, version, err = auroraconfig.GetContent(filename, editcmd.Configuration)
+	request := auroraconfig.GetAuroraConfigRequest(editcmd.Configuration)
+	response, err := serverapi.CallApiWithRequest(request, editcmd.Configuration)
+	if err != nil {
+		return "", err
+	}
+	auroraConfig, err := auroraconfig.Response2AuroraConfig(response)
+	if err != nil {
+		return "", err
+	}
+	content, version, err = auroraconfig.GetContent(filename, &auroraConfig)
 	if err != nil {
 		return "", err
 	}

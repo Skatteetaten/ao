@@ -49,6 +49,8 @@ func generateTestResponse(method string, apiEndpoint string, Payload string) (re
 func getTestFileName(ApiEndpoint string) (testFileName string, err error) {
 	if strings.Contains(ApiEndpoint, "auroraconfig") {
 		testFileName = "../serverapi/Testfiles/auroraconfig.json"
+	} else if strings.Contains(ApiEndpoint, "/clientconfig") {
+		testFileName = "../serverapi/Testfiles/clientconfig.json"
 	} else if strings.Contains(ApiEndpoint, "vault") {
 		testFileName = "../serverapi/Testfiles/vault.json"
 	} else {

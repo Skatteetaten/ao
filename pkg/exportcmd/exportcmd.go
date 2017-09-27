@@ -2,10 +2,12 @@ package exportcmd
 
 import (
 	"errors"
+
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 const UsageString = "Usage: export files | file [env/]<filename> | vaults | adc"
@@ -57,7 +59,16 @@ func (exportObj *ExportcmdClass) exportFile(filename string, persistentOptions *
 	switch outputFormat {
 	case "json":
 		{
-			content, _, err := auroraconfig.GetContent(filename, exportObj.Configuration)
+			request := auroraconfig.GetAuroraConfigRequest(exportObj.Configuration)
+			response, err := serverapi.CallApiWithRequest(request, exportObj.Configuration)
+			if err != nil {
+				return "", err
+			}
+			auroraConfig, err := auroraconfig.Response2AuroraConfig(response)
+			if err != nil {
+				return "", err
+			}
+			content, _, err := auroraconfig.GetContent(filename, &auroraConfig)
 			if err != nil {
 				return "", err
 			}

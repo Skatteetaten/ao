@@ -85,7 +85,6 @@ func (getcmd *GetcmdClass) Apps() (output string, err error) {
 	if err != nil {
 		return "", err
 	}
-
 	err = fuzzyArgs.Init(&auroraConfig)
 	if err != nil {
 		return "", err
@@ -225,7 +224,7 @@ func (getcmd *GetcmdClass) File(args []string) (string, error) {
 		return "", err
 	}
 
-	content, _, err := auroraconfig.GetContent(filename, getcmd.Configuration)
+	content, _, err := auroraconfig.GetContent(filename, &auroraConfig)
 	if err != nil {
 		return "", err
 	}
