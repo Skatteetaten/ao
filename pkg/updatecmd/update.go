@@ -8,11 +8,13 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/executil"
 	"github.com/skatteetaten/ao/pkg/versionutil"
 )
 
 const ao5Url = "http://ao-update-service-paas-ao-update.utv.paas.skead.no"
+const ao5UrlTest = "http://ao-update-service-paas-ao-update.test.paas.skead.no"
 
 func InstallAuroraOpenshiftGenerator() (err error) {
 	const gitExec = "git"
@@ -51,9 +53,22 @@ func InstallAuroraOpenshiftGenerator() (err error) {
 
 func UpdateSelf(args []string, simulate bool, forceVersion string, forceUpdate bool) (output string, err error) {
 	var releaseVersion string
+	var url string
+
+	var config configuration.ConfigurationClass
+	err = config.Init()
+	if err != nil {
+		return "", err
+	}
+	cluster := config.GetApiClusterName()
+	if cluster == "utv" {
+		url = ao5Url
+	} else {
+		url = ao5UrlTest
+	}
 
 	if forceVersion == "" {
-		releaseVersion, err = getReleaseVersion()
+		releaseVersion, err = getReleaseVersion(url)
 		if err != nil {
 			return "", errors.New("Update server unreachable: " + err.Error())
 		}
@@ -66,7 +81,7 @@ func UpdateSelf(args []string, simulate bool, forceVersion string, forceUpdate b
 	if myVersion != releaseVersion || forceUpdate {
 		output += "New version detected: Current version: " + myVersion + ".  Available version: " + releaseVersion
 		if !simulate {
-			err = doUpdate(releaseVersion)
+			err = doUpdate(url, releaseVersion)
 			if err != nil {
 				return
 			}
@@ -79,9 +94,9 @@ func UpdateSelf(args []string, simulate bool, forceVersion string, forceUpdate b
 	return
 }
 
-func doUpdate(version string) (err error) {
+func doUpdate(url string, version string) (err error) {
 	releaseFilename := "ao_" + version
-	releaseUrl := ao5Url + "/" + releaseFilename
+	releaseUrl := url + "/" + releaseFilename
 
 	executablePath, err := os.Executable()
 	if err != nil {
@@ -101,8 +116,8 @@ func doUpdate(version string) (err error) {
 	return
 }
 
-func getReleaseVersion() (version string, err error) {
-	releaseinfoUrl := ao5Url + "/releaseinfo.json"
+func getReleaseVersion(url string) (version string, err error) {
+	releaseinfoUrl := url + "/releaseinfo.json"
 	releaseinfo, err := getFile(releaseinfoUrl)
 	if err != nil {
 		return
@@ -129,7 +144,6 @@ func getFile(url string) (file []byte, err error) {
 	req.Header.Set("Content-Type", "application/octet-stream")
 
 	client := &http.Client{}
-
 	resp, err := client.Do(req)
 	if err != nil {
 
