@@ -28,15 +28,20 @@ fi
 #
 # Set nodename on OpenShift node used to populate the PV
 #
+
 case $env in
   "utv")
     openshiftnode=uil0paas-utv-node01
+    aorelease=/home/$USER/go/src/github.com/skatteetaten/ao/bin/amd64/ao
+    cp $aorelease /home/$USER/nettverksdisker/hjemmeomrade/ao-release/
     ;;
   "test")
     openshiftnode=tsl0paas-test-node01
+    aorelease=/home/$USER/nettverksdisker/hjemmeomrade/ao-release/
     ;;
   "prod")
     openshiftnode=psl0paas-prod-node01
+    aorelease=/home/$USER/nettverksdisker/hjemmeomrade/ao-release/
     ;;
 esac
 if [ -z $openshiftnode ]; then
@@ -51,7 +56,6 @@ openshiftpvbasedir=/shared/pv/recyclable
 # Related constants
 #
 pvcname=ao-update-htdocs
-aocrelease=/home/$USER/go/src/github.com/skatteetaten/ao/bin/amd64/ao
 releaseinfo=releaseinfo.json
 tmpreleaseinfo=/tmp/$releaseinfo
 remotedir=uil0paas-utv-node01:/home/$USER/ao-v5
@@ -82,13 +86,13 @@ fi
 #
 # Get filename and releaseinfo
 #
-filename=$($aocrelease version -o filename)
-$aocrelease version -o json >$tmpreleaseinfo
+filename=$($aorelease version -o filename)
+$aorelease version -o json >$tmpreleaseinfo
 #
 # Copy files to temporary folder on OpenShift node
 #
 ssh $openshiftnode "mkdir -p ~/ao-v5"
-scp $aocrelease $remotedir/ao
+scp $aorelease $remotedir/ao
 scp $tmpreleaseinfo $remotedir/$releaseinfo
 #
 # Copy the files to the actual volume
