@@ -58,7 +58,7 @@ openshiftpvbasedir=/shared/pv/recyclable
 pvcname=ao-update-htdocs
 releaseinfo=releaseinfo.json
 tmpreleaseinfo=/tmp/$releaseinfo
-remotedir=uil0paas-utv-node01:/home/$USER/ao-v5
+remotedir=$openshiftnode:/home/$USER/ao-v5
 #
 # Check for valid oc login
 #
