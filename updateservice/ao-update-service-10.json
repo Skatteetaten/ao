@@ -88,7 +88,7 @@
                         "containers": [
                             {
                                 "name": "ao-update-service-10",
-                                "image": "getwarped/s2i-httpd-server",
+                                "image": "s2i-httpd-server",
                                 "ports": [
                                     {
                                         "containerPort": 8080,
@@ -194,7 +194,7 @@
                         "containers": [
                             {
                                 "name": "ao-update-service-10",
-                                "image": "getwarped/s2i-httpd-server",
+                                "image": "s2i-httpd-server",
                                 "ports": [
                                     {
                                         "containerPort": 8080,

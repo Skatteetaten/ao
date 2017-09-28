@@ -14,7 +14,13 @@
 #
 # Check parameters
 #
-pv=$1
+env=$1
+if [ -z $env ]; then
+  echo "ERROR: Missing environment, please specify utv, test or prod"
+  exit -1
+fi
+
+pv=$2
 if [ -z $pv ]; then
   echo "ERROR: Missing Volume name"
   exit -1
@@ -22,7 +28,23 @@ fi
 #
 # Set nodename on OpenShift node used to populate the PV
 #
-openshiftnode=uil0paas-utv-node01
+case $env in
+  "utv")
+    openshiftnode=uil0paas-utv-node01
+    ;;
+  "test")
+    openshiftnode=tsl0paas-utv-node01
+    ;;
+  "prod")
+    openshiftnode=psl0paas-utv-node01
+    ;;
+esac
+if [ -z $openshiftnode ]; then
+  echo "ERROR: Illegal environment, please specify utv, test or prod"
+  exit -1
+fi
+
+echo "Using OpenShift node $openshiftnode"
 openshiftproject=paas-ao-update
 openshiftpvbasedir=/shared/pv/recyclable
 #
