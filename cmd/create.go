@@ -9,7 +9,7 @@ import (
 
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create a vault",
+	Short: "Create a resource",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Usage()
 	},
@@ -42,4 +42,5 @@ func init() {
 	createVaultCmd.Flags().StringVarP(&vaultFolder, "folder", "f", "", "Creates a vault from a set of secret files")
 	createVaultCmd.Flags().StringVarP(&vaultAddUser, "user", "u", "", "Adds a permission for the given user")
 	createVaultCmd.Flags().StringVarP(&vaultAddGroup, "group", "g", "", "Adds a permission for the given group")
+	createCmd.Hidden = true
 }
