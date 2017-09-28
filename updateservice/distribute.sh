@@ -33,10 +33,10 @@ case $env in
     openshiftnode=uil0paas-utv-node01
     ;;
   "test")
-    openshiftnode=tsl0paas-utv-node01
+    openshiftnode=tsl0paas-test-node01
     ;;
   "prod")
-    openshiftnode=psl0paas-utv-node01
+    openshiftnode=psl0paas-prod-node01
     ;;
 esac
 if [ -z $openshiftnode ]; then
