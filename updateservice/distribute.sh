@@ -28,20 +28,20 @@ fi
 #
 # Set nodename on OpenShift node used to populate the PV
 #
-distlocation=/home/$USER/nettverksdisker/programvare/Utvikling/ao/
+distlocation=/home/$USER/nettverksdisker/programvare/Utvikling/ao
 case $env in
   "utv")
     openshiftnode=uil0paas-utv-node01
     aorelease=/home/$USER/go/src/github.com/skatteetaten/ao/bin/amd64/ao
-    cp $aorelease $distlocation
+    cp $aorelease $distlocation/
     ;;
   "test")
     openshiftnode=tsl0paas-test-node01
-    aorelease=$distlocation
+    aorelease=$distlocation/ao
     ;;
   "prod")
     openshiftnode=psl0paas-prod-node01
-    aorelease=$distlocation
+    aorelease=$distlocation/ao
     ;;
 esac
 if [ -z $openshiftnode ]; then
