@@ -1,5 +1,36 @@
     {
       "files": {
+        "imp.json": {
+          "resources": {
+            "memory": {
+              "max": "512Mi"
+            }
+          }
+        },
+        "utv0/afs-import.json": {
+          "secretVault": "xyz"
+        },
+        "utv0/about.json": {
+          "cluster": "utv",
+          "version": "dev-SNAPSHOT"
+        },
+        "utv0/imp.json": {
+          "secretVault": "utv0-afs"
+        },
+        "about.json": {
+          "schemaVersion": "v1",
+          "route": true,
+          "certificate": true,
+          "type": "deploy"
+        },
+        "afs-import.json": {
+          "version": "1.0.2",
+          "resources": {
+            "memory": {
+              "max": "512Mi"
+            }
+          }
+        },
         "espen-dev-qa/console.json": {
           "type": "development",
           "groupId": "ske.openshift.aurora.console",
