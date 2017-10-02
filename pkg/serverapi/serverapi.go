@@ -200,12 +200,15 @@ func ResponsItems2MessageString(response Response) (output string, err error) {
 		if err != nil {
 			return "", err
 		}
-		output = output + "\n\t" + responseItemError.Environment + "/" + responseItemError.Application + ":"
+		output = output + "\n\t Env/App: " + responseItemError.Environment + "/" + responseItemError.Application + ":"
 
 		for message := range responseItemError.Messages {
 			if responseItemError.Messages[message].Field.Path != "" {
 				output = output + "\n\t\t" + responseItemError.Messages[message].Field.Path + " (" +
 					responseItemError.Messages[message].Field.Value + ") in " + responseItemError.Messages[message].Field.Source
+			}
+			if responseItemError.Messages[message].FileName != "" {
+				output = output + "\n\t\t File: " + responseItemError.Messages[message].FileName
 			}
 			output = output + "\n\t\t\t" + responseItemError.Messages[message].Message
 		}
