@@ -298,3 +298,7 @@ func (deploy *DeployClass) validateDeploy(args []string, appList []string, envLi
 
 	return
 }
+
+func testRunner() {
+	return
+}

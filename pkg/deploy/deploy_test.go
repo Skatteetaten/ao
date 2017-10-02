@@ -2,6 +2,6 @@ package deploy
 
 import "testing"
 
-func TestExecuteDeploy(t *testing.T) {
-
+func TestTestRunner(t *testing.T) {
+	testRunner()
 }
