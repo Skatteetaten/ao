@@ -44,7 +44,6 @@ type LegalDeployStruct struct {
 }
 
 type FuzzyArgs struct {
-	//configuration   *configuration.ConfigurationClass
 	appList         []string
 	envList         []string
 	filename        string
@@ -56,7 +55,6 @@ type FuzzyArgs struct {
 
 // ** Initialize **
 func (fuzzyArgs *FuzzyArgs) Init(auroraConfig *serverapi.AuroraConfig) (err error) {
-	//fuzzyArgs.configuration = configuration
 	err = fuzzyArgs.getLegalEnvAppFileList(auroraConfig)
 	if err != nil {
 		return err
@@ -221,13 +219,17 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyFile(args []string) (err error) {
 		}
 		if !foundFile {
 			for i := range fuzzyArgs.LegalFileList {
-				if strings.Contains(fuzzyArgs.LegalFileList[i], env+"/"+args[1]) {
-					if foundFile {
-						err = errors.New("Duplicate file spec found: " + args[1] + " matching both " + fuzzyArgs.filename + " and " + fuzzyArgs.LegalFileList[i])
-						return err
+				if strings.Contains(fuzzyArgs.LegalFileList[i], "/") {
+					legalParts := strings.Split(fuzzyArgs.LegalFileList[i], "/")
+
+					if strings.Contains(legalParts[1], args[1]) {
+						if foundFile {
+							err = errors.New("Duplicate file spec found: " + args[1] + " matching both " + fuzzyArgs.filename + " and " + fuzzyArgs.LegalFileList[i])
+							return err
+						}
+						foundFile = true
+						fuzzyArgs.filename = fuzzyArgs.LegalFileList[i]
 					}
-					foundFile = true
-					fuzzyArgs.filename = fuzzyArgs.LegalFileList[i]
 				}
 			}
 		}
