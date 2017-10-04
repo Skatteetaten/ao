@@ -29,7 +29,9 @@ var checkoutCmd = &cobra.Command{
 			path = fmt.Sprintf("%s/%s", wd, affiliation)
 		}
 
-		url := getGitUrl(affiliation, userName)
+		user, _ := cmd.LocalFlags().GetString("user")
+
+		url := getGitUrl(affiliation, user)
 
 		fmt.Printf("Cloning AuroraConfig for affiliation %s\n", affiliation)
 		fmt.Printf("From: %s\n\n", url)
