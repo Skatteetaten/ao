@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 const SpecIllegal = -1
@@ -88,15 +89,25 @@ func ValidateFileFolderArg(args []string) (error error) {
 func EditFile(filename string) (err error) {
 	const vi = "vim"
 	var editor = os.Getenv("EDITOR")
+	var editorParts []string
 	if editor == "" {
 		editor = vi
 	}
-	path, err := exec.LookPath(editor)
+	editorParts = strings.Split(editor, " ")
+	editorPath := editorParts[0]
+
+	path, err := exec.LookPath(editorPath)
 	if err != nil {
-		return errors.New("ERROR: Editor \"" + editor + "\" specified in environment variable $EDITOR is not a valid program")
+		return errors.New("ERROR: Editor \"" + editorPath + "\" specified in environment variable $EDITOR is not a valid program")
 	}
 
-	cmd := exec.Command(path, filename)
+	editorParts[0] = path
+
+	var cmd *exec.Cmd
+	cmd = new(exec.Cmd)
+	cmd.Path = path
+	cmd.Args = append(editorParts, filename)
+
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

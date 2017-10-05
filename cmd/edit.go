@@ -31,7 +31,9 @@ will edit this file, if there is no other file matching the same shortening.`,
 		}
 
 		if output, err := editcmdObject.FuzzyEditFile(args); err == nil {
-			fmt.Println(output)
+			if output != "" {
+				fmt.Println(output)
+			}
 			auroraconfig.UpdateLocalRepository(config.GetAffiliation(), aoConfig)
 		} else {
 			fmt.Println(err)
@@ -58,7 +60,9 @@ will edit this file, if there is no other file matching the same shortening.`,
 		}
 
 		if output, err := editcmdObject.FuzzyEditFile(args); err == nil {
-			fmt.Println(output)
+			if output != "" {
+				fmt.Println(output)
+			}
 			auroraconfig.UpdateLocalRepository(config.GetAffiliation(), aoConfig)
 		} else {
 			fmt.Println(err)
