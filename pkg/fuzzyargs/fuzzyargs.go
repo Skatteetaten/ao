@@ -162,6 +162,16 @@ func (fuzzyArgs *FuzzyArgs) PopulateFuzzyFile(args []string) (err error) {
 			return fuzzyArgs.PopulateFuzzyFile(parts)
 		}
 		// This should be a root file, search through the root file list
+
+		// Firch check for exact match
+		for i := range fuzzyArgs.LegalFileList {
+			if !strings.Contains(fuzzyArgs.LegalFileList[i], "/") {
+				if fuzzyArgs.LegalFileList[i] == args[0] {
+					fuzzyArgs.filename = fuzzyArgs.LegalFileList[i]
+					return nil
+				}
+			}
+		}
 		var found bool = false
 		for i := range fuzzyArgs.LegalFileList {
 			if !strings.Contains(fuzzyArgs.LegalFileList[i], "/") {
