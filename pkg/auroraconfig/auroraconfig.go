@@ -10,6 +10,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/serverapi"
+	"fmt"
 )
 
 const InvalidConfigurationError = "Invalid configuration"
@@ -97,6 +98,55 @@ func Response2AuroraConfig(response serverapi.Response) (auroraConfig serverapi.
 
 	return auroraConfig, nil
 
+}
+
+func ValidateAuroraConfig(auroraConfig *serverapi.AuroraConfig, config *configuration.ConfigurationClass) error {
+	payload, err := json.Marshal(auroraConfig)
+	if err != nil {
+		return err
+	}
+
+	printedFiles := make(map[string]bool)
+
+	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/validate", config.GetAffiliation())
+	response, err := serverapi.CallApi(http.MethodPut, endpoint, string(payload), config)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(response.Message)
+	if !response.Success {
+		for _, item := range response.Items {
+			var res serverapi.ResponseItemError
+			json.Unmarshal(item, &res)
+			printValidationError(&res, printedFiles)
+		}
+	}
+
+	return nil
+}
+
+func printValidationError(res *serverapi.ResponseItemError, printedFiles map[string]bool) {
+	errFormat := `
+Filename: %s
+Path:     %s
+Value:    %s
+Message:  %s
+`
+
+	for _, message := range res.Messages {
+		key := message.Field.Source + "|" + message.Field.Path
+		if printedFiles[key] {
+			continue
+		}
+		fmt.Printf(errFormat,
+			message.Field.Source,
+			message.Field.Path,
+			message.Field.Value,
+			message.Message,
+		)
+		printedFiles[key] = true
+	}
 }
 
 func GetAuroraConfig(configuration *configuration.ConfigurationClass) (auroraConfig serverapi.AuroraConfig, err error) {
