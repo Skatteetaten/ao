@@ -21,16 +21,24 @@ const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
 // TODO: Add debug
 func GitCommand(args ...string) (string, error) {
 	command := exec.Command("git", args...)
+
 	cmdReader, err := command.StdoutPipe()
+	cmdErrReader, err := command.StderrPipe()
 	if err != nil {
 		return "", err
 	}
 
 	scanner := bufio.NewScanner(cmdReader)
+	errScanner := bufio.NewScanner(cmdErrReader)
 
 	err = command.Start()
 	if err != nil {
 		return "", errors.Wrap(err, "Failed to start git command")
+	}
+
+	errMessage := ""
+	for errScanner.Scan() {
+		errMessage = fmt.Sprintf("%s%s", errMessage, errScanner.Text())
 	}
 
 	message := ""
@@ -40,10 +48,7 @@ func GitCommand(args ...string) (string, error) {
 
 	err = command.Wait()
 	if err != nil {
-		if message != "" {
-			return "", errors.New(message)
-		}
-		return "", errors.Wrap(err, "Failed to wait for git command")
+		return "", errors.New(errMessage)
 	}
 
 	return message, nil
@@ -126,7 +131,7 @@ func Save(url string, config *configuration.ConfigurationClass) (string, error) 
 }
 
 func isCleanRepo() bool {
-	_, err := GitCommand("log")
+	_, err := GitCommand("log", "-1")
 	if err != nil {
 		return true
 	}
