@@ -141,9 +141,7 @@ func Validate(config *configuration.ConfigurationClass) (error) {
 		return err
 	}
 
-	ValidateAuroraConfig(auroraConfig, config)
-
-	return nil
+	return ValidateAuroraConfig(auroraConfig, config)
 }
 
 
