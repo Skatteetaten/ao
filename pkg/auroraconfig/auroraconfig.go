@@ -165,7 +165,7 @@ Message:     %s
 `
 	missingFieldFormat := `
 Application: %s/%s
-Path:        %s
+Path:        %s (Missing)
 Message:     %s
 `
 
@@ -194,13 +194,13 @@ Message:     %s
 		switch message.Type {
 		case "ILLEGAL":
 			{
-				validationError := fmt.Sprintf(illegalFieldFormat,
+				illegal := fmt.Sprintf(illegalFieldFormat,
 					message.Field.Source,
 					message.Field.Path,
 					message.Field.Value,
 					message.Message,
 				)
-				v.IllegalFieldErrors = append(v.IllegalFieldErrors, validationError)
+				v.IllegalFieldErrors = append(v.IllegalFieldErrors, illegal)
 			}
 
 		case "INVALID":
