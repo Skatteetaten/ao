@@ -11,6 +11,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/serverapi"
 	"fmt"
+	"strings"
 )
 
 const InvalidConfigurationError = "Invalid configuration"
@@ -106,46 +107,123 @@ func ValidateAuroraConfig(auroraConfig *serverapi.AuroraConfig, config *configur
 		return err
 	}
 
-	printedFiles := make(map[string]bool)
-
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/validate", config.GetAffiliation())
 	response, err := serverapi.CallApi(http.MethodPut, endpoint, string(payload), config)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(response.Message)
-	if !response.Success {
-		for _, item := range response.Items {
-			var res serverapi.ResponseItemError
-			json.Unmarshal(item, &res)
-			printValidationError(&res, printedFiles)
-		}
-	}
+	printValidationResponse(response)
 
 	return nil
 }
 
-func printValidationError(res *serverapi.ResponseItemError, printedFiles map[string]bool) {
-	errFormat := `
-Filename: %s
-Path:     %s
-Value:    %s
-Message:  %s
+type Validation struct {
+	IllegalFieldErrors []string
+	MissingFieldErrors []string
+	InvalidFieldErrors []string
+	UniqueErrors       map[string]bool
+}
+
+func (v *Validation) GetAllErrors() []string {
+	errorMessages := append(v.IllegalFieldErrors, v.InvalidFieldErrors...)
+	return append(errorMessages, v.MissingFieldErrors...)
+}
+
+func (v *Validation) Contains(key string) bool {
+	return v.UniqueErrors[key]
+}
+
+func printValidationResponse(res serverapi.Response) {
+	fmt.Println(res.Message)
+
+	if res.Success {
+		return
+	}
+
+	validation := &Validation{
+		UniqueErrors: make(map[string]bool),
+	}
+
+	for _, item := range res.Items {
+		var res serverapi.ResponseItemError
+		json.Unmarshal(item, &res)
+		validation.formatValidationError(&res)
+	}
+
+	for _, e := range validation.GetAllErrors() {
+		fmt.Print(e)
+	}
+}
+
+func (v *Validation) formatValidationError(res *serverapi.ResponseItemError) {
+	illegalFieldFormat := `
+Filename:    %s
+Path:        %s
+Value:       %s
+Message:     %s
+`
+	missingFieldFormat := `
+Application: %s/%s
+Path:        %s
+Message:     %s
+`
+
+	invalidFieldFormat := `
+Filename:    %s
+Path:        %s
+Message:     %s
 `
 
 	for _, message := range res.Messages {
-		key := message.Field.Source + "|" + message.Field.Path
-		if printedFiles[key] {
-			continue
-		}
-		fmt.Printf(errFormat,
+		k := []string{
 			message.Field.Source,
 			message.Field.Path,
 			message.Field.Value,
-			message.Message,
-		)
-		printedFiles[key] = true
+		}
+		key := strings.Join(k, "|")
+
+		if v.Contains(key) {
+			continue
+		}
+
+		if message.Type != "MISSING" {
+			v.UniqueErrors[key] = true
+		}
+
+		switch message.Type {
+		case "ILLEGAL":
+			{
+				validationError := fmt.Sprintf(illegalFieldFormat,
+					message.Field.Source,
+					message.Field.Path,
+					message.Field.Value,
+					message.Message,
+				)
+				v.IllegalFieldErrors = append(v.IllegalFieldErrors, validationError)
+			}
+
+		case "INVALID":
+			{
+				invalid := fmt.Sprintf(invalidFieldFormat,
+					message.Field.Source,
+					message.Field.Path,
+					message.Message,
+				)
+				v.InvalidFieldErrors = append(v.InvalidFieldErrors, invalid);
+			}
+
+		case "MISSING":
+			{
+				missing := fmt.Sprintf(missingFieldFormat,
+					res.Environment,
+					res.Application,
+					message.Field.Path,
+					message.Message,
+				)
+				v.MissingFieldErrors = append(v.MissingFieldErrors, missing);
+			}
+		}
 	}
 }
 

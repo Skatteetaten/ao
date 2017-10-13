@@ -29,7 +29,7 @@ type ApplicationId struct {
 type OpenShiftResponse struct {
 	Kind          string `json:"kind"`
 	OperationType string `json:"operationType"` // CREATED, UPDATE eller NONE
-	Payload       struct {
+	Payload struct {
 		Kind string `json:"payload"`
 	} `json:"payload"`
 	ResponseBody json.RawMessage `json:"responseBody"`
@@ -81,10 +81,10 @@ type Response struct {
 type ResponseItemError struct {
 	Application string `json:"application"`
 	Environment string `json:"environment"`
-	Messages    []struct {
+	Messages []struct {
+		Type     string `json:"type"`
 		Message  string `json:"message"`
-		FileName string `json:"fileName"`
-		Field    struct {
+		Field struct {
 			Path   string `json:"path"`
 			Value  string `json:"value"`
 			Source string `json:"source"`
@@ -184,7 +184,7 @@ func ResponseItems2Vaults(response Response) (output string, err error) {
 func ApplicationResult2MessageString(applicationResult ApplicationResult) (output string, err error) {
 
 	output +=
-		//applicationResult.ApplicationId.ApplicationName +
+	//applicationResult.ApplicationId.ApplicationName +
 		applicationResult.AuroraDc.GroupId + "/" + applicationResult.AuroraDc.ArtifactId + "-" + applicationResult.AuroraDc.Version +
 			" deployed in " + applicationResult.AuroraDc.Cluster + "/" + applicationResult.AuroraDc.EnvName
 	return
@@ -207,8 +207,8 @@ func ResponsItems2MessageString(response Response) (output string, err error) {
 				output = output + "\n\t\t" + responseItemError.Messages[message].Field.Path + " (" +
 					responseItemError.Messages[message].Field.Value + ") in " + responseItemError.Messages[message].Field.Source
 			}
-			if responseItemError.Messages[message].FileName != "" {
-				output = output + "\n\t\t File: " + responseItemError.Messages[message].FileName
+			if responseItemError.Messages[message].Field.Source != "" {
+				output = output + "\n\t\t File: " + responseItemError.Messages[message].Field.Source
 			}
 			output = output + "\n\t\t\t" + responseItemError.Messages[message].Message
 		}
