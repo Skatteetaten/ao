@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/spf13/cobra"
 )
 
 var validateCmd = &cobra.Command{

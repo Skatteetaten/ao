@@ -6,11 +6,11 @@ import (
 	"errors"
 	"net/http"
 
+	"fmt"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/serverapi"
-	"fmt"
 	"strings"
 )
 
@@ -210,7 +210,7 @@ Message:     %s
 					message.Field.Path,
 					message.Message,
 				)
-				v.InvalidFieldErrors = append(v.InvalidFieldErrors, invalid);
+				v.InvalidFieldErrors = append(v.InvalidFieldErrors, invalid)
 			}
 
 		case "MISSING":
@@ -221,7 +221,7 @@ Message:     %s
 					message.Field.Path,
 					message.Message,
 				)
-				v.MissingFieldErrors = append(v.MissingFieldErrors, missing);
+				v.MissingFieldErrors = append(v.MissingFieldErrors, missing)
 			}
 		}
 	}

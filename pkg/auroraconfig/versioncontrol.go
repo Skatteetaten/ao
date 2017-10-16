@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/openshift"
 	"github.com/skatteetaten/ao/pkg/serverapi"
-	"encoding/json"
 )
 
 const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
@@ -131,9 +131,9 @@ func Save(url string, config *configuration.ConfigurationClass) (string, error) 
 	return Pull()
 }
 
-func Validate(config *configuration.ConfigurationClass) (error) {
+func Validate(config *configuration.ConfigurationClass) error {
 	auroraConfig := &serverapi.AuroraConfig{
-		Files: make(map[string]json.RawMessage),
+		Files:    make(map[string]json.RawMessage),
 		Versions: make(map[string]string),
 	}
 
@@ -143,7 +143,6 @@ func Validate(config *configuration.ConfigurationClass) (error) {
 
 	return ValidateAuroraConfig(auroraConfig, config)
 }
-
 
 func isCleanRepo() bool {
 	_, err := GitCommand("log", "-1")
