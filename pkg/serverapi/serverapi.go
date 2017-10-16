@@ -82,9 +82,9 @@ type ResponseItemError struct {
 	Application string `json:"application"`
 	Environment string `json:"environment"`
 	Messages    []struct {
-		Message  string `json:"message"`
-		FileName string `json:"fileName"`
-		Field    struct {
+		Type    string `json:"type"`
+		Message string `json:"message"`
+		Field   struct {
 			Path   string `json:"path"`
 			Value  string `json:"value"`
 			Source string `json:"source"`
@@ -207,8 +207,8 @@ func ResponsItems2MessageString(response Response) (output string, err error) {
 				output = output + "\n\t\t" + responseItemError.Messages[message].Field.Path + " (" +
 					responseItemError.Messages[message].Field.Value + ") in " + responseItemError.Messages[message].Field.Source
 			}
-			if responseItemError.Messages[message].FileName != "" {
-				output = output + "\n\t\t File: " + responseItemError.Messages[message].FileName
+			if responseItemError.Messages[message].Field.Source != "" {
+				output = output + "\n\t\t File: " + responseItemError.Messages[message].Field.Source
 			}
 			output = output + "\n\t\t\t" + responseItemError.Messages[message].Message
 		}

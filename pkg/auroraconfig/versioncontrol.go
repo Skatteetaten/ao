@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
@@ -128,6 +129,19 @@ func Save(url string, config *configuration.ConfigurationClass) (string, error) 
 	}
 
 	return Pull()
+}
+
+func Validate(config *configuration.ConfigurationClass) error {
+	auroraConfig := &serverapi.AuroraConfig{
+		Files:    make(map[string]json.RawMessage),
+		Versions: make(map[string]string),
+	}
+
+	if err := addFilesToAuroraConfig(auroraConfig); err != nil {
+		return err
+	}
+
+	return ValidateAuroraConfig(auroraConfig, config)
 }
 
 func isCleanRepo() bool {
