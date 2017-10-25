@@ -24,23 +24,24 @@ node {
     }
 
     stage('Copy ao to assets') {
-        sh 'cd website'
-        sh 'mkdir assets'
-        sh 'cp ../bin/amd64/ao ./assets'
+        sh 'mkdir ./website/assets'
+        sh 'cp ./bin/amd64/ao ./website/assets'
     }
 
     def isMaster = env.BRANCH_NAME == "master"
     String version = git.getTagFromCommit()
     currentBuild.displayName = "${version} (${currentBuild.number})"
 
-    stage('Deploy to Nexus') {
-      yarn.deployToNexus(version)
-    }
+    dir('website') {
+        stage('Deploy to Nexus') {
+          yarn.deployToNexus(version)
+        }
 
-    stage('OpenShift Build') {
-        artifactId = yarn.getArtifactId()
-        groupId = yarn.getGroupId()
-        openshift.buildWebleveransepakke(artifactId, groupId, version)
+        stage('OpenShift Build') {
+            artifactId = yarn.getArtifactId()
+            groupId = yarn.getGroupId()
+            openshift.buildWebleveransepakke(artifactId, groupId, version)
+        }
     }
 }
 
