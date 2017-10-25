@@ -24,7 +24,7 @@ node {
     }
 
     stage('Copy ao to assets') {
-        dir 'website'
+        sh 'cd website'
         sh 'mkdir assets'
         sh 'cp /home/$USER/go/src/github.com/skatteetaten/ao/bin/amd64/ao ./assets'
     }
