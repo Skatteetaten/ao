@@ -11,12 +11,15 @@
     "express"
   ],
   "scripts": {
+    "start": "nodemon test-server.js --watch public --watch api --watch test-server.js",
     "deploy": "aurora-openshift deploy"
   },
   "dependencies": {
     "express": "^4.16.2"
   },
   "devDependencies": {
-    "aurora-openshift": "0.0.12"
+    "aurora-openshift": "0.0.12",
+    "express-http-proxy": "^1.0.7",
+    "nodemon": "^1.12.1"
   }
 }

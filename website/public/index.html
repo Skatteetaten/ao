@@ -1,12 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>AO</title>
+  <meta charset="UTF-8">
+  <title>AO</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
 </head>
+
 <body>
-    <a href="/assets/ao" download>
-        <h1>Download AO</h1>
-    </a>
+  <em>
+    <pre class="logo">
+           ,ggg,     _,gggggg,_
+          dP""8I   ,d8P""d8P"Y8b,
+         dP   88  ,d8'   Y8   "8b,dP
+        dP    88  d8'    `Ybaaad88P'
+       ,8'    88  8P       `""""Y8
+       d88888888  8b            d8
+ __   ,8"     88  Y8,          ,8P
+dP"  ,8P      Y8  `Y8,        ,8P'
+Yb,_,dP       `8b, `Y8b,,__,,d8P'
+ "Y8P"         `Y8   `"Y8888P"'
+  </pre>
+
+  </em>
+  <a href="/api/ao" class="btn" download>
+    <h1>
+      <em>Download</em>
+    </h1>
+  </a>
+  <em id="version"></em>
+  <script>
+    fetch('/api/version').then(function (res) {
+      res.json().then(function (value) {
+        document.getElementById('version').innerHTML = 'Version: ' + value.branch;
+      });
+    });
+  </script>
 </body>
+
 </html>
