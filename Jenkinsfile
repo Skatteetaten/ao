@@ -1,36 +1,54 @@
 #!/usr/bin/env groovy
 
+def openshift
+def git
+def npm
+def go
+
+def version='v4.0.1'
+fileLoader.withGit('https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git', version) {
+    go = fileLoader.load('go/go')
+    git = fileLoader.load('git/git')
+    npm = fileLoader.load('node.js/npm')
+    openshift = fileLoader.load('openshift/openshift')
+}
+
 node {
 
-    stage 'Load shared libraries'
-
-    def openshift, git
-    def version='v4.0.1'
-    fileLoader.withGit('https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git', version) {
-        openshift = fileLoader.load('openshift/openshift')
-        git = fileLoader.load('git/git')
-        go = fileLoader.load('go/go')
-        webleveransepakke = fileLoader.load('templates/webleveransepakke')
+    stage('Checkout') {
+        checkout scm
     }
 
-    stage 'Checkout'
-    checkout scm
+    stage('Build, Test & coverage') {
+        go.buildGoWithJenkinsSh()
+    }
 
+    stage('Copy ao to assets') {
+        dir 'website'
+        sh 'mkdir assets'
+        sh 'cp /home/$USER/go/src/github.com/skatteetaten/ao/bin/amd64/ao ./assets'
+    }
 
-    stage 'Test og coverage'
-    go.buildGoWithJenkinsSh()
+    def isMaster = env.BRANCH_NAME == "master"
+    String version = git.getTagFromCommit()
+    currentBuild.displayName = "${version} (${currentBuild.number})"
+    if (isMaster) {
+      if (!git.tagExists("v${version}")) {
+        error "Commit is not tagged. Aborting build."
+      }
 
-    dir 'website'
-    sh 'mkdir assets'
-    sh 'cp /home/$USER/go/src/github.com/skatteetaten/ao/bin/amd64/ao ./assets'
+      npm.version(version)
+    }
 
-    def overrides = [
-      publishToNpm: false,
-      deployToNexus: true,
-      openShiftBuild: true
-    ]
+    stage('Deploy to Nexus') {
+      yarn.deployToNexus(version)
+    }
 
-    webleveransepakke(version, overrides)
+    stage('OpenShift Build') {
+        artifactId = yarn.getArtifactId()
+        groupId = yarn.getGroupId()
+        openshift.buildWebleveransepakke(artifactId, groupId, version)
+    }
 }
 
 
