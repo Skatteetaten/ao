@@ -18,9 +18,10 @@ app.get('/api/version', (req, res) => {
   if (version.error) {
     console.error(version.error.stack);
     res.status(404).send('ao not found');
-  } else {
-    res.json(JSON.parse(version.stdout.toString()));
+    return;
   }
+
+  res.json(JSON.parse(version.stdout.toString()));
 });
 
 app.listen(nodejsPort, () => {
