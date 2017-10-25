@@ -7,9 +7,16 @@
   "author": {
     "name": "Skatteetaten"
   },
-  "files": [
-    "assets",
-    "public",
-    "metadata"
-  ]
+  "bundledDependencies": [
+    "express"
+  ],
+  "scripts": {
+    "deploy": "aurora-openshift deploy"
+  },
+  "dependencies": {
+    "express": "^4.16.2"
+  },
+  "devDependencies": {
+    "aurora-openshift": "0.0.12"
+  }
 }
