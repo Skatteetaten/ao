@@ -7,11 +7,6 @@
   "author": {
     "name": "Skatteetaten"
   },
-  "scripts": {
-    "build": "echo 'Nothing to build'",
-    "clean": "echo 'Nothing to clean'",
-    "test:coverage": "echo 'Nothing to test'"
-  },
   "files": [
     "assets",
     "public",

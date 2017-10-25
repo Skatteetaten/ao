@@ -2,14 +2,14 @@
 
 def openshift
 def git
-def npm
+def yarn
 def go
 
 def scriptVersion='v4.0.1'
 fileLoader.withGit('https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git', scriptVersion) {
     go = fileLoader.load('go/go')
     git = fileLoader.load('git/git')
-    npm = fileLoader.load('node.js/npm')
+    yarn = fileLoader.load('node.js/yarn')
     openshift = fileLoader.load('openshift/openshift')
 }
 
@@ -26,19 +26,12 @@ node {
     stage('Copy ao to assets') {
         sh 'cd website'
         sh 'mkdir assets'
-        sh 'cp /home/$USER/go/src/github.com/skatteetaten/ao/bin/amd64/ao ./assets'
+        sh 'cp ../bin/amd64/ao ./assets'
     }
 
     def isMaster = env.BRANCH_NAME == "master"
     String version = git.getTagFromCommit()
     currentBuild.displayName = "${version} (${currentBuild.number})"
-    if (isMaster) {
-      if (!git.tagExists("v${version}")) {
-        error "Commit is not tagged. Aborting build."
-      }
-
-      npm.version(version)
-    }
 
     stage('Deploy to Nexus') {
       yarn.deployToNexus(version)
