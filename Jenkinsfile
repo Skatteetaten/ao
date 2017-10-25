@@ -5,8 +5,8 @@ def git
 def npm
 def go
 
-def version='v4.0.1'
-fileLoader.withGit('https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git', version) {
+def scriptVersion='v4.0.1'
+fileLoader.withGit('https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git', scriptVersion) {
     go = fileLoader.load('go/go')
     git = fileLoader.load('git/git')
     npm = fileLoader.load('node.js/npm')
