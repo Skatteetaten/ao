@@ -1,0 +1,12 @@
+{
+  "docker": {
+    "maintainer": "Aurora OpenShift Utvikling <utvpaas@skatteetaten.no>",
+    "labels": {
+      "io.k8s.description": "Demo application with React on Openshift.",
+      "io.openshift.tags": "openshift,react,nodejs"
+    }
+  },
+  "web": {
+    "static": "public"
+  }
+}
