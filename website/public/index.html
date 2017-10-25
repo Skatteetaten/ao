@@ -32,7 +32,12 @@ Yb,_,dP       `8b, `Y8b,,__,,d8P'
   <script>
     fetch('/api/version').then(function (res) {
       res.json().then(function (value) {
-        document.getElementById('version').innerHTML = 'Version: ' + value.branch;
+        var version = value.branch;
+        if (value.version.match(/v([0-9])./).length > 0) {
+          version = value.version.replace('v', '');
+        }
+
+        document.getElementById('version').innerHTML = 'Version: ' + version;
       });
     });
   </script>
