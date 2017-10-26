@@ -34,7 +34,7 @@ will edit this file, if there is no other file matching the same shortening.`,
 			if output != "" {
 				fmt.Println(output)
 			}
-			auroraconfig.UpdateLocalRepository(config.GetAffiliation(), aoConfig)
+			auroraconfig.UpdateLocalRepository(config.GetAffiliation(), config.OpenshiftConfig)
 		} else {
 			fmt.Println(err)
 		}
@@ -63,7 +63,7 @@ will edit this file, if there is no other file matching the same shortening.`,
 			if output != "" {
 				fmt.Println(output)
 			}
-			auroraconfig.UpdateLocalRepository(config.GetAffiliation(), aoConfig)
+			auroraconfig.UpdateLocalRepository(config.GetAffiliation(), config.OpenshiftConfig)
 		} else {
 			fmt.Println(err)
 		}
