@@ -7,6 +7,12 @@
   "author": {
     "name": "Skatteetaten"
   },
+  "files": [
+    "api",
+    "assets",
+    "metadata",
+    "public"
+  ],
   "bundledDependencies": [
     "express"
   ],
