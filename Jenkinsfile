@@ -28,7 +28,6 @@ node {
         sh 'cp ./bin/amd64/ao ./website/assets'
     }
 
-    def isMaster = env.BRANCH_NAME == "master"
     String version = git.getTagFromCommit()
     currentBuild.displayName = "${version} (${currentBuild.number})"
 
@@ -42,6 +41,10 @@ node {
             groupId = yarn.getGroupId()
             openshift.buildWebleveransepakke(artifactId, groupId, version)
         }
+    }
+
+    stage('Clear workspace') {
+      step([$class: 'WsCleanup'])
     }
 }
 
