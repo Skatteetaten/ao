@@ -46,11 +46,12 @@ type OpenshiftCluster struct {
 }
 
 type OpenshiftConfig struct {
-	APICluster    string              `json:"apiCluster"`
-	Affiliation   string              `json:"affiliation"`
-	Clusters      []*OpenshiftCluster `json:"clusters"`
-	CheckoutPaths map[string]string   `json:"checkoutPaths"`
-	Localhost     bool                `json:"localhost"`
+	APICluster     string              `json:"apiCluster"`
+	Affiliation    string              `json:"affiliation"`
+	Clusters       []*OpenshiftCluster `json:"clusters"`
+	CheckoutPaths  map[string]string   `json:"checkoutPaths"`
+	Localhost      bool                `json:"localhost"`
+	ConfigLocation string
 }
 
 func getConsoleUrl(clusterName string) (consoleAddress string) {
@@ -142,7 +143,7 @@ func Login(configLocation string, userName string, affiliation string, apiCluste
 	config.write(configLocation)
 }
 
-func LoadOrInitiateConfigFile(configLocation string, useOcConfig bool, loginCluster string) (*OpenshiftConfig, error) {
+func LoadOrInitiateConfigFile(configLocation, loginCluster string, useOcConfig bool) (*OpenshiftConfig, error) {
 	config, err := loadConfigFile(configLocation)
 
 	var booberUrlFound bool
@@ -155,27 +156,32 @@ func LoadOrInitiateConfigFile(configLocation string, useOcConfig bool, loginClus
 	}
 
 	if err != nil || !booberUrlFound {
-		//fmt.Println("No config file found, initializing new config")
-		config, err := newConfig(useOcConfig, loginCluster)
-		if err != nil {
-			return nil, err
-		}
-		if err := config.write(configLocation); err != nil {
-			return nil, err
-		}
-		return config, nil
+		return CreateAoConfig(configLocation, loginCluster, useOcConfig)
 	}
+
 	return config, nil
 }
 
-func (c *OpenshiftConfig) AddCheckoutPath(affiliation string, path string, configLocation string) error {
+func CreateAoConfig(configLocation, loginCluster string, useOcConfig bool) (*OpenshiftConfig, error) {
+	config, err := newConfig(useOcConfig, loginCluster)
+	if err != nil {
+		return nil, err
+	}
+	if err := config.write(configLocation); err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
+func (c *OpenshiftConfig) AddCheckoutPath(affiliation string, path string) error {
 	if c.CheckoutPaths == nil {
 		c.CheckoutPaths = make(map[string]string)
 	}
 
 	c.CheckoutPaths[affiliation] = path
 
-	return c.write(configLocation)
+	return c.write(c.ConfigLocation)
 }
 
 func (c *OpenshiftConfig) RemoveCheckoutPath(affiliation string, configLocation string) error {

@@ -51,15 +51,10 @@ func InstallAuroraOpenshiftGenerator() (err error) {
 	return
 }
 
-func UpdateSelf(args []string, simulate bool, forceVersion string, forceUpdate bool) (output string, err error) {
+func UpdateSelf(args []string, simulate bool, forceVersion string, forceUpdate bool, config *configuration.ConfigurationClass) (output string, err error) {
 	var releaseVersion string
 	var url string
 
-	var config configuration.ConfigurationClass
-	err = config.Init()
-	if err != nil {
-		return "", err
-	}
 	cluster := config.GetApiClusterName()
 	if cluster == "utv" {
 		url = ao5Url

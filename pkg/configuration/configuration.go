@@ -1,17 +1,13 @@
 package configuration
 
 import (
-	"errors"
-
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/openshift"
-	"github.com/spf13/viper"
 )
 
 type ConfigurationClass struct {
 	PersistentOptions *cmdoptions.CommonCommandOptions
 	OpenshiftConfig   *openshift.OpenshiftConfig
-	configLocation    string
 	apiClusterIndex   int
 	apiClusterName    string
 	apiClusterUrl     string
@@ -26,16 +22,7 @@ func NewTestConfiguration() (config *ConfigurationClass) {
 	return config
 }
 
-func (configuration *ConfigurationClass) Init() error {
-
-	configuration.configLocation = viper.GetString("HOME") + "/.ao.json"
-	openshiftConfig, err := openshift.LoadOrInitiateConfigFile(configuration.configLocation, false, "")
-
-	if err == nil {
-		configuration.OpenshiftConfig = openshiftConfig
-	} else {
-		return errors.New("Error in loading OpenShift configuration")
-	}
+func (configuration *ConfigurationClass) SetApiCluster() error {
 
 	// Find index for API cluster,that is the first reachable cluster
 	if configuration.OpenshiftConfig != nil {

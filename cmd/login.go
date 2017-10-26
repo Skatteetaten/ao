@@ -56,11 +56,11 @@ one is available.
 				}
 			}
 		}
-		initConfig(useCurrentOcLogin, loginCluster)
+		config.OpenshiftConfig = getOpenShiftConfig(useCurrentOcLogin, loginCluster)
 		//		if !recreateConfig && !useCurrentOcLogin {
 		openshift.Login(configLocation, userName, affiliation, apiCluster, persistentOptions.Localhost, loginCluster)
 		//		}
-		output, _ := updatecmd.UpdateSelf(args, !doUpdate, "", false)
+		output, _ := updatecmd.UpdateSelf(args, !doUpdate, "", false, config)
 		if strings.Contains(output, "New version detected") {
 			fmt.Println(output)
 		}
