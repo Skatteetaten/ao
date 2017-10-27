@@ -51,10 +51,13 @@ func GetAllVaults(outputFolder string, configuration *configuration.Configuratio
 	return output, err
 }
 
-func PutVault(vaultname string, vault Vault, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
+func PutVault(vault Vault, version string, configuration *configuration.ConfigurationClass) (string, []string, error) {
 	var apiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/vault/"
 
 	content, err := json.Marshal(vault)
+	if err != nil {
+		return "", []string{}, err
+	}
 
 	return putContent(apiEndpoint, string(content), version, configuration)
 

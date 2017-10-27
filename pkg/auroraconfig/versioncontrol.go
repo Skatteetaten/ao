@@ -19,7 +19,9 @@ import (
 
 const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
 
+// TODO: Needs testing
 // TODO: Add debug
+
 func GitCommand(args ...string) (string, error) {
 	command := exec.Command("git", args...)
 
@@ -131,14 +133,15 @@ func Save(url string, config *configuration.ConfigurationClass) (string, error) 
 	return Pull()
 }
 
-func Validate(config *configuration.ConfigurationClass) error {
+// TODO: Test
+func Validate(config *configuration.ConfigurationClass) (string, []string, error) {
 	auroraConfig := &serverapi.AuroraConfig{
 		Files:    make(map[string]json.RawMessage),
 		Versions: make(map[string]string),
 	}
 
 	if err := addFilesToAuroraConfig(auroraConfig); err != nil {
-		return err
+		return "", []string{}, err
 	}
 
 	return ValidateAuroraConfig(auroraConfig, config)
@@ -208,6 +211,7 @@ Expected affliation to be %s, but was %s.`, expectedAffiliation, repoAffiliation
 }
 
 func handleAuroraConfigCommit(statuses []string, config *configuration.ConfigurationClass) error {
+	// TODO: Remove this request
 	ac, err := GetAuroraConfig(config)
 
 	if err != nil {
