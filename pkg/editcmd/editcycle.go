@@ -3,21 +3,20 @@ package editcmd
 import (
 	"fmt"
 
-	"github.com/skatteetaten/ao/pkg/auroraconfig"
-	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
+	"os"
 )
 
-type storeFunc func(string, string, string, *configuration.ConfigurationClass) (string, error)
+type OnSaveFunc = func(modifiedContent string) ([]string, error)
 
-func editCycle(content string, contentName string, version string, store storeFunc, configuration *configuration.ConfigurationClass) (modifiedContent string, output string, err error) {
+func editCycle(content string, contentName string, debug bool, onSave OnSaveFunc) (modifiedContent string, output string, err error) {
 
 	var editCycleDone bool
 	content = jsonutil.PrettyPrintJson(content)
 	modifiedContent = content
 
-	for editCycleDone == false {
+	for !editCycleDone {
 		contentBeforeEdit := modifiedContent
 		modifiedContent, err = editString("# Name: " + contentName + editMessage + modifiedContent)
 		if err != nil {
@@ -32,7 +31,7 @@ func editCycle(content string, contentName string, version string, store storeFu
 				output += "A copy of your changes har been stored to \"" + tempfile + "\"\n"
 			}
 			output += "Edit cancelled, no valid changes were saved."
-			if configuration.GetPersistentOptions().Debug {
+			if debug {
 				fmt.Println("DEBUG: Content of modified file:")
 				fmt.Println(modifiedContent)
 				fmt.Println("DEBUG: Content of modified file stripped:")
@@ -43,18 +42,18 @@ func editCycle(content string, contentName string, version string, store storeFu
 		modifiedContent = stripComments(modifiedContent)
 
 		if jsonutil.IsLegalJson(modifiedContent) {
-			validationMessages, err := store(contentName, modifiedContent, version, configuration)
+			validationMessages, err := onSave(modifiedContent)
 			if err != nil {
-				if err.Error() == auroraconfig.InvalidConfigurationError {
-					modifiedContent, _ = addComments(modifiedContent, validationMessages)
-				} else {
-					editCycleDone = true
-				}
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			if len(validationMessages) > 0{
+				modifiedContent, _ = addComments(modifiedContent, validationMessages)
 			} else {
 				editCycleDone = true
 			}
 		} else {
-			modifiedContent, _ = addComments(modifiedContent, "Illegal JSON Format")
+			modifiedContent, _ = addComments(modifiedContent, []string{"Illegal JSON Format"})
 		}
 	}
 

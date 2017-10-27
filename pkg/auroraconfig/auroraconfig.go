@@ -101,21 +101,19 @@ func Response2AuroraConfig(response serverapi.Response) (auroraConfig serverapi.
 
 }
 
-func ValidateAuroraConfig(auroraConfig *serverapi.AuroraConfig, config *configuration.ConfigurationClass) error {
+func ValidateAuroraConfig(auroraConfig *serverapi.AuroraConfig, config *configuration.ConfigurationClass) (string, []string, error) {
 	payload, err := json.Marshal(auroraConfig)
 	if err != nil {
-		return err
+		return "", []string{}, err
 	}
 
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/validate", config.GetAffiliation())
 	response, err := serverapi.CallApi(http.MethodPut, endpoint, string(payload), config)
 	if err != nil {
-		return err
+		return "", []string{}, err
 	}
 
-	printValidationResponse(response)
-
-	return nil
+	return response.Message, GetValidationMessages(response), nil
 }
 
 type Validation struct {
@@ -134,11 +132,10 @@ func (v *Validation) Contains(key string) bool {
 	return v.UniqueErrors[key]
 }
 
-func printValidationResponse(res serverapi.Response) {
-	fmt.Println(res.Message)
-
+// TODO: Test
+func GetValidationMessages(res serverapi.Response) []string {
 	if res.Success {
-		return
+		return []string{}
 	}
 
 	validation := &Validation{
@@ -148,32 +145,28 @@ func printValidationResponse(res serverapi.Response) {
 	for _, item := range res.Items {
 		var res serverapi.ResponseItemError
 		json.Unmarshal(item, &res)
-		validation.formatValidationError(&res)
+		validation.FormatValidationError(&res)
 	}
 
-	for _, e := range validation.GetAllErrors() {
-		fmt.Print(e)
-	}
+	return validation.GetAllErrors()
 }
 
-func (v *Validation) formatValidationError(res *serverapi.ResponseItemError) {
+func (v *Validation) FormatValidationError(res *serverapi.ResponseItemError) {
+	// TODO: Structs ? Better usage for edit?
 	illegalFieldFormat := `
 Filename:    %s
 Path:        %s
 Value:       %s
-Message:     %s
-`
+Message:     %s`
 	missingFieldFormat := `
 Application: %s/%s
 Path:        %s (Missing)
-Message:     %s
-`
+Message:     %s`
 
 	invalidFieldFormat := `
 Filename:    %s
 Path:        %s
-Message:     %s
-`
+Message:     %s`
 
 	for _, message := range res.Messages {
 		k := []string{
@@ -258,43 +251,33 @@ func PutAuroraConfig(auroraConfig serverapi.AuroraConfig, configuration *configu
 
 	var apiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/auroraconfig"
 
-	_, err = putContent(apiEndpoint, string(content), "", configuration)
+	message, _, err := putContent(apiEndpoint, string(content), "", configuration)
 	if err != nil {
-		return err
+		return errors.New(message)
 	}
 	return
 }
 
-func putContent(apiEndpoint string, content string, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
+func putContent(apiEndpoint string, content string, version string, configuration *configuration.ConfigurationClass) (string, []string, error) {
 
 	var versionHeader = make(map[string]string)
 	versionHeader["AuroraConfigFileVersion"] = version
 
 	response, err := serverapi.CallApiWithHeaders(versionHeader, http.MethodPut, apiEndpoint, content, configuration)
-
 	if err != nil {
-		validationMessages, err := serverapi.ResponsItems2MessageString(response)
-		if err != nil {
-			return "", err
-		}
-		return validationMessages, errors.New(InvalidConfigurationError + "\n" + validationMessages)
+		return "", []string{}, nil
 	}
 
-	if !response.Success {
-		validationMessages, _ := serverapi.ResponsItems2MessageString(response)
-		return validationMessages, errors.New(InvalidConfigurationError + "\n" + validationMessages)
-	}
-
-	return
+	return response.Message, GetValidationMessages(response), nil
 }
 
-func PutFile(filename string, content string, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
-	var apiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/auroraconfigfile/" + filename
+func PutFile(filename string, content string, version string, configuration *configuration.ConfigurationClass) (string, []string, error) {
+	var apiEndpoint= "/affiliation/" + configuration.GetAffiliation() + "/auroraconfigfile/" + filename
 
 	return putContent(apiEndpoint, content, version, configuration)
 }
 
-func PutSecret(vaultname string, secretname string, secret string, version string, configuration *configuration.ConfigurationClass) (validationMessages string, err error) {
+func PutSecret(vaultname string, secretname string, secret string, version string, configuration *configuration.ConfigurationClass) (string, []string, error) {
 	var apiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/vault/" + vaultname + "/secret/" + secretname
 
 	encodedSecret := base64.StdEncoding.EncodeToString([]byte(secret))

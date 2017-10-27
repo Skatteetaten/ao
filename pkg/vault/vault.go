@@ -58,7 +58,7 @@ func CreateVault(vaultname string, config *configuration.ConfigurationClass, fol
 		return "", errors.New("Error: Vault " + vault.Name + " exists")
 	}
 
-	message, err := auroraconfig.PutVault(vaultname, vault, "", config)
+	message, _, err := auroraconfig.PutVault(vault, "", config)
 	if err != nil {
 		return "", errors.New(message)
 	}
@@ -176,7 +176,7 @@ func Rename(vaultName string, newVaultName string, config *configuration.Configu
 	}
 
 	vault.Name = newVaultName
-	output, err = auroraconfig.PutVault(newVaultName, vault, "", config)
+	output, _, err = auroraconfig.PutVault(vault, "", config)
 	if err != nil {
 		return "", err
 	}
@@ -225,7 +225,7 @@ func Permissions(vaultName string, config *configuration.ConfigurationClass,
 	}
 
 	// Save
-	output, err = auroraconfig.PutVault(vaultName, vault, "", config)
+	output, _, err = auroraconfig.PutVault(vault, "", config)
 	if err != nil {
 		return "", err
 	}
@@ -240,7 +240,7 @@ func ImportVaults(catalogName string, config *configuration.ConfigurationClass) 
 	}
 
 	for _, vault := range vaults {
-		output, err = auroraconfig.PutVault(vault.Name, vault, "", config)
+		output, _, err = auroraconfig.PutVault(vault, "", config)
 		if err != nil {
 			return output, err
 		}
