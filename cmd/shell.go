@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stromland/cobra-prompt"
 )
+
 // TODO: Remove this?
 var shellCmd = &cobra.Command{
 	Use:   "shell",

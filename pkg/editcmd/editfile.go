@@ -2,8 +2,8 @@ package editcmd
 
 import (
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
-	"github.com/skatteetaten/ao/pkg/serverapi"
 	"github.com/skatteetaten/ao/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 func EditFile(filename string, auroraConfig *serverapi.AuroraConfig, config *configuration.ConfigurationClass) (string, error) {

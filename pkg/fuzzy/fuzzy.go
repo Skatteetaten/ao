@@ -1,12 +1,12 @@
 package fuzzy
 
 import (
-	"strings"
-	"github.com/renstrom/fuzzysearch/fuzzy"
-	"sort"
-	"gopkg.in/AlecAivazis/survey.v1"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/renstrom/fuzzysearch/fuzzy"
+	"gopkg.in/AlecAivazis/survey.v1"
+	"sort"
+	"strings"
 )
 
 func FindMatches(search string, fileNames []string, withSuffix bool) ([]string, error) {
@@ -25,7 +25,7 @@ func FindMatches(search string, fileNames []string, withSuffix bool) ([]string, 
 	sort.Sort(matches)
 
 	if len(matches) == 0 {
-		return []string{}, errors.New("No matches for " + search);
+		return []string{}, errors.New("No matches for " + search)
 	}
 
 	firstMatch := matches[0]

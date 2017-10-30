@@ -272,7 +272,7 @@ func putContent(apiEndpoint string, content string, version string, configuratio
 }
 
 func PutFile(filename string, content string, version string, configuration *configuration.ConfigurationClass) (string, []string, error) {
-	var apiEndpoint= "/affiliation/" + configuration.GetAffiliation() + "/auroraconfigfile/" + filename
+	var apiEndpoint = "/affiliation/" + configuration.GetAffiliation() + "/auroraconfigfile/" + filename
 
 	return putContent(apiEndpoint, content, version, configuration)
 }

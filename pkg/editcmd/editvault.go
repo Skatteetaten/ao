@@ -3,9 +3,9 @@ package editcmd
 import (
 	"encoding/json"
 
+	"fmt"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/configuration"
-	"fmt"
 )
 
 func (editcmd *EditcmdClass) EditVault(vaultname string) (string, error) {
