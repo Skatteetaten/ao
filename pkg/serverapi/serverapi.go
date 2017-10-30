@@ -217,8 +217,7 @@ func ResponsItems2MessageString(response Response) (output string, err error) {
 }
 
 func getConsoleAddress(clusterName string) (consoleAddress string) {
-	//consoleAddress = "http://console-aurora." + clusterName + ".paas.skead.no"
-	consoleAddress = "http://console-paas-espen-dev." + clusterName + ".paas.skead.no"
+	consoleAddress = "http://console-aurora." + clusterName + ".paas.skead.no"
 	return
 }
 
