@@ -11,6 +11,8 @@ import:
   subpackages:
   - termios
 - package: github.com/stromland/cobra-prompt
+- package: github.com/sirupsen/logrus
+  version: ^1.0.3
 - package: github.com/renstrom/fuzzysearch
 - package: gopkg.in/AlecAivazis/survey.v1
 testImport:

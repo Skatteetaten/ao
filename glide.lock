@@ -38,6 +38,8 @@ imports:
   version: b1f72af2d63057363398bec5873d16a98b453312
   subpackages:
   - termios
+- name: github.com/sirupsen/logrus
+  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
 - name: github.com/renstrom/fuzzysearch
   version: 2d205ac6ec17a839a94bdbfd16d2fa6c6dada2e0
   subpackages:

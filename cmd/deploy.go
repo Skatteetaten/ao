@@ -21,6 +21,10 @@ import (
 
 	"github.com/skatteetaten/ao/pkg/deploy"
 	"github.com/spf13/cobra"
+	"github.com/skatteetaten/ao/pkg/boober"
+	"strings"
+	"encoding/json"
+	"github.com/sirupsen/logrus"
 )
 
 var appList []string
@@ -105,8 +109,49 @@ The --force flag will override this, and execute the deploy without confirmation
 	},
 }
 
+var applyCmd = &cobra.Command{
+	Use:   "apply",
+	Short: "Deploy applications for the current affiliation",
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) < 1 {
+			cmd.Usage()
+			return
+		}
+
+		var url string
+		var token string
+		for _, c := range config.OpenshiftConfig.Clusters {
+			if c.Name == "utv" {
+				url = c.BooberUrl
+				token = c.Token
+			}
+		}
+
+		applicationIds := []boober.ApplicationId{}
+		for _, arg := range args {
+			envApp := strings.Split(arg, "/")
+			if len(envApp) != 2 {
+				continue
+			}
+
+			applicationIds = append(applicationIds, boober.ApplicationId{
+				Environment: envApp[0],
+				Application: envApp[1],
+			})
+		}
+
+		api := boober.NewApi(url, token, config.GetAffiliation())
+		logrus.SetLevel(logrus.DebugLevel)
+		err := api.Deploy(applicationIds, make(map[string]json.RawMessage))
+		if err != nil {
+			logrus.Error(err)
+		}
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(deployCmd)
+	RootCmd.AddCommand(applyCmd)
 
 	deployCmd.Flags().StringArrayVarP(&overrideJson, "file",
 		"o", overrideValues, "Override in the form [env/]file:{<json override>}")
