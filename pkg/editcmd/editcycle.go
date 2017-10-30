@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-type OnSaveFunc = func(modifiedContent string) ([]string, error)
+type OnSaveFunc func(modifiedContent string) ([]string, error)
 
 func editCycle(content string, contentName string, debug bool, onSave OnSaveFunc) (modifiedContent string, output string, err error) {
 
