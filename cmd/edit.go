@@ -8,11 +8,7 @@ import (
 
 	pkgEditCmd "github.com/skatteetaten/ao/pkg/editcmd"
 	"github.com/spf13/cobra"
-	"github.com/renstrom/fuzzysearch/fuzzy"
-	"sort"
-	"gopkg.in/AlecAivazis/survey.v1"
-	"encoding/json"
-	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/fuzzy"
 )
 
 var editcmdObject = &pkgEditCmd.EditcmdClass{
@@ -29,33 +25,6 @@ The file can be specified using unique shortened name, so given that the file su
 
 will edit this file, if there is no other file matching the same shortening.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) < 1 {
-			cmd.Usage()
-			return
-		}
-
-		if output, err := editcmdObject.FuzzyEditFile(args); err == nil {
-			if output != "" {
-				fmt.Println(output)
-			}
-			auroraconfig.UpdateLocalRepository(config.GetAffiliation(), config.OpenshiftConfig)
-		} else {
-			fmt.Println(err)
-		}
-	},
-}
-
-var editFileCmd = &cobra.Command{
-	Use:   "file [env/]<filename>",
-	Short: "Edit a single configuration file",
-	Long: `Edit a single configuration file or a secret in a vault.
-The file can be specified using unique shortened name, so given that the file superapp-test/about.json exists, then the command
-
-	ao edit test/about
-
-will edit this file, if there is no other file matching the same shortening.`,
-	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
 			cmd.Usage()
 			return
@@ -63,7 +32,12 @@ will edit this file, if there is no other file matching the same shortening.`,
 
 		auroraConfig, _ := auroraconfig.GetAuroraConfig(config)
 
-		filename, err := FuzzyFindFile(args[0], auroraConfig.Files)
+		files := []string{}
+		for k, _ := range auroraConfig.Files {
+			files = append(files, k)
+		}
+
+		filename, err := fuzzy.FindFileToEdit(args[0], files, true)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -74,56 +48,6 @@ will edit this file, if there is no other file matching the same shortening.`,
 			fmt.Println(err)
 		}
 	},
-}
-
-// TODO: Files should be a list of strings
-// TODO: Test
-func FuzzyFindFile(search string, files map[string]json.RawMessage) (string, error) {
-	words := []string{}
-	for filename, _ := range files {
-		words = append(words, strings.TrimSuffix(filename, ".json"))
-	}
-
-	matches := fuzzy.RankFind(strings.TrimSuffix(search, ".json"), words)
-	sort.Sort(matches)
-
-	if len(matches) == 0 {
-		return "", errors.New("No matches for " + search);
-	}
-
-
-	if (matches.Len() > 0 && matches[0].Distance == 0) || matches.Len() == 1 {
-		return matches[0].Target+".json", nil
-	}
-
-	options := []string{}
-	for _, match := range matches {
-		options = append(options, match.Target+".json")
-	}
-
-	// TODO: Do we need this?
-	if len(options) > 5 {
-		sortByName := false
-		conf := &survey.Confirm{
-			Message: "Do you want to sort by name?",
-		}
-		survey.AskOne(conf, &sortByName, nil)
-
-		if sortByName {
-			sort.Strings(options)
-		}
-	}
-
-	p := &survey.Select{
-		Message: fmt.Sprintf("Matched %d files. Which file do you want to edit?", len(options)),
-		PageSize: 10,
-		Options: options,
-	}
-
-	var filename string
-	survey.AskOne(p, &filename, nil)
-
-	return filename, nil
 }
 
 var editVaultCmd = &cobra.Command{
