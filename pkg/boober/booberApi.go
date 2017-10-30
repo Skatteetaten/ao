@@ -115,7 +115,7 @@ func (api *Api) PerformRequest(method string, endpoint string, payload []byte) (
 		"url":    url,
 	})
 
-	reqLog.Debug("Request")
+	reqLog.Info("Request")
 	if len(payload) == 0 {
 		reqLog.Debug("No payload")
 	} else {
@@ -145,7 +145,7 @@ func (api *Api) PerformRequest(method string, endpoint string, payload []byte) (
 		return []byte{}, errors.New("Boober request returned with error code " + res.Status)
 	}
 
-	reqLog.Debug("Response")
+	reqLog.Info("Response")
 
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
@@ -158,7 +158,7 @@ func IndentJson(data []byte) string {
 	var out bytes.Buffer
 	err := json.Indent(&out, data, "", "  ")
 	if err != nil {
-		log.Error("Failed to indent json")
+		log.Error("Failed to indent json ", err.Error())
 		return string(data)
 	}
 
