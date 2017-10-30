@@ -7,12 +7,12 @@ import (
 	"os"
 	"strings"
 
+	"fmt"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
 	"github.com/skatteetaten/ao/pkg/fuzzyargs"
 	"github.com/skatteetaten/ao/pkg/serverapi"
-	"fmt"
 )
 
 const editMessage = `

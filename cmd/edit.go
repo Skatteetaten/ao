@@ -7,8 +7,8 @@ import (
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 
 	pkgEditCmd "github.com/skatteetaten/ao/pkg/editcmd"
-	"github.com/spf13/cobra"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
+	"github.com/spf13/cobra"
 )
 
 var editcmdObject = &pkgEditCmd.EditcmdClass{
@@ -94,6 +94,5 @@ If secret-name is given, the editor will present the decoded secret string for e
 
 func init() {
 	RootCmd.AddCommand(editCmd)
-	editCmd.AddCommand(editFileCmd)
 	editCmd.AddCommand(editVaultCmd)
 }

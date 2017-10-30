@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/spf13/cobra"
-	"fmt"
 )
 
 var validateCmd = &cobra.Command{

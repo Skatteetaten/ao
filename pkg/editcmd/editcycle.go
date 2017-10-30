@@ -47,7 +47,7 @@ func editCycle(content string, contentName string, debug bool, onSave OnSaveFunc
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			if len(validationMessages) > 0{
+			if len(validationMessages) > 0 {
 				modifiedContent, _ = addComments(modifiedContent, validationMessages)
 			} else {
 				editCycleDone = true

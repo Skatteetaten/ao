@@ -1,8 +1,8 @@
 package fuzzy
 
 import (
-	"testing"
 	"github.com/magiconair/properties/assert"
+	"testing"
 )
 
 var fileNames = []string{
@@ -35,13 +35,12 @@ func TestFindMatches(t *testing.T) {
 		{"con", false, []string{"console", "utv/console", "test/console"}},
 		{"utv/ab", true, []string{"utv/about.json", "utv-relay/about.json"}},
 		{"utv/o", true, []string{"utv/about.json", "utv/boober.json", "utv/console.json",
-		"utv-relay/about.json", "utv-relay/boober.json"}},
+			"utv-relay/about.json", "utv-relay/boober.json"}},
 	}
-
 
 	for _, test := range tests {
 		matches, err := FindMatches(test.Search, fileNames, test.WithSuffix)
-		assert.Equal(t, matches, test.Expected, test.Search + " returned more matches than expected.")
+		assert.Equal(t, matches, test.Expected, test.Search+" returned more matches than expected.")
 
 		if err != nil {
 			t.Error(err)
