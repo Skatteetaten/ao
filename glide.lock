@@ -1,5 +1,5 @@
-hash: 74cb7a99e2a06af66ff3ac08f40cbd5da03eebf71c87ef032ea5fd481283c7b7
-updated: 2017-10-31T07:58:29.297006542+01:00
+hash: 742f5f345d7730b08191ebfae37320ea8355554c933ba5210b486b7134aff43e
+updated: 2017-10-31T16:43:52.245124632+01:00
 imports:
 - name: github.com/c-bata/go-prompt
   version: ba233229562fbeebe1328788a6245cda9124af27
@@ -60,6 +60,8 @@ imports:
   version: 7aff26db30c1be810f9de5038ec5ef96ac41fd7c
 - name: github.com/spf13/viper
   version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
+- name: github.com/stretchr/testify
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
 - name: github.com/stromland/cobra-prompt
   version: 954ec300b77540a32ca2f10ed10626540818ef01
 - name: golang.org/x/crypto

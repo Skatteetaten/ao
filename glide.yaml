@@ -15,6 +15,8 @@ import:
   version: ^1.0.3
 - package: github.com/renstrom/fuzzysearch
 - package: gopkg.in/AlecAivazis/survey.v1
+- package: github.com/stretchr/testify
+  version: v1.1.4
 testImport:
 - package: gopkg.in/h2non/gock.v1
   version: ^1.0.6

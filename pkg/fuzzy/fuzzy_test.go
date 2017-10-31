@@ -1,8 +1,8 @@
 package fuzzy
 
 import (
-	"github.com/magiconair/properties/assert"
 	"testing"
+	"github.com/stretchr/testify/assert"
 )
 
 var fileNames = []string{
@@ -10,6 +10,7 @@ var fileNames = []string{
 	"console.json",
 	"boober.json",
 	"utv/about.json",
+	"utv/about-template.json",
 	"utv/boober.json",
 	"utv/console.json",
 	"utv-relay/about.json",
@@ -21,6 +22,20 @@ var fileNames = []string{
 	"test-relay/boober.json",
 }
 
+func TestFilterFileNamesForDeploy(t *testing.T) {
+	var expected = []string{
+		"utv/boober",
+		"utv/console",
+		"utv-relay/boober",
+		"test/boober",
+		"test/console",
+		"test-relay/boober",
+	}
+
+	actual := FilterFileNamesForDeploy(fileNames)
+	assert.Equal(t, expected, actual)
+}
+
 func TestFindMatches(t *testing.T) {
 
 	tests := []struct {
@@ -28,27 +43,20 @@ func TestFindMatches(t *testing.T) {
 		WithSuffix bool
 		Expected   []string
 	}{
+		{"asdlfkja", true, []string{}},
 		{"about", true, []string{"about.json"}},
 		{"console", true, []string{"console.json"}},
 		{"test/boober", true, []string{"test/boober.json"}},
 		{"con", true, []string{"console.json", "utv/console.json", "test/console.json"}},
 		{"con", false, []string{"console", "utv/console", "test/console"}},
-		{"utv/ab", true, []string{"utv/about.json", "utv-relay/about.json"}},
+		{"utv/ab", true, []string{"utv/about.json", "utv-relay/about.json", "utv/about-template.json"}},
 		{"utv/o", true, []string{"utv/about.json", "utv/boober.json", "utv/console.json",
-			"utv-relay/about.json", "utv-relay/boober.json"}},
+			"utv-relay/about.json", "utv-relay/boober.json", "utv/about-template.json"}},
 	}
 
 	for _, test := range tests {
-		matches, err := FindMatches(test.Search, fileNames, test.WithSuffix)
-		assert.Equal(t, matches, test.Expected, test.Search+" returned more matches than expected.")
-
-		if err != nil {
-			t.Error(err)
-		}
-
-		for i, m := range matches {
-			assert.Equal(t, m, test.Expected[i])
-		}
+		matches, _ := FindMatches(test.Search, fileNames, test.WithSuffix)
+		assert.Equal(t, test.Expected, matches, test.Search+" returned unexpected matches than expected.")
 	}
 }
 
@@ -69,7 +77,7 @@ func TestFindFileToEdit(t *testing.T) {
 			t.Error(err)
 		}
 
-		assert.Equal(t, filename, test.Expected)
+		assert.Equal(t, test.Expected, filename)
 	}
 }
 
@@ -78,6 +86,7 @@ func TestFindApplicationsToDeploy(t *testing.T) {
 		Search   string
 		Expected []string
 	}{
+		{"aosdfkja",  []string{}},
 		{"utv",  []string{"utv/boober", "utv/console"}},
 		{"console",  []string{"test/console", "utv/console"}},
 		{"test",  []string{"test/boober", "test/console"}},
@@ -89,11 +98,8 @@ func TestFindApplicationsToDeploy(t *testing.T) {
 	filteredFiles := FilterFileNamesForDeploy(fileNames)
 
 	for _, test := range tests {
-		deploys, err := FindApplicationsToDeploy(test.Search, filteredFiles, false)
-		if err != nil {
-			t.Error(err)
-		}
-		assert.Equal(t, deploys, test.Expected, "Searching for " + test.Search)
+		deploys, _ := FindApplicationsToDeploy(test.Search, filteredFiles, false)
+		assert.Equal(t, test.Expected, deploys, "Searching for " + test.Search)
 	}
 }
 
@@ -115,6 +121,6 @@ func TestFindAllFor(t *testing.T) {
 
 	for _, test := range tests {
 		deploys := FindAllDeploysFor(test.Mode, test.Search, filteredFiles)
-		assert.Equal(t, deploys, test.Expected)
+		assert.Equal(t, test.Expected, deploys)
 	}
 }
