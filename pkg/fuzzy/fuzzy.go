@@ -74,13 +74,22 @@ func FindFileToEdit(search string, files []string, prompt bool) (string, error) 
 	return filename, err
 }
 
-// TODO: Exact match for environment - Include all apps
-// TODO: Exact match for application - Include all envs
 func FindApplicationsToDeploy(search string, files []string, prompt bool) ([]string, error) {
 
-	options, err := FindMatches(search, files, false)
-	if err != nil {
-		return []string{}, err
+	options := []string{}
+	if !strings.Contains(search, "/") {
+		options = FindAllDeploysFor(APP_FILTER, search, files)
+		if len(options) == 0 {
+			options = FindAllDeploysFor(ENV_FILTER, search, files)
+		}
+	}
+
+	if len(options) == 0 {
+		opts, err := FindMatches(search, files, false)
+		if err != nil {
+			return []string{}, err
+		}
+		options = opts
 	}
 
 	if len(options) == 1 || !prompt {
@@ -94,7 +103,7 @@ func FindApplicationsToDeploy(search string, files []string, prompt bool) ([]str
 	}
 
 	var applications []string
-	err = survey.AskOne(p, &applications, nil)
+	err := survey.AskOne(p, &applications, nil)
 
 	return applications, err
 }
@@ -128,27 +137,27 @@ func (s *DeploySet) Keys() []string {
 type DeployFilterMode uint
 
 const (
-	APP DeployFilterMode = iota
-	ENV
+	APP_FILTER DeployFilterMode = iota
+	ENV_FILTER
 )
 
 /*
-	Search string must match exact
+	Search string must match either environment or application exact
  */
-func FindAllDeploysFor(mode DeployFilterMode, search string, files []string) ([]string, error) {
+func FindAllDeploysFor(mode DeployFilterMode, search string, files []string) []string {
 	deploys := make(map[string]*DeploySet)
 
 	for _, file := range files {
-		deploy := strings.Split(file, "/")
-		if len(deploy) != 2 {
+		appId := strings.Split(file, "/")
+		if len(appId) != 2 {
 			continue
 		}
 
 		// Key = env, value = app
-		key, value := deploy[0], deploy[1]
-		if mode == APP {
+		key, value := appId[0], appId[1]
+		if mode == APP_FILTER {
 			// Key = app, value = env
-			key, value = deploy[1], deploy[0]
+			key, value = appId[1], appId[0]
 		}
 
 		if _, found := deploys[key]; !found {
@@ -168,12 +177,22 @@ func FindAllDeploysFor(mode DeployFilterMode, search string, files []string) ([]
 	sort.Sort(matches)
 
 	if len(matches) < 1 || matches[0].Distance != 0 {
-		return []string{}, nil
+		return []string{}
 	}
 
 	result := deploys[matches[0].Target]
 	keys := result.Keys()
 	sort.Strings(keys)
 
-	return keys, nil
+	allDeploys := []string{}
+	for _, k := range keys {
+		id := search + "/" + k
+		if mode == APP_FILTER {
+			id = k + "/" + search
+		}
+
+		allDeploys = append(allDeploys, id)
+	}
+
+	return allDeploys
 }
