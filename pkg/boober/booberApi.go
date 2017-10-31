@@ -1,7 +1,7 @@
 package boober
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"bytes"
 	"io/ioutil"
@@ -97,10 +97,8 @@ func (api *Api) Deploy(applicationIds []ApplicationId, overrides map[string]json
 
 	for _, item := range response.Items {
 		if !item.Success {
-			fmt.Printf("Deploy failed (%s).\n", item.DeployId)
-			fmt.Printf("Tried to deploy: %s/%s", item.ADS.Namespace, item.ADS.Name)
+			fmt.Printf("Failed to deploy: %s/%s", item.ADS.Namespace, item.ADS.Name)
 		}
-		fmt.Printf("Deploy was success (%s).\n", item.DeployId)
 		fmt.Printf("Deployed: %s/%s\n", item.ADS.Namespace, item.ADS.Name)
 	}
 
@@ -110,7 +108,7 @@ func (api *Api) Deploy(applicationIds []ApplicationId, overrides map[string]json
 func (api *Api) PerformRequest(method string, endpoint string, payload []byte) ([]byte, error) {
 
 	url := api.Host + endpoint
-	reqLog := log.WithFields(log.Fields{
+	reqLog := logrus.WithFields(logrus.Fields{
 		"method": method,
 		"url":    url,
 	})
@@ -119,7 +117,7 @@ func (api *Api) PerformRequest(method string, endpoint string, payload []byte) (
 	if len(payload) == 0 {
 		reqLog.Debug("No payload")
 	} else {
-		log.Debug("Payload:\n", IndentJson(payload))
+		logrus.Debug("Payload:\n", string(payload))
 	}
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(payload))
@@ -136,7 +134,7 @@ func (api *Api) PerformRequest(method string, endpoint string, payload []byte) (
 		return []byte{}, errors.Wrap(err, "Error connecting to Boober")
 	}
 
-	reqLog = reqLog.WithFields(log.Fields{
+	reqLog = reqLog.WithFields(logrus.Fields{
 		"status": res.StatusCode,
 	})
 
@@ -149,7 +147,7 @@ func (api *Api) PerformRequest(method string, endpoint string, payload []byte) (
 
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
-	log.Debug("Body:\n", IndentJson(body))
+	logrus.Debug("Body:\n", string(body))
 
 	return body, err
 }
@@ -158,7 +156,7 @@ func IndentJson(data []byte) string {
 	var out bytes.Buffer
 	err := json.Indent(&out, data, "", "  ")
 	if err != nil {
-		log.Error("Failed to indent json ", err.Error())
+		logrus.Warn("Failed to indent json ", err.Error())
 		return string(data)
 	}
 

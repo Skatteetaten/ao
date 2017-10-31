@@ -1,5 +1,5 @@
-hash: 87f810d4516b95809be89fe5f0de4c1b26b7154d508664b8b0b42af0f4e7133e
-updated: 2017-10-27T17:12:00.686059586+02:00
+hash: 74cb7a99e2a06af66ff3ac08f40cbd5da03eebf71c87ef032ea5fd481283c7b7
+updated: 2017-10-31T07:58:29.297006542+01:00
 imports:
 - name: github.com/c-bata/go-prompt
   version: ba233229562fbeebe1328788a6245cda9124af27
@@ -22,6 +22,8 @@ imports:
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/magiconair/properties
   version: 8d7837e64d3c1ee4e54a880c5a920ab4316fc90a
+  subpackages:
+  - assert
 - name: github.com/mattn/go-colorable
   version: ad5389df28cdac544c99bd7b9161a0b5b6ca9d1b
 - name: github.com/mattn/go-isatty
@@ -38,12 +40,12 @@ imports:
   version: b1f72af2d63057363398bec5873d16a98b453312
   subpackages:
   - termios
-- name: github.com/sirupsen/logrus
-  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
 - name: github.com/renstrom/fuzzysearch
   version: 2d205ac6ec17a839a94bdbfd16d2fa6c6dada2e0
   subpackages:
   - fuzzy
+- name: github.com/sirupsen/logrus
+  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
 - name: github.com/spf13/afero
   version: ee1bd8ee15a1306d1f9201acc41ef39cd9f99a1b
   subpackages:
@@ -75,7 +77,7 @@ imports:
   - transform
   - unicode/norm
 - name: gopkg.in/AlecAivazis/survey.v1
-  version: 18a4dbb1d9d05349aea1a2bf9c84028c36817c10
+  version: 344ec26ea976135df7508f1f513e5490a4686e11
   subpackages:
   - core
   - terminal

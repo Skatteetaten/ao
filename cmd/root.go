@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stromland/cobra-prompt"
+	"github.com/sirupsen/logrus"
 )
 
 const CallbackAnnotation = cobraprompt.CALLBACK_ANNOTATION
@@ -38,6 +39,15 @@ This application has two main parts.
 2. apply the aoc configuration to the clusters
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+
+		lvl, _ := cmd.Flags().GetString("loglevel")
+		level, err := logrus.ParseLevel(lvl)
+		if err == nil {
+			logrus.SetLevel(level)
+		} else {
+			fmt.Println(err)
+		}
+
 		commandsWithoutLogin := []string{"login", "logout", "version", "help"}
 
 		commands := strings.Split(cmd.CommandPath(), " ")
@@ -74,6 +84,9 @@ func Execute() {
 }
 
 func init() {
+	logrus.SetOutput(os.Stdout)
+
+	RootCmd.PersistentFlags().StringP("loglevel", "", "fatal", "Set loglevel")
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Verbose, "verbose",
 		"", false, "Log progress to standard out")
