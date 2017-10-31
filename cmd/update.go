@@ -40,7 +40,7 @@ var updateCmd = &cobra.Command{
 				os.Exit(-1)
 			}
 		}
-		output, err := updatecmd.UpdateSelf(args, simulate, forceVersion, forceUpdate)
+		output, err := updatecmd.UpdateSelf(args, simulate, forceVersion, forceUpdate, config)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())

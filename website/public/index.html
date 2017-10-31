@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>AO</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+
+<body>
+  <em>
+    <pre class="logo">
+           ,ggg,     _,gggggg,_
+          dP""8I   ,d8P""d8P"Y8b,
+         dP   88  ,d8'   Y8   "8b,dP
+        dP    88  d8'    `Ybaaad88P'
+       ,8'    88  8P       `""""Y8
+       d88888888  8b            d8
+ __   ,8"     88  Y8,          ,8P
+dP"  ,8P      Y8  `Y8,        ,8P'
+Yb,_,dP       `8b, `Y8b,,__,,d8P'
+ "Y8P"         `Y8   `"Y8888P"'
+  </pre>
+
+  </em>
+  <a href="/api/ao" class="btn" download>
+    <h1>
+      <em>Download</em>
+    </h1>
+  </a>
+  <em id="version"></em>
+  <script>
+    function showVersion(body) {
+        var version = body.branch;
+        var matches = body.version.match(/v([0-9])./);
+        if (matches !== null && matches.length > 0) {
+          version = body.version.replace('v', '');
+        }
+        document.getElementById('version').innerHTML = 'Version: ' + version;
+    }
+
+    fetch('/api/version').then(function (res) {
+      res.json().then(showVersion);
+    });
+  </script>
+  </body>
+  
+  </html>

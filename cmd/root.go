@@ -18,20 +18,14 @@ import (
 
 const CallbackAnnotation = cobraprompt.CALLBACK_ANNOTATION
 
-// Cobra Flag variables
 var persistentOptions cmdoptions.CommonCommandOptions
 var overrideValues []string
 var localDryRun bool
 
-var aoConfigLocation string
-var aoConfig *openshift.OpenshiftConfig
 var config = &configuration.ConfigurationClass{
 	PersistentOptions: &persistentOptions,
 }
 
-//var cfgFile string
-
-// RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "ao",
 	Short: "Aurora Openshift CLI",
@@ -44,7 +38,7 @@ This application has two main parts.
 2. apply the aoc configuration to the clusters
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		commandsWithoutLogin := []string{"login", "logout", "version", "update", "help", "deploy", "adm"}
+		commandsWithoutLogin := []string{"login", "logout", "version", "help"}
 
 		commands := strings.Split(cmd.CommandPath(), " ")
 		if len(commands) > 1 {
@@ -53,6 +47,13 @@ This application has two main parts.
 					return
 				}
 			}
+		}
+
+		config.OpenshiftConfig = getOpenShiftConfig(false, "")
+
+		if err := config.SetApiCluster(); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
 		}
 
 		if valid := serverapi.ValidateLogin(config.OpenshiftConfig); !valid {
@@ -73,15 +74,6 @@ func Execute() {
 }
 
 func init() {
-	config.Init()
-	cobra.OnInitialize(initConfigCobra)
-
-	//Verbose     bool
-	//Debug       bool
-	//DryRun      bool
-	//Localhost   bool
-	//ShowConfig  bool
-	//ShowObjects bool
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Verbose, "verbose",
 		"", false, "Log progress to standard out")
@@ -89,42 +81,25 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Debug, "debug",
 		"", false, "Show debug information")
 	RootCmd.PersistentFlags().MarkHidden("debug")
-
-	//RootCmd.PersistentFlags().BoolVarP(&persistentOptions.DryRun, "dryrun",
-	//	"d", false,
-	//	"Do not perform a setup, just collect and print the configuration files")
-
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Localhost, "localhost",
 		"l", false, "Send setup to Boober on localhost")
 	RootCmd.PersistentFlags().MarkHidden("localhost")
 
 	RootCmd.PersistentFlags().StringVarP(&persistentOptions.ServerApi, "serverapi",
 		"", "", "Override default server API address")
-	//RootCmd.PersistentFlags().MarkHidden("serverurl")
 	RootCmd.PersistentFlags().StringVarP(&persistentOptions.Token, "token",
 		"", "", "Token to be used for serverapi connections")
-
-	//RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowConfig, "showconfig",
-	//	"", false, "Print merged config from Boober to standard out")
-
-	//RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowObjects, "showobjects",
-	//	"", false, "Print object definitions from Boober to standard out")
-	// test
-
 }
 
-// initConfig reads in config file and ENV variables if set.
-
-func initConfigCobra() {
-	initConfig(false, "")
-}
-
-func initConfig(useOcConfig bool, loginCluster string) {
+func getOpenShiftConfig(useOcConfig bool, loginCluster string) *openshift.OpenshiftConfig {
 	viper.SetConfigName(".ao")   // name of config file (without extension)
 	viper.AddConfigPath("$HOME") // adding home directory as first search path
 	viper.AutomaticEnv()         // read in environment variables that match
 	viper.BindEnv("HOME")
 
-	aoConfigLocation = viper.GetString("HOME") + "/.ao.json"
-	aoConfig, _ = openshift.LoadOrInitiateConfigFile(aoConfigLocation, useOcConfig, loginCluster)
+	aoConfigLocation := viper.GetString("HOME") + "/.ao.json"
+	openShiftConfig, _ := openshift.LoadOrInitiateConfigFile(aoConfigLocation, loginCluster, useOcConfig)
+	openShiftConfig.ConfigLocation = aoConfigLocation
+
+	return openShiftConfig
 }
