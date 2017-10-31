@@ -25,6 +25,8 @@ import (
 	"strings"
 	"encoding/json"
 	"github.com/sirupsen/logrus"
+	"github.com/skatteetaten/ao/pkg/fuzzy"
+	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 var appList []string
@@ -118,31 +120,47 @@ var applyCmd = &cobra.Command{
 			return
 		}
 
-		var url string
-		var token string
-		for _, c := range config.OpenshiftConfig.Clusters {
-			if c.Name == "utv" {
-				url = c.BooberUrl
-				token = c.Token
-			}
+		cluster := config.GetApiCluster()
+		api := boober.NewApi(cluster.BooberUrl, cluster.Token, config.GetAffiliation())
+		files, err := api.GetFileNames()
+		if err != nil {
+			fmt.Println(err)
 		}
-
+		filesToDeploy := fuzzy.FilterFileNamesForDeploy(files)
 		applicationIds := []boober.ApplicationId{}
 		for _, arg := range args {
-			envApp := strings.Split(arg, "/")
-			if len(envApp) != 2 {
-				continue
+			apps, _ := fuzzy.FindApplicationsToDeploy(arg, filesToDeploy, true)
+			for _, app := range apps {
+				envApp := strings.Split(app, "/")
+
+				if len(envApp) != 2 {
+					continue
+				}
+
+				applicationIds = append(applicationIds, boober.ApplicationId{
+					Environment: envApp[0],
+					Application: envApp[1],
+				})
 			}
 
-			applicationIds = append(applicationIds, boober.ApplicationId{
-				Environment: envApp[0],
-				Application: envApp[1],
-			})
 		}
 
-		api := boober.NewApi(url, token, config.GetAffiliation())
-		logrus.SetLevel(logrus.DebugLevel)
-		err := api.Deploy(applicationIds, make(map[string]json.RawMessage))
+		c := &survey.Confirm{
+			Message: fmt.Sprintf("Do you want to deploy\n%v", applicationIds),
+		}
+
+		shouldDeploy := true
+		err = survey.AskOne(c, &shouldDeploy, nil)
+		if err != nil {
+			logrus.Error(err)
+		}
+
+		if !shouldDeploy {
+			return
+		}
+
+		// TODO: Fix overrides
+		err = api.Deploy(applicationIds, make(map[string]json.RawMessage))
 		if err != nil {
 			logrus.Error(err)
 		}
