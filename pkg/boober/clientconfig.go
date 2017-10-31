@@ -14,7 +14,7 @@ type ClientConfig struct {
 }
 
 func (api *Api) GetClientConfig() (ClientConfig, error) {
-	endpoint := fmt.Sprintf("/clientconfig", api.Affiliation)
+	endpoint := "/clientconfig"
 
 	var res struct {
 		Response
