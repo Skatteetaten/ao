@@ -61,6 +61,10 @@ func (api *Api) WithRequest(method string, endpoint string, payload []byte, hand
 		return err
 	}
 
+	if len(body) == 0 {
+		return errors.New("Boober returned nothing")
+	}
+
 	res, err := handle(body)
 
 	logrus.WithFields(logrus.Fields{

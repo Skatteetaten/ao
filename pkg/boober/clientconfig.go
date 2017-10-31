@@ -1,7 +1,6 @@
 package boober
 
 import (
-	"fmt"
 	"net/http"
 	"encoding/json"
 	"github.com/pkg/errors"
