@@ -72,3 +72,29 @@ func TestFindFileToEdit(t *testing.T) {
 		assert.Equal(t, filename, test.Expected)
 	}
 }
+
+func TestFindAllFor(t *testing.T) {
+	tests := []struct {
+		Search   string
+		Mode     DeployFilterMode
+		Expected []string
+	}{
+		{"utv", ENV, []string{"boober", "console"}},
+		{"console", APP, []string{"test", "utv"}},
+		{"test", ENV, []string{"boober", "console"}},
+		{"test-r", ENV, []string{}},
+		{"boober", APP, []string{"test", "test-relay", "utv", "utv-relay"}},
+		{"boo", APP, []string{}},
+	}
+
+	filteredFiles := FilterFileNamesForDeploy(fileNames)
+
+	for _, test := range tests {
+		deploys, err := FindAllDeploysFor(test.Mode, test.Search, filteredFiles)
+		if err != nil {
+			t.Error(err)
+		}
+
+		assert.Equal(t, deploys, test.Expected)
+	}
+}

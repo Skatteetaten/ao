@@ -9,6 +9,16 @@ import (
 	"strings"
 )
 
+func FilterFileNamesForDeploy(fileNames []string) []string {
+	filteredFiles := []string{}
+	for _, file := range fileNames {
+		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
+			filteredFiles = append(filteredFiles, strings.TrimSuffix(file, ".json"))
+		}
+	}
+	return filteredFiles
+}
+
 func FindMatches(search string, fileNames []string, withSuffix bool) ([]string, error) {
 
 	files := []string{}
@@ -87,4 +97,83 @@ func FindApplicationsToDeploy(search string, files []string, prompt bool) ([]str
 	err = survey.AskOne(p, &applications, nil)
 
 	return applications, err
+}
+
+func NewDeploySet() *DeploySet {
+	return &DeploySet{
+		set: make(map[string]bool),
+	}
+}
+
+type DeploySet struct {
+	set map[string]bool
+}
+
+func (s *DeploySet) Add(key string) {
+	_, found := s.set[key]
+	if !found {
+		s.set[key] = true
+	}
+}
+
+func (s *DeploySet) Keys() []string {
+	keys := []string{}
+	for k, _ := range s.set {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
+type DeployFilterMode uint
+
+const (
+	APP DeployFilterMode = iota
+	ENV
+)
+
+/*
+	Search string must match exact
+ */
+func FindAllDeploysFor(mode DeployFilterMode, search string, files []string) ([]string, error) {
+	deploys := make(map[string]*DeploySet)
+
+	for _, file := range files {
+		deploy := strings.Split(file, "/")
+		if len(deploy) != 2 {
+			continue
+		}
+
+		// Key = env, value = app
+		key, value := deploy[0], deploy[1]
+		if mode == APP {
+			// Key = app, value = env
+			key, value = deploy[1], deploy[0]
+		}
+
+		if _, found := deploys[key]; !found {
+			deploys[key] = NewDeploySet()
+			deploys[key].Add(value)
+		} else {
+			deploys[key].Add(value)
+		}
+	}
+
+	deployKeys := []string{}
+	for k, _ := range deploys {
+		deployKeys = append(deployKeys, k)
+	}
+
+	matches := fuzzy.RankFind(search, deployKeys)
+	sort.Sort(matches)
+
+	if len(matches) < 1 || matches[0].Distance != 0 {
+		return []string{}, nil
+	}
+
+	result := deploys[matches[0].Target]
+	keys := result.Keys()
+	sort.Strings(keys)
+
+	return keys, nil
 }
