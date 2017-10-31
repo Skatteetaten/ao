@@ -200,7 +200,7 @@ func (deploy *DeployClass) populateAllAppForEnv(env string) (err error) {
 			// We have a full path name
 			parts := strings.Split(filename, "/")
 			if parts[0] == env {
-				if !strings.Contains(parts[1], "about.json") {
+				if !strings.Contains(parts[1], "about") && !strings.Contains(parts[1], "template") {
 					if strings.HasSuffix(parts[1], ".json") {
 						deploy.fuzzyArgs.AddApp(strings.TrimSuffix(parts[1], ".json"))
 					}
