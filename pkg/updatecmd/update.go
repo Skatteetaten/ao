@@ -13,8 +13,10 @@ import (
 	"github.com/skatteetaten/ao/pkg/versionutil"
 )
 
-const ao5Url = "http://ao-update-service-paas-ao-update.utv.paas.skead.no"
-const ao5UrlTest = "http://ao-update-service-paas-ao-update.test.paas.skead.no"
+const updateServerPattern = "http://ao-aurora-tools.%s.paas.skead.no"
+
+const aoDownloadPath = "/api/ao"
+const getCurrentVersionPath = "/api/version"
 
 func InstallAuroraOpenshiftGenerator() (err error) {
 	const gitExec = "git"
@@ -51,20 +53,15 @@ func InstallAuroraOpenshiftGenerator() (err error) {
 	return
 }
 
-func UpdateSelf(args []string, simulate bool, forceVersion string, forceUpdate bool) (output string, err error) {
+func UpdateSelf(args []string, simulate bool, forceVersion string, forceUpdate bool, config *configuration.ConfigurationClass) (output string, err error) {
 	var releaseVersion string
 	var url string
 
-	var config configuration.ConfigurationClass
-	err = config.Init()
-	if err != nil {
-		return "", err
-	}
 	cluster := config.GetApiClusterName()
 	if cluster == "utv" {
-		url = ao5Url
+		url = fmt.Sprintf(updateServerPattern, "utv")
 	} else {
-		url = ao5UrlTest
+		url = fmt.Sprintf(updateServerPattern, "test")
 	}
 
 	if forceVersion == "" {
@@ -95,8 +92,6 @@ func UpdateSelf(args []string, simulate bool, forceVersion string, forceUpdate b
 }
 
 func doUpdate(url string, version string) (err error) {
-	releaseFilename := "ao_" + version
-	releaseUrl := url + "/" + releaseFilename
 
 	executablePath, err := os.Executable()
 	if err != nil {
@@ -104,7 +99,7 @@ func doUpdate(url string, version string) (err error) {
 	}
 
 	releasePath := executablePath + "_" + version
-	body, err := getFile(releaseUrl)
+	body, err := getFile(url + aoDownloadPath)
 	err = ioutil.WriteFile(releasePath, []byte(body), 0750)
 	if err != nil {
 		return
@@ -117,12 +112,11 @@ func doUpdate(url string, version string) (err error) {
 }
 
 func getReleaseVersion(url string) (version string, err error) {
-	releaseinfoUrl := url + "/releaseinfo.json"
-	releaseinfo, err := getFile(releaseinfoUrl)
+	releaseInfo, err := getFile(url + getCurrentVersionPath)
 	if err != nil {
 		return
 	}
-	releaseVersionStruct, err := versionutil.Json2Version(releaseinfo)
+	releaseVersionStruct, err := versionutil.Json2Version(releaseInfo)
 
 	version = releaseVersionStruct.Version
 	return
@@ -146,8 +140,7 @@ func getFile(url string) (file []byte, err error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-
-		err = errors.New(fmt.Sprintf("Error downloading update from %v: %v", ao5Url, err))
+		err = errors.New(fmt.Sprintf("Error downloading update from %v: %v", url, err))
 		return
 	}
 

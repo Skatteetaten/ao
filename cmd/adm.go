@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
+	"github.com/skatteetaten/ao/pkg/openshift"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -91,7 +92,8 @@ var recreateConfigCmd = &cobra.Command{
 				os.Exit(1)
 			}
 		}
-		initConfig(useCurrentOcLogin, loginCluster)
+
+		openshift.CreateAoConfig(configLocation, loginCluster, useCurrentOcLogin)
 	},
 }
 

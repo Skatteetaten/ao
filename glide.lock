@@ -1,5 +1,5 @@
-hash: 0eeae33bdb2bbe87451210401f36eb4e9cc4931f2a269630caeb24ca4b4feffa
-updated: 2017-09-05T15:38:35.673873654+02:00
+hash: 87f810d4516b95809be89fe5f0de4c1b26b7154d508664b8b0b42af0f4e7133e
+updated: 2017-10-27T17:12:00.686059586+02:00
 imports:
 - name: github.com/c-bata/go-prompt
   version: ba233229562fbeebe1328788a6245cda9124af27
@@ -22,6 +22,12 @@ imports:
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/magiconair/properties
   version: 8d7837e64d3c1ee4e54a880c5a920ab4316fc90a
+- name: github.com/mattn/go-colorable
+  version: ad5389df28cdac544c99bd7b9161a0b5b6ca9d1b
+- name: github.com/mattn/go-isatty
+  version: a5cdd64afdee435007ee3e9f6ed4684af949d568
+- name: github.com/mgutz/ansi
+  version: 9520e82c474b0a04dd04f8a40959027271bab992
 - name: github.com/mitchellh/mapstructure
   version: d0303fe809921458f417bcf828397a65db30a7e4
 - name: github.com/pelletier/go-toml
@@ -32,6 +38,10 @@ imports:
   version: b1f72af2d63057363398bec5873d16a98b453312
   subpackages:
   - termios
+- name: github.com/renstrom/fuzzysearch
+  version: 2d205ac6ec17a839a94bdbfd16d2fa6c6dada2e0
+  subpackages:
+  - fuzzy
 - name: github.com/spf13/afero
   version: ee1bd8ee15a1306d1f9201acc41ef39cd9f99a1b
   subpackages:
@@ -62,6 +72,11 @@ imports:
   subpackages:
   - transform
   - unicode/norm
+- name: gopkg.in/AlecAivazis/survey.v1
+  version: 18a4dbb1d9d05349aea1a2bf9c84028c36817c10
+  subpackages:
+  - core
+  - terminal
 - name: gopkg.in/yaml.v2
   version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
 testImports:

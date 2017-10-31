@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"fmt"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/fileutil"
@@ -14,12 +15,10 @@ import (
 	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
-const commentString = "# "
 const editMessage = `
 # Please edit the object below. Lines beginning with a '#' will be ignored,
 # and an empty file will abort the edit. If an error occurs while saving this file will be
 # reopened with the relevant failures.
-#
 `
 
 type EditcmdClass struct {
@@ -52,7 +51,7 @@ func (editcmd *EditcmdClass) FuzzyEditFile(args []string) (string, error) {
 		return "", err
 	}
 
-	return editcmd.EditFile(filename)
+	return EditFile(filename, &auroraConfig, editcmd.Configuration)
 }
 
 func (editcmd *EditcmdClass) EditSecret(vaultName string, secretName string) (string, error) {
@@ -69,24 +68,21 @@ func (editcmd *EditcmdClass) EditSecret(vaultName string, secretName string) (st
 	}
 
 	if modifiedSecret != secret {
-		_, err = auroraconfig.PutSecret(vaultName, secretName, modifiedSecret, version, editcmd.Configuration)
+		_, _, err = auroraconfig.PutSecret(vaultName, secretName, modifiedSecret, version, editcmd.Configuration)
 	}
 
 	return "", err
 }
 
-func addComments(content string, comments string) (commentedContent string, err error) {
-	var commentLines []string
-
-	const newline = "\n"
-	var commentedComments string
-	commentLines, _ = contentToLines(comments)
-	for lineno := range commentLines {
-		commentedComments += commentString + commentLines[lineno] + newline
+func addComments(content string, messages []string) (string, error) {
+	comments := ""
+	for _, message := range messages {
+		for _, line := range strings.Split(message, "\n") {
+			comments += fmt.Sprintf("# %s\n", line)
+		}
 	}
-	commentedContent = commentedComments + content
 
-	return
+	return comments + content, nil
 }
 
 func stripComments(content string) (uncommentedContent string) {

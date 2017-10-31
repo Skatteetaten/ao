@@ -12,6 +12,7 @@ import (
 	"github.com/stromland/cobra-prompt"
 )
 
+// TODO: Remove this?
 var shellCmd = &cobra.Command{
 	Use:   "shell",
 	Short: "Interactive shell",

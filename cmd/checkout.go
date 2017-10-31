@@ -42,7 +42,7 @@ var checkoutCmd = &cobra.Command{
 			fmt.Print(output)
 		}
 
-		if err := aoConfig.AddCheckoutPath(affiliation, path, aoConfigLocation); err != nil {
+		if err := config.OpenshiftConfig.AddCheckoutPath(affiliation, path); err != nil {
 			fmt.Println(err)
 			return
 		}

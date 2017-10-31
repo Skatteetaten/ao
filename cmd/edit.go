@@ -7,6 +7,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 
 	pkgEditCmd "github.com/skatteetaten/ao/pkg/editcmd"
+	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/spf13/cobra"
 )
 
@@ -24,47 +25,26 @@ The file can be specified using unique shortened name, so given that the file su
 
 will edit this file, if there is no other file matching the same shortening.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
 		if len(args) < 1 {
 			cmd.Usage()
 			return
 		}
 
-		if output, err := editcmdObject.FuzzyEditFile(args); err == nil {
-			if output != "" {
-				fmt.Println(output)
-			}
-			auroraconfig.UpdateLocalRepository(config.GetAffiliation(), aoConfig)
-		} else {
+		auroraConfig, _ := auroraconfig.GetAuroraConfig(config)
+
+		files := []string{}
+		for k, _ := range auroraConfig.Files {
+			files = append(files, k)
+		}
+
+		filename, err := fuzzy.FindFileToEdit(args[0], files, true)
+		if err != nil {
 			fmt.Println(err)
-		}
-	},
-}
-
-var editFileCmd = &cobra.Command{
-	Use:   "file [env/]<filename>",
-	Short: "Edit a single configuration file",
-	Long: `Edit a single configuration file or a secret in a vault.
-The file can be specified using unique shortened name, so given that the file superapp-test/about.json exists, then the command
-
-	ao edit test/about
-
-will edit this file, if there is no other file matching the same shortening.`,
-	Annotations: map[string]string{
-		CallbackAnnotation: "GetFiles",
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 1 {
-			cmd.Usage()
 			return
 		}
 
-		if output, err := editcmdObject.FuzzyEditFile(args); err == nil {
-			if output != "" {
-				fmt.Println(output)
-			}
-			auroraconfig.UpdateLocalRepository(config.GetAffiliation(), aoConfig)
-		} else {
+		_, err = pkgEditCmd.EditFile(filename, &auroraConfig, config)
+		if err != nil {
 			fmt.Println(err)
 		}
 	},
@@ -114,6 +94,5 @@ If secret-name is given, the editor will present the decoded secret string for e
 
 func init() {
 	RootCmd.AddCommand(editCmd)
-	editCmd.AddCommand(editFileCmd)
 	editCmd.AddCommand(editVaultCmd)
 }

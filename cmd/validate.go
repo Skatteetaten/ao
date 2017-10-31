@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/spf13/cobra"
 )
@@ -8,7 +9,16 @@ import (
 var validateCmd = &cobra.Command{
 	Use: "validate",
 	Run: func(cmd *cobra.Command, args []string) {
-		auroraconfig.Validate(config)
+		mainMessage, messages, err := auroraconfig.Validate(config)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		fmt.Println(mainMessage)
+		for _, m := range messages {
+			fmt.Println(m)
+		}
 	},
 }
 
