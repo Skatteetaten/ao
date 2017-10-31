@@ -56,8 +56,9 @@ type HandleResponseFunc func([]byte) (ResponseBody, error)
 
 func (api *Api) WithRequest(method string, endpoint string, payload []byte, handle HandleResponseFunc) error {
 
-	body, status, err := api.performRequest(method, endpoint, payload)
+	body, status, err := api.doRequest(method, endpoint, payload)
 	if err != nil {
+		logrus.Error(err)
 		return err
 	}
 
@@ -79,7 +80,7 @@ func (api *Api) WithRequest(method string, endpoint string, payload []byte, hand
 	return err
 }
 
-func (api *Api) performRequest(method string, endpoint string, payload []byte) ([]byte, int, error) {
+func (api *Api) doRequest(method string, endpoint string, payload []byte) ([]byte, int, error) {
 
 	url := api.Host + endpoint
 	reqLog := logrus.WithFields(logrus.Fields{
@@ -96,6 +97,7 @@ func (api *Api) performRequest(method string, endpoint string, payload []byte) (
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(payload))
 	if err != nil {
+		// TODO: status code as -1 for internal errors?
 		return []byte{}, -1, err
 	}
 
@@ -108,6 +110,7 @@ func (api *Api) performRequest(method string, endpoint string, payload []byte) (
 		return []byte{}, -1, errors.Wrap(err, "Error connecting to Boober")
 	}
 
+	// TODO: How do we handle error codes? Does Boober send Response envelope for error codes?
 	if res.StatusCode > 399 {
 		return []byte{}, res.StatusCode, errors.New("Boober request returned with error code " + res.Status)
 	}
@@ -118,6 +121,7 @@ func (api *Api) performRequest(method string, endpoint string, payload []byte) (
 	return body, res.StatusCode, err
 }
 
+// TODO: Do we need this?
 func IndentJson(data []byte) string {
 	var out bytes.Buffer
 	err := json.Indent(&out, data, "", "  ")

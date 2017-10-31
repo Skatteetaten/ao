@@ -10,6 +10,7 @@ import (
 
 func getTestServer(payload, body []byte) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusForbidden)
 		res.Header().Set("Content-Type", "application/json")
 		res.Write(body)
 	}))
