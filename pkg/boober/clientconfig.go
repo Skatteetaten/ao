@@ -3,7 +3,7 @@ package boober
 import (
 	"net/http"
 	"encoding/json"
-	"github.com/pkg/errors"
+	"fmt"
 )
 
 type ClientConfig struct {
@@ -12,26 +12,28 @@ type ClientConfig struct {
 	OpenShiftUrl     string `json:"openshiftUrl"`
 }
 
-func (api *Api) GetClientConfig() (ClientConfig, error) {
+type clientConfigResponse struct {
+	Response
+	Items []ClientConfig `json:"items"`
+}
+
+func (api *BooberClient) GetClientConfig() (ClientConfig, *Validation) {
 	endpoint := "/clientconfig"
 
-	var res struct {
-		Response
-		Items []ClientConfig `json:"items"`
-	}
-
-	err := api.WithRequest(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
-		jErr := json.Unmarshal(body, &res)
-		return res, jErr
+	var ccr clientConfigResponse
+	validation, err := api.Call(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
+		jErr := json.Unmarshal(body, &ccr)
+		return ccr, jErr
 	})
-
 	if err != nil {
-		return ClientConfig{}, err
+		fmt.Println(err)
+		return ClientConfig{}, validation
 	}
 
-	if len(res.Items) < 1 {
-		return ClientConfig{}, errors.New("No client config for affiliation " + api.Affiliation)
+	if len(ccr.Items) < 1 {
+		validation.SetMessage("No client config for affiliation " + api.Affiliation)
+		return ClientConfig{}, validation
 	}
 
-	return res.Items[0], nil
+	return ccr.Items[0], validation
 }

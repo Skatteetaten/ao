@@ -14,73 +14,65 @@ type ApplicationId struct {
 	Application string `json:"application"`
 }
 
-type Response struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-	Count   int    `json:"count"`
-}
-
-func (r Response) GetSuccess() bool {
-	return r.Success
-}
-
-func (r Response) GetMessage() string {
-	return r.Message
-}
-
-func (r Response) GetCount() int {
-	return r.Count
-}
-
-type ResponseBody interface {
-	GetSuccess() bool
-	GetMessage() string
-	GetCount() int
-}
-
-type Api struct {
+type BooberClient struct {
 	Host        string
 	Token       string
 	Affiliation string
 }
 
-func NewApi(host, token, affiliation string) *Api {
-	return &Api{
+func NewBooberClient(host, token, affiliation string) *BooberClient {
+	return &BooberClient{
 		Host:        host,
 		Token:       token,
 		Affiliation: affiliation,
 	}
 }
 
-type HandleResponseFunc func([]byte) (ResponseBody, error)
+type UnmarshalResponseFunc func(body []byte) (ResponseBody, error)
 
-func (api *Api) WithRequest(method string, endpoint string, payload []byte, handle HandleResponseFunc) error {
+func (api *BooberClient) Call(method string, endpoint string, payload []byte, unmarshal UnmarshalResponseFunc) (*Validation, error) {
 
 	body, status, err := api.doRequest(method, endpoint, payload)
 	if err != nil {
-		logrus.Error(err)
-		return err
+		return nil, err
 	}
 
-	if len(body) == 0 {
-		return errors.New("Boober returned nothing")
+	logrus.Debug("ResponseBody:\n", string(body))
+
+	if status > 399 {
+		var resErr responseError
+		err = json.Unmarshal(body, &resErr)
+		if err != nil {
+			return nil, err
+		}
+		logResponse(status, resErr)
+
+		validation := NewValidation(resErr.Message)
+		for _, re := range resErr.Items {
+			validation.FormatValidationError(&re)
+		}
+		return validation, nil
 	}
 
-	res, err := handle(body)
+	res, err := unmarshal(body)
+	if err != nil {
+		return nil, err
+	}
+	logResponse(status, res)
 
+	return nil, nil
+}
+
+func logResponse(status int, res ResponseBody) {
 	logrus.WithFields(logrus.Fields{
 		"status":  status,
 		"success": res.GetSuccess(),
 		"message": res.GetMessage(),
 		"count":   res.GetCount(),
 	}).Info("Response")
-
-	logrus.Debug("ResponseBody:\n", string(body))
-
-	return err
 }
 
-func (api *Api) doRequest(method string, endpoint string, payload []byte) ([]byte, int, error) {
+func (api *BooberClient) doRequest(method string, endpoint string, payload []byte) ([]byte, int, error) {
 
 	url := api.Host + endpoint
 	reqLog := logrus.WithFields(logrus.Fields{
@@ -108,11 +100,6 @@ func (api *Api) doRequest(method string, endpoint string, payload []byte) ([]byt
 	res, err := client.Do(req)
 	if err != nil {
 		return []byte{}, -1, errors.Wrap(err, "Error connecting to Boober")
-	}
-
-	// TODO: How do we handle error codes? Does Boober send Response envelope for error codes?
-	if res.StatusCode > 399 {
-		return []byte{}, res.StatusCode, errors.New("Boober request returned with error code " + res.Status)
 	}
 
 	defer res.Body.Close()

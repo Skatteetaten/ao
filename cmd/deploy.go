@@ -22,11 +22,10 @@ import (
 	"github.com/skatteetaten/ao/pkg/deploy"
 	"github.com/spf13/cobra"
 	"github.com/skatteetaten/ao/pkg/boober"
-	"strings"
-	"encoding/json"
-	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
-	"gopkg.in/AlecAivazis/survey.v1"
+	"github.com/skatteetaten/ao/pkg/prompt"
+	"github.com/skatteetaten/ao/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/jsonutil"
 )
 
 var appList []string
@@ -120,58 +119,63 @@ var applyCmd = &cobra.Command{
 			return
 		}
 
-		cluster := config.GetApiCluster()
-		api := boober.NewApi(cluster.BooberUrl, cluster.Token, config.GetAffiliation())
-		files, err := api.GetFileNames()
-		if err != nil {
-			fmt.Println(err)
+		PerformDeploy(args, config)
+	},
+}
+
+func PerformDeploy(args []string, conf *configuration.ConfigurationClass) {
+
+	cluster := conf.GetApiCluster()
+	api := boober.NewBooberClient(cluster.BooberUrl, cluster.Token, conf.GetAffiliation())
+
+	files, validation := api.GetFileNames()
+	if validation != nil {
+		validation.PrintAllErrors()
+		return
+	}
+
+	possibleDeploys := fuzzy.FilterFileNamesForDeploy(files)
+	appsToDeploy := []string{}
+	for _, arg := range args {
+		options, _ := fuzzy.SearchForApplications(arg, possibleDeploys)
+		if !forceDeployFlag && len(options) > 1 {
+			selectedApps := prompt.MultiSelectDeployments(options)
+			appsToDeploy = append(appsToDeploy, selectedApps...)
+		} else {
+			appsToDeploy = append(appsToDeploy, options...)
 		}
-		filesToDeploy := fuzzy.FilterFileNamesForDeploy(files)
-		applicationIds := []boober.ApplicationId{}
-		for _, arg := range args {
-			apps, _ := fuzzy.FindApplicationsToDeploy(arg, filesToDeploy, true)
-			for _, app := range apps {
-				envApp := strings.Split(app, "/")
+	}
 
-				if len(envApp) != 2 {
-					continue
-				}
+	if len(appsToDeploy) == 0 {
+		fmt.Println("No applications to deploy")
+		return
+	}
 
-				applicationIds = append(applicationIds, boober.ApplicationId{
-					Environment: envApp[0],
-					Application: envApp[1],
-				})
-			}
-
-		}
-
-		c := &survey.Confirm{
-			Message: fmt.Sprintf("Do you want to deploy\n%v", applicationIds),
-		}
-
-		shouldDeploy := true
-		err = survey.AskOne(c, &shouldDeploy, nil)
-		if err != nil {
-			logrus.Error(err)
-		}
-
+	if !forceDeployFlag {
+		shouldDeploy := prompt.ConfirmDeploy(appsToDeploy)
 		if !shouldDeploy {
 			return
 		}
+	}
 
-		// TODO: Fix overrides
-		err = api.Deploy(applicationIds, make(map[string]json.RawMessage))
-		if err != nil {
-			logrus.Error(err)
-		}
-	},
+	overrides, err := jsonutil.OverrideJsons2map(overrideJson)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// TODO: Deploy to all clusters
+	validation = api.Deploy(appsToDeploy, overrides)
+	if validation != nil {
+		validation.PrintAllErrors()
+	}
 }
 
 func init() {
 	RootCmd.AddCommand(deployCmd)
 	RootCmd.AddCommand(applyCmd)
 
-	deployCmd.Flags().StringArrayVarP(&overrideJson, "file",
+	applyCmd.Flags().StringArrayVarP(&overrideJson, "overrides",
 		"o", overrideValues, "Override in the form [env/]file:{<json override>}")
 
 	deployCmd.Flags().BoolVarP(&localDryRun, "localdryrun",
@@ -185,9 +189,9 @@ func init() {
 		"e", nil, "Only deploy specified environment")
 
 	deployCmd.Flags().BoolVarP(&deployAllFlag, "all",
-		"", false, "Will deploy all applications in all affiliations in all clusters reachable")
+		"", false, "Will deploy all applications in all clusters reachable")
 
-	deployCmd.Flags().BoolVarP(&forceDeployFlag, "force",
+	applyCmd.Flags().BoolVarP(&forceDeployFlag, "force",
 		"", false, "Supress prompts")
 
 	deployCmd.Flags().StringVarP(&deployVersion, "version",
@@ -202,5 +206,4 @@ func init() {
 
 	deployCmd.Flags().BoolVarP(&deployApiClusterOnly, "api-cluster-only", "", false,
 		"Limit deploy to the API cluster")
-
 }

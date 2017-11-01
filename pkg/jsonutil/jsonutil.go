@@ -64,6 +64,8 @@ func OverrideJsons2map(OverrideJsons []string) (returnMap map[string]json.RawMes
 	for i := 0; i < len(OverrideJsons); i++ {
 		indexByte := strings.IndexByte(OverrideJsons[i], ':')
 		filename := OverrideJsons[i][:indexByte]
+
+		// TODO: Check for valid json
 		jsonOverride := OverrideJsons[i][indexByte+1:]
 		returnMap[filename] = json.RawMessage(jsonOverride)
 	}
