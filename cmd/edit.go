@@ -9,6 +9,7 @@ import (
 	pkgEditCmd "github.com/skatteetaten/ao/pkg/editcmd"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/spf13/cobra"
+	"github.com/skatteetaten/ao/pkg/prompt"
 )
 
 var editcmdObject = &pkgEditCmd.EditcmdClass{
@@ -37,12 +38,13 @@ will edit this file, if there is no other file matching the same shortening.`,
 			files = append(files, k)
 		}
 
-		filename, err := fuzzy.FindFileToEdit(args[0], files, true)
+		options, err := fuzzy.SearchForFile(args[0], files)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
+		filename := prompt.SelectFileToEdit(options)
 		_, err = pkgEditCmd.EditFile(filename, &auroraConfig, config)
 		if err != nil {
 			fmt.Println(err)

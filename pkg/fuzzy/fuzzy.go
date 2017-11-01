@@ -1,10 +1,8 @@
 package fuzzy
 
 import (
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/renstrom/fuzzysearch/fuzzy"
-	"gopkg.in/AlecAivazis/survey.v1"
 	"sort"
 	"strings"
 )
@@ -51,30 +49,17 @@ func FindMatches(search string, fileNames []string, withSuffix bool) ([]string, 
 	return options, nil
 }
 
-func FindFileToEdit(search string, files []string, prompt bool) (string, error) {
+func SearchForFile(search string, files []string) ([]string, error) {
 
 	options, err := FindMatches(search, files, true)
 	if err != nil {
-		return "", err
+		return []string{}, err
 	}
 
-	if len(options) == 1 || !prompt {
-		return options[0], nil
-	}
-
-	p := &survey.Select{
-		Message:  fmt.Sprintf("Matched %d files. Which file do you want to edit?", len(options)),
-		PageSize: 10,
-		Options:  options,
-	}
-
-	var filename string
-	err = survey.AskOne(p, &filename, nil)
-
-	return filename, err
+	return options, nil
 }
 
-func FindApplicationsToDeploy(search string, files []string, prompt bool) ([]string, error) {
+func SearchForApplications(search string, files []string) ([]string, error) {
 
 	options := []string{}
 	if !strings.Contains(search, "/") {
@@ -92,20 +77,7 @@ func FindApplicationsToDeploy(search string, files []string, prompt bool) ([]str
 		options = opts
 	}
 
-	if len(options) == 1 || !prompt {
-		return options, nil
-	}
-
-	p := &survey.MultiSelect{
-		Message:  fmt.Sprintf("Matched %d files. Which applications do you want to deploy?", len(options)),
-		PageSize: 10,
-		Options:  options,
-	}
-
-	var applications []string
-	err := survey.AskOne(p, &applications, nil)
-
-	return applications, err
+	return options, nil
 }
 
 func NewDeploySet() *DeploySet {

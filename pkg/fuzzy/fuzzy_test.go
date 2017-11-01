@@ -63,16 +63,15 @@ func TestFindMatches(t *testing.T) {
 func TestFindFileToEdit(t *testing.T) {
 	tests := []struct {
 		Search   string
-		Prompt   bool
-		Expected string
+		Expected []string
 	}{
-		{"about", false, "about.json"},
-		{"console", false, "console.json"},
-		{"utv/ab", false, "utv/about.json"},
+		{"about", []string{"about.json"}},
+		{"console", []string{"console.json"}},
+		{"utv/ab", []string{"utv/about.json", "utv-relay/about.json", "utv/about-template.json"}},
 	}
 
 	for _, test := range tests {
-		filename, err := FindFileToEdit(test.Search, fileNames, test.Prompt)
+		filename, err := SearchForFile(test.Search, fileNames)
 		if err != nil {
 			t.Error(err)
 		}
@@ -86,20 +85,20 @@ func TestFindApplicationsToDeploy(t *testing.T) {
 		Search   string
 		Expected []string
 	}{
-		{"aosdfkja",  []string{}},
-		{"utv",  []string{"utv/boober", "utv/console"}},
-		{"console",  []string{"test/console", "utv/console"}},
-		{"test",  []string{"test/boober", "test/console"}},
-		{"test-r",  []string{"test-relay/boober"}},
-		{"boober",  []string{"test/boober", "test-relay/boober", "utv/boober", "utv-relay/boober"}},
-		{"boo",  []string{"utv/boober", "test/boober", "utv-relay/boober", "test-relay/boober"}},
+		{"aosdfkja", []string{}},
+		{"utv", []string{"utv/boober", "utv/console"}},
+		{"console", []string{"test/console", "utv/console"}},
+		{"test", []string{"test/boober", "test/console"}},
+		{"test-r", []string{"test-relay/boober"}},
+		{"boober", []string{"test/boober", "test-relay/boober", "utv/boober", "utv-relay/boober"}},
+		{"boo", []string{"utv/boober", "test/boober", "utv-relay/boober", "test-relay/boober"}},
 	}
 
 	filteredFiles := FilterFileNamesForDeploy(fileNames)
 
 	for _, test := range tests {
-		deploys, _ := FindApplicationsToDeploy(test.Search, filteredFiles, false)
-		assert.Equal(t, test.Expected, deploys, "Searching for " + test.Search)
+		deploys, _ := SearchForApplications(test.Search, filteredFiles)
+		assert.Equal(t, test.Expected, deploys, "Searching for "+test.Search)
 	}
 }
 
