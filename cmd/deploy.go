@@ -142,7 +142,17 @@ var applyCmd = &cobra.Command{
 			affiliation = deployAffiliation
 		}
 
-		client := boober.NewBooberClient(apiCluster.BooberUrl, apiCluster.Token, affiliation)
+		token := apiCluster.Token
+		if config.PersistentOptions.Token != "" {
+			token = config.PersistentOptions.Token
+		}
+
+		host := apiCluster.BooberUrl
+		if config.PersistentOptions.ServerApi != "" {
+			host = config.PersistentOptions.ServerApi
+		}
+
+		client := boober.NewBooberClient(host, token, affiliation)
 		if oc.Localhost {
 			client.Host = "http://localhost:8080"
 		} else if deployCluster != "" {
@@ -205,12 +215,17 @@ var applyCmd = &cobra.Command{
 			if !c.Reachable {
 				continue
 			}
-			logrus.Info(c.Name, " is reachable")
+			logrus.Debug(c.Name, " is reachable")
 			counter++
-			cli := boober.NewBooberClient(c.BooberUrl, c.Token, affiliation)
+
+			token = c.Token
+			if config.PersistentOptions.Token != "" {
+				token = config.PersistentOptions.Token
+			}
+			cli := boober.NewBooberClient(c.BooberUrl, token, affiliation)
+
 			go func() {
-				validation := cli.Deploy(appsToDeploy, overrides)
-				validations <- validation
+				validations <- cli.Deploy(appsToDeploy, overrides)
 			}()
 		}
 

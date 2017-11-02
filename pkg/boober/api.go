@@ -32,33 +32,41 @@ type UnmarshalResponseFunc func(body []byte) (ResponseBody, error)
 
 func (api *BooberClient) Call(method string, endpoint string, payload []byte, unmarshal UnmarshalResponseFunc) (*Validation, error) {
 
-	body, status, err := api.doRequest(method, endpoint, payload)
+	res, err := api.doRequest(method, endpoint, payload)
 	if err != nil {
 		return nil, err
 	}
 
-	logrus.Debug("ResponseBody:\n", string(body))
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 
-	if status > 399 {
+	// TODO: Check content head for text/html
+
+	logrus.Debug("ResponseBody:\n", IndentJson(body))
+
+	if res.StatusCode > 399 {
 		var resErr responseError
 		err = json.Unmarshal(body, &resErr)
 		if err != nil {
 			return nil, err
 		}
-		logResponse(api.Host + endpoint, status, resErr)
+		logResponse(api.Host+endpoint, res.StatusCode, resErr)
 
-		validation := NewValidation(resErr.Message)
+		validation := NewValidation(resErr.Message + "\n Host: " + api.Host)
 		for _, re := range resErr.Items {
 			validation.FormatValidationError(&re)
 		}
-		return validation, errors.New("Validation error")
+		return validation, errors.New("Error from server")
 	}
 
-	res, err := unmarshal(body)
+	data, err := unmarshal(body)
 	if err != nil {
 		return nil, err
 	}
-	logResponse(api.Host + endpoint, status, res)
+	logResponse(api.Host+endpoint, res.StatusCode, data)
 
 	return nil, nil
 }
@@ -66,14 +74,14 @@ func (api *BooberClient) Call(method string, endpoint string, payload []byte, un
 func logResponse(url string, status int, res ResponseBody) {
 	logrus.WithFields(logrus.Fields{
 		"status":  status,
-		"url": url,
+		"url":     url,
 		"success": res.GetSuccess(),
 		"message": res.GetMessage(),
 		"count":   res.GetCount(),
 	}).Info("Response")
 }
 
-func (api *BooberClient) doRequest(method string, endpoint string, payload []byte) ([]byte, int, error) {
+func (api *BooberClient) doRequest(method string, endpoint string, payload []byte) (*http.Response, error) {
 
 	url := api.Host + endpoint
 	reqLog := logrus.WithFields(logrus.Fields{
@@ -85,13 +93,12 @@ func (api *BooberClient) doRequest(method string, endpoint string, payload []byt
 	if len(payload) == 0 {
 		reqLog.Debug("No payload")
 	} else {
-		logrus.Debug("Payload:\n", string(payload))
+		logrus.Debug("Payload:\n", IndentJson(payload))
 	}
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(payload))
 	if err != nil {
-		// TODO: status code as -1 for internal errors?
-		return []byte{}, -1, err
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -100,13 +107,10 @@ func (api *BooberClient) doRequest(method string, endpoint string, payload []byt
 	client := http.DefaultClient
 	res, err := client.Do(req)
 	if err != nil {
-		return []byte{}, -1, errors.Wrap(err, "Error connecting to Boober")
+		return nil, errors.Wrap(err, "Error connecting to Boober")
 	}
 
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-
-	return body, res.StatusCode, err
+	return res, nil
 }
 
 // TODO: Do we need this?
