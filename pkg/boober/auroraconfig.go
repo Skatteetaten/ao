@@ -22,6 +22,7 @@ type auroraConfigResponse struct {
 	Items []AuroraConfig `json:"items"`
 }
 
+// TODO: Return error
 func (api *BooberClient) GetFileNames() ([]string, *Validation) {
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/filenames", api.Affiliation)
 
@@ -55,16 +56,19 @@ func (api *BooberClient) GetAuroraConfig() ([]AuroraConfig, *Validation) {
 }
 
 func (api *BooberClient) SaveAuroraConfig(ac *AuroraConfig) ([]AuroraConfig, *Validation) {
+
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig", api.Affiliation)
 	return api.putAuroraConfig(ac, endpoint)
 }
 
 func (api *BooberClient) ValidateAuroraConfig(ac *AuroraConfig) ([]AuroraConfig, *Validation) {
+
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/validate", api.Affiliation)
 	return api.putAuroraConfig(ac, endpoint)
 }
 
 func (api *BooberClient) putAuroraConfig(ac *AuroraConfig, endpoint string) ([]AuroraConfig, *Validation) {
+
 	payload, err := json.Marshal(ac)
 	if err != nil {
 		logrus.Error("Failed to marshal AuroraConfig")

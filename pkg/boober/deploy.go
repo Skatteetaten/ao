@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"github.com/sirupsen/logrus"
 )
 
 type deployResponse struct {
@@ -42,6 +43,7 @@ func (api *BooberClient) Deploy(applications []string, overrides map[string]json
 
 	endpoint := fmt.Sprintf("/affiliation/%s/apply", api.Affiliation)
 
+	logrus.Info("Deploying to ", api.Host)
 	var response deployResponse
 	validation, err := api.Call(http.MethodPut, endpoint, payload, func(body []byte) (ResponseBody, error) {
 		jErr := json.Unmarshal(body, &response)
@@ -54,10 +56,10 @@ func (api *BooberClient) Deploy(applications []string, overrides map[string]json
 
 	for _, item := range response.Items {
 		if !item.Success {
-			fmt.Println(response.Message)
-			fmt.Printf("Failed to deploy %s/%s (%s)", item.ADS.Namespace, item.ADS.Name, item.DeployId)
+			fmt.Printf("Failed to deploy %s/%s to %s (%s)\n", item.ADS.Namespace, item.ADS.Name, item.ADS.Cluster, item.DeployId)
+		} else {
+			fmt.Printf("Deployed %s in namespace %s to %s (%s)\n", item.ADS.Name, item.ADS.Namespace, item.ADS.Cluster, item.DeployId)
 		}
-		fmt.Printf("Deployed %s/%s to %s (%s)\n", item.ADS.Namespace, item.ADS.Name, item.ADS.Cluster, item.DeployId)
 	}
 
 	return validation

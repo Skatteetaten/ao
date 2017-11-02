@@ -37,17 +37,6 @@ func (configuration *ConfigurationClass) SetApiCluster() error {
 
 	return nil
 }
-func (configuration *ConfigurationClass) GetApiCluster() *openshift.OpenshiftCluster {
-	apiCluster := &openshift.OpenshiftCluster{ }
-	for _, cluster := range configuration.OpenshiftConfig.Clusters {
-		if cluster.Name == configuration.GetApiClusterName() {
-			apiCluster = cluster
-			break
-		}
-	}
-
-	return apiCluster
-}
 
 func (configuration *ConfigurationClass) GetApiClusterIndex() int {
 	return configuration.apiClusterIndex

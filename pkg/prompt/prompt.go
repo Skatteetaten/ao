@@ -4,12 +4,33 @@ import (
 	"gopkg.in/AlecAivazis/survey.v1"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"strings"
+	"github.com/skatteetaten/ao/pkg/printutil"
 )
 
-func ConfirmDeploy(applications []string) bool {
-	//  TODO: Print deployment table
+func ConfirmDeployAll(applications []string) bool {
+
+	printDeployTable(applications)
+
 	p := &survey.Confirm{
-		Message: fmt.Sprintf("Do you want to deploy %d applications?", len(applications)),
+		Message: fmt.Sprintf("Do you want to add all %d application(s) to deploy?", len(applications)),
+	}
+
+	var deploy bool
+	err := survey.AskOne(p, &deploy, nil)
+	if err != nil {
+		logrus.Error(err)
+	}
+	return deploy
+}
+
+func ConfirmDeploy(applications []string) bool {
+
+	printDeployTable(applications)
+
+	p := &survey.Confirm{
+		Message: fmt.Sprintf("Do you want to deploy %d application(s)?", len(applications)),
+		Default: true,
 	}
 
 	var deploy bool
@@ -51,4 +72,17 @@ func SelectFileToEdit(options []string) string {
 	}
 
 	return filename
+}
+
+func printDeployTable(applications []string) {
+	envs := []string{}
+	apps := []string{}
+
+	for _, a := range applications {
+		split := strings.Split(a, "/")
+		envs = append(envs, split[0])
+		apps = append(apps, split[1])
+	}
+
+	fmt.Printf(printutil.FormatTable([]string{"ENVIRONMENT", "APPLICATION"}, envs, apps))
 }

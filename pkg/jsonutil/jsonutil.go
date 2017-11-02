@@ -65,8 +65,11 @@ func OverrideJsons2map(OverrideJsons []string) (returnMap map[string]json.RawMes
 		indexByte := strings.IndexByte(OverrideJsons[i], ':')
 		filename := OverrideJsons[i][:indexByte]
 
-		// TODO: Check for valid json
 		jsonOverride := OverrideJsons[i][indexByte+1:]
+		if !IsLegalJson(jsonOverride) {
+			msg := fmt.Sprintf("%s is not a valid json", jsonOverride)
+			return nil, errors.New(msg)
+		}
 		returnMap[filename] = json.RawMessage(jsonOverride)
 	}
 	return returnMap, err

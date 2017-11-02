@@ -45,27 +45,28 @@ func (api *BooberClient) Call(method string, endpoint string, payload []byte, un
 		if err != nil {
 			return nil, err
 		}
-		logResponse(status, resErr)
+		logResponse(api.Host + endpoint, status, resErr)
 
 		validation := NewValidation(resErr.Message)
 		for _, re := range resErr.Items {
 			validation.FormatValidationError(&re)
 		}
-		return validation, nil
+		return validation, errors.New("Validation error")
 	}
 
 	res, err := unmarshal(body)
 	if err != nil {
 		return nil, err
 	}
-	logResponse(status, res)
+	logResponse(api.Host + endpoint, status, res)
 
 	return nil, nil
 }
 
-func logResponse(status int, res ResponseBody) {
+func logResponse(url string, status int, res ResponseBody) {
 	logrus.WithFields(logrus.Fields{
 		"status":  status,
+		"url": url,
 		"success": res.GetSuccess(),
 		"message": res.GetMessage(),
 		"count":   res.GetCount(),

@@ -54,6 +54,28 @@ type OpenshiftConfig struct {
 	ConfigLocation string
 }
 
+func (o *OpenshiftConfig) GetApiCluster() (*OpenshiftCluster, error) {
+
+	clusters := o.GetClusterMap()
+
+	apiCluster :=  clusters[o.APICluster]
+	if apiCluster == nil {
+		return nil, errors.New("No api cluster defined")
+	}
+
+	return apiCluster, nil
+}
+
+func (o *OpenshiftConfig) GetClusterMap() map[string]*OpenshiftCluster {
+	clusters := make(map[string]*OpenshiftCluster)
+
+	for _, c := range o.Clusters {
+		clusters[c.Name] = c
+	}
+
+	return clusters
+}
+
 func getConsoleUrl(clusterName string) (consoleAddress string) {
 	consoleAddress = "http://console-aurora." + clusterName + ".paas.skead.no"
 	//consoleAddress = "http://console-paas-espen-dev." + clusterName + ".paas.skead.no"
@@ -209,27 +231,14 @@ func loadConfigFile(configLocation string) (*OpenshiftConfig, error) {
 
 }
 
-func (openshiftConfig *OpenshiftConfig) GetApiCluster() (cluster *OpenshiftCluster, err error) {
-	if openshiftConfig != nil {
-		for clusterIndex := range openshiftConfig.Clusters {
-			if openshiftConfig.Clusters[clusterIndex].Name == openshiftConfig.APICluster {
-				cluster = openshiftConfig.Clusters[clusterIndex]
-				return
-			}
-		}
-	}
-	err = errors.New("No API cluster defined")
-	return
-}
-
-func (this *OpenshiftCluster) HasValidToken() bool {
-	if this.Token == "" {
+func (oc *OpenshiftCluster) HasValidToken() bool {
+	if oc.Token == "" {
 		return false
 	}
 
-	clusterUrl := fmt.Sprintf("%s/%s", this.Url, "oapi")
+	clusterUrl := fmt.Sprintf("%s/%s", oc.Url, "oapi")
 
-	resp, err := getBearer(clusterUrl, this.Token)
+	resp, err := getBearer(clusterUrl, oc.Token)
 	if err != nil {
 		return false
 	}
