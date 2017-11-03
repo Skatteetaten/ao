@@ -1,7 +1,9 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"strings"
 )
 
@@ -19,28 +21,53 @@ type responseErrorItem struct {
 	} `json:"messages"`
 }
 
-type ResponseBody interface {
-	GetSuccess() bool
-	GetMessage() string
-	GetCount() int
-}
-
 type Response struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-	Count   int    `json:"count"`
+	Success bool            `json:"success"`
+	Message string          `json:"message"`
+	Items   json.RawMessage `json:"items"`
+	Count   int             `json:"count"`
 }
 
-func (r Response) GetSuccess() bool {
-	return r.Success
+func (res *Response) ParseItems(data interface{}) error {
+	if !res.Success {
+		errorResponse, err := res.ToErrorResponse()
+		if err != nil {
+			return err
+		}
+		errorResponse.PrintAllErrors()
+		return errors.New("response was unsuccessful")
+	}
+
+	return json.Unmarshal(res.Items, data)
 }
 
-func (r Response) GetMessage() string {
-	return r.Message
+func (res *Response) ParseFirstItem(data interface{}) error {
+	var items []json.RawMessage
+	err := res.ParseItems(&items)
+	if err != nil {
+		return err
+	}
+
+	if len(items) < 1 {
+		return errors.New("no items available")
+	}
+
+	return json.Unmarshal(items[0], data)
 }
 
-func (r Response) GetCount() int {
-	return r.Count
+func (res *Response) ToErrorResponse() (*ErrorResponse, error) {
+	var rei []responseErrorItem
+	err := json.Unmarshal(res.Items, &rei)
+	if err != nil {
+		return nil, err
+	}
+
+	errorResponse := NewErrorResponse(res.Message)
+	for _, re := range rei {
+		errorResponse.FormatValidationError(&re)
+	}
+
+	return errorResponse, nil
 }
 
 type ErrorResponse struct {
@@ -90,7 +117,6 @@ func (e *ErrorResponse) Contains(key string) bool {
 }
 
 func (e *ErrorResponse) FormatValidationError(res *responseErrorItem) {
-	// TODO: Structs ? Better usage for edit?
 	illegalFieldFormat := `Filename:    %s
 Path:        %s
 Value:       %s

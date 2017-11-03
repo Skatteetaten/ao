@@ -168,9 +168,9 @@ var applyCmd = &cobra.Command{
 			}
 		}
 
-		files, validation := api.GetFileNames()
-		if validation != nil {
-			validation.PrintAllErrors()
+		files, err := api.GetFileNames()
+		if err != nil {
+			fmt.Println(err)
 			return
 		}
 
@@ -203,15 +203,15 @@ var applyCmd = &cobra.Command{
 		}
 
 		if oc.Localhost || deployApiClusterOnly || deployCluster != "" {
-			validation := api.Deploy(appsToDeploy, overrides)
-			if validation != nil {
-				validation.PrintAllErrors()
+			err := api.Deploy(appsToDeploy, overrides)
+			if err != nil {
+				fmt.Println(err)
 			}
 			return
 		}
 
-		validations := make(chan *client.ErrorResponse)
-		defer close(validations)
+		deployErrors := make(chan error)
+		defer close(deployErrors)
 		counter := 0
 		for _, c := range oc.Clusters {
 			if !c.Reachable {
@@ -226,14 +226,14 @@ var applyCmd = &cobra.Command{
 			cli := client.NewApiClient(c.BooberUrl, token, affiliation)
 
 			go func() {
-				validations <- cli.Deploy(appsToDeploy, overrides)
+				deployErrors <- cli.Deploy(appsToDeploy, overrides)
 			}()
 		}
 
 		for i := 0; i < counter; i++ {
-			validation := <-validations
-			if validation != nil {
-				validation.PrintAllErrors()
+			err = <-deployErrors
+			if err != nil {
+				fmt.Println(err)
 			}
 		}
 	},

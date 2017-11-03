@@ -3,7 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/sirupsen/logrus"
+	"github.com/pkg/errors"
 	"net/http"
 )
 
@@ -19,80 +19,65 @@ func NewAuroraConfig() *AuroraConfig {
 	}
 }
 
-type auroraConfigFileNamesResponse struct {
-	Response
-	Items []string `json:"items"`
-}
-
-type auroraConfigResponse struct {
-	Response
-	Items []AuroraConfig `json:"items"`
-}
-
-func (api *ApiClient) GetFileNames() ([]string, *ErrorResponse) {
+func (api *ApiClient) GetFileNames() ([]string, error) {
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/filenames", api.Affiliation)
 
-	var res auroraConfigFileNamesResponse
-	errorResponse, err := api.Do(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
-		jErr := json.Unmarshal(body, &res)
-		return res, jErr
-	})
+	response, err := api.Do(http.MethodGet, endpoint, nil)
 	if err != nil {
-		fmt.Println(err)
-		return []string{}, errorResponse
+		return nil, err
 	}
 
-	return res.Items, nil
-}
-
-func (api *ApiClient) GetAuroraConfig() (*AuroraConfig, *ErrorResponse) {
-
-	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig", api.Affiliation)
-
-	var acr auroraConfigResponse
-	errorResponse, err := api.Do(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
-		jErr := json.Unmarshal(body, &acr)
-		return acr, jErr
-	})
+	var fileNames []string
+	err = response.ParseItems(&fileNames)
 	if err != nil {
-		fmt.Println(err)
-		return nil, errorResponse
+		return nil, err
 	}
 
-	// TODO: Check for empty
-	return &acr.Items[0], nil
+	return fileNames, err
 }
 
-// TODO: Return single AuroraConfig
-func (api *ApiClient) SaveAuroraConfig(ac *AuroraConfig) ([]AuroraConfig, *ErrorResponse) {
-
+func (api *ApiClient) GetAuroraConfig() (*AuroraConfig, error) {
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig", api.Affiliation)
-	return api.putAuroraConfig(ac, endpoint)
+
+	response, err := api.Do(http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var ac AuroraConfig
+	err = response.ParseFirstItem(&ac)
+	if err != nil {
+		return nil, errors.Wrap(err, "aurora config")
+	}
+
+	return &ac, nil
 }
 
-func (api *ApiClient) ValidateAuroraConfig(ac *AuroraConfig) ([]AuroraConfig, *ErrorResponse) {
-
-	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/validate", api.Affiliation)
-	return api.putAuroraConfig(ac, endpoint)
-}
-
-func (api *ApiClient) putAuroraConfig(ac *AuroraConfig, endpoint string) ([]AuroraConfig, *ErrorResponse) {
+func (api *ApiClient) PutAuroraConfig(endpoint string, ac *AuroraConfig) (*ErrorResponse, error) {
 
 	payload, err := json.Marshal(ac)
 	if err != nil {
-		logrus.Error("Failed to marshal AuroraConfig")
-		return []AuroraConfig{}, nil
+		return nil, err
 	}
 
-	var acr auroraConfigResponse
-	errorResponse, err := api.Do(http.MethodPut, endpoint, payload, func(body []byte) (ResponseBody, error) {
-		jErr := json.Unmarshal(body, &acr)
-		return acr, jErr
-	})
+	response, err := api.Do(http.MethodPut, endpoint, payload)
 	if err != nil {
-		fmt.Println(err)
-		return []AuroraConfig{}, errorResponse
+		return nil, err
 	}
 
-	return acr.Items, nil
+	if !response.Success {
+		return response.ToErrorResponse()
+	}
+
+	return nil, nil
+}
+
+func (api *ApiClient) SaveAuroraConfig(ac *AuroraConfig) (*ErrorResponse, error) {
+	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig", api.Affiliation)
+	return api.PutAuroraConfig(endpoint, ac)
+}
+
+func (api *ApiClient) ValidateAuroraConfig(ac *AuroraConfig) (*ErrorResponse, error) {
+	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/validate", api.Affiliation)
+	return api.PutAuroraConfig(endpoint, ac)
 }
