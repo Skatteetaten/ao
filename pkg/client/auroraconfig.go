@@ -45,7 +45,8 @@ func (api *ApiClient) GetFileNames() ([]string, *ErrorResponse) {
 	return res.Items, nil
 }
 
-func (api *ApiClient) GetAuroraConfig() ([]AuroraConfig, *ErrorResponse) {
+func (api *ApiClient) GetAuroraConfig() (*AuroraConfig, *ErrorResponse) {
+
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig", api.Affiliation)
 
 	var acr auroraConfigResponse
@@ -55,12 +56,14 @@ func (api *ApiClient) GetAuroraConfig() ([]AuroraConfig, *ErrorResponse) {
 	})
 	if err != nil {
 		fmt.Println(err)
-		return []AuroraConfig{}, errorResponse
+		return nil, errorResponse
 	}
 
-	return acr.Items, nil
+	// TODO: Check for empty
+	return &acr.Items[0], nil
 }
 
+// TODO: Return single AuroraConfig
 func (api *ApiClient) SaveAuroraConfig(ac *AuroraConfig) ([]AuroraConfig, *ErrorResponse) {
 
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig", api.Affiliation)

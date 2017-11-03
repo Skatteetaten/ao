@@ -59,7 +59,7 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte, unmarsh
 
 		logResponse("ErrorResponse", api.Host+endpoint, res.StatusCode, resErr)
 
-		// TODO: Errors with single message
+		// TODO: Errors with single message, test
 		errorResponse := NewErrorResponse(resErr.Message + "\nHost: " + api.Host)
 		for _, re := range resErr.Items {
 			errorResponse.FormatValidationError(&re)

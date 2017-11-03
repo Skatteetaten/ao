@@ -1,51 +1,61 @@
 package client
 
 import (
-	"encoding/json"
-	"github.com/sirupsen/logrus"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
-func init() {
-	logrus.SetLevel(logrus.FatalLevel)
-}
+// TESTING
+// TODO: Test success get AuroraConfig
+// TODO: Test failed put/validate AuroraConfig
+// TODO: Test success deploy
+// TODO: Test failed deploy
 
-func getTestServer(payload, body []byte) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		res.WriteHeader(http.StatusForbidden)
-		res.Header().Set("Content-Type", "application/json")
-		res.Write(body)
-	}))
+func AuroraConfigSuccessResponseHandler(affiliation string, t *testing.T) http.HandlerFunc {
+	return func(writer http.ResponseWriter, req *http.Request) {
+
+		if !strings.Contains(req.RequestURI, "/affiliation") {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusOK)
+
+		uri := strings.TrimPrefix(req.RequestURI, "/affiliation/")
+		uriAffiliation := strings.Split(uri, "/")[0]
+
+		if affiliation != uriAffiliation {
+			t.Errorf("Expected affiliation %s to be equal to %s", affiliation, uriAffiliation)
+			return
+		}
+
+		fileName := fmt.Sprintf("auroraconfig_%s_success_response", affiliation)
+		data := ReadTestFile(fileName)
+		writer.Write(data)
+	}
 }
 
 func TestApi_GetAuroraConfig(t *testing.T) {
-	acBody := AuroraConfig{
-		Files:    make(map[string]json.RawMessage),
-		Versions: make(map[string]string),
-	}
 
-	response := auroraConfigResponse{
-		Response: Response{
-			Count:   1,
-			Message: "AuroraConfig contained errors",
-			Success: false,
-		},
-		Items: []AuroraConfig{acBody},
-	}
-
-	body, _ := json.Marshal(response)
-
-	ts := getTestServer(nil, body)
+	affiliation := "aurora"
+	ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(affiliation, t))
 	defer ts.Close()
 
-	api := NewApiClient(ts.URL, "", "paas")
+	api := NewApiClient(ts.URL, "", affiliation)
 	ac, errResponse := api.GetAuroraConfig()
+
 	if errResponse != nil {
-		errResponse.PrintAllErrors()
+		t.Error("Expected ErrorResponse to be nil.")
 	}
 
-	assert.Equal(t, 0, len(ac))
+	assert.Equal(t, 90, len(ac.Files))
+
+	if len(ac.Files) != len(ac.Versions) {
+		t.Error("Expected Files and Version to have equal length.")
+	}
 }
