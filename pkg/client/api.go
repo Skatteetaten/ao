@@ -30,7 +30,7 @@ func NewApiClient(host, token, affiliation string) *ApiClient {
 
 type UnmarshalResponseFunc func(body []byte) (ResponseBody, error)
 
-func (api *ApiClient) Call(method string, endpoint string, payload []byte, unmarshal UnmarshalResponseFunc) (*ErrorResponse, error) {
+func (api *ApiClient) Do(method string, endpoint string, payload []byte, unmarshal UnmarshalResponseFunc) (*ErrorResponse, error) {
 
 	res, err := api.doRequest(method, endpoint, payload)
 	if err != nil {
@@ -48,18 +48,23 @@ func (api *ApiClient) Call(method string, endpoint string, payload []byte, unmar
 	logrus.Debug("ResponseBody", string(body))
 
 	if res.StatusCode > 399 {
-		var resErr responseError
+		var resErr struct {
+			Response
+			Items []responseErrorItem `json:"items"`
+		}
 		err = json.Unmarshal(body, &resErr)
 		if err != nil {
 			return nil, err
 		}
+
 		logResponse("ErrorResponse", api.Host+endpoint, res.StatusCode, resErr)
 
-		errorResponse := NewErrorResponse(resErr.Message + "\n Host: " + api.Host)
+		// TODO: Errors with single message
+		errorResponse := NewErrorResponse(resErr.Message + "\nHost: " + api.Host)
 		for _, re := range resErr.Items {
 			errorResponse.FormatValidationError(&re)
 		}
-		return errorResponse, errors.New("Error from server")
+		return errorResponse, errors.New("Validation error")
 	}
 
 	data, err := unmarshal(body)
@@ -97,7 +102,7 @@ func (api *ApiClient) doRequest(method string, endpoint string, payload []byte) 
 	client := http.DefaultClient
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error connecting to Boober")
+		return nil, errors.Wrap(err, "Error connecting to api")
 	}
 
 	return res, nil

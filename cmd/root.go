@@ -91,7 +91,7 @@ func Execute() {
 func init() {
 	logrus.SetOutput(os.Stdout)
 
-	RootCmd.PersistentFlags().StringP("loglevel", "", "fatal", "Set loglevel")
+	RootCmd.PersistentFlags().StringP("loglevel", "", "fatal", "Set loglevel. Valid log levels are [info, debug, warning, error, fatal]")
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Verbose, "verbose",
 		"", false, "Log progress to standard out")

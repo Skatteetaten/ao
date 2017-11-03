@@ -30,8 +30,8 @@ func TestApi_GetAuroraConfig(t *testing.T) {
 	response := auroraConfigResponse{
 		Response: Response{
 			Count:   1,
-			Message: "OK",
-			Success: true,
+			Message: "AuroraConfig contained errors",
+			Success: false,
 		},
 		Items: []AuroraConfig{acBody},
 	}
@@ -42,9 +42,9 @@ func TestApi_GetAuroraConfig(t *testing.T) {
 	defer ts.Close()
 
 	api := NewApiClient(ts.URL, "", "paas")
-	ac, err := api.GetAuroraConfig()
-	if err != nil {
-		t.Error(err)
+	ac, errResponse := api.GetAuroraConfig()
+	if errResponse != nil {
+		errResponse.PrintAllErrors()
 	}
 
 	assert.Equal(t, 0, len(ac))

@@ -43,7 +43,7 @@ func (api *ApiClient) Deploy(applications []string, overrides map[string]json.Ra
 	endpoint := fmt.Sprintf("/affiliation/%s/apply", api.Affiliation)
 
 	var response deployResponse
-	errorResponse, err := api.Call(http.MethodPut, endpoint, payload, func(body []byte) (ResponseBody, error) {
+	errorResponse, err := api.Do(http.MethodPut, endpoint, payload, func(body []byte) (ResponseBody, error) {
 		jErr := json.Unmarshal(body, &response)
 		return response, jErr
 	})

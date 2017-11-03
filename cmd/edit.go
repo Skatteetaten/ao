@@ -44,7 +44,17 @@ will edit this file, if there is no other file matching the same shortening.`,
 			return
 		}
 
-		filename := prompt.SelectFileToEdit(options)
+		filename := ""
+		if len(options) > 1 {
+			filename = prompt.SelectFileToEdit(options)
+		} else if len(options) == 1 {
+			filename = options[0]
+		}
+
+		if filename == "" {
+			fmt.Println("No file to edit")
+		}
+
 		_, err = pkgEditCmd.EditFile(filename, &auroraConfig, config)
 		if err != nil {
 			fmt.Println(err)

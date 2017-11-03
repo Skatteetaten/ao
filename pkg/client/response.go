@@ -19,11 +19,6 @@ type responseErrorItem struct {
 	} `json:"messages"`
 }
 
-type responseError struct {
-	Response
-	Items []responseErrorItem `json:"items"`
-}
-
 type ResponseBody interface {
 	GetSuccess() bool
 	GetMessage() string

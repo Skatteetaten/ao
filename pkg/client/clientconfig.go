@@ -21,7 +21,7 @@ func (api *ApiClient) GetClientConfig() (ClientConfig, *ErrorResponse) {
 	endpoint := "/clientconfig"
 
 	var ccr clientConfigResponse
-	errorResponse, err := api.Call(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
+	errorResponse, err := api.Do(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
 		jErr := json.Unmarshal(body, &ccr)
 		return ccr, jErr
 	})

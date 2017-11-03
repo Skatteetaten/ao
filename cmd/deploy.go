@@ -19,7 +19,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/deploy"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
@@ -152,9 +151,9 @@ var applyCmd = &cobra.Command{
 			host = config.PersistentOptions.ServerApi
 		}
 
-		client := client.NewApiClient(host, token, affiliation)
+		api := client.NewApiClient(host, token, affiliation)
 		if oc.Localhost {
-			client.Host = "http://localhost:8080"
+			api.Host = "http://localhost:8080"
 		} else if deployCluster != "" {
 			clusters := oc.GetClusterMap()
 			cluster := clusters[deployCluster]
@@ -162,14 +161,14 @@ var applyCmd = &cobra.Command{
 				fmt.Println("No such cluster", deployCluster)
 				return
 			}
-			client.Host = cluster.BooberUrl
-			client.Token = cluster.Token
+			api.Host = cluster.BooberUrl
+			api.Token = cluster.Token
 			if config.PersistentOptions.Token != "" {
-				client.Token = config.PersistentOptions.Token
+				api.Token = config.PersistentOptions.Token
 			}
 		}
 
-		files, validation := client.GetFileNames()
+		files, validation := api.GetFileNames()
 		if validation != nil {
 			validation.PrintAllErrors()
 			return
@@ -204,7 +203,7 @@ var applyCmd = &cobra.Command{
 		}
 
 		if oc.Localhost || deployApiClusterOnly || deployCluster != "" {
-			validation := client.Deploy(appsToDeploy, overrides)
+			validation := api.Deploy(appsToDeploy, overrides)
 			if validation != nil {
 				validation.PrintAllErrors()
 			}
@@ -218,7 +217,6 @@ var applyCmd = &cobra.Command{
 			if !c.Reachable {
 				continue
 			}
-			logrus.Debug(c.Name, " is reachable")
 			counter++
 
 			token = c.Token

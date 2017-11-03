@@ -12,6 +12,13 @@ type AuroraConfig struct {
 	Versions map[string]string          `json:"versions"`
 }
 
+func NewAuroraConfig() *AuroraConfig {
+	return &AuroraConfig{
+		Files:    make(map[string]json.RawMessage),
+		Versions: make(map[string]string),
+	}
+}
+
 type auroraConfigFileNamesResponse struct {
 	Response
 	Items []string `json:"items"`
@@ -26,7 +33,7 @@ func (api *ApiClient) GetFileNames() ([]string, *ErrorResponse) {
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/filenames", api.Affiliation)
 
 	var res auroraConfigFileNamesResponse
-	errorResponse, err := api.Call(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
+	errorResponse, err := api.Do(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
 		jErr := json.Unmarshal(body, &res)
 		return res, jErr
 	})
@@ -42,7 +49,7 @@ func (api *ApiClient) GetAuroraConfig() ([]AuroraConfig, *ErrorResponse) {
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig", api.Affiliation)
 
 	var acr auroraConfigResponse
-	errorResponse, err := api.Call(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
+	errorResponse, err := api.Do(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
 		jErr := json.Unmarshal(body, &acr)
 		return acr, jErr
 	})
@@ -75,7 +82,7 @@ func (api *ApiClient) putAuroraConfig(ac *AuroraConfig, endpoint string) ([]Auro
 	}
 
 	var acr auroraConfigResponse
-	errorResponse, err := api.Call(http.MethodPut, endpoint, payload, func(body []byte) (ResponseBody, error) {
+	errorResponse, err := api.Do(http.MethodPut, endpoint, payload, func(body []byte) (ResponseBody, error) {
 		jErr := json.Unmarshal(body, &acr)
 		return acr, jErr
 	})
