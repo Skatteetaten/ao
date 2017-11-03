@@ -36,7 +36,7 @@ func TestApi_GetAuroraConfig(t *testing.T) {
 	ts := getTestServer(nil, body)
 	defer ts.Close()
 
-	api := NewBooberClient(ts.URL, "", "paas")
+	api := NewApiClient(ts.URL, "", "paas")
 	ac, err := api.GetAuroraConfig()
 	if err != nil {
 		t.Error(err)

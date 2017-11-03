@@ -48,7 +48,7 @@ func (r Response) GetCount() int {
 	return r.Count
 }
 
-type Validation struct {
+type ErrorResponse struct {
 	message            string
 	ContainsError bool
 	IllegalFieldErrors []string
@@ -57,29 +57,29 @@ type Validation struct {
 	UniqueErrors       map[string]bool
 }
 
-func NewValidation(message string) *Validation {
-	return &Validation{
+func NewErrorResponse(message string) *ErrorResponse {
+	return &ErrorResponse{
 		message: message,
 		ContainsError: true,
 		UniqueErrors: make(map[string]bool),
 	}
 }
 
-func (v *Validation) SetMessage(m string) {
-	v.message = m
-	v.ContainsError = true
+func (e *ErrorResponse) SetMessage(m string) {
+	e.message = m
+	e.ContainsError = true
 }
 
-func (v *Validation) GetAllErrors() []string {
-	errorMessages := append(v.IllegalFieldErrors, v.InvalidFieldErrors...)
-	return append(errorMessages, v.MissingFieldErrors...)
+func (e *ErrorResponse) GetAllErrors() []string {
+	errorMessages := append(e.IllegalFieldErrors, e.InvalidFieldErrors...)
+	return append(errorMessages, e.MissingFieldErrors...)
 }
 
-func (v *Validation) PrintAllErrors() {
-	allErrors := v.GetAllErrors()
+func (e *ErrorResponse) PrintAllErrors() {
+	allErrors := e.GetAllErrors()
 
-	if v.ContainsError {
-		fmt.Println(v.message)
+	if e.ContainsError {
+		fmt.Println(e.message)
 	}
 
 	for i, e := range allErrors {
@@ -90,11 +90,11 @@ func (v *Validation) PrintAllErrors() {
 	}
 }
 
-func (v *Validation) Contains(key string) bool {
-	return v.UniqueErrors[key]
+func (e *ErrorResponse) Contains(key string) bool {
+	return e.UniqueErrors[key]
 }
 
-func (v *Validation) FormatValidationError(res *responseErrorItem) {
+func (e *ErrorResponse) FormatValidationError(res *responseErrorItem) {
 	// TODO: Structs ? Better usage for edit?
 	illegalFieldFormat := `Filename:    %s
 Path:        %s
@@ -116,12 +116,12 @@ Message:     %s`
 		}
 		key := strings.Join(k, "|")
 
-		if v.Contains(key) {
+		if e.Contains(key) {
 			continue
 		}
 
 		if message.Type != "MISSING" {
-			v.UniqueErrors[key] = true
+			e.UniqueErrors[key] = true
 		}
 
 		switch message.Type {
@@ -133,7 +133,7 @@ Message:     %s`
 					message.Field.Value,
 					message.Message,
 				)
-				v.IllegalFieldErrors = append(v.IllegalFieldErrors, illegal)
+				e.IllegalFieldErrors = append(e.IllegalFieldErrors, illegal)
 			}
 
 		case "INVALID":
@@ -143,7 +143,7 @@ Message:     %s`
 					message.Field.Path,
 					message.Message,
 				)
-				v.InvalidFieldErrors = append(v.InvalidFieldErrors, invalid)
+				e.InvalidFieldErrors = append(e.InvalidFieldErrors, invalid)
 			}
 
 		case "MISSING":
@@ -154,7 +154,7 @@ Message:     %s`
 					message.Field.Path,
 					message.Message,
 				)
-				v.MissingFieldErrors = append(v.MissingFieldErrors, missing)
+				e.MissingFieldErrors = append(e.MissingFieldErrors, missing)
 			}
 		}
 	}

@@ -23,51 +23,51 @@ type auroraConfigResponse struct {
 }
 
 // TODO: Return error
-func (api *BooberClient) GetFileNames() ([]string, *Validation) {
+func (api *ApiClient) GetFileNames() ([]string, *ErrorResponse) {
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/filenames", api.Affiliation)
 
 	var res auroraConfigFileNamesResponse
-	validation, err := api.Call(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
+	errorResponse, err := api.Call(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
 		jErr := json.Unmarshal(body, &res)
 		return res, jErr
 	})
 	if err != nil {
 		fmt.Println(err)
-		return []string{}, validation
+		return []string{}, errorResponse
 	}
 
-	return res.Items, validation
+	return res.Items, nil
 }
 
-func (api *BooberClient) GetAuroraConfig() ([]AuroraConfig, *Validation) {
+func (api *ApiClient) GetAuroraConfig() ([]AuroraConfig, *ErrorResponse) {
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig", api.Affiliation)
 
 	var acr auroraConfigResponse
-	validation, err := api.Call(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
+	errorResponse, err := api.Call(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
 		jErr := json.Unmarshal(body, &acr)
 		return acr, jErr
 	})
 	if err != nil {
 		fmt.Println(err)
-		return []AuroraConfig{}, validation
+		return []AuroraConfig{}, errorResponse
 	}
 
-	return acr.Items, validation
+	return acr.Items, nil
 }
 
-func (api *BooberClient) SaveAuroraConfig(ac *AuroraConfig) ([]AuroraConfig, *Validation) {
+func (api *ApiClient) SaveAuroraConfig(ac *AuroraConfig) ([]AuroraConfig, *ErrorResponse) {
 
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig", api.Affiliation)
 	return api.putAuroraConfig(ac, endpoint)
 }
 
-func (api *BooberClient) ValidateAuroraConfig(ac *AuroraConfig) ([]AuroraConfig, *Validation) {
+func (api *ApiClient) ValidateAuroraConfig(ac *AuroraConfig) ([]AuroraConfig, *ErrorResponse) {
 
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/validate", api.Affiliation)
 	return api.putAuroraConfig(ac, endpoint)
 }
 
-func (api *BooberClient) putAuroraConfig(ac *AuroraConfig, endpoint string) ([]AuroraConfig, *Validation) {
+func (api *ApiClient) putAuroraConfig(ac *AuroraConfig, endpoint string) ([]AuroraConfig, *ErrorResponse) {
 
 	payload, err := json.Marshal(ac)
 	if err != nil {
@@ -76,14 +76,14 @@ func (api *BooberClient) putAuroraConfig(ac *AuroraConfig, endpoint string) ([]A
 	}
 
 	var acr auroraConfigResponse
-	validation, err := api.Call(http.MethodPut, endpoint, payload, func(body []byte) (ResponseBody, error) {
+	errorResponse, err := api.Call(http.MethodPut, endpoint, payload, func(body []byte) (ResponseBody, error) {
 		jErr := json.Unmarshal(body, &acr)
 		return acr, jErr
 	})
 	if err != nil {
 		fmt.Println(err)
-		return []AuroraConfig{}, validation
+		return []AuroraConfig{}, errorResponse
 	}
 
-	return acr.Items, validation
+	return acr.Items, nil
 }

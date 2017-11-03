@@ -17,23 +17,23 @@ type clientConfigResponse struct {
 	Items []ClientConfig `json:"items"`
 }
 
-func (api *BooberClient) GetClientConfig() (ClientConfig, *Validation) {
+func (api *ApiClient) GetClientConfig() (ClientConfig, *ErrorResponse) {
 	endpoint := "/clientconfig"
 
 	var ccr clientConfigResponse
-	validation, err := api.Call(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
+	errorResponse, err := api.Call(http.MethodGet, endpoint, nil, func(body []byte) (ResponseBody, error) {
 		jErr := json.Unmarshal(body, &ccr)
 		return ccr, jErr
 	})
 	if err != nil {
 		fmt.Println(err)
-		return ClientConfig{}, validation
+		return ClientConfig{}, errorResponse
 	}
 
 	if len(ccr.Items) < 1 {
-		validation.SetMessage("No client config for affiliation " + api.Affiliation)
-		return ClientConfig{}, validation
+		errorResponse.SetMessage("No client config for affiliation " + api.Affiliation)
+		return ClientConfig{}, errorResponse
 	}
 
-	return ccr.Items[0], validation
+	return ccr.Items[0], nil
 }

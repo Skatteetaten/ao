@@ -14,14 +14,14 @@ type ApplicationId struct {
 	Application string `json:"application"`
 }
 
-type BooberClient struct {
+type ApiClient struct {
 	Host        string
 	Token       string
 	Affiliation string
 }
 
-func NewBooberClient(host, token, affiliation string) *BooberClient {
-	return &BooberClient{
+func NewApiClient(host, token, affiliation string) *ApiClient {
+	return &ApiClient{
 		Host:        host,
 		Token:       token,
 		Affiliation: affiliation,
@@ -30,8 +30,9 @@ func NewBooberClient(host, token, affiliation string) *BooberClient {
 
 type UnmarshalResponseFunc func(body []byte) (ResponseBody, error)
 
-func (api *BooberClient) Call(method string, endpoint string, payload []byte, unmarshal UnmarshalResponseFunc) (*Validation, error) {
+func (api *ApiClient) Call(method string, endpoint string, payload []byte, unmarshal UnmarshalResponseFunc) (*ErrorResponse, error) {
 
+	// TODO: ErrorResponse
 	res, err := api.doRequest(method, endpoint, payload)
 	if err != nil {
 		return nil, err
@@ -45,7 +46,7 @@ func (api *BooberClient) Call(method string, endpoint string, payload []byte, un
 
 	// TODO: Check content head for text/html
 
-	logrus.Debug("ResponseBody:\n", IndentJson(body))
+	logrus.Debug("ResponseBody", string(body))
 
 	if res.StatusCode > 399 {
 		var resErr responseError
@@ -53,47 +54,36 @@ func (api *BooberClient) Call(method string, endpoint string, payload []byte, un
 		if err != nil {
 			return nil, err
 		}
-		logResponse(api.Host+endpoint, res.StatusCode, resErr)
+		logResponse("ErrorResponse", api.Host+endpoint, res.StatusCode, resErr)
 
-		validation := NewValidation(resErr.Message + "\n Host: " + api.Host)
+		errorResponse := NewErrorResponse(resErr.Message + "\n Host: " + api.Host)
 		for _, re := range resErr.Items {
-			validation.FormatValidationError(&re)
+			errorResponse.FormatValidationError(&re)
 		}
-		return validation, errors.New("Error from server")
+		return errorResponse, errors.New("Error from server")
 	}
 
 	data, err := unmarshal(body)
 	if err != nil {
 		return nil, err
 	}
-	logResponse(api.Host+endpoint, res.StatusCode, data)
+	logResponse("Response", api.Host+endpoint, res.StatusCode, data)
 
 	return nil, nil
 }
 
-func logResponse(url string, status int, res ResponseBody) {
-	logrus.WithFields(logrus.Fields{
-		"status":  status,
-		"url":     url,
-		"success": res.GetSuccess(),
-		"message": res.GetMessage(),
-		"count":   res.GetCount(),
-	}).Info("Response")
-}
-
-func (api *BooberClient) doRequest(method string, endpoint string, payload []byte) (*http.Response, error) {
+func (api *ApiClient) doRequest(method string, endpoint string, payload []byte) (*http.Response, error) {
 
 	url := api.Host + endpoint
-	reqLog := logrus.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"method": method,
 		"url":    url,
-	})
+	}).Info("Request")
 
-	reqLog.Info("Request")
 	if len(payload) == 0 {
-		reqLog.Debug("No payload")
+		logrus.Debug("No payload")
 	} else {
-		logrus.Debug("Payload:\n", IndentJson(payload))
+		logrus.Debug("Payload", string(payload))
 	}
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(payload))
@@ -113,14 +103,12 @@ func (api *BooberClient) doRequest(method string, endpoint string, payload []byt
 	return res, nil
 }
 
-// TODO: Do we need this?
-func IndentJson(data []byte) string {
-	var out bytes.Buffer
-	err := json.Indent(&out, data, "", "  ")
-	if err != nil {
-		logrus.Warn("Failed to indent json ", err.Error())
-		return string(data)
-	}
-
-	return string(out.Bytes())
+func logResponse(message, url string, status int, res ResponseBody) {
+	logrus.WithFields(logrus.Fields{
+		"status":  status,
+		"url":     url,
+		"success": res.GetSuccess(),
+		"message": res.GetMessage(),
+		"count":   res.GetCount(),
+	}).Info(message)
 }

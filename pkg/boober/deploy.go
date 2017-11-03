@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"github.com/sirupsen/logrus"
 )
 
 type deployResponse struct {
@@ -21,7 +20,7 @@ type deployResponse struct {
 	} `json:"items"`
 }
 
-func (api *BooberClient) Deploy(applications []string, overrides map[string]json.RawMessage) (*Validation) {
+func (api *ApiClient) Deploy(applications []string, overrides map[string]json.RawMessage) (*ErrorResponse) {
 
 	applicationIds := createApplicationIds(applications)
 
@@ -43,15 +42,14 @@ func (api *BooberClient) Deploy(applications []string, overrides map[string]json
 
 	endpoint := fmt.Sprintf("/affiliation/%s/apply", api.Affiliation)
 
-	logrus.Info("Deploying to ", api.Host)
 	var response deployResponse
-	validation, err := api.Call(http.MethodPut, endpoint, payload, func(body []byte) (ResponseBody, error) {
+	errorResponse, err := api.Call(http.MethodPut, endpoint, payload, func(body []byte) (ResponseBody, error) {
 		jErr := json.Unmarshal(body, &response)
 		return response, jErr
 	})
 	if err != nil {
 		fmt.Println(err)
-		return validation
+		return errorResponse
 	}
 
 	for _, item := range response.Items {
@@ -62,7 +60,7 @@ func (api *BooberClient) Deploy(applications []string, overrides map[string]json
 		}
 	}
 
-	return validation
+	return nil
 }
 
 func createApplicationIds(apps []string) []ApplicationId {

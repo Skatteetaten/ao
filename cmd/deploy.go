@@ -152,7 +152,7 @@ var applyCmd = &cobra.Command{
 			host = config.PersistentOptions.ServerApi
 		}
 
-		client := boober.NewBooberClient(host, token, affiliation)
+		client := boober.NewApiClient(host, token, affiliation)
 		if oc.Localhost {
 			client.Host = "http://localhost:8080"
 		} else if deployCluster != "" {
@@ -164,6 +164,9 @@ var applyCmd = &cobra.Command{
 			}
 			client.Host = cluster.BooberUrl
 			client.Token = cluster.Token
+			if config.PersistentOptions.Token != "" {
+				client.Token = config.PersistentOptions.Token
+			}
 		}
 
 		files, validation := client.GetFileNames()
@@ -208,7 +211,7 @@ var applyCmd = &cobra.Command{
 			return
 		}
 
-		validations := make(chan *boober.Validation)
+		validations := make(chan *boober.ErrorResponse)
 		defer close(validations)
 		counter := 0
 		for _, c := range oc.Clusters {
@@ -222,7 +225,7 @@ var applyCmd = &cobra.Command{
 			if config.PersistentOptions.Token != "" {
 				token = config.PersistentOptions.Token
 			}
-			cli := boober.NewBooberClient(c.BooberUrl, token, affiliation)
+			cli := boober.NewApiClient(c.BooberUrl, token, affiliation)
 
 			go func() {
 				validations <- cli.Deploy(appsToDeploy, overrides)
