@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stromland/cobra-prompt"
 	"github.com/sirupsen/logrus"
+	"github.com/skatteetaten/ao/pkg/boober"
 )
 
 const CallbackAnnotation = cobraprompt.CALLBACK_ANNOTATION
@@ -46,6 +47,10 @@ This application has two main parts.
 			logrus.SetLevel(level)
 		} else {
 			fmt.Println(err)
+		}
+
+		if config.PersistentOptions.Pretty {
+			logrus.SetFormatter(&boober.PrettyFormatter{})
 		}
 
 		commandsWithoutLogin := []string{"login", "logout", "version", "help"}
@@ -90,6 +95,9 @@ func init() {
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Verbose, "verbose",
 		"", false, "Log progress to standard out")
+
+	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Pretty, "prettylog",
+		"", false, "Pretty print log")
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Debug, "debug",
 		"", false, "Show debug information")

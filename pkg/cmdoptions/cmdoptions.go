@@ -10,6 +10,7 @@ type CommonCommandOptions struct {
 	DryRun      bool
 	Localhost   bool
 	ShowConfig  bool
+	Pretty      bool
 	ShowObjects bool
 	ServerApi   string
 	Token       string
