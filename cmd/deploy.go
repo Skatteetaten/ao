@@ -21,7 +21,7 @@ import (
 
 	"github.com/skatteetaten/ao/pkg/deploy"
 	"github.com/spf13/cobra"
-	"github.com/skatteetaten/ao/pkg/boober"
+	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
@@ -152,7 +152,7 @@ var applyCmd = &cobra.Command{
 			host = config.PersistentOptions.ServerApi
 		}
 
-		client := boober.NewApiClient(host, token, affiliation)
+		client := client.NewApiClient(host, token, affiliation)
 		if oc.Localhost {
 			client.Host = "http://localhost:8080"
 		} else if deployCluster != "" {
@@ -211,7 +211,7 @@ var applyCmd = &cobra.Command{
 			return
 		}
 
-		validations := make(chan *boober.ErrorResponse)
+		validations := make(chan *client.ErrorResponse)
 		defer close(validations)
 		counter := 0
 		for _, c := range oc.Clusters {
@@ -225,7 +225,7 @@ var applyCmd = &cobra.Command{
 			if config.PersistentOptions.Token != "" {
 				token = config.PersistentOptions.Token
 			}
-			cli := boober.NewApiClient(c.BooberUrl, token, affiliation)
+			cli := client.NewApiClient(c.BooberUrl, token, affiliation)
 
 			go func() {
 				validations <- cli.Deploy(appsToDeploy, overrides)

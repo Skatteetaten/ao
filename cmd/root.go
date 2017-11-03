@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stromland/cobra-prompt"
 	"github.com/sirupsen/logrus"
-	"github.com/skatteetaten/ao/pkg/boober"
+	"github.com/skatteetaten/ao/pkg/client"
 )
 
 const CallbackAnnotation = cobraprompt.CALLBACK_ANNOTATION
@@ -50,7 +50,7 @@ This application has two main parts.
 		}
 
 		if config.PersistentOptions.Pretty {
-			logrus.SetFormatter(&boober.PrettyFormatter{})
+			logrus.SetFormatter(&client.PrettyFormatter{})
 		}
 
 		commandsWithoutLogin := []string{"login", "logout", "version", "help"}

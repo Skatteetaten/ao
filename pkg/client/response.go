@@ -1,4 +1,4 @@
-package boober
+package client
 
 import (
 	"fmt"
