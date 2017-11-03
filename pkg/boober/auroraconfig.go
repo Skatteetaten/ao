@@ -22,7 +22,6 @@ type auroraConfigResponse struct {
 	Items []AuroraConfig `json:"items"`
 }
 
-// TODO: Return error
 func (api *ApiClient) GetFileNames() ([]string, *ErrorResponse) {
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/filenames", api.Affiliation)
 

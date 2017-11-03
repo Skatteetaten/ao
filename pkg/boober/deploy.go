@@ -54,6 +54,7 @@ func (api *ApiClient) Deploy(applications []string, overrides map[string]json.Ra
 
 	for _, item := range response.Items {
 		if !item.Success {
+			// TODO: Can we find the failed object?
 			fmt.Printf("Failed to deploy %s/%s to %s (%s)\n", item.ADS.Namespace, item.ADS.Name, item.ADS.Cluster, item.DeployId)
 		} else {
 			fmt.Printf("Deployed %s in namespace %s to %s (%s)\n", item.ADS.Name, item.ADS.Namespace, item.ADS.Cluster, item.DeployId)

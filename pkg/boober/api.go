@@ -32,16 +32,15 @@ type UnmarshalResponseFunc func(body []byte) (ResponseBody, error)
 
 func (api *ApiClient) Call(method string, endpoint string, payload []byte, unmarshal UnmarshalResponseFunc) (*ErrorResponse, error) {
 
-	// TODO: ErrorResponse
 	res, err := api.doRequest(method, endpoint, payload)
 	if err != nil {
-		return nil, err
+		return NewErrorResponse("Request failed"), err
 	}
 
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return NewErrorResponse("ErrorResponse format error"), err
 	}
 
 	// TODO: Check content head for text/html
