@@ -1,12 +1,12 @@
 package client
 
 import (
-	"github.com/sirupsen/logrus"
-	"net/http"
 	"bytes"
-	"io/ioutil"
 	"encoding/json"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"io/ioutil"
+	"net/http"
 )
 
 type ApplicationId struct {
@@ -68,6 +68,7 @@ func (api *ApiClient) Call(method string, endpoint string, payload []byte, unmar
 	}
 	logResponse("Response", api.Host+endpoint, res.StatusCode, data)
 
+	// TODO: Is this ok?
 	return nil, nil
 }
 

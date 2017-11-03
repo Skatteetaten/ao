@@ -115,7 +115,7 @@ const (
 
 /*
 	Search string must match either environment or application exact
- */
+*/
 func FindAllDeploysFor(mode DeployFilterMode, search string, files []string) []string {
 	deploys := make(map[string]*DeploySet)
 

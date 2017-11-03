@@ -8,10 +8,10 @@ import (
 type responseErrorItem struct {
 	Application string `json:"application"`
 	Environment string `json:"environment"`
-	Messages []struct {
+	Messages    []struct {
 		Type    string `json:"type"`
 		Message string `json:"message"`
-		Field struct {
+		Field   struct {
 			Path   string `json:"path"`
 			Value  string `json:"value"`
 			Source string `json:"source"`
@@ -50,7 +50,7 @@ func (r Response) GetCount() int {
 
 type ErrorResponse struct {
 	message            string
-	ContainsError bool
+	ContainsError      bool
 	IllegalFieldErrors []string
 	MissingFieldErrors []string
 	InvalidFieldErrors []string
@@ -59,9 +59,9 @@ type ErrorResponse struct {
 
 func NewErrorResponse(message string) *ErrorResponse {
 	return &ErrorResponse{
-		message: message,
+		message:       message,
 		ContainsError: true,
-		UniqueErrors: make(map[string]bool),
+		UniqueErrors:  make(map[string]bool),
 	}
 }
 

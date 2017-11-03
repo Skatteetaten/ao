@@ -1,11 +1,11 @@
 package prompt
 
 import (
-	"gopkg.in/AlecAivazis/survey.v1"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"strings"
 	"github.com/skatteetaten/ao/pkg/printutil"
+	"gopkg.in/AlecAivazis/survey.v1"
+	"strings"
 )
 
 func ConfirmDeployAll(applications []string) bool {

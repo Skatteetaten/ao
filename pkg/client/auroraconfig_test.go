@@ -1,12 +1,17 @@
 package client
 
 import (
-	"testing"
-	"net/http/httptest"
-	"net/http"
 	"encoding/json"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
+
+func init() {
+	logrus.SetLevel(logrus.FatalLevel)
+}
 
 func getTestServer(payload, body []byte) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
@@ -24,7 +29,7 @@ func TestApi_GetAuroraConfig(t *testing.T) {
 
 	response := auroraConfigResponse{
 		Response: Response{
-			Count: 1,
+			Count:   1,
 			Message: "OK",
 			Success: true,
 		},

@@ -1,8 +1,8 @@
 package fuzzy
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 var fileNames = []string{

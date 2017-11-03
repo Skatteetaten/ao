@@ -8,8 +8,8 @@ import (
 
 	pkgEditCmd "github.com/skatteetaten/ao/pkg/editcmd"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
-	"github.com/spf13/cobra"
 	"github.com/skatteetaten/ao/pkg/prompt"
+	"github.com/spf13/cobra"
 )
 
 var editcmdObject = &pkgEditCmd.EditcmdClass{

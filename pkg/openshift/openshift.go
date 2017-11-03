@@ -58,7 +58,7 @@ func (o *OpenshiftConfig) GetApiCluster() (*OpenshiftCluster, error) {
 
 	clusters := o.GetClusterMap()
 
-	apiCluster :=  clusters[o.APICluster]
+	apiCluster := clusters[o.APICluster]
 	if apiCluster == nil {
 		return nil, errors.New("No api cluster defined")
 	}

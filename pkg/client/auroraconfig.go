@@ -1,10 +1,10 @@
 package client
 
 import (
-	"fmt"
-	"net/http"
 	"encoding/json"
+	"fmt"
 	"github.com/sirupsen/logrus"
+	"net/http"
 )
 
 type AuroraConfig struct {

@@ -19,13 +19,13 @@ import (
 	"log"
 	"os"
 
-	"github.com/skatteetaten/ao/pkg/deploy"
-	"github.com/spf13/cobra"
-	"github.com/skatteetaten/ao/pkg/client"
-	"github.com/skatteetaten/ao/pkg/fuzzy"
-	"github.com/skatteetaten/ao/pkg/prompt"
-	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/sirupsen/logrus"
+	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/deploy"
+	"github.com/skatteetaten/ao/pkg/fuzzy"
+	"github.com/skatteetaten/ao/pkg/jsonutil"
+	"github.com/skatteetaten/ao/pkg/prompt"
+	"github.com/spf13/cobra"
 )
 
 var appList []string

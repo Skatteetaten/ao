@@ -11,7 +11,7 @@ type deployResponse struct {
 	Response
 	Items []struct {
 		DeployId string `json:"deployId"`
-		ADS struct {
+		ADS      struct {
 			Name      string `json:"name"`
 			Namespace string `json:"namespace"`
 			Cluster   string `json:"cluster"`
@@ -20,7 +20,7 @@ type deployResponse struct {
 	} `json:"items"`
 }
 
-func (api *ApiClient) Deploy(applications []string, overrides map[string]json.RawMessage) (*ErrorResponse) {
+func (api *ApiClient) Deploy(applications []string, overrides map[string]json.RawMessage) *ErrorResponse {
 
 	applicationIds := createApplicationIds(applications)
 

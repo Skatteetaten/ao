@@ -1,11 +1,11 @@
 package client
 
 import (
-	"github.com/sirupsen/logrus"
 	"bytes"
-	"strings"
-	"fmt"
 	"encoding/json"
+	"fmt"
+	"github.com/sirupsen/logrus"
+	"strings"
 )
 
 type PrettyFormatter struct{}
@@ -23,7 +23,7 @@ func (df *PrettyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 	jsonStart := strings.Index(entry.Message, "{")
 
-	if jsonStart  >= 0 {
+	if jsonStart >= 0 {
 		var pretty bytes.Buffer
 		err := json.Indent(&pretty, []byte(entry.Message[jsonStart:]), "", "  ")
 		if err == nil {

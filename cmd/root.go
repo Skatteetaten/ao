@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/openshift"
@@ -14,8 +16,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stromland/cobra-prompt"
-	"github.com/sirupsen/logrus"
-	"github.com/skatteetaten/ao/pkg/client"
 )
 
 const CallbackAnnotation = cobraprompt.CALLBACK_ANNOTATION
