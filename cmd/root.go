@@ -1,5 +1,3 @@
-// Copyright © 2016 Skatteetaten <utvpaas@skatteetaten.no>
-
 package cmd
 
 import (
@@ -10,20 +8,27 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
+	aoConfig "github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/configuration"
-	"github.com/skatteetaten/ao/pkg/openshift"
-	"github.com/skatteetaten/ao/pkg/serverapi"
+	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/stromland/cobra-prompt"
 )
 
-const CallbackAnnotation = cobraprompt.CALLBACK_ANNOTATION
+// TODO: UPDATE DOCUMENTATION
 
+// DefaultApiClient will use APICluster from ao config as default values
+// if persistent token and/or server api url is specified these will override default values
+var DefaultApiClient *client.ApiClient
+
+var configLocation string
+
+// TODO: rename import aoConfig to config
+var ao *aoConfig.AOConfig
+
+// TODO: Change class name
 var persistentOptions cmdoptions.CommonCommandOptions
-var overrideValues []string
-var localDryRun bool
 
+// TODO: Remove all config references
 var config = &configuration.ConfigurationClass{
 	PersistentOptions: &persistentOptions,
 }
@@ -41,19 +46,35 @@ This application has two main parts.
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 
-		lvl, _ := cmd.Flags().GetString("loglevel")
-		level, err := logrus.ParseLevel(lvl)
+		level, err := logrus.ParseLevel(persistentOptions.LogLevel)
 		if err == nil {
 			logrus.SetLevel(level)
 		} else {
 			fmt.Println(err)
 		}
 
-		if config.PersistentOptions.Pretty {
+		if persistentOptions.Pretty {
 			logrus.SetFormatter(&client.PrettyFormatter{})
 		}
 
-		commandsWithoutLogin := []string{"login", "logout", "version", "help"}
+		apiCluster := ao.Clusters[ao.APICluster]
+		if apiCluster == nil {
+			apiCluster = &aoConfig.Cluster{}
+		}
+
+		DefaultApiClient = client.NewApiClient(apiCluster.BooberUrl, apiCluster.Token, ao.Affiliation)
+
+		if persistentOptions.ServerApi != "" {
+			DefaultApiClient.Host = persistentOptions.ServerApi
+		}
+
+		if persistentOptions.Token != "" {
+			DefaultApiClient.Token = persistentOptions.Token
+			// If token flag is specified, ignore login check
+			return
+		}
+
+		commandsWithoutLogin := []string{"login", "logout", "version", "help", "adm"}
 
 		commands := strings.Split(cmd.CommandPath(), " ")
 		if len(commands) > 1 {
@@ -64,16 +85,21 @@ This application has two main parts.
 			}
 		}
 
-		config.OpenshiftConfig = getOpenShiftConfig(false, "")
-
-		if err := config.SetApiCluster(); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+		// TODO: Rework this
+		if ao.Affiliation == "" && cmd.Name() != "deploy" {
+			ao.Affiliation = prompt.Affiliation("Choose")
 		}
 
-		if valid := serverapi.ValidateLogin(config.OpenshiftConfig); !valid {
-			fmt.Println("Not logged in, please use ao login")
-			os.Exit(1)
+		user, _ := os.LookupEnv("USER")
+		ao.Login(configLocation, aoConfig.LoginOptions{
+			UserName: user,
+		})
+
+		// Affiliation and api cluster may be changed
+		DefaultApiClient.Affiliation = ao.Affiliation
+		apiCluster = ao.Clusters[ao.APICluster]
+		if DefaultApiClient.Token == "" && apiCluster != nil {
+			DefaultApiClient.Token = apiCluster.Token
 		}
 	},
 }
@@ -85,42 +111,39 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
-
 }
 
 func init() {
 	logrus.SetOutput(os.Stdout)
 
-	RootCmd.PersistentFlags().StringP("loglevel", "", "fatal", "Set loglevel. Valid log levels are [info, debug, warning, error, fatal]")
+	home, _ := os.LookupEnv("HOME")
+	configLocation = home + "/.ao.json"
+	conf, err := aoConfig.LoadConfigFile(configLocation)
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Verbose, "verbose",
-		"", false, "Log progress to standard out")
+	if conf == nil || recreateConfig {
+		logrus.Info("Creating new config")
+		conf = &aoConfig.DefaultAOConfig
+		conf.InitClusters()
+		conf.SelectApiCluster()
+		conf.Write(configLocation)
+	}
+	// Set global config variable
+	ao = conf
+
+	// TODO: Mark as hidden?
+	RootCmd.PersistentFlags().StringVarP(&persistentOptions.LogLevel, "loglevel", "", "fatal", "Set loglevel. Valid log levels are [info, debug, warning, error, fatal]")
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Pretty, "prettylog",
 		"", false, "Pretty print log")
-
-	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Debug, "debug",
-		"", false, "Show debug information")
-	RootCmd.PersistentFlags().MarkHidden("debug")
-	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Localhost, "localhost",
-		"l", false, "Send setup to Boober on localhost")
-	RootCmd.PersistentFlags().MarkHidden("localhost")
 
 	RootCmd.PersistentFlags().StringVarP(&persistentOptions.ServerApi, "serverapi",
 		"", "", "Override default server API address")
 	RootCmd.PersistentFlags().StringVarP(&persistentOptions.Token, "token",
 		"", "", "Token to be used for serverapi connections")
-}
 
-func getOpenShiftConfig(useOcConfig bool, loginCluster string) *openshift.OpenshiftConfig {
-	viper.SetConfigName(".ao")   // name of config file (without extension)
-	viper.AddConfigPath("$HOME") // adding home directory as first search path
-	viper.AutomaticEnv()         // read in environment variables that match
-	viper.BindEnv("HOME")
-
-	aoConfigLocation := viper.GetString("HOME") + "/.ao.json"
-	openShiftConfig, _ := openshift.LoadOrInitiateConfigFile(aoConfigLocation, loginCluster, useOcConfig)
-	openShiftConfig.ConfigLocation = aoConfigLocation
-
-	return openShiftConfig
+	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Localhost, "localhost", "l", false, "Send all request to localhost api on port 8080")
+	RootCmd.PersistentFlags().MarkHidden("localhost")
 }

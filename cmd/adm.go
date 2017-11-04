@@ -5,17 +5,9 @@ import (
 	"os"
 	"strings"
 
-	pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
-	"github.com/skatteetaten/ao/pkg/openshift"
+	config2 "github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
-
-var admcmdObject = &pkgGetCmd.GetcmdClass{
-	Configuration: config,
-}
-
-var loginCluster string
 
 var admCmd = &cobra.Command{
 	Use:   "adm",
@@ -44,37 +36,18 @@ intended for that particular cluster.`,
 		}
 
 		allClusters, _ := cmd.Flags().GetBool("all")
-		if output, err := admcmdObject.Clusters(clusterName, allClusters); err == nil {
-			fmt.Println(output)
-		} else {
-			fmt.Println(err)
-		}
+		ao.PrintClusters(clusterName, allClusters)
 	},
 }
 
-var getKubeConfigCmd = &cobra.Command{
-	Use:   "kubeconfig",
-	Short: "adm kubeconfig",
-	Long:  `The command will list the contents of the OC configuration.`,
+var updateClustersCmd = &cobra.Command{
+	Use:   "update-clusters",
+	Short: "Will update clusters",
+	Long:  `The command will updated cluster with latest clusterUrlPattern and booberUrlPattern.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if output, err := admcmdObject.KubeConfig(); err == nil {
-			fmt.Println(output)
-		} else {
-			fmt.Println(err)
-		}
-	},
-}
-
-var getOcLoginCmd = &cobra.Command{
-	Use:   "oclogin",
-	Short: "adm oclogin",
-	Long:  `The command will print info about the current OC login.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if output, err := admcmdObject.OcLogin(); err == nil {
-			fmt.Println(output)
-		} else {
-			fmt.Println(err)
-		}
+		ao.InitClusters()
+		ao.SelectApiCluster()
+		ao.Write(configLocation)
 	},
 }
 
@@ -84,7 +57,6 @@ var recreateConfigCmd = &cobra.Command{
 	Long:  `The command will recreate the .ao.json file.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		var configLocation = viper.GetString("HOME") + "/.ao.json"
 		err := os.Remove(configLocation)
 		if err != nil {
 			if !strings.Contains(err.Error(), "no such file or directory") {
@@ -92,8 +64,15 @@ var recreateConfigCmd = &cobra.Command{
 				os.Exit(1)
 			}
 		}
+		conf := &config2.DefaultAOConfig
+		conf.InitClusters()
+		conf.SelectApiCluster()
 
-		openshift.CreateAoConfig(configLocation, loginCluster, useCurrentOcLogin)
+		cluster, _ := cmd.Flags().GetString("cluster")
+		if cluster != "" {
+			conf.AvailableClusters = []string{cluster}
+		}
+		conf.Write(configLocation)
 	},
 }
 
@@ -120,14 +99,13 @@ To persist this across login sessions, please update your .bashrc file.`,
 func init() {
 	RootCmd.AddCommand(admCmd)
 	admCmd.AddCommand(getClusterCmd)
-	admCmd.AddCommand(getKubeConfigCmd)
-	admCmd.AddCommand(getOcLoginCmd)
 	admCmd.AddCommand(completionCmd)
-
-	getClusterCmd.Flags().BoolP("all",
-		"a", false, "Show all clusters, not just the reachable ones")
-
 	admCmd.AddCommand(recreateConfigCmd)
-	recreateConfigCmd.Flags().BoolVarP(&useCurrentOcLogin, "use-current-oclogin", "", false, "Recreates config based on current OC login")
-	recreateConfigCmd.Flags().StringVarP(&loginCluster, "cluster", "c", "", "Limit recreate-config to the given Tax Norway cluster")
+	admCmd.AddCommand(updateClustersCmd)
+
+	// Get cluster
+	getClusterCmd.Flags().BoolP("all", "a", false, "Show all clusters, not just the reachable ones")
+
+	// Recreate config
+	recreateConfigCmd.Flags().StringP("cluster", "c", "", "Limit recreate-config to the given Tax Norway cluster")
 }

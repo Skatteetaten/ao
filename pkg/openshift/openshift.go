@@ -396,7 +396,6 @@ func dialTimeout(network, addr string) (net.Conn, error) {
 }
 
 func ping(url string) bool {
-
 	resp, err := client.Get(url)
 	if err != nil {
 		return false

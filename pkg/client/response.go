@@ -30,6 +30,7 @@ type Response struct {
 
 func (res *Response) ParseItems(data interface{}) error {
 	if !res.Success {
+		// TODO: Only for validation errors?
 		errorResponse, err := res.ToErrorResponse()
 		if err != nil {
 			return err

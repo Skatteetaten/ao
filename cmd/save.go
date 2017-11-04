@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"os"
 )
 
 var saveCmd = &cobra.Command{
@@ -13,8 +13,9 @@ var saveCmd = &cobra.Command{
 	Short: "Save changed, new and deleted files for AuroraConfig",
 	Run: func(cmd *cobra.Command, args []string) {
 		user, _ := cmd.Flags().GetString("user")
-		url := getGitUrl(config.GetAffiliation(), user)
-		if _, err := auroraconfig.Save(url, config); err != nil {
+		url := getGitUrl(ao.Affiliation, user)
+
+		if _, err := versioncontrol.Save(url, DefaultApiClient); err != nil {
 			fmt.Println(err.Error())
 		} else {
 			fmt.Println("Save success")
@@ -25,6 +26,6 @@ var saveCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(saveCmd)
 
-	viper.BindEnv("USER")
-	saveCmd.Flags().StringP("user", "u", viper.GetString("USER"), "Save AuroraConfig as user")
+	user, _ := os.LookupEnv("USER")
+	saveCmd.Flags().StringP("user", "u", user, "Save AuroraConfig as user")
 }

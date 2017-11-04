@@ -50,7 +50,7 @@ func (api *ApiClient) Deploy(applications []string, overrides map[string]json.Ra
 	}
 
 	var deploys []deployResult
-	response.ParseItems(&deploys)
+	err = json.Unmarshal(response.Items, &deploys)
 	if err != nil {
 		return err
 	}

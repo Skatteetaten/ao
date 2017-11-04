@@ -1,4 +1,4 @@
-package auroraconfig
+package versioncontrol
 
 import (
 	"fmt"

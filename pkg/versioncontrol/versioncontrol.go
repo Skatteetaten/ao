@@ -1,4 +1,4 @@
-package auroraconfig
+package versioncontrol
 
 import (
 	"bufio"
@@ -9,12 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"encoding/json"
 	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
-	"github.com/skatteetaten/ao/pkg/openshift"
-	"github.com/skatteetaten/ao/pkg/serverapi"
 )
 
 const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
@@ -95,7 +93,7 @@ func getStatuses() ([]string, error) {
 	return statuses, nil
 }
 
-func Save(url string, config *configuration.ConfigurationClass) (string, error) {
+func Save(url string, api *client.ApiClient) (string, error) {
 	if err := ValidateRepo(url); err != nil {
 		return "", err
 	}
@@ -116,7 +114,7 @@ func Save(url string, config *configuration.ConfigurationClass) (string, error) 
 		return "", err
 	}
 
-	if err := handleAuroraConfigCommit(statuses, config); err != nil {
+	if err := handleAuroraConfigCommit(statuses, api); err != nil {
 		return "", errors.Wrap(err, "Failed to save AuroraConfig")
 	}
 
@@ -133,18 +131,13 @@ func Save(url string, config *configuration.ConfigurationClass) (string, error) 
 	return Pull()
 }
 
-// TODO: Test
-func Validate(config *configuration.ConfigurationClass) (string, []string, error) {
-	auroraConfig := &serverapi.AuroraConfig{
-		Files:    make(map[string]json.RawMessage),
-		Versions: make(map[string]string),
-	}
+func CollectFiles() (*client.AuroraConfig, error) {
+	ac := client.NewAuroraConfig()
 
-	if err := addFilesToAuroraConfig(auroraConfig); err != nil {
-		return "", []string{}, err
+	if err := addFilesToAuroraConfig(ac); err != nil {
+		return nil, err
 	}
-
-	return ValidateAuroraConfig(auroraConfig, config)
+	return ac, nil
 }
 
 func isCleanRepo() bool {
@@ -156,7 +149,7 @@ func isCleanRepo() bool {
 	return false
 }
 
-func UpdateLocalRepository(affiliation string, config *openshift.OpenshiftConfig) error {
+func UpdateLocalRepository(affiliation string, config config.AOConfig) error {
 	path := config.CheckoutPaths[affiliation]
 	if path == "" {
 		return errors.New("No local repository for affiliation " + affiliation)
@@ -210,22 +203,25 @@ Expected affliation to be %s, but was %s.`, expectedAffiliation, repoAffiliation
 	return nil
 }
 
-func handleAuroraConfigCommit(statuses []string, config *configuration.ConfigurationClass) error {
+func handleAuroraConfigCommit(statuses []string, api *client.ApiClient) error {
 	// TODO: Remove this request
-	ac, err := GetAuroraConfig(config)
-
+	ac, err := api.GetAuroraConfig()
 	if err != nil {
 		return errors.Wrap(err, "Failed getting AuroraConfig")
 	}
 
-	if err = addFilesToAuroraConfig(&ac); err != nil {
+	if err = addFilesToAuroraConfig(ac); err != nil {
 		return errors.Wrap(err, "Failed adding files to AuroraConfig")
 	}
 
-	removeFilesFromAuroraConfig(statuses, &ac)
+	removeFilesFromAuroraConfig(statuses, ac)
 
-	if err = PutAuroraConfig(ac, config); err != nil {
-		return errors.Wrap(err, "Failed committing AuroraConfig")
+	res, err := api.SaveAuroraConfig(ac)
+	if err != nil {
+		return err
+	}
+	if res != nil {
+		res.PrintAllErrors()
 	}
 
 	return nil
@@ -287,7 +283,7 @@ func FindGitPath(path string) (string, bool) {
 	return FindGitPath(next)
 }
 
-func addFilesToAuroraConfig(ac *serverapi.AuroraConfig) error {
+func addFilesToAuroraConfig(ac *client.AuroraConfig) error {
 
 	wd, _ := os.Getwd()
 	gitRoot, found := FindGitPath(wd)
@@ -320,7 +316,7 @@ func addFilesToAuroraConfig(ac *serverapi.AuroraConfig) error {
 	})
 }
 
-func removeFilesFromAuroraConfig(statuses []string, ac *serverapi.AuroraConfig) error {
+func removeFilesFromAuroraConfig(statuses []string, ac *client.AuroraConfig) error {
 	for i, v := range statuses {
 		if v == "D" && len(statuses) > i+1 {
 			delete(ac.Files, statuses[i+1])

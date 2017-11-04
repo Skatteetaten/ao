@@ -57,6 +57,13 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 		return nil, err
 	}
 
+	errorCodes := []int{http.StatusNotFound, http.StatusForbidden}
+	for _, c := range errorCodes {
+		if res.StatusCode == c {
+			return nil, errors.New(string(body))
+		}
+	}
+
 	// TODO: Check content head for text/html
 	var response Response
 	err = json.Unmarshal(body, &response)

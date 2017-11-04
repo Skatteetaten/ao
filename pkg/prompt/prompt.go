@@ -8,6 +8,34 @@ import (
 	"strings"
 )
 
+func Affiliation(cmd string) string {
+	p := &survey.Input{
+		Message: cmd + " affiliation:",
+	}
+
+	var affiliation string
+	err := survey.AskOne(p, &affiliation, nil)
+	if err != nil {
+		logrus.Error(err)
+	}
+
+	return affiliation
+}
+
+func Password() string {
+	p := &survey.Password{
+		Message: "Password:",
+	}
+
+	var pass string
+	err := survey.AskOne(p, &pass, nil)
+	if err != nil {
+		logrus.Error(err)
+	}
+
+	return string(pass[:])
+}
+
 func ConfirmDeployAll(applications []string) bool {
 
 	printDeployTable(applications)

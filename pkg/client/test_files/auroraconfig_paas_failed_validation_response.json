@@ -1,0 +1,17 @@
+{
+  "success": false,
+  "message": "AuroraConfig contained errors for one or more applications.",
+  "items": [
+    {
+      "application": "reference-web",
+      "environment": "boober-test",
+      "messages": [
+        {
+          "type": "ILLEGAL",
+          "message": "No enum constant no.skatteetaten.aurora.boober.model.TemplateType.randm"
+        }
+      ]
+    }
+  ],
+  "count": 1
+}

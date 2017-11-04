@@ -11,6 +11,7 @@ type CommonCommandOptions struct {
 	Localhost   bool
 	ShowConfig  bool
 	Pretty      bool
+	LogLevel    string
 	ShowObjects bool
 	ServerApi   string
 	Token       string

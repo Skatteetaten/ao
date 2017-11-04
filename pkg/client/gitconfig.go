@@ -10,7 +10,7 @@ type GitConfig struct {
 }
 
 func (api *ApiClient) GetClientConfig() (*GitConfig, error) {
-	endpoint := "/clientconfig"
+	endpoint := "/clientconfig/"
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
 	if err != nil {

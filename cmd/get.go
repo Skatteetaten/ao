@@ -100,9 +100,6 @@ will print the file.
 
 If no argument is given, the command will list all the files in the repository.`,
 	Aliases: []string{"files"},
-	Annotations: map[string]string{
-		CallbackAnnotation: "GetFiles",
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 
 		var output string
