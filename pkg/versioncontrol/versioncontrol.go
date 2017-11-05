@@ -222,6 +222,7 @@ func handleAuroraConfigCommit(statuses []string, api *client.ApiClient) error {
 	}
 	if res != nil {
 		res.PrintAllErrors()
+		return errors.New("Save failed")
 	}
 
 	return nil

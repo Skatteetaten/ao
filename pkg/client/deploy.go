@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"text/tabwriter"
+	"os"
+	"sort"
 )
 
 type ApplicationId struct {
@@ -55,17 +58,37 @@ func (api *ApiClient) Deploy(applications []string, overrides map[string]json.Ra
 		return err
 	}
 
+	sort.Slice(deploys, func(i, j int) bool {
+		return strings.Compare(deploys[i].ADS.Name, deploys[j].ADS.Name) < 1
+	})
+
+	results := []string{"\x1b[00mSTATUS\x1b[0m\tAPPLICATION\tENVIRONMENT\tCLUSTER\tDEPLOY_ID\t"}
 	// TODO: Can we find the failed object?
 	for _, item := range deploys {
 		ads := item.ADS
-		message := "Deployed %s in namespace %s to %s (%s)\n"
+		pattern := "%s\t%s\t%s\t%s\t%s\t"
+		status := "\x1b[32mDeployed\x1b[0m"
 		if !item.Success {
-			message = "Failed to deploy %s in namespace %s to %s (%s)\n"
+			status = "\x1b[31mFailed\x1b[0m"
 		}
-		fmt.Printf(message, ads.Name, ads.Namespace, ads.Cluster, item.DeployId)
+		result := fmt.Sprintf(pattern, status, ads.Name, ads.Namespace, ads.Cluster, item.DeployId)
+		results = append(results, result)
+	}
+
+	if len(deploys) > 0 {
+		printDeployResults(results)
 	}
 
 	return nil
+}
+
+func printDeployResults(results []string) {
+	const padding = 3
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', tabwriter.TabIndent)
+	for _, result := range results {
+		fmt.Fprintln(w, result)
+	}
+	w.Flush()
 }
 
 func createApplicationIds(apps []string) []ApplicationId {

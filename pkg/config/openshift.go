@@ -103,6 +103,8 @@ func (ao *AOConfig) Logout(configLocation string) error {
 		c.Token = ""
 	}
 
+	ao.Localhost = false
+
 	err := ao.Write(configLocation)
 	if err != nil {
 		return err
