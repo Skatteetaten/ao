@@ -5,11 +5,11 @@ import (
 	"net/http"
 )
 
-type GitConfig struct {
+type ClientConfig struct {
 	GitUrlPattern string `json:"gitUrlPattern"`
 }
 
-func (api *ApiClient) GetClientConfig() (*GitConfig, error) {
+func (api *ApiClient) GetClientConfig() (*ClientConfig, error) {
 	endpoint := "/clientconfig/"
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
@@ -17,7 +17,7 @@ func (api *ApiClient) GetClientConfig() (*GitConfig, error) {
 		return nil, err
 	}
 
-	var gc GitConfig
+	var gc ClientConfig
 	response.ParseFirstItem(&gc)
 	if err != nil {
 		return nil, errors.Wrap(err, "git config")

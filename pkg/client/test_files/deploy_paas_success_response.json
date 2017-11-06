@@ -1,0 +1,352 @@
+{
+  "success": true,
+  "message": "OK",
+  "items": [
+    {
+      "deployId": "7f866742-6af7-47b1-b3a3-461fc4b948a4",
+      "auroraDeploymentSpec": {
+        "schemaVersion": "v1",
+        "affiliation": "paas",
+        "cluster": "qa",
+        "type": "development",
+        "name": "this-is-a-really-long-name-forreference",
+        "envName": "boober-utv",
+        "permissions": {
+          "admin": {
+            "groups": [
+              "APP_PaaS_drift",
+              "APP_PaaS_utv"
+            ],
+            "users": [],
+            "rolebindings": {
+              "APP_PaaS_drift": "Group",
+              "APP_PaaS_utv": "Group"
+            }
+          }
+        },
+        "fields": {
+          "schemaVersion": {
+            "path": "/schemaVersion",
+            "value": "v1",
+            "source": "about.json"
+          },
+          "type": {
+            "path": "/type",
+            "value": "development",
+            "source": "boober-utv/about.json"
+          },
+          "affiliation": {
+            "path": "/affiliation",
+            "value": "paas",
+            "source": "about.json"
+          },
+          "cluster": {
+            "path": "/cluster",
+            "value": "qa",
+            "source": "boober-utv/about.json"
+          },
+          "name": {
+            "path": "/name",
+            "value": "this-is-a-really-long-name-forreference",
+            "source": "reference.json"
+          },
+          "permissions/admin": {
+            "path": "/permissions/admin",
+            "value": "APP_PaaS_drift APP_PaaS_utv",
+            "source": "about.json"
+          },
+          "database/referanseapp": {
+            "path": "/database/referanseapp",
+            "value": "auto",
+            "source": "reference.json"
+          },
+          "artifactId": {
+            "path": "/artifactId",
+            "value": "openshift-reference-springboot-server",
+            "source": "reference.json"
+          },
+          "groupId": {
+            "path": "/groupId",
+            "value": "no.skatteetaten.aurora.openshift",
+            "source": "reference.json"
+          },
+          "version": {
+            "path": "/version",
+            "value": "1",
+            "source": "reference.json"
+          },
+          "applicationPlatform": {
+            "path": "/applicationPlatform",
+            "value": "java",
+            "source": "reference.json"
+          },
+          "deployStrategy/type": {
+            "path": "/deployStrategy/type",
+            "value": "rolling",
+            "source": "reference.json"
+          },
+          "deployStrategy/timeout": {
+            "path": "/deployStrategy/timeout",
+            "value": "180",
+            "source": "default"
+          },
+          "database": {
+            "path": "/database",
+            "value": {
+              "referanseapp": "auto"
+            },
+            "source": "reference.json"
+          },
+          "resources/cpu/min": {
+            "path": "/resources/cpu/min",
+            "value": "100m",
+            "source": "default"
+          },
+          "resources/cpu/max": {
+            "path": "/resources/cpu/max",
+            "value": "2000m",
+            "source": "default"
+          },
+          "resources/memory/min": {
+            "path": "/resources/memory/min",
+            "value": "128Mi",
+            "source": "default"
+          },
+          "resources/memory/max": {
+            "path": "/resources/memory/max",
+            "value": "256Mi",
+            "source": "default"
+          },
+          "replicas": {
+            "path": "/replicas",
+            "value": "1",
+            "source": "default"
+          },
+          "prometheus": {
+            "path": "/prometheus",
+            "value": "true",
+            "source": "default"
+          },
+          "prometheus/path": {
+            "path": "/prometheus/path",
+            "value": "/prometheus",
+            "source": "default"
+          },
+          "prometheus/port": {
+            "path": "/prometheus/port",
+            "value": "8081",
+            "source": "default"
+          },
+          "management": {
+            "path": "/management",
+            "value": "true",
+            "source": "default"
+          },
+          "management/path": {
+            "path": "/management/path",
+            "value": "actuator",
+            "source": "default"
+          },
+          "management/port": {
+            "path": "/management/port",
+            "value": "8081",
+            "source": "default"
+          },
+          "certificate": {
+            "path": "/certificate",
+            "value": true,
+            "source": "reference.json"
+          },
+          "readiness": {
+            "path": "/readiness",
+            "value": "true",
+            "source": "default"
+          },
+          "readiness/port": {
+            "path": "/readiness/port",
+            "value": "8080",
+            "source": "default"
+          },
+          "readiness/delay": {
+            "path": "/readiness/delay",
+            "value": "10",
+            "source": "default"
+          },
+          "readiness/timeout": {
+            "path": "/readiness/timeout",
+            "value": "1",
+            "source": "default"
+          },
+          "liveness": {
+            "path": "/liveness",
+            "value": "false",
+            "source": "default"
+          },
+          "liveness/port": {
+            "path": "/liveness/port",
+            "value": "8080",
+            "source": "default"
+          },
+          "liveness/delay": {
+            "path": "/liveness/delay",
+            "value": "10",
+            "source": "default"
+          },
+          "liveness/timeout": {
+            "path": "/liveness/timeout",
+            "value": "1",
+            "source": "default"
+          },
+          "webseal": {
+            "path": "/webseal",
+            "value": "false",
+            "source": "default"
+          },
+          "debug": {
+            "path": "/debug",
+            "value": "false",
+            "source": "default"
+          },
+          "pause": {
+            "path": "/pause",
+            "value": "false",
+            "source": "default"
+          },
+          "alarm": {
+            "path": "/alarm",
+            "value": "true",
+            "source": "default"
+          },
+          "route": {
+            "path": "/route",
+            "value": true,
+            "source": "about.json"
+          },
+          "config/foo": {
+            "path": "/config/foo",
+            "value": "bar",
+            "source": "about.json"
+          },
+          "config/foo2": {
+            "path": "/config/foo2",
+            "value": "baz",
+            "source": "reference.json"
+          },
+          "secretVault": {
+            "path": "/secretVault",
+            "value": "utv",
+            "source": "boober-utv/about.json"
+          },
+          "extraTags": {
+            "path": "/extraTags",
+            "value": "latest,major,minor,patch",
+            "source": "default"
+          },
+          "builder/name": {
+            "path": "/builder/name",
+            "value": "architect",
+            "source": "default"
+          },
+          "builder/version": {
+            "path": "/builder/version",
+            "value": "1",
+            "source": "default"
+          }
+        },
+        "volume": {
+          "secrets": {
+            "1.2.3.properties": "Rk9PPU9IWUVBSApCQVI9Rk9PQkFSCg==",
+            "latest.properties": "Rk9PPWJhcgpCQVI9YmF6Cg=="
+          },
+          "config": {
+            "foo": "bar",
+            "foo2": "baz",
+            "latest.properties": "foo=bar\\nfoo2=baz"
+          },
+          "permissions": {
+            "groups": [
+              "APP_PaaS_utv"
+            ],
+            "users": []
+          }
+        },
+        "route": {
+          "route": [
+            {
+              "name": "this-is-a-really-long-name-forreference"
+            }
+          ]
+        },
+        "build": {
+          "baseName": "wingnut",
+          "baseVersion": "8",
+          "builderName": "architect",
+          "builderVersion": "1",
+          "extraTags": "latest,major,minor,patch",
+          "groupId": "no.skatteetaten.aurora.openshift",
+          "artifactId": "openshift-reference-springboot-server",
+          "version": "1",
+          "outputKind": "ImageStreamTag",
+          "outputName": "this-is-a-really-long-name-forreference:latest",
+          "triggers": false,
+          "applicationPlatform": "java"
+        },
+        "deploy": {
+          "applicationFile": "boober-utv/reference.json",
+          "overrideFiles": {},
+          "flags": {
+            "debug": false,
+            "alarm": true,
+            "pause": false
+          },
+          "resources": {
+            "memory": {
+              "min": "128Mi",
+              "max": "256Mi"
+            },
+            "cpu": {
+              "min": "100m",
+              "max": "2000m"
+            }
+          },
+          "replicas": 1,
+          "applicationPlatform": "java",
+          "groupId": "no.skatteetaten.aurora.openshift",
+          "artifactId": "openshift-reference-springboot-server",
+          "version": "1",
+          "database": [
+            {
+              "name": "referanseapp",
+              "spec": "referanseapp",
+              "envName": "REFERANSEAPP_DB",
+              "dbName": "referanseapp-db"
+            }
+          ],
+          "certificateCn": "no.skatteetaten.aurora.openshift.this-is-a-really-long-name-forreference",
+          "prometheus": {
+            "path": "/prometheus",
+            "port": 8081
+          },
+          "managementPath": ":8081/actuator",
+          "readiness": {
+            "port": 8080,
+            "delay": 10,
+            "timeout": 1
+          },
+          "dockerImagePath": "docker-registry:5000/no_skatteetaten_aurora_openshift/openshift-reference-springboot-server",
+          "dockerTag": "1",
+          "deployStrategy": {
+            "type": "rolling",
+            "timeout": 180
+          },
+          "dockerImage": "docker-registry:5000/no_skatteetaten_aurora_openshift/openshift-reference-springboot-server:1"
+        },
+        "namespace": "paas-boober-utv"
+      },
+      "openShiftResponses": [],
+      "success": true,
+      "tag": "qa.paas-boober-utv.this-is-a-really-long-name-forreference/7f866742-6af7-47b1-b3a3-461fc4b948a4"
+    }
+  ],
+  "count": 1
+}

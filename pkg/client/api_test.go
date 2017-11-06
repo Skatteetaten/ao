@@ -37,6 +37,9 @@ func TestApiClient_Do(t *testing.T) {
 
 			assert.Len(t, req.Header, 5)
 
+			agent := req.Header.Get("User-Agent")
+			assert.Equal(t, "ao/", agent)
+
 			auth := req.Header.Get("Authorization")
 			assert.Equal(t, "Bearer test", auth)
 
