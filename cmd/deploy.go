@@ -63,7 +63,10 @@ var deployCmd = &cobra.Command{
 			Token:       persistentOptions.Token,
 		}
 
-		command.Deploy(allArgs, DefaultApiClient, ao.Clusters, options)
+		result := command.Deploy(allArgs, DefaultApiClient, ao.Clusters, options)
+		if result != nil {
+			command.PrintDeployResults(result)
+		}
 	},
 }
 

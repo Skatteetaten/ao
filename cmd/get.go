@@ -36,8 +36,8 @@ var getDeploymentsCmd = &cobra.Command{
 			return
 		}
 
-		table := command.GetAllDeploymentsTable(fileNames)
-		command.DefaultTablePrinter(table)
+		deployments := fileNames.FilterDeployments()
+		command.PrintDeployments(deployments)
 	},
 }
 

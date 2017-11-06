@@ -2,17 +2,8 @@ package command
 
 import (
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/client"
-	"sort"
 	"strings"
 )
-
-func GetAllDeploymentsTable(fileNames client.FileNames) []string {
-	apps := fileNames.FilterDeployments()
-	sort.Strings(apps)
-
-	return GetDeploymentTable(apps)
-}
 
 func GetDeploymentTable(deployments []string) []string {
 	table := []string{"ENVIRONMENT\tAPPLICATION\t"}

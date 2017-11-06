@@ -65,7 +65,7 @@ func ConfirmDeploy(applications []string) bool {
 
 func MultiSelectDeployments(options []string) []string {
 	p := &survey.MultiSelect{
-		Message:  fmt.Sprintf("Matched %d files. Which applications do you want to deploy?", len(options)),
+		Message:  "Which applications do you want to deploy?",
 		PageSize: 10,
 		Options:  options,
 	}

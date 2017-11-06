@@ -18,13 +18,13 @@ type DeployOptions struct {
 	Force       bool
 }
 
-func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cluster, options DeployOptions) {
+func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cluster, options DeployOptions) []client.DeployResult {
 
 	overrides, err := ParseOverride(options.Overrides)
 	if err != nil {
 		fmt.Println(err)
 		fmt.Println("Override must start and end with ' or else escape \" ")
-		return
+		return nil
 	}
 
 	api.Affiliation = options.Affiliation
@@ -33,7 +33,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		cluster := clusters[options.Cluster]
 		if cluster == nil {
 			fmt.Println("No such cluster", options.Cluster)
-			return
+			return nil
 		}
 
 		api.Host = cluster.BooberUrl
@@ -46,7 +46,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 	files, err := api.GetFileNames()
 	if err != nil {
 		fmt.Println(err)
-		return
+		return nil
 	}
 
 	possibleDeploys := files.FilterDeployments()
@@ -73,14 +73,14 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 
 	if len(appsToDeploy) == 0 {
 		fmt.Println("No applications to deploy")
-		return
+		return nil
 	}
 
 	if !options.Force {
 		PrintDeployments(appsToDeploy)
 		shouldDeploy := prompt.ConfirmDeploy(appsToDeploy)
 		if !shouldDeploy {
-			return
+			return nil
 		}
 	}
 
@@ -90,7 +90,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 			fmt.Println(err)
 		}
 		PrintDeployResults(result)
-		return
+		return nil
 	}
 
 	reachableClusters := 0
@@ -119,7 +119,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		}()
 	}
 
-	allResults := []client.DeployResult{}
+	var allResults []client.DeployResult
 	counter := 0
 	for {
 		select {
@@ -135,5 +135,5 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		}
 	}
 
-	PrintDeployResults(allResults)
+	return allResults
 }
