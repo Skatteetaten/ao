@@ -1,11 +1,12 @@
 package fuzzy
 
 import (
+	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-var fileNames = []string{
+var fileNames = client.FileNames{
 	"about.json",
 	"console.json",
 	"boober.json",
@@ -32,7 +33,7 @@ func TestFilterFileNamesForDeploy(t *testing.T) {
 		"test-relay/boober",
 	}
 
-	actual := FilterFileNamesForDeploy(fileNames)
+	actual := fileNames.FilterDeployments()
 	assert.Equal(t, expected, actual)
 }
 
@@ -94,7 +95,7 @@ func TestFindApplicationsToDeploy(t *testing.T) {
 		{"boo", []string{"utv/boober", "test/boober", "utv-relay/boober", "test-relay/boober"}},
 	}
 
-	filteredFiles := FilterFileNamesForDeploy(fileNames)
+	filteredFiles := fileNames.FilterDeployments()
 
 	for _, test := range tests {
 		deploys, _ := SearchForApplications(test.Search, filteredFiles)
@@ -116,7 +117,7 @@ func TestFindAllFor(t *testing.T) {
 		{"boo", APP_FILTER, []string{}},
 	}
 
-	filteredFiles := FilterFileNamesForDeploy(fileNames)
+	filteredFiles := fileNames.FilterDeployments()
 
 	for _, test := range tests {
 		deploys := FindAllDeploysFor(test.Mode, test.Search, filteredFiles)

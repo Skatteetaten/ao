@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"net/http"
+	"strings"
 )
 
 type AuroraConfig struct {
@@ -19,7 +20,19 @@ func NewAuroraConfig() *AuroraConfig {
 	}
 }
 
-func (api *ApiClient) GetFileNames() ([]string, error) {
+type FileNames []string
+
+func (f FileNames) FilterDeployments() []string {
+	filteredFiles := []string{}
+	for _, file := range f {
+		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
+			filteredFiles = append(filteredFiles, strings.TrimSuffix(file, ".json"))
+		}
+	}
+	return filteredFiles
+}
+
+func (api *ApiClient) GetFileNames() (FileNames, error) {
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/filenames", api.Affiliation)
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
@@ -27,7 +40,7 @@ func (api *ApiClient) GetFileNames() ([]string, error) {
 		return nil, err
 	}
 
-	var fileNames []string
+	var fileNames FileNames
 	err = response.ParseItems(&fileNames)
 	if err != nil {
 		return nil, err

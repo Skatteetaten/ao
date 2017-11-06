@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/skatteetaten/ao/pkg/command"
 	pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
 	"github.com/spf13/cobra"
 )
@@ -29,16 +30,14 @@ var getDeploymentsCmd = &cobra.Command{
 	Aliases: []string{"deployments", "dep", "deps", "all"},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		var output string
-		var err error
-
-		output, err = getcmdObject.Deployments("")
-
-		if err == nil {
-			fmt.Print(output)
-		} else {
+		fileNames, err := DefaultApiClient.GetFileNames()
+		if err != nil {
 			fmt.Println(err)
+			return
 		}
+
+		table := command.GetAllDeploymentsTable(fileNames)
+		command.DefaultTablePrinter(table)
 	},
 }
 

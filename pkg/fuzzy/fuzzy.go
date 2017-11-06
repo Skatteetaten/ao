@@ -7,16 +7,6 @@ import (
 	"strings"
 )
 
-func FilterFileNamesForDeploy(fileNames []string) []string {
-	filteredFiles := []string{}
-	for _, file := range fileNames {
-		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
-			filteredFiles = append(filteredFiles, strings.TrimSuffix(file, ".json"))
-		}
-	}
-	return filteredFiles
-}
-
 func FindMatches(search string, fileNames []string, withSuffix bool) ([]string, error) {
 
 	files := []string{}

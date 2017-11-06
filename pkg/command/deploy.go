@@ -7,8 +7,6 @@ import (
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/prompt"
-	"os"
-	"text/tabwriter"
 )
 
 type DeployOptions struct {
@@ -52,7 +50,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		return
 	}
 
-	possibleDeploys := fuzzy.FilterFileNamesForDeploy(files)
+	possibleDeploys := files.FilterDeployments()
 	appsToDeploy := []string{}
 	if options.DeployAll {
 		args = []string{}
@@ -154,11 +152,6 @@ func PrintDeployResults(deploys []client.DeployResult) {
 	}
 
 	if len(deploys) > 0 {
-		const padding = 3
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', tabwriter.TabIndent)
-		for _, result := range results {
-			fmt.Fprintln(w, result)
-		}
-		w.Flush()
+		DefaultTablePrinter(results)
 	}
 }
