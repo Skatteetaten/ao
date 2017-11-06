@@ -91,8 +91,7 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 
 	t.Run("Validation and save should fail when deploy type is illegal", func(t *testing.T) {
 		fileName := "auroraconfig_paas_failed_validation_response"
-		// TODO: This should not return error code 500
-		ts := httptest.NewServer(AuroraConfigFailedResponseHandler(t, fileName, http.StatusInternalServerError))
+		ts := httptest.NewServer(AuroraConfigFailedResponseHandler(t, fileName, http.StatusBadRequest))
 		defer ts.Close()
 
 		api := NewApiClient(ts.URL, "", affiliation)
@@ -106,6 +105,7 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 		errResponse, err := api.ValidateAuroraConfig(&ac)
 		if errResponse == nil {
 			t.Error("Expected errResponse to not be nil")
+			return
 		}
 		assert.NoError(t, err)
 		assert.NotEmpty(t, errResponse)

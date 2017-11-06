@@ -35,12 +35,15 @@ func TestApiClient_Do(t *testing.T) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 
-			assert.Len(t, req.Header, 4)
+			assert.Len(t, req.Header, 5)
 
 			auth := req.Header.Get("Authorization")
 			assert.Equal(t, "Bearer test", auth)
 
-			contentType := req.Header.Get("Accept")
+			accept := req.Header.Get("Accept")
+			assert.Equal(t, "application/json", accept)
+
+			contentType := req.Header.Get("Content-Type")
 			assert.Equal(t, "application/json", contentType)
 
 			assert.Equal(t, "/hello", req.URL.Path)

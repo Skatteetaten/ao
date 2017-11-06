@@ -47,6 +47,7 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 	version.Init()
 	req.Header.Set("User-Agent", "ao/"+version.Version)
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+api.Token)
 
 	client := http.DefaultClient

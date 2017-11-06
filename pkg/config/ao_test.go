@@ -17,6 +17,7 @@ func TestAOConfig_SelectApiCluster(t *testing.T) {
 
 	for _, test := range tests {
 		aoConfig := DefaultAOConfig
+		aoConfig.Clusters = make(map[string]*Cluster)
 		for name, reachable := range test.Clusters {
 			aoConfig.Clusters[name] = &Cluster{
 				Reachable: reachable,
@@ -25,6 +26,7 @@ func TestAOConfig_SelectApiCluster(t *testing.T) {
 
 		aoConfig.SelectApiCluster()
 		assert.Equal(t, test.Expected, aoConfig.APICluster)
+		assert.Len(t, aoConfig.Clusters, len(test.Clusters))
 	}
 
 	aoConfig := DefaultAOConfig

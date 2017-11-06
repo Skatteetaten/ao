@@ -20,7 +20,7 @@ func NewAuroraConfig() *AuroraConfig {
 }
 
 func (api *ApiClient) GetFileNames() ([]string, error) {
-	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/filenamesss", api.Affiliation)
+	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfig/filenames", api.Affiliation)
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
 	if err != nil {
