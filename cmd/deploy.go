@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/client"
-	"github.com/skatteetaten/ao/pkg/fuzzy"
+	"github.com/skatteetaten/ao/pkg/command"
 	"github.com/skatteetaten/ao/pkg/jsonutil"
-	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
 )
 
@@ -62,97 +60,19 @@ var deployCmd = &cobra.Command{
 			affiliation = deployAffiliation
 		}
 
-		api := DefaultApiClient
-		api.Affiliation = affiliation
+		deployOnce := ao.Localhost || deployApiClusterOnly || deployCluster != ""
 
-		if ao.Localhost {
-			api.Host = "http://localhost:8080"
-		} else if deployCluster != "" {
-			cluster := ao.Clusters[deployCluster]
-			if cluster == nil {
-				fmt.Println("No such cluster", deployCluster)
-				return
-			}
-			api.Host = cluster.BooberUrl
-			api.Token = cluster.Token
-			if persistentOptions.Token != "" {
-				api.Token = persistentOptions.Token
-			}
+		options := command.DeployOptions{
+			Affiliation: affiliation,
+			Overrides:   overrides,
+			Force:       forceDeployFlag,
+			DeployAll:   deployAllFlag,
+			DeployOnce:  deployOnce,
+			Cluster:     deployCluster,
+			Token:       persistentOptions.Token,
 		}
 
-		files, err := api.GetFileNames()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		possibleDeploys := fuzzy.FilterFileNamesForDeploy(files)
-		appsToDeploy := []string{}
-		if deployAllFlag {
-			allArgs = []string{}
-			appsToDeploy = possibleDeploys
-		}
-		for _, arg := range allArgs {
-			options, _ := fuzzy.SearchForApplications(arg, possibleDeploys)
-			if !forceDeployFlag && len(options) > 1 {
-				deployAll := prompt.ConfirmDeployAll(options)
-				selectedApps := options
-				if !deployAll {
-					selectedApps = prompt.MultiSelectDeployments(options)
-				}
-				appsToDeploy = append(appsToDeploy, selectedApps...)
-			} else {
-				appsToDeploy = append(appsToDeploy, options...)
-			}
-		}
-
-		if len(appsToDeploy) == 0 {
-			fmt.Println("No applications to deploy")
-			return
-		}
-
-		if !forceDeployFlag {
-			shouldDeploy := prompt.ConfirmDeploy(appsToDeploy)
-			if !shouldDeploy {
-				return
-			}
-		}
-
-		if ao.Localhost || deployApiClusterOnly || deployCluster != "" {
-			err := api.Deploy(appsToDeploy, overrides)
-			if err != nil {
-				fmt.Println(err)
-			}
-			return
-		}
-
-		deployErrors := make(chan error)
-		defer close(deployErrors)
-		counter := 0
-		for _, c := range ao.Clusters {
-			if !c.Reachable {
-				continue
-			}
-			counter++
-
-			token := c.Token
-			if persistentOptions.Token != "" {
-				token = persistentOptions.Token
-			}
-
-			cli := client.NewApiClient(c.BooberUrl, token, affiliation)
-
-			go func() {
-				deployErrors <- cli.Deploy(appsToDeploy, overrides)
-			}()
-		}
-
-		for i := 0; i < counter; i++ {
-			err = <-deployErrors
-			if err != nil {
-				fmt.Println(err)
-			}
-		}
+		command.Deploy(allArgs, DefaultApiClient, ao.Clusters, options)
 	},
 }
 

@@ -2,16 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"strings"
-
-	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
+	"github.com/skatteetaten/ao/pkg/command"
 	aoConfig "github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/configuration"
-	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 // TODO: UPDATE DOCUMENTATION
@@ -45,62 +42,16 @@ This application has two main parts.
 2. apply the aoc configuration to the clusters
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		home, _ := os.LookupEnv("HOME")
+		configLocation = home + "/.ao.json"
 
-		level, err := logrus.ParseLevel(persistentOptions.LogLevel)
-		if err == nil {
-			logrus.SetLevel(level)
-		} else {
-			fmt.Println(err)
-		}
-
-		if persistentOptions.Pretty {
-			logrus.SetFormatter(&client.PrettyFormatter{})
-		}
-
-		apiCluster := ao.Clusters[ao.APICluster]
-		if apiCluster == nil {
-			apiCluster = &aoConfig.Cluster{}
-		}
-
-		DefaultApiClient = client.NewApiClient(apiCluster.BooberUrl, apiCluster.Token, ao.Affiliation)
-
-		if persistentOptions.ServerApi != "" {
-			DefaultApiClient.Host = persistentOptions.ServerApi
-		}
-
-		if persistentOptions.Token != "" {
-			DefaultApiClient.Token = persistentOptions.Token
-			// If token flag is specified, ignore login check
-			return
-		}
-
-		commandsWithoutLogin := []string{"login", "logout", "version", "help", "adm"}
-
-		commands := strings.Split(cmd.CommandPath(), " ")
-		if len(commands) > 1 {
-			for _, command := range commandsWithoutLogin {
-				if commands[1] == command {
-					return
-				}
-			}
-		}
-
-		// TODO: Rework this
-		if ao.Affiliation == "" && cmd.Name() != "deploy" {
-			ao.Affiliation = prompt.Affiliation("Choose")
-		}
-
-		user, _ := os.LookupEnv("USER")
-		ao.Login(configLocation, aoConfig.LoginOptions{
-			UserName: user,
+		ao, DefaultApiClient = command.Initialize(configLocation, command.InitializeOptions{
+			Host:        persistentOptions.ServerApi,
+			Token:       persistentOptions.Token,
+			LogLevel:    persistentOptions.LogLevel,
+			PrettyLog:   persistentOptions.Pretty,
+			CommandName: cmd.Name(),
 		})
-
-		// Affiliation and api cluster may be changed
-		DefaultApiClient.Affiliation = ao.Affiliation
-		apiCluster = ao.Clusters[ao.APICluster]
-		if DefaultApiClient.Token == "" && apiCluster != nil {
-			DefaultApiClient.Token = apiCluster.Token
-		}
 	},
 }
 
@@ -114,25 +65,6 @@ func Execute() {
 }
 
 func init() {
-	logrus.SetOutput(os.Stdout)
-
-	home, _ := os.LookupEnv("HOME")
-	configLocation = home + "/.ao.json"
-	conf, err := aoConfig.LoadConfigFile(configLocation)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	if conf == nil || recreateConfig {
-		logrus.Info("Creating new config")
-		conf = &aoConfig.DefaultAOConfig
-		conf.InitClusters()
-		conf.SelectApiCluster()
-		conf.Write(configLocation)
-	}
-	// Set global config variable
-	ao = conf
-
 	// TODO: Mark as hidden?
 	RootCmd.PersistentFlags().StringVarP(&persistentOptions.LogLevel, "loglevel", "", "fatal", "Set loglevel. Valid log levels are [info, debug, warning, error, fatal]")
 
