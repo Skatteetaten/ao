@@ -66,10 +66,11 @@ func (ao *AOConfig) InitClusters() {
 	ch := make(chan *Cluster)
 
 	for _, cluster := range ao.AvailableClusters {
-		clusterUrl := fmt.Sprintf(ao.ClusterUrlPattern, cluster)
-		go func(name, url string) {
+		name := cluster
+		clusterUrl := fmt.Sprintf(ao.ClusterUrlPattern, name)
+		go func() {
 			reachable := true
-			resp, err := client.Get(url)
+			resp, err := client.Get(clusterUrl)
 			if err != nil || resp == nil {
 				reachable = false
 			}
@@ -83,7 +84,7 @@ func (ao *AOConfig) InitClusters() {
 				Reachable: reachable,
 				BooberUrl: fmt.Sprintf(ao.BooberUrlPattern, name),
 			}
-		}(cluster, clusterUrl)
+		}()
 	}
 
 	for {

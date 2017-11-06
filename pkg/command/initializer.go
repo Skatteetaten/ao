@@ -7,6 +7,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"os"
+	"strings"
 )
 
 type InitializeOptions struct {
@@ -15,6 +16,7 @@ type InitializeOptions struct {
 	LogLevel    string
 	PrettyLog   bool
 	CommandName string
+	CommandPath string
 }
 
 func Initialize(configLocation string, options InitializeOptions) (*config.AOConfig, *client.ApiClient) {
@@ -56,7 +58,7 @@ func Initialize(configLocation string, options InitializeOptions) (*config.AOCon
 
 	commandsWithoutLogin := []string{"login", "logout", "version", "help", "adm"}
 	for _, command := range commandsWithoutLogin {
-		if options.CommandName == command {
+		if strings.Contains(options.CommandPath, command) {
 			return ao, defaultClient
 		}
 	}

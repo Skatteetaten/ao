@@ -24,7 +24,7 @@ type AOConfig struct {
 	CheckoutPaths map[string]string `json:"checkoutPaths"`
 }
 
-var DefaultAOConfig AOConfig = AOConfig{
+var DefaultAOConfig = AOConfig{
 	Clusters:                make(map[string]*Cluster),
 	CheckoutPaths:           make(map[string]string),
 	AvailableClusters:       []string{"utv", "utv-relay", "test", "test-relay", "prod", "prod-relay", "qa"},

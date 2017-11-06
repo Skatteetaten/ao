@@ -51,6 +51,7 @@ This application has two main parts.
 			LogLevel:    persistentOptions.LogLevel,
 			PrettyLog:   persistentOptions.Pretty,
 			CommandName: cmd.Name(),
+			CommandPath: cmd.CommandPath(),
 		})
 	},
 }
