@@ -5,7 +5,6 @@ import (
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
-	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/prompt"
 )
 
@@ -21,7 +20,7 @@ type DeployOptions struct {
 
 func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cluster, options DeployOptions) {
 
-	overrides, err := jsonutil.OverrideJsons2map(options.Overrides)
+	overrides, err := ParseOverride(options.Overrides)
 	if err != nil {
 		fmt.Println(err)
 		fmt.Println("Override must start and end with ' or else escape \" ")
@@ -60,8 +59,9 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 	for _, arg := range args {
 		applications, _ := fuzzy.SearchForApplications(arg, possibleDeploys)
 		if !options.Force && len(applications) > 1 {
-			deployAll := prompt.ConfirmDeployAll(applications)
 			selectedApps := applications
+			PrintDeployments(applications)
+			deployAll := prompt.ConfirmDeployAll(applications)
 			if !deployAll {
 				selectedApps = prompt.MultiSelectDeployments(applications)
 			}
@@ -77,6 +77,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 	}
 
 	if !options.Force {
+		PrintDeployments(appsToDeploy)
 		shouldDeploy := prompt.ConfirmDeploy(appsToDeploy)
 		if !shouldDeploy {
 			return
@@ -135,23 +136,4 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 	}
 
 	PrintDeployResults(allResults)
-}
-
-func PrintDeployResults(deploys []client.DeployResult) {
-	results := []string{"\x1b[00mSTATUS\x1b[0m\tAPPLICATION\tENVIRONMENT\tCLUSTER\tDEPLOY_ID\t"}
-	// TODO: Can we find the failed object?
-	for _, item := range deploys {
-		ads := item.ADS
-		pattern := "%s\t%s\t%s\t%s\t%s\t"
-		status := "\x1b[32mDeployed\x1b[0m"
-		if !item.Success {
-			status = "\x1b[31mFailed\x1b[0m"
-		}
-		result := fmt.Sprintf(pattern, status, ads.Name, ads.Namespace, ads.Cluster, item.DeployId)
-		results = append(results, result)
-	}
-
-	if len(deploys) > 0 {
-		DefaultTablePrinter(results)
-	}
 }

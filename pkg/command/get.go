@@ -11,9 +11,13 @@ func GetAllDeploymentsTable(fileNames client.FileNames) []string {
 	apps := fileNames.FilterDeployments()
 	sort.Strings(apps)
 
+	return GetDeploymentTable(apps)
+}
+
+func GetDeploymentTable(deployments []string) []string {
 	table := []string{"ENVIRONMENT\tAPPLICATION\t"}
 	last := ""
-	for _, app := range apps {
+	for _, app := range deployments {
 		sp := strings.Split(app, "/")
 		env := sp[0]
 		app := sp[1]

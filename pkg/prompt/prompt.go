@@ -3,9 +3,7 @@ package prompt
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"github.com/skatteetaten/ao/pkg/printutil"
 	"gopkg.in/AlecAivazis/survey.v1"
-	"strings"
 )
 
 func Affiliation(cmd string) string {
@@ -38,8 +36,6 @@ func Password() string {
 
 func ConfirmDeployAll(applications []string) bool {
 
-	printDeployTable(applications)
-
 	p := &survey.Confirm{
 		Message: fmt.Sprintf("Do you want to add all %d application(s) to deploy?", len(applications)),
 	}
@@ -53,8 +49,6 @@ func ConfirmDeployAll(applications []string) bool {
 }
 
 func ConfirmDeploy(applications []string) bool {
-
-	printDeployTable(applications)
 
 	p := &survey.Confirm{
 		Message: fmt.Sprintf("Do you want to deploy %d application(s)?", len(applications)),
@@ -100,17 +94,4 @@ func SelectFileToEdit(options []string) string {
 	}
 
 	return filename
-}
-
-func printDeployTable(applications []string) {
-	envs := []string{}
-	apps := []string{}
-
-	for _, a := range applications {
-		split := strings.Split(a, "/")
-		envs = append(envs, split[0])
-		apps = append(apps, split[1])
-	}
-
-	fmt.Printf(printutil.FormatTable([]string{"ENVIRONMENT", "APPLICATION"}, envs, apps))
 }

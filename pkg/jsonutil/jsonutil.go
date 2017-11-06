@@ -58,23 +58,6 @@ func Overrides2map(overrideJson []string, overrideFiles []string) (returnMap map
 	return
 }
 
-func OverrideJsons2map(OverrideJsons []string) (returnMap map[string]json.RawMessage, err error) {
-	returnMap = make(map[string]json.RawMessage)
-
-	for i := 0; i < len(OverrideJsons); i++ {
-		indexByte := strings.IndexByte(OverrideJsons[i], ':')
-		filename := OverrideJsons[i][:indexByte]
-
-		jsonOverride := OverrideJsons[i][indexByte+1:]
-		if !IsLegalJson(jsonOverride) {
-			msg := fmt.Sprintf("%s is not a valid json", jsonOverride)
-			return nil, errors.New(msg)
-		}
-		returnMap[filename] = json.RawMessage(jsonOverride)
-	}
-	return returnMap, err
-}
-
 func JsonFolder2Map(folder string, prefix string) (map[string]json.RawMessage, error) {
 	returnMap := make(map[string]json.RawMessage)
 	var allFilesOK bool = true
