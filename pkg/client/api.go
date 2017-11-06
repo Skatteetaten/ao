@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/skatteetaten/ao/pkg/versionutil"
 	"io/ioutil"
 	"net/http"
 )
@@ -42,7 +43,10 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 		return nil, err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	version := new(versionutil.VersionStruct)
+	version.Init()
+	req.Header.Set("User-Agent", "ao/"+version.Version)
+	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", "Bearer "+api.Token)
 
 	client := http.DefaultClient
@@ -51,24 +55,33 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 		return nil, errors.Wrap(err, "Error connecting to api")
 	}
 
+	logrus.WithField("status", res.StatusCode).Info(res.Status)
+
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	errorCodes := []int{http.StatusNotFound, http.StatusForbidden}
+	// TODO: Create proper error for each code
+	errorCodes := []int{http.StatusNotFound, http.StatusForbidden, http.StatusInternalServerError, http.StatusServiceUnavailable}
 	for _, c := range errorCodes {
 		if res.StatusCode == c {
 			return nil, errors.New(string(body))
 		}
 	}
 
-	// TODO: Check content head for text/html
 	var response Response
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		return nil, err
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		response = Response{
+			Success: true,
+			Message: res.Status,
+		}
 	}
 
 	logrus.WithFields(logrus.Fields{

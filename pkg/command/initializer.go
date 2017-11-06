@@ -19,6 +19,8 @@ type InitializeOptions struct {
 
 func Initialize(configLocation string, options InitializeOptions) (*config.AOConfig, *client.ApiClient) {
 
+	setLogging(options.LogLevel, options.PrettyLog)
+
 	ao, err := config.LoadConfigFile(configLocation)
 	if err != nil {
 		logrus.Error(err)
@@ -30,19 +32,6 @@ func Initialize(configLocation string, options InitializeOptions) (*config.AOCon
 		ao.InitClusters()
 		ao.SelectApiCluster()
 		ao.Write(configLocation)
-	}
-
-	logrus.SetOutput(os.Stdout)
-
-	level, err := logrus.ParseLevel(options.LogLevel)
-	if err == nil {
-		logrus.SetLevel(level)
-	} else {
-		fmt.Println(err)
-	}
-
-	if options.PrettyLog {
-		logrus.SetFormatter(&client.PrettyFormatter{})
 	}
 
 	apiCluster := ao.Clusters[ao.APICluster]
@@ -89,4 +78,19 @@ func Initialize(configLocation string, options InitializeOptions) (*config.AOCon
 	}
 
 	return ao, defaultClient
+}
+
+func setLogging(level string, pretty bool) {
+	logrus.SetOutput(os.Stdout)
+
+	lvl, err := logrus.ParseLevel(level)
+	if err == nil {
+		logrus.SetLevel(lvl)
+	} else {
+		fmt.Println(err)
+	}
+
+	if pretty {
+		logrus.SetFormatter(&client.PrettyFormatter{})
+	}
 }

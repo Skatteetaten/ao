@@ -8,20 +8,24 @@ import (
 	"testing"
 )
 
-func AuroraConfigSuccessResponseHandler(responseFile string) http.HandlerFunc {
+func AuroraConfigSuccessResponseHandler(t *testing.T, responseFile string) http.HandlerFunc {
 	return func(writer http.ResponseWriter, req *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusOK)
+
+		assert.Contains(t, req.URL.Path, affiliation)
 
 		data := ReadTestFile(responseFile)
 		writer.Write(data)
 	}
 }
 
-func AuroraConfigFailedResponseHandler(responseFile string, status int) http.HandlerFunc {
+func AuroraConfigFailedResponseHandler(t *testing.T, responseFile string, status int) http.HandlerFunc {
 	return func(writer http.ResponseWriter, req *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(status)
+
+		assert.Contains(t, req.URL.Path, affiliation)
 
 		data := ReadTestFile(responseFile)
 		writer.Write(data)
@@ -32,31 +36,40 @@ func TestApi_GetAuroraConfig(t *testing.T) {
 
 	t.Run("Successfully get AuroraConfig", func(t *testing.T) {
 		fileName := "auroraconfig_paas_success_response"
-		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(fileName))
+		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(t, fileName))
 		defer ts.Close()
 
-		api := NewApiClient(ts.URL, "", "paas")
+		api := NewApiClient(ts.URL, "", affiliation)
 		ac, errResponse := api.GetAuroraConfig()
 
-		if errResponse != nil {
-			t.Error("Expected ErrorResponse to be nil.")
-		}
+		assert.Empty(t, errResponse)
+		assert.Len(t, ac.Files, 13)
+		assert.Len(t, ac.Versions, 13)
+	})
+}
 
-		assert.Equal(t, 13, len(ac.Files))
+func TestApiClient_GetFileNames(t *testing.T) {
+	t.Run("Should get all filenames in AuroraConfig for a given affiliation", func(t *testing.T) {
 
-		if len(ac.Files) != len(ac.Versions) {
-			t.Error("Expected Files and Version to have equal length.")
-		}
+		fileName := "filenames_paas_success_response"
+		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(t, fileName))
+		defer ts.Close()
+
+		api := NewApiClient(ts.URL, "", affiliation)
+		fileNames, err := api.GetFileNames()
+
+		assert.NoError(t, err)
+		assert.Len(t, fileNames, 4)
 	})
 }
 
 func TestApiClient_PutAuroraConfig(t *testing.T) {
-	t.Run("Successfully validate AuroraConfig", func(t *testing.T) {
+	t.Run("Successfully validate and save AuroraConfig", func(t *testing.T) {
 		fileName := "auroraconfig_paas_success_response"
-		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(fileName))
+		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(t, fileName))
 		defer ts.Close()
 
-		api := NewApiClient(ts.URL, "", "paas")
+		api := NewApiClient(ts.URL, "", affiliation)
 
 		data := ReadTestFile("auroraconfig_paas_success_validation_request")
 		var ac AuroraConfig
@@ -66,22 +79,23 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 		}
 
 		errResponse, err := api.ValidateAuroraConfig(&ac)
-		if err != nil {
-			t.Error("Expected error to be nil.")
-		}
 
-		if errResponse != nil {
-			t.Error("Expected ErrorResponse to be nil.")
-		}
+		assert.NoError(t, err)
+		assert.Empty(t, errResponse)
+
+		errResponse, err = api.SaveAuroraConfig(&ac)
+
+		assert.NoError(t, err)
+		assert.Empty(t, errResponse)
 	})
 
-	t.Run("Validation should fail when deploy type is illegal", func(t *testing.T) {
+	t.Run("Validation and save should fail when deploy type is illegal", func(t *testing.T) {
 		fileName := "auroraconfig_paas_failed_validation_response"
 		// TODO: This should not return error code 500
-		ts := httptest.NewServer(AuroraConfigFailedResponseHandler(fileName, http.StatusInternalServerError))
+		ts := httptest.NewServer(AuroraConfigFailedResponseHandler(t, fileName, http.StatusInternalServerError))
 		defer ts.Close()
 
-		api := NewApiClient(ts.URL, "", "paas")
+		api := NewApiClient(ts.URL, "", affiliation)
 		data := ReadTestFile("auroraconfig_paas_fail_validation_request")
 		var ac AuroraConfig
 		err := json.Unmarshal(data, &ac)
@@ -90,14 +104,16 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 		}
 
 		errResponse, err := api.ValidateAuroraConfig(&ac)
-		if err != nil {
-			t.Error("Expected error to be nil.")
-		}
-
 		if errResponse == nil {
-			t.Error("Expected ErrorResponse to not be nil.")
+			t.Error("Expected errResponse to not be nil")
 		}
+		assert.NoError(t, err)
+		assert.NotEmpty(t, errResponse)
+		assert.Len(t, errResponse.IllegalFieldErrors, 1)
 
-		assert.Equal(t, 1, len(errResponse.IllegalFieldErrors))
+		errResponse, err = api.SaveAuroraConfig(&ac)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, errResponse)
+		assert.Len(t, errResponse.IllegalFieldErrors, 1)
 	})
 }
