@@ -1,11 +1,11 @@
 package command
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
+	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"os"
 	"text/tabwriter"
@@ -15,13 +15,20 @@ type DeployOptions struct {
 	Affiliation string
 	Token       string
 	Cluster     string
-	Overrides   map[string]json.RawMessage
+	Overrides   []string
 	DeployOnce  bool
 	DeployAll   bool
 	Force       bool
 }
 
 func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cluster, options DeployOptions) {
+
+	overrides, err := jsonutil.OverrideJsons2map(options.Overrides)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("Override must start and end with ' or else escape \" ")
+		return
+	}
 
 	api.Affiliation = options.Affiliation
 
@@ -79,7 +86,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 	}
 
 	if options.DeployOnce {
-		result, err := api.Deploy(appsToDeploy, options.Overrides)
+		result, err := api.Deploy(appsToDeploy, overrides)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -104,7 +111,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		cli := client.NewApiClient(c.BooberUrl, token, options.Affiliation)
 
 		go func() {
-			result, err := cli.Deploy(appsToDeploy, options.Overrides)
+			result, err := cli.Deploy(appsToDeploy, overrides)
 			if err != nil {
 				deployErrors <- err
 			} else {

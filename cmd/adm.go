@@ -2,11 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"strings"
-
 	config2 "github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var admCmd = &cobra.Command{
@@ -56,14 +54,6 @@ var recreateConfigCmd = &cobra.Command{
 	Short: "adm recreate-config",
 	Long:  `The command will recreate the .ao.json file.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		err := os.Remove(configLocation)
-		if err != nil {
-			if !strings.Contains(err.Error(), "no such file or directory") {
-				fmt.Println(err.Error())
-				os.Exit(1)
-			}
-		}
 		conf := &config2.DefaultAOConfig
 		conf.InitClusters()
 		conf.SelectApiCluster()

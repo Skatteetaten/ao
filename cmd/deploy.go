@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/skatteetaten/ao/pkg/command"
-	"github.com/skatteetaten/ao/pkg/jsonutil"
 	"github.com/spf13/cobra"
 )
 
@@ -40,13 +38,6 @@ var deployCmd = &cobra.Command{
 	Long:    deployLong,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		overrides, err := jsonutil.OverrideJsons2map(overrideJson)
-		if err != nil {
-			fmt.Println(err)
-			fmt.Println("Override must start and end with ' or else escape \" ")
-			return
-		}
-
 		allArgs := append(envList, appList...)
 		allArgs = append(allArgs, args...)
 
@@ -64,7 +55,7 @@ var deployCmd = &cobra.Command{
 
 		options := command.DeployOptions{
 			Affiliation: affiliation,
-			Overrides:   overrides,
+			Overrides:   overrideJson,
 			Force:       forceDeployFlag,
 			DeployAll:   deployAllFlag,
 			DeployOnce:  deployOnce,
