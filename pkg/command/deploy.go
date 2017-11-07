@@ -10,16 +10,18 @@ import (
 )
 
 type DeployOptions struct {
-	Affiliation string
-	Token       string
-	Cluster     string
-	Overrides   []string
-	DeployOnce  bool
-	DeployAll   bool
-	Force       bool
+	Affiliation   string
+	Token         string
+	Cluster       string
+	Version       string
+	Overrides     []string
+	DeployApiOnly bool
+	DeployOnce    bool
+	DeployAll     bool
+	Force         bool
 }
 
-func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cluster, options DeployOptions) []client.DeployResult {
+func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cluster, options *DeployOptions) []client.DeployResult {
 
 	api.Affiliation = options.Affiliation
 
@@ -78,10 +80,29 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		}
 	}
 
-	payload, err := client.NewApplyPayload(appsToDeploy, options.Overrides)
+	payload, err := client.NewDeployPayload(appsToDeploy, options.Overrides)
 	if err != nil {
 		fmt.Println(err)
 		return nil
+	}
+
+	if options.Version != "" {
+		if len(appsToDeploy) > 1 {
+			fmt.Println("Deploy with version does only support one application")
+			return nil
+		}
+		operation := client.JsonPatchOp{
+			OP:    "add",
+			Path:  "/version",
+			Value: options.Version,
+		}
+
+		fileName := appsToDeploy[0] + ".json"
+		err := api.PatchAuroraConfigFile(fileName, operation)
+		if err != nil {
+			fmt.Println(err)
+			return nil
+		}
 	}
 
 	if options.DeployOnce {
@@ -98,7 +119,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 	return allResults
 }
 
-func deployToReachableClusters(affiliation, token string, clusters map[string]*config.Cluster, payload *client.ApplyPayload) []client.DeployResult {
+func deployToReachableClusters(affiliation, token string, clusters map[string]*config.Cluster, payload *client.DeployPayload) []client.DeployResult {
 
 	reachableClusters := 0
 	deployResult := make(chan []client.DeployResult)
@@ -127,18 +148,12 @@ func deployToReachableClusters(affiliation, token string, clusters map[string]*c
 	}
 
 	var allResults []client.DeployResult
-	counter := 0
-	for {
+	for i := 0; i < reachableClusters; i++ {
 		select {
 		case err := <-deployErrors:
 			fmt.Println(err)
-			counter++
 		case result := <-deployResult:
 			allResults = append(allResults, result...)
-			counter++
-		}
-		if counter == reachableClusters {
-			break
 		}
 	}
 

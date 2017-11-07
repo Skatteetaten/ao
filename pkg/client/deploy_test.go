@@ -35,13 +35,13 @@ func TestApiClient_Deploy(t *testing.T) {
 		applications := []string{"boober-utv/reference"}
 
 		api := NewApiClient(ts.URL, "test", affiliation)
-		applyPayload, err := NewApplyPayload(applications, []string{})
+		deployPayload, err := NewDeployPayload(applications, []string{})
 		if err != nil {
 			t.Error(err)
 			return
 		}
 
-		deploys, err := api.Deploy(applyPayload)
+		deploys, err := api.Deploy(deployPayload)
 
 		assert.NoError(t, err)
 		assert.Len(t, deploys, 1)

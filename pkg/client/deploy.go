@@ -24,30 +24,30 @@ type DeployResult struct {
 	Success bool `json:"success"`
 }
 
-type ApplyPayload struct {
+type DeployPayload struct {
 	ApplicationIds []ApplicationId            `json:"applicationIds"`
 	Overrides      map[string]json.RawMessage `json:"overrides"`
 	Deploy         bool                       `json:"deploy"`
 }
 
-func NewApplyPayload(applications []string, overrides []string) (*ApplyPayload, error) {
+func NewDeployPayload(applications []string, overrides []string) (*DeployPayload, error) {
 	applicationIds := createApplicationIds(applications)
 	override, err := parseOverride(overrides)
 	if err != nil {
 		return nil, err
 	}
-	return &ApplyPayload{
+	return &DeployPayload{
 		ApplicationIds: applicationIds,
 		Overrides:      override,
 		Deploy:         true,
 	}, nil
 }
 
-func (api *ApiClient) Deploy(applyPayload *ApplyPayload) ([]DeployResult, error) {
+func (api *ApiClient) Deploy(deployPayload *DeployPayload) ([]DeployResult, error) {
 
-	payload, err := json.Marshal(applyPayload)
+	payload, err := json.Marshal(deployPayload)
 	if err != nil {
-		return nil, errors.New("failed to marshal ApplyPayload")
+		return nil, errors.New("failed to marshal DeployPayload")
 
 	}
 

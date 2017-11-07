@@ -56,8 +56,6 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 		return nil, errors.Wrap(err, "Error connecting to api")
 	}
 
-	logrus.WithField("status", res.StatusCode).Info(res.Status)
-
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {

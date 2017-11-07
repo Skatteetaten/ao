@@ -116,14 +116,19 @@ func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatch
 		return err
 	}
 
+	op, err := json.Marshal([]JsonPatchOp{operation})
+	if err != nil {
+		return err
+	}
+
 	payload := struct {
-		Version          string      `json:"version"`
-		ValidateVersions bool        `json:"validateVersions"`
-		Content          JsonPatchOp `json:"content"`
+		Version          string `json:"version"`
+		ValidateVersions bool   `json:"validateVersions"`
+		Content          string `json:"content"`
 	}{
 		Version:          file.Version,
 		ValidateVersions: true,
-		Content:          operation,
+		Content:          string(op),
 	}
 
 	data, err := json.Marshal(payload)
