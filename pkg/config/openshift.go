@@ -121,8 +121,6 @@ type LoginOptions struct {
 	LocalHost   bool
 }
 
-// TODO: If localhost bypass cluster check
-// TODO: Return error when login fail
 func (ao *AOConfig) Login(configLocation string, options LoginOptions) {
 
 	if options.Affiliation != "" {
@@ -135,10 +133,7 @@ func (ao *AOConfig) Login(configLocation string, options LoginOptions) {
 
 	var password string
 	for _, c := range ao.Clusters {
-		if !c.Reachable {
-			continue
-		}
-		if c.HasValidToken() {
+		if !c.Reachable || c.HasValidToken() {
 			continue
 		}
 		if password == "" {

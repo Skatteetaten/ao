@@ -129,6 +129,8 @@ func TestApiClient_GetAuroraConfigFile(t *testing.T) {
 	t.Run("Should successfully get AuroraConfigFile", func(t *testing.T) {
 		fileName := "auroraconfigfile_paas_success_response"
 		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(t, fileName))
+		defer ts.Close()
+
 		api := NewApiClient(ts.URL, "", "paas")
 		file, err := api.GetAuroraConfigFile("about.json")
 		if err != nil {
@@ -146,6 +148,7 @@ func TestApiClient_GetAuroraConfigFile(t *testing.T) {
 			response := `{"status": false}`
 			w.Write([]byte(response))
 		}))
+		defer ts.Close()
 
 		api := NewApiClient(ts.URL, "", "")
 
