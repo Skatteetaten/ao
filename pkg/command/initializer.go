@@ -63,7 +63,7 @@ func Initialize(configLocation string, options InitializeOptions) (*config.AOCon
 	}
 
 	for _, c := range ao.Clusters {
-		if c.Reachable && c.HasValidToken() {
+		if !c.Reachable || c.HasValidToken() {
 			continue
 		}
 

@@ -24,20 +24,26 @@ type DeployResult struct {
 	Success bool `json:"success"`
 }
 
-type applyPayload struct {
+type ApplyPayload struct {
 	ApplicationIds []ApplicationId            `json:"applicationIds"`
 	Overrides      map[string]json.RawMessage `json:"overrides"`
 	Deploy         bool                       `json:"deploy"`
 }
 
-func (api *ApiClient) Deploy(applications []string, overrides map[string]json.RawMessage) ([]DeployResult, error) {
-
+func NewApplyPayload(applications []string, overrides []string) (*ApplyPayload, error) {
 	applicationIds := createApplicationIds(applications)
-	applyPayload := &applyPayload{
-		ApplicationIds: applicationIds,
-		Overrides:      overrides,
-		Deploy:         true,
+	override, err := parseOverride(overrides)
+	if err != nil {
+		return nil, err
 	}
+	return &ApplyPayload{
+		ApplicationIds: applicationIds,
+		Overrides:      override,
+		Deploy:         true,
+	}, nil
+}
+
+func (api *ApiClient) Deploy(applyPayload *ApplyPayload) ([]DeployResult, error) {
 
 	payload, err := json.Marshal(applyPayload)
 	if err != nil {
@@ -74,4 +80,26 @@ func createApplicationIds(apps []string) []ApplicationId {
 		})
 	}
 	return applicationIds
+}
+
+func parseOverride(override []string) (returnMap map[string]json.RawMessage, err error) {
+	returnMap = make(map[string]json.RawMessage)
+
+	for i := 0; i < len(override); i++ {
+		indexByte := strings.IndexByte(override[i], ':')
+		filename := override[i][:indexByte]
+
+		jsonOverride := override[i][indexByte+1:]
+		if !IsLegalJson(jsonOverride) {
+			msg := fmt.Sprintf("%s is not a valid json", jsonOverride)
+			return nil, errors.New(msg)
+		}
+		returnMap[filename] = json.RawMessage(jsonOverride)
+	}
+	return returnMap, err
+}
+
+func IsLegalJson(jsonString string) bool {
+	var js map[string]interface{}
+	return json.Unmarshal([]byte(jsonString), &js) == nil
 }

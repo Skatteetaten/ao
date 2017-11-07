@@ -4,14 +4,34 @@
   "items": [
     {
       "application": "reference-web",
-      "environment": "boober-test",
+      "environment": "boober-utv",
       "messages": [
         {
           "type": "ILLEGAL",
-          "message": "No enum constant no.skatteetaten.aurora.boober.model.TemplateType.randm"
+          "message": "Must be one of [deploy, development, localTemplate, template, build]",
+          "field": {
+            "path": "/type",
+            "value": "aslkdjf",
+            "source": "boober-utv/about.json"
+          }
+        }
+      ]
+    },
+    {
+      "application": "reference",
+      "environment": "boober-utv",
+      "messages": [
+        {
+          "type": "ILLEGAL",
+          "message": "Must be one of [deploy, development, localTemplate, template, build]",
+          "field": {
+            "path": "/type",
+            "value": "aslkdjf",
+            "source": "boober-utv/about.json"
+          }
         }
       ]
     }
   ],
-  "count": 1
+  "count": 2
 }

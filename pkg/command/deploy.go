@@ -21,13 +21,6 @@ type DeployOptions struct {
 
 func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cluster, options DeployOptions) []client.DeployResult {
 
-	overrides, err := parseOverride(options.Overrides)
-	if err != nil {
-		fmt.Println(err)
-		fmt.Println("Override must start and end with ' or else escape \" ")
-		return nil
-	}
-
 	api.Affiliation = options.Affiliation
 
 	if options.Cluster != "" {
@@ -85,14 +78,27 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		}
 	}
 
+	payload, err := client.NewApplyPayload(appsToDeploy, options.Overrides)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
 	if options.DeployOnce {
-		result, err := api.Deploy(appsToDeploy, overrides)
+		result, err := api.Deploy(payload)
 		if err != nil {
 			fmt.Println(err)
 		}
 		PrintDeployResults(result)
 		return nil
 	}
+
+	allResults := deployToReachableClusters(options.Affiliation, options.Token, clusters, payload)
+
+	return allResults
+}
+
+func deployToReachableClusters(affiliation, token string, clusters map[string]*config.Cluster, payload *client.ApplyPayload) []client.DeployResult {
 
 	reachableClusters := 0
 	deployResult := make(chan []client.DeployResult)
@@ -103,15 +109,15 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		}
 		reachableClusters++
 
-		token := c.Token
-		if options.Token != "" {
-			token = options.Token
+		clusterToken := c.Token
+		if token != "" {
+			clusterToken = token
 		}
 
-		cli := client.NewApiClient(c.BooberUrl, token, options.Affiliation)
+		cli := client.NewApiClient(c.BooberUrl, clusterToken, affiliation)
 
 		go func() {
-			result, err := cli.Deploy(appsToDeploy, overrides)
+			result, err := cli.Deploy(payload)
 			if err != nil {
 				deployErrors <- err
 			} else {

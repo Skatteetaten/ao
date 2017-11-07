@@ -154,7 +154,7 @@ If no argument is given, the command will list all the files in the repository.`
 			selectedFile = prompt.SelectFile(matches)
 		}
 
-		auroraConfigFile, err := DefaultApiClient.GetSingleFile(selectedFile)
+		auroraConfigFile, err := DefaultApiClient.GetAuroraConfigFile(selectedFile)
 		if err != nil {
 			fmt.Println(err)
 			return

@@ -161,10 +161,8 @@ func (ao *AOConfig) Login(configLocation string, options LoginOptions) {
 			fmt.Printf("Specified api cluster %s is not available, using %s\n", options.APICluster, ao.APICluster)
 		}
 	}
-	if options.LocalHost {
-		ao.Localhost = options.LocalHost
-	}
 
+	ao.Localhost = options.LocalHost
 	ao.Write(configLocation)
 }
 

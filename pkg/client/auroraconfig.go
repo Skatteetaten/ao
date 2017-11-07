@@ -39,7 +39,7 @@ func (f *AuroraConfigFile) ToPrettyJson() string {
 type FileNames []string
 
 func (f FileNames) FilterDeployments() []string {
-	filteredFiles := []string{}
+	var filteredFiles []string
 	for _, file := range f {
 		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
 			filteredFiles = append(filteredFiles, strings.TrimSuffix(file, ".json"))
@@ -82,7 +82,7 @@ func (api *ApiClient) GetAuroraConfig() (*AuroraConfig, error) {
 	return &ac, nil
 }
 
-func (api *ApiClient) GetSingleFile(fileName string) (*AuroraConfigFile, error) {
+func (api *ApiClient) GetAuroraConfigFile(fileName string) (*AuroraConfigFile, error) {
 	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfigfile/%s", api.Affiliation, fileName)
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)

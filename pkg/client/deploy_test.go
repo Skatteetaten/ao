@@ -1,7 +1,6 @@
 package client
 
 import (
-	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -36,7 +35,13 @@ func TestApiClient_Deploy(t *testing.T) {
 		applications := []string{"boober-utv/reference"}
 
 		api := NewApiClient(ts.URL, "test", affiliation)
-		deploys, err := api.Deploy(applications, make(map[string]json.RawMessage))
+		applyPayload, err := NewApplyPayload(applications, []string{})
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		deploys, err := api.Deploy(applyPayload)
 
 		assert.NoError(t, err)
 		assert.Len(t, deploys, 1)

@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -14,6 +15,10 @@ func AuroraConfigSuccessResponseHandler(t *testing.T, responseFile string) http.
 		writer.WriteHeader(http.StatusOK)
 
 		assert.Contains(t, req.URL.Path, affiliation)
+
+		if strings.Contains(req.URL.Path, "auroraconfigfile") {
+			assert.Contains(t, req.URL.Path, ".json")
+		}
 
 		data := ReadTestFile(responseFile)
 		writer.Write(data)
@@ -109,6 +114,8 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 		}
 		assert.NoError(t, err)
 		assert.NotEmpty(t, errResponse)
+		// We get two errors from server
+		// IllegalFieldErrors are grouped by file name, hence length 1
 		assert.Len(t, errResponse.IllegalFieldErrors, 1)
 
 		errResponse, err = api.SaveAuroraConfig(&ac)
@@ -116,4 +123,44 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 		assert.NotEmpty(t, errResponse)
 		assert.Len(t, errResponse.IllegalFieldErrors, 1)
 	})
+}
+
+func TestApiClient_GetAuroraConfigFile(t *testing.T) {
+	t.Run("Should successfully get AuroraConfigFile", func(t *testing.T) {
+		fileName := "auroraconfigfile_paas_success_response"
+		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(t, fileName))
+		api := NewApiClient(ts.URL, "", "paas")
+		file, err := api.GetAuroraConfigFile("about.json")
+		if err != nil {
+			t.Error("Should not get error when fetching AuroraConfigFile")
+			return
+		}
+
+		assert.Equal(t, "about.json", file.Name)
+		assert.NotEmpty(t, file.Contents)
+	})
+
+	t.Run("Should return error message when AuroraConfigFile return success false", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.WriteHeader(http.StatusBadRequest)
+			response := `{"status": false}`
+			w.Write([]byte(response))
+		}))
+
+		api := NewApiClient(ts.URL, "", "")
+
+		file, err := api.GetAuroraConfigFile("about.json")
+		assert.Error(t, err)
+		assert.EqualError(t, err, "Failed getting file about.json")
+		assert.Empty(t, file)
+	})
+
+}
+
+func TestFileNames_FilterDeployments(t *testing.T) {
+	fileNames := FileNames{"about.json", "boober.json", "test/about.json", "test/boober.json"}
+	deployments := fileNames.FilterDeployments()
+
+	assert.Len(t, deployments, 1)
+	assert.Equal(t, "test/boober", deployments[0])
 }
