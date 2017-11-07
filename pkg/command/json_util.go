@@ -12,7 +12,7 @@ func IsLegalJson(jsonString string) bool {
 	return json.Unmarshal([]byte(jsonString), &js) == nil
 }
 
-func ParseOverride(override []string) (returnMap map[string]json.RawMessage, err error) {
+func parseOverride(override []string) (returnMap map[string]json.RawMessage, err error) {
 	returnMap = make(map[string]json.RawMessage)
 
 	for i := 0; i < len(override); i++ {

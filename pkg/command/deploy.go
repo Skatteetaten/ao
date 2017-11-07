@@ -6,6 +6,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/prompt"
+	"sort"
 )
 
 type DeployOptions struct {
@@ -20,7 +21,7 @@ type DeployOptions struct {
 
 func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cluster, options DeployOptions) []client.DeployResult {
 
-	overrides, err := ParseOverride(options.Overrides)
+	overrides, err := parseOverride(options.Overrides)
 	if err != nil {
 		fmt.Println(err)
 		fmt.Println("Override must start and end with ' or else escape \" ")
@@ -60,7 +61,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		applications, _ := fuzzy.SearchForApplications(arg, possibleDeploys)
 		if !options.Force && len(applications) > 1 {
 			selectedApps := applications
-			PrintDeployments(applications)
+			printDeployments(applications)
 			deployAll := prompt.ConfirmDeployAll(applications)
 			if !deployAll {
 				selectedApps = prompt.MultiSelectDeployments(applications)
@@ -77,7 +78,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 	}
 
 	if !options.Force {
-		PrintDeployments(appsToDeploy)
+		printDeployments(appsToDeploy)
 		shouldDeploy := prompt.ConfirmDeploy(appsToDeploy)
 		if !shouldDeploy {
 			return nil
@@ -136,4 +137,10 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 	}
 
 	return allResults
+}
+
+func printDeployments(deployments []string) {
+	sort.Strings(deployments)
+	lines := GetDeploymentTable(deployments)
+	DefaultTablePrinter(lines)
 }

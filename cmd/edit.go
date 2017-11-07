@@ -46,7 +46,7 @@ will edit this file, if there is no other file matching the same shortening.`,
 
 		filename := ""
 		if len(options) > 1 {
-			filename = prompt.SelectFileToEdit(options)
+			filename = prompt.SelectFile(options)
 		} else if len(options) == 1 {
 			filename = options[0]
 		}

@@ -125,8 +125,6 @@ type LoginOptions struct {
 // TODO: Return error when login fail
 func (ao *AOConfig) Login(configLocation string, options LoginOptions) {
 
-	shouldWrite := false
-
 	if options.Affiliation != "" {
 		ao.Affiliation = options.Affiliation
 	}
@@ -145,7 +143,6 @@ func (ao *AOConfig) Login(configLocation string, options LoginOptions) {
 		}
 		if password == "" {
 			password = prompt.Password()
-			shouldWrite = true
 		}
 		token, err := getToken(c.Url, options.UserName, password)
 		if err != nil {
@@ -159,20 +156,16 @@ func (ao *AOConfig) Login(configLocation string, options LoginOptions) {
 	if options.APICluster != "" {
 		if cluster, found := ao.Clusters[options.APICluster]; found && cluster.Reachable {
 			ao.APICluster = options.APICluster
-			shouldWrite = true
 		} else {
 			ao.SelectApiCluster()
-			fmt.Printf("Specified api cluster %s is not available, using %s", options.APICluster, ao.APICluster)
+			fmt.Printf("Specified api cluster %s is not available, using %s\n", options.APICluster, ao.APICluster)
 		}
 	}
 	if options.LocalHost {
 		ao.Localhost = options.LocalHost
-		shouldWrite = true
 	}
 
-	if shouldWrite {
-		ao.Write(configLocation)
-	}
+	ao.Write(configLocation)
 }
 
 func getToken(cluster string, username string, password string) (string, error) {

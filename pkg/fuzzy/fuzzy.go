@@ -3,13 +3,14 @@ package fuzzy
 import (
 	"github.com/pkg/errors"
 	"github.com/renstrom/fuzzysearch/fuzzy"
+	"github.com/skatteetaten/ao/pkg/collections"
 	"sort"
 	"strings"
 )
 
 func FindMatches(search string, fileNames []string, withSuffix bool) ([]string, error) {
 
-	files := []string{}
+	var files []string
 	for _, file := range fileNames {
 		files = append(files, strings.TrimSuffix(file, ".json"))
 	}
@@ -31,7 +32,7 @@ func FindMatches(search string, fileNames []string, withSuffix bool) ([]string, 
 		return []string{firstMatch.Target + suffix}, nil
 	}
 
-	options := []string{}
+	var options []string
 	for _, match := range matches {
 		options = append(options, match.Target+suffix)
 	}
@@ -51,7 +52,7 @@ func SearchForFile(search string, files []string) ([]string, error) {
 
 func SearchForApplications(search string, files []string) ([]string, error) {
 
-	options := []string{}
+	var options []string
 	if !strings.Contains(search, "/") {
 		options = FindAllDeploysFor(APP_FILTER, search, files)
 		if len(options) == 0 {
@@ -70,44 +71,18 @@ func SearchForApplications(search string, files []string) ([]string, error) {
 	return options, nil
 }
 
-func NewDeploySet() *DeploySet {
-	return &DeploySet{
-		set: make(map[string]bool),
-	}
-}
-
-type DeploySet struct {
-	set map[string]bool
-}
-
-func (s *DeploySet) Add(key string) {
-	_, found := s.set[key]
-	if !found {
-		s.set[key] = true
-	}
-}
-
-func (s *DeploySet) Keys() []string {
-	keys := []string{}
-	for k, _ := range s.set {
-		keys = append(keys, k)
-	}
-
-	return keys
-}
-
-type DeployFilterMode uint
+type FilterMode uint
 
 const (
-	APP_FILTER DeployFilterMode = iota
+	APP_FILTER FilterMode = iota
 	ENV_FILTER
 )
 
 /*
 	Search string must match either environment or application exact
 */
-func FindAllDeploysFor(mode DeployFilterMode, search string, files []string) []string {
-	deploys := make(map[string]*DeploySet)
+func FindAllDeploysFor(mode FilterMode, search string, files []string) []string {
+	deploys := make(map[string]*collections.StringSet)
 
 	for _, file := range files {
 		appId := strings.Split(file, "/")
@@ -123,15 +98,15 @@ func FindAllDeploysFor(mode DeployFilterMode, search string, files []string) []s
 		}
 
 		if _, found := deploys[key]; !found {
-			deploys[key] = NewDeploySet()
+			deploys[key] = collections.NewStringSet()
 			deploys[key].Add(value)
 		} else {
 			deploys[key].Add(value)
 		}
 	}
 
-	deployKeys := []string{}
-	for k, _ := range deploys {
+	var deployKeys []string
+	for k := range deploys {
 		deployKeys = append(deployKeys, k)
 	}
 
@@ -143,10 +118,10 @@ func FindAllDeploysFor(mode DeployFilterMode, search string, files []string) []s
 	}
 
 	result := deploys[matches[0].Target]
-	keys := result.Keys()
+	keys := result.All()
 	sort.Strings(keys)
 
-	allDeploys := []string{}
+	var allDeploys []string
 	for _, k := range keys {
 		id := search + "/" + k
 		if mode == APP_FILTER {

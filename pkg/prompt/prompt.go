@@ -79,10 +79,10 @@ func MultiSelectDeployments(options []string) []string {
 	return applications
 }
 
-func SelectFileToEdit(options []string) string {
+func SelectFile(options []string) string {
 
 	p := &survey.Select{
-		Message:  fmt.Sprintf("Matched %d files. Which file do you want to edit?", len(options)),
+		Message:  fmt.Sprintf("Matched %d files. Which file do you want?", len(options)),
 		PageSize: 10,
 		Options:  options,
 	}

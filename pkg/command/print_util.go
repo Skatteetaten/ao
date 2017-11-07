@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/skatteetaten/ao/pkg/client"
 	"os"
-	"sort"
 	"text/tabwriter"
 )
 
@@ -14,12 +13,6 @@ func DefaultTablePrinter(lines []string) {
 		fmt.Fprintln(w, line)
 	}
 	w.Flush()
-}
-
-func PrintDeployments(deployments []string) {
-	sort.Strings(deployments)
-	lines := GetDeploymentTable(deployments)
-	DefaultTablePrinter(lines)
 }
 
 func PrintDeployResults(deploys []client.DeployResult) {

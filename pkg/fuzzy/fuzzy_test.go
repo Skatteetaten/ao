@@ -106,7 +106,7 @@ func TestFindApplicationsToDeploy(t *testing.T) {
 func TestFindAllFor(t *testing.T) {
 	tests := []struct {
 		Search   string
-		Mode     DeployFilterMode
+		Mode     FilterMode
 		Expected []string
 	}{
 		{"utv", ENV_FILTER, []string{"utv/boober", "utv/console"}},

@@ -5,7 +5,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
-	"github.com/skatteetaten/ao/pkg/prompt"
 	"os"
 	"strings"
 )
@@ -63,17 +62,19 @@ func Initialize(configLocation string, options InitializeOptions) (*config.AOCon
 		}
 	}
 
-	user, _ := os.LookupEnv("USER")
-	ao.Login(configLocation, config.LoginOptions{
-		UserName: user,
-	})
+	for _, c := range ao.Clusters {
+		if c.Reachable && c.HasValidToken() {
+			continue
+		}
 
-	// TODO: Rework this
-	if ao.Affiliation == "" && options.CommandName != "deploy" {
-		ao.Affiliation = prompt.Affiliation("Choose")
-		defaultClient.Affiliation = ao.Affiliation
+		user, _ := os.LookupEnv("USER")
+		ao.Login(configLocation, config.LoginOptions{
+			UserName: user,
+		})
+		break
 	}
 
+	defaultClient.Affiliation = ao.Affiliation
 	apiCluster = ao.Clusters[ao.APICluster]
 	if defaultClient.Token == "" && apiCluster != nil {
 		defaultClient.Token = apiCluster.Token

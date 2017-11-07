@@ -20,6 +20,22 @@ func NewAuroraConfig() *AuroraConfig {
 	}
 }
 
+type AuroraConfigFile struct {
+	Name     string          `json:"name"`
+	Override bool            `json:"override"`
+	Contents json.RawMessage `json:"contents"`
+}
+
+func (f *AuroraConfigFile) ToPrettyJson() string {
+
+	data, err := json.MarshalIndent(f.Contents, "", " ")
+	if err != nil {
+		return ""
+	}
+
+	return string(data)
+}
+
 type FileNames []string
 
 func (f FileNames) FilterDeployments() []string {
@@ -64,6 +80,27 @@ func (api *ApiClient) GetAuroraConfig() (*AuroraConfig, error) {
 	}
 
 	return &ac, nil
+}
+
+func (api *ApiClient) GetSingleFile(fileName string) (*AuroraConfigFile, error) {
+	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfigfile/%s", api.Affiliation, fileName)
+
+	response, err := api.Do(http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if !response.Success {
+		return nil, errors.New("Failed getting file " + fileName)
+	}
+
+	var file AuroraConfigFile
+	err = response.ParseFirstItem(&file)
+	if err != nil {
+		return nil, errors.Wrap(err, "aurora config file")
+	}
+
+	return &file, nil
 }
 
 func (api *ApiClient) PutAuroraConfig(endpoint string, ac *AuroraConfig) (*ErrorResponse, error) {

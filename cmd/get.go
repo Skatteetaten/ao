@@ -4,8 +4,11 @@ import (
 	"fmt"
 
 	"github.com/skatteetaten/ao/pkg/command"
+	"github.com/skatteetaten/ao/pkg/fuzzy"
 	pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
+	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
+	"sort"
 )
 
 var showSecretContent bool
@@ -37,7 +40,9 @@ var getDeploymentsCmd = &cobra.Command{
 		}
 
 		deployments := fileNames.FilterDeployments()
-		command.PrintDeployments(deployments)
+		sort.Strings(deployments)
+		table := command.GetDeploymentTable(deployments)
+		command.DefaultTablePrinter(table)
 	},
 }
 
@@ -48,19 +53,26 @@ var getAppsCmd = &cobra.Command{
 	Aliases: []string{"apps"},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		var output string
-		var err error
-
-		if len(args) == 0 {
-			output, err = getcmdObject.Apps()
-		} else {
-			output, err = getcmdObject.Deployments(args[0])
-		}
-		if err == nil {
-			fmt.Print(output)
-		} else {
+		fileNames, err := DefaultApiClient.GetFileNames()
+		if err != nil {
 			fmt.Println(err)
+			return
 		}
+
+		applications := fileNames.FilterDeployments()
+		var table []string
+		if len(args) > 0 {
+			table = command.GetApplicationsTable(applications, args[0])
+		} else {
+			table = command.GetApplicationsTable(applications, "")
+		}
+
+		if len(table) < 2 {
+			fmt.Println("Did not find any applications")
+			return
+		}
+
+		command.DefaultTablePrinter(table)
 	},
 }
 
@@ -71,16 +83,26 @@ var getEnvsCmd = &cobra.Command{
 	Aliases: []string{"envs"},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		var output string
-		var err error
-
-		output, err = getcmdObject.Envs()
-
-		if err == nil {
-			fmt.Print(output)
-		} else {
+		fileNames, err := DefaultApiClient.GetFileNames()
+		if err != nil {
 			fmt.Println(err)
+			return
 		}
+
+		applications := fileNames.FilterDeployments()
+		var table []string
+		if len(args) > 0 {
+			table = command.GetEnvironmentTable(applications, args[0])
+		} else {
+			table = command.GetEnvironmentTable(applications, "")
+		}
+
+		if len(table) < 2 {
+			fmt.Println("Did not find any environments")
+			return
+		}
+
+		command.DefaultTablePrinter(table)
 	},
 }
 
@@ -101,47 +123,43 @@ If no argument is given, the command will list all the files in the repository.`
 	Aliases: []string{"files"},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		var output string
-		var err error
-
-		if len(args) == 0 {
-			output, err = getcmdObject.Files()
-		} else {
-			output, err = getcmdObject.File(args)
-		}
-
-		if err == nil {
-			fmt.Print(output)
-		} else {
+		fileNames, err := DefaultApiClient.GetFileNames()
+		if err != nil {
 			fmt.Println(err)
-		}
-	},
-}
-
-var getVaultCmd = &cobra.Command{
-	Use:   "vault [vaultname]",
-	Short: "Get vault",
-	Long: `If no argument is given, the command will list the vaults in the current affiliation, along with the
-numer of secrets in the vault.
-If a vaultname is specified, the command will list the secrets in the given vault.
-To access a secret, use the get secret command.`,
-	Aliases: []string{"vaults"},
-	Run: func(cmd *cobra.Command, args []string) {
-
-		var output string
-		var err error
-
-		if len(args) == 0 {
-			output, err = getcmdObject.Vaults(showSecretContent)
-		} else {
-			output, err = getcmdObject.Vault(args[0])
+			return
 		}
 
-		if err == nil {
-			fmt.Println(output)
-		} else {
+		if len(args) < 1 {
+			table := command.GetFilesTable(fileNames)
+			command.DefaultTablePrinter(table)
+			return
+		}
+
+		file := args[0]
+		matches, err := fuzzy.SearchForFile(file, fileNames)
+		if err != nil {
 			fmt.Println(err)
+			return
 		}
+
+		if len(matches) < 1 {
+			fmt.Println("Did not find file", file)
+			return
+		}
+
+		var selectedFile string
+		if len(matches) == 1 {
+			selectedFile = matches[0]
+		} else {
+			selectedFile = prompt.SelectFile(matches)
+		}
+
+		auroraConfigFile, err := DefaultApiClient.GetSingleFile(selectedFile)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(auroraConfigFile.ToPrettyJson())
 	},
 }
 
@@ -167,14 +185,9 @@ var getSecretCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(getCmd)
 	getCmd.AddCommand(getFileCmd)
-	getCmd.AddCommand(getVaultCmd)
 	getCmd.AddCommand(getSecretCmd)
 
 	getCmd.AddCommand(getAppsCmd)
 	getCmd.AddCommand(getEnvsCmd)
 	getCmd.AddCommand(getDeploymentsCmd)
-
-	getVaultCmd.Flags().BoolVarP(&showSecretContent, "show-secret-content", "s", false,
-		"This flag will print the content of the secrets in the vaults")
-
 }
