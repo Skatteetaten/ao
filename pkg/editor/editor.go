@@ -1,6 +1,8 @@
 package editor
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -30,7 +32,7 @@ func Edit(content string, fileName string, onSave OnSaveFunc) (string, error) {
 	}()
 
 	var editErrors string
-	originalContent := PrettyPrintJson(content)
+	originalContent := prettyPrintJson(content)
 	currentContent := originalContent
 
 	for {
@@ -45,7 +47,7 @@ func Edit(content string, fileName string, onSave OnSaveFunc) (string, error) {
 			return "", err
 		}
 
-		err = Editor(tempFilePath)
+		err = OpenEditor(tempFilePath)
 		if err != nil {
 			return "", err
 		}
@@ -61,11 +63,14 @@ func Edit(content string, fileName string, onSave OnSaveFunc) (string, error) {
 		}
 
 		currentContent = stripComments(string(fileContent))
-		if currentContent == originalContent || beforeEdit.ModTime().Equal(afterEdit.ModTime()) {
+
+		hasNoChanges := hasContentChanged(originalContent, currentContent)
+		noWrite := beforeEdit.ModTime().Equal(afterEdit.ModTime())
+		if hasNoChanges || noWrite {
 			return "Edit cancelled, no changes made.", nil
 		}
 
-		if !IsLegalJson(currentContent) {
+		if !json.Valid([]byte(currentContent)) {
 			editErrors = addErrorMessage([]string{"Invalid JSON format"})
 			continue
 		}
@@ -81,5 +86,22 @@ func Edit(content string, fileName string, onSave OnSaveFunc) (string, error) {
 		}
 	}
 
-	return fmt.Sprintf("%s edited\n", fileName), nil
+	return fmt.Sprintf("%s edited", fileName), nil
+}
+
+func hasContentChanged(original, edited string) bool {
+
+	orgBuffer := new(bytes.Buffer)
+	err := json.Compact(orgBuffer, []byte(original))
+	if err != nil {
+		return true
+	}
+
+	editBuffer := new(bytes.Buffer)
+	err = json.Compact(editBuffer, []byte(edited))
+	if err != nil {
+		return true
+	}
+
+	return orgBuffer.String() != editBuffer.String()
 }
