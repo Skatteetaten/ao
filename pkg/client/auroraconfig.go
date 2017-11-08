@@ -104,6 +104,12 @@ func (api *ApiClient) GetAuroraConfigFile(fileName string) (*AuroraConfigFile, e
 	return &file, nil
 }
 
+type AuroraConfigFilePayload struct {
+	Version          string `json:"version"`
+	ValidateVersions bool   `json:"validateVersions"`
+	Content          string `json:"content"`
+}
+
 type JsonPatchOp struct {
 	OP    string      `json:"op"`
 	Path  string      `json:"path"`
@@ -121,11 +127,7 @@ func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatch
 		return err
 	}
 
-	payload := struct {
-		Version          string `json:"version"`
-		ValidateVersions bool   `json:"validateVersions"`
-		Content          string `json:"content"`
-	}{
+	payload := AuroraConfigFilePayload{
 		Version:          file.Version,
 		ValidateVersions: true,
 		Content:          string(op),
@@ -147,6 +149,32 @@ func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatch
 	}
 
 	return nil
+}
+
+func (api *ApiClient) PutAuroraConfigFile(file *AuroraConfigFile) (*ErrorResponse, error) {
+	endpoint := fmt.Sprintf("/affiliation/%s/auroraconfigfile/%s", api.Affiliation, file.Name)
+
+	payload := AuroraConfigFilePayload{
+		Version:          file.Version,
+		Content:          string(file.Contents),
+		ValidateVersions: true,
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := api.Do(http.MethodPut, endpoint, data)
+	if err != nil {
+		return nil, err
+	}
+
+	if !response.Success {
+		return response.ToErrorResponse()
+	}
+
+	return nil, nil
 }
 
 func (api *ApiClient) PutAuroraConfig(endpoint string, ac *AuroraConfig) (*ErrorResponse, error) {

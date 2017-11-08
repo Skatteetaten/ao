@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/skatteetaten/ao/pkg/editor"
 	"net/http"
 	"sort"
 	"strings"
@@ -90,16 +91,11 @@ func parseOverride(override []string) (returnMap map[string]json.RawMessage, err
 		filename := override[i][:indexByte]
 
 		jsonOverride := override[i][indexByte+1:]
-		if !IsLegalJson(jsonOverride) {
+		if !editor.IsLegalJson(jsonOverride) {
 			msg := fmt.Sprintf("%s is not a valid json", jsonOverride)
 			return nil, errors.New(msg)
 		}
 		returnMap[filename] = json.RawMessage(jsonOverride)
 	}
 	return returnMap, err
-}
-
-func IsLegalJson(jsonString string) bool {
-	var js map[string]interface{}
-	return json.Unmarshal([]byte(jsonString), &js) == nil
 }

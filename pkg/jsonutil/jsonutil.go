@@ -179,7 +179,7 @@ func IsLegalJson(jsonString string) bool {
 
 func PrettyPrintJson(jsonString string) string {
 	var out bytes.Buffer
-	err := json.Indent(&out, []byte(jsonString), "", "\t")
+	err := json.Indent(&out, []byte(jsonString), "", "  ")
 	if err != nil {
 		return jsonString
 	}

@@ -80,6 +80,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		}
 	}
 
+	// TODO: Validate overrides before this
 	payload, err := client.NewDeployPayload(appsToDeploy, options.Overrides)
 	if err != nil {
 		fmt.Println(err)
