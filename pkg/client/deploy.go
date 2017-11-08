@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/editor"
 	"net/http"
 	"sort"
 	"strings"
@@ -31,15 +30,11 @@ type DeployPayload struct {
 	Deploy         bool                       `json:"deploy"`
 }
 
-func NewDeployPayload(applications []string, overrides []string) (*DeployPayload, error) {
+func NewDeployPayload(applications []string, overrides map[string]json.RawMessage) (*DeployPayload, error) {
 	applicationIds := createApplicationIds(applications)
-	override, err := parseOverride(overrides)
-	if err != nil {
-		return nil, err
-	}
 	return &DeployPayload{
 		ApplicationIds: applicationIds,
-		Overrides:      override,
+		Overrides:      overrides,
 		Deploy:         true,
 	}, nil
 }
@@ -81,21 +76,4 @@ func createApplicationIds(apps []string) []ApplicationId {
 		})
 	}
 	return applicationIds
-}
-
-func parseOverride(override []string) (returnMap map[string]json.RawMessage, err error) {
-	returnMap = make(map[string]json.RawMessage)
-
-	for i := 0; i < len(override); i++ {
-		indexByte := strings.IndexByte(override[i], ':')
-		filename := override[i][:indexByte]
-
-		jsonOverride := override[i][indexByte+1:]
-		if !editor.IsLegalJson(jsonOverride) {
-			msg := fmt.Sprintf("%s is not a valid json", jsonOverride)
-			return nil, errors.New(msg)
-		}
-		returnMap[filename] = json.RawMessage(jsonOverride)
-	}
-	return returnMap, err
 }

@@ -1,12 +1,15 @@
 package command
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"sort"
+	"strings"
 )
 
 type DeployOptions struct {
@@ -22,6 +25,12 @@ type DeployOptions struct {
 }
 
 func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cluster, options *DeployOptions) []client.DeployResult {
+
+	overrides, err := parseOverride(options.Overrides)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
 
 	api.Affiliation = options.Affiliation
 
@@ -80,8 +89,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		}
 	}
 
-	// TODO: Validate overrides before this
-	payload, err := client.NewDeployPayload(appsToDeploy, options.Overrides)
+	payload, err := client.NewDeployPayload(appsToDeploy, overrides)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -159,6 +167,23 @@ func deployToReachableClusters(affiliation, token string, clusters map[string]*c
 	}
 
 	return allResults
+}
+
+func parseOverride(override []string) (returnMap map[string]json.RawMessage, err error) {
+	returnMap = make(map[string]json.RawMessage)
+
+	for i := 0; i < len(override); i++ {
+		indexByte := strings.IndexByte(override[i], ':')
+		filename := override[i][:indexByte]
+
+		jsonOverride := override[i][indexByte+1:]
+		if !json.Valid([]byte(jsonOverride)) {
+			msg := fmt.Sprintf("%s is not a valid json", jsonOverride)
+			return nil, errors.New(msg)
+		}
+		returnMap[filename] = json.RawMessage(jsonOverride)
+	}
+	return returnMap, err
 }
 
 func printDeployments(deployments []string) {
