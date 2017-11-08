@@ -60,7 +60,7 @@ func CreateTempFile() (string, error) {
 		return "", errors.New("Unable to create temporary file: " + err.Error())
 	}
 	if isLegalFileFolder(tmpFile.Name()) != SpecIsFile {
-		err = errors.New("Internal error: Illegal temp file name: " + tmpFile.Name())
+		return "", errors.New("Internal error: Illegal temp file name: " + tmpFile.Name())
 	}
 	filename := tmpFile.Name()
 	return filename, nil

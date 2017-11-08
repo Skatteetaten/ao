@@ -64,7 +64,7 @@ func Edit(content string, fileName string, onSave OnSaveFunc) (string, error) {
 
 		currentContent = stripComments(string(fileContent))
 
-		hasNoChanges := hasContentChanged(originalContent, currentContent)
+		hasNoChanges := HasContentChanged(originalContent, currentContent)
 		noWrite := beforeEdit.ModTime().Equal(afterEdit.ModTime())
 		if hasNoChanges || noWrite {
 			return "Edit cancelled, no changes made.", nil
@@ -89,7 +89,7 @@ func Edit(content string, fileName string, onSave OnSaveFunc) (string, error) {
 	return fmt.Sprintf("%s edited", fileName), nil
 }
 
-func hasContentChanged(original, edited string) bool {
+func HasContentChanged(original, edited string) bool {
 
 	orgBuffer := new(bytes.Buffer)
 	err := json.Compact(orgBuffer, []byte(original))
