@@ -40,7 +40,8 @@ will edit this file, if there is no other file matching the same shortening.`,
 
 		filename := ""
 		if len(options) > 1 {
-			filename = prompt.SelectFile(options)
+			message := fmt.Sprintf("Matched %d files. Which file do you want?", len(options))
+			filename = prompt.Select(message, options)
 		} else if len(options) == 1 {
 			filename = options[0]
 		}

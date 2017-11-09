@@ -1,7 +1,6 @@
 package prompt
 
 import (
-	"fmt"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/AlecAivazis/survey.v1"
 )
@@ -34,9 +33,9 @@ func Password() string {
 	return string(pass[:])
 }
 
-func ConfirmUpdate(version string) bool {
+func Confirm(message string) bool {
 	p := &survey.Confirm{
-		Message: fmt.Sprintf("Do you want update to version %s?", version),
+		Message: message,
 	}
 
 	var update bool
@@ -47,38 +46,9 @@ func ConfirmUpdate(version string) bool {
 	return update
 }
 
-func ConfirmDeployAll(applications []string) bool {
-
-	p := &survey.Confirm{
-		Message: fmt.Sprintf("Do you want to add all %d application(s) to deploy?", len(applications)),
-	}
-
-	var deploy bool
-	err := survey.AskOne(p, &deploy, nil)
-	if err != nil {
-		logrus.Error(err)
-	}
-	return deploy
-}
-
-func ConfirmDeploy(applications []string) bool {
-
-	p := &survey.Confirm{
-		Message: fmt.Sprintf("Do you want to deploy %d application(s)?", len(applications)),
-		Default: true,
-	}
-
-	var deploy bool
-	err := survey.AskOne(p, &deploy, nil)
-	if err != nil {
-		logrus.Error(err)
-	}
-	return deploy
-}
-
-func MultiSelectDeployments(options []string) []string {
+func MultiSelect(message string, options []string) []string {
 	p := &survey.MultiSelect{
-		Message:  "Which applications do you want to deploy?",
+		Message:  message,
 		PageSize: 10,
 		Options:  options,
 	}
@@ -92,10 +62,10 @@ func MultiSelectDeployments(options []string) []string {
 	return applications
 }
 
-func SelectFile(options []string) string {
+func Select(message string, options []string) string {
 
 	p := &survey.Select{
-		Message:  fmt.Sprintf("Matched %d files. Which file do you want?", len(options)),
+		Message:  message,
 		PageSize: 10,
 		Options:  options,
 	}

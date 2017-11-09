@@ -24,7 +24,8 @@ var updateCmd = &cobra.Command{
 			return
 		}
 
-		update := prompt.ConfirmUpdate(serverVersion.Version)
+		message := fmt.Sprintf("Do you want update to version %s?", serverVersion.Version)
+		update := prompt.Confirm(message)
 		if !update {
 			return
 		}

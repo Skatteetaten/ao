@@ -144,7 +144,8 @@ If no argument is given, the command will list all the files in the repository.`
 		if len(matches) == 1 {
 			selectedFile = matches[0]
 		} else {
-			selectedFile = prompt.SelectFile(matches)
+			message := fmt.Sprintf("Matched %d files. Which file do you want?", len(matches))
+			selectedFile = prompt.Select(message, matches)
 		}
 
 		auroraConfigFile, err := DefaultApiClient.GetAuroraConfigFile(selectedFile)
