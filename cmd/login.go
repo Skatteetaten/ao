@@ -55,7 +55,10 @@ one is available.
 		}
 
 		ao.Login(configLocation, options)
-		// TODO: Check for new ao version
+		err := ao.Update()
+		if err == nil {
+			fmt.Println("AO has been updated")
+		}
 	},
 }
 
