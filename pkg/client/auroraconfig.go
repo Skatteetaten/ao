@@ -63,7 +63,7 @@ func (api *ApiClient) GetFileNames() (FileNames, error) {
 		return nil, err
 	}
 
-	return fileNames, err
+	return fileNames, nil
 }
 
 func (api *ApiClient) GetAuroraConfig() (*AuroraConfig, error) {

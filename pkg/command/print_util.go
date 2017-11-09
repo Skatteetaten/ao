@@ -7,9 +7,9 @@ import (
 	"text/tabwriter"
 )
 
-func DefaultTablePrinter(lines []string) {
+func DefaultTablePrinter(table []string) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', tabwriter.TabIndent)
-	for _, line := range lines {
+	for _, line := range table {
 		fmt.Fprintln(w, line)
 	}
 	w.Flush()

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/collections"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/prompt"
@@ -76,6 +77,13 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		}
 	}
 
+	// Only deploy unique applications
+	deploySet := collections.NewStringSet()
+	for _, app := range appsToDeploy {
+		deploySet.Add(app)
+	}
+	appsToDeploy = deploySet.All()
+
 	if len(appsToDeploy) == 0 {
 		fmt.Println("No applications to deploy")
 		return nil
@@ -119,8 +127,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		if err != nil {
 			fmt.Println(err)
 		}
-		PrintDeployResults(result)
-		return nil
+		return result
 	}
 
 	allResults := deployToReachableClusters(options.Affiliation, options.Token, clusters, payload)

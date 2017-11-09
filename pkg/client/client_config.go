@@ -18,7 +18,7 @@ func (api *ApiClient) GetClientConfig() (*ClientConfig, error) {
 	}
 
 	var gc ClientConfig
-	response.ParseFirstItem(&gc)
+	err = response.ParseFirstItem(&gc)
 	if err != nil {
 		return nil, errors.Wrap(err, "git config")
 	}

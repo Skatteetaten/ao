@@ -30,13 +30,7 @@ type Response struct {
 
 func (res *Response) ParseItems(data interface{}) error {
 	if !res.Success {
-		// TODO: Only for validation errors?
-		errorResponse, err := res.ToErrorResponse()
-		if err != nil {
-			return err
-		}
-		errorResponse.PrintAllErrors()
-		return errors.New("response was unsuccessful")
+		return errors.New(res.Message)
 	}
 
 	return json.Unmarshal(res.Items, data)

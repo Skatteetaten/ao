@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/skatteetaten/ao/pkg/versionutil"
+	"github.com/skatteetaten/ao/pkg/config"
 	"io/ioutil"
 	"net/http"
 )
@@ -43,9 +43,7 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 		return nil, err
 	}
 
-	version := new(versionutil.VersionStruct)
-	version.Init()
-	req.Header.Set("User-Agent", "ao/"+version.Version)
+	req.Header.Set("User-Agent", "ao/"+config.Version)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+api.Token)

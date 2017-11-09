@@ -54,6 +54,8 @@ func (api *ApiClient) Deploy(deployPayload *DeployPayload) ([]DeployResult, erro
 	}
 
 	var deploys []DeployResult
+	// If deploy fail, the DeployResult will contain errors so we can't check if the
+	// Response is successfully or not
 	err = json.Unmarshal(response.Items, &deploys)
 	if err != nil {
 		return nil, err

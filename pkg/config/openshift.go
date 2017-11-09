@@ -49,7 +49,7 @@ func (c *Cluster) HasValidToken() bool {
 	}
 
 	req.Header.Add("Authorization", "Bearer "+c.Token)
-	logrus.Debug("Check for valid token ", clusterUrl)
+	logrus.WithField("url", clusterUrl).Debug("Check for valid token")
 	resp, err := client.Do(req)
 	if err != nil {
 		return false

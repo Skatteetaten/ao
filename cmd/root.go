@@ -77,7 +77,8 @@ func init() {
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Localhost, "localhost", "l", false, "Send all request to localhost api on port 8080")
 	RootCmd.PersistentFlags().MarkHidden("localhost")
-	setHelpTemplate(RootCmd)
+	// TODO: Rework
+	//setHelpTemplate(RootCmd)
 }
 
 func setHelpTemplate(root *cobra.Command) {
