@@ -5,8 +5,9 @@ import (
 
 	"strings"
 
+	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/command"
 	"github.com/skatteetaten/ao/pkg/editcmd"
-	pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
 	"github.com/skatteetaten/ao/pkg/vault"
 	"github.com/spf13/cobra"
 )
@@ -17,13 +18,8 @@ var vaultAddUser string
 var vaultRemoveUser string
 
 var vaultFolder string
-var showSecretContent bool
 
 var editCmdObject = &editcmd.EditcmdClass{
-	Configuration: oldConfig,
-}
-
-var getcmdObject = &pkgGetCmd.GetcmdClass{
 	Configuration: oldConfig,
 }
 
@@ -182,9 +178,9 @@ Vault2 will contain 1 secret: secretfile3.`,
 	},
 }
 
-var vaultGetCmd = &cobra.Command{
-	Use:   "get [vaultname]",
-	Short: "get",
+var vaultListCmd = &cobra.Command{
+	Use:   "list [vaultname]",
+	Short: "list all vaults",
 	Long: `If no argument is given, the command will list the vaults in the current affiliation, along with the
 numer of secrets in the vault.
 If a vaultname is specified, the command will list the secrets in the given vault.
@@ -192,20 +188,29 @@ To access a secret, use the get secret command.`,
 	Aliases: []string{"vaults"},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		var output string
-		var err error
-
-		if len(args) == 0 {
-			output, err = getcmdObject.Vaults(showSecretContent)
+		var vaults []*client.AuroraSecretVault
+		if len(args) > 0 {
+			vault, err := DefaultApiClient.GetVault(args[0])
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			vaults = []*client.AuroraSecretVault{vault}
 		} else {
-			output, err = getcmdObject.Vault(args[0])
+			var err error
+			vaults, err = DefaultApiClient.GetVaults()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 		}
 
-		if err == nil {
-			fmt.Println(output)
-		} else {
-			fmt.Println(err)
+		table := command.GetVaultTable(vaults)
+		if len(table) == 1 {
+			fmt.Println("No vaults available")
+			return
 		}
+		command.DefaultTablePrinter(table)
 	},
 }
 
@@ -228,7 +233,5 @@ func init() {
 
 	vaultCmd.AddCommand(vaultImportCmd)
 
-	vaultCmd.AddCommand(vaultGetCmd)
-	vaultGetCmd.Flags().BoolVarP(&showSecretContent, "show-secret-content", "s", false,
-		"This flag will print the content of the secrets in the vaults")
+	vaultCmd.AddCommand(vaultListCmd)
 }

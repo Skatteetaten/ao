@@ -2,11 +2,33 @@ package command
 
 import (
 	"fmt"
+	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/collections"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"sort"
 	"strings"
 )
+
+func GetVaultTable(vaults []*client.AuroraSecretVault) []string {
+	table := []string{"VAULT\tPERMISSIONS\tSECRET\t"}
+
+	sort.Slice(vaults, func(i, j int) bool {
+		return strings.Compare(vaults[i].Name, vaults[j].Name) < 1
+	})
+
+	for _, vault := range vaults {
+		name := vault.Name
+		permissions := vault.Permissions.GetGroups()
+
+		for s := range vault.Secrets {
+			line := fmt.Sprintf("%s\t%s\t%s\t", name, permissions, s)
+			table = append(table, line)
+			name = " "
+		}
+	}
+
+	return table
+}
 
 func GetFilesTable(files []string) []string {
 	var single []string
