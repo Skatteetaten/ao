@@ -18,11 +18,9 @@ import (
 var DefaultApiClient *client.ApiClient
 
 var configLocation string
-
-// TODO: rename import aoConfig to config
 var ao *config.AOConfig
 
-// TODO: Change class name
+// TODO: Replace with InitializeOptions
 var persistentOptions cmdoptions.CommonCommandOptions
 
 // TODO: Remove all config references

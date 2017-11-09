@@ -9,6 +9,7 @@ import (
 	"net/http"
 )
 
+// The version variables will be set during build time, see build/build.sh
 var BuildStamp string
 var Branch string
 var GitHash string
@@ -36,6 +37,54 @@ var DefaultAOVersion = AOVersion{
 const aoDownloadPath = "/api/ao"
 const aoCurrentVersionPath = "/api/version"
 
+func (ao *AOConfig) GetCurrentVersionFromServer() (*AOVersion, error) {
+	data, err := ao.FetchFromUpdateServer(aoCurrentVersionPath, "application/json")
+	if err != nil {
+		return nil, err
+	}
+
+	var aoVersion AOVersion
+	err = json.Unmarshal(data, &aoVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	return &aoVersion, nil
+}
+
+func (ao *AOConfig) GetNewAOClient() ([]byte, error) {
+	return ao.FetchFromUpdateServer(aoDownloadPath, "application/octet-stream")
+}
+
+func (ao *AOConfig) FetchFromUpdateServer(endpoint, contentType string) ([]byte, error) {
+	url, err := ao.getUpdateUrl()
+	if err != nil {
+		return nil, err
+	}
+
+	logrus.WithField("url", url).Info("Request")
+	req, err := http.NewRequest(http.MethodGet, url+endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", contentType)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	logrus.WithField("url", url).WithField("status", res.StatusCode).Info("Response")
+	if res.StatusCode != http.StatusOK {
+		return nil, errors.New(res.Status)
+	}
+
+	defer res.Body.Close()
+	file, err := ioutil.ReadAll(res.Body)
+
+	return file, err
+}
+
 func (ao *AOConfig) getUpdateUrl() (string, error) {
 	var updateCluster string
 	for _, c := range ao.AvailableUpdateClusters {
@@ -52,65 +101,4 @@ func (ao *AOConfig) getUpdateUrl() (string, error) {
 	}
 
 	return fmt.Sprintf(ao.UpdateUrlPattern, updateCluster), nil
-}
-
-func (ao *AOConfig) GetCurrentVersionFromServer() (*AOVersion, error) {
-	url, err := ao.getUpdateUrl()
-	if err != nil {
-		return nil, err
-	}
-
-	logrus.WithField("url", url).Info("Request")
-	req, err := http.NewRequest(http.MethodGet, url+aoCurrentVersionPath, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	res, err := http.DefaultClient.Do(req)
-
-	logrus.WithField("url", url).WithField("status", res.StatusCode).Info("Response")
-	if res.StatusCode != http.StatusOK {
-		return nil, errors.New(res.Status)
-	}
-
-	defer res.Body.Close()
-	data, err := ioutil.ReadAll(res.Body)
-
-	var aoVersion AOVersion
-	err = json.Unmarshal(data, &aoVersion)
-	if err != nil {
-		return nil, err
-	}
-
-	return &aoVersion, nil
-}
-
-func (ao *AOConfig) GetNewAOClient() ([]byte, error) {
-	url, err := ao.getUpdateUrl()
-	if err != nil {
-		return nil, err
-	}
-
-	logrus.WithField("url", url).Info("Request")
-	req, err := http.NewRequest(http.MethodGet, url+aoDownloadPath, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Content-Type", "application/octet-stream")
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error downloading update from %v: %v", url, err))
-	}
-
-	logrus.WithField("url", url).WithField("status", res.StatusCode).Info("Response")
-	if res.StatusCode != http.StatusOK {
-		return nil, errors.New(res.Status)
-	}
-
-	defer res.Body.Close()
-	file, err := ioutil.ReadAll(res.Body)
-
-	return file, err
 }
