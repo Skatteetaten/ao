@@ -64,9 +64,9 @@ func Edit(content string, fileName string, onSave OnSaveFunc) (string, error) {
 
 		currentContent = stripComments(string(fileContent))
 
-		hasNoChanges := HasContentChanged(originalContent, currentContent)
+		originalHasChanges := HasContentChanged(originalContent, currentContent)
 		noWrite := beforeEdit.ModTime().Equal(afterEdit.ModTime())
-		if hasNoChanges || noWrite {
+		if !originalHasChanges || noWrite {
 			return "Edit cancelled, no changes made.", nil
 		}
 
