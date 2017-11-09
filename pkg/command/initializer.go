@@ -94,6 +94,6 @@ func setLogging(level string, pretty bool) {
 	}
 
 	if pretty {
-		logrus.SetFormatter(&client.PrettyFormatter{})
+		logrus.SetFormatter(&PrettyFormatter{})
 	}
 }
