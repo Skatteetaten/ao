@@ -5,17 +5,10 @@ import (
 
 	"github.com/skatteetaten/ao/pkg/command"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
-	pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
 	"sort"
 )
-
-var showSecretContent bool
-
-var getcmdObject = &pkgGetCmd.GetcmdClass{
-	Configuration: config,
-}
 
 var getCmd = &cobra.Command{
 	Use:   "get",
@@ -163,30 +156,9 @@ If no argument is given, the command will list all the files in the repository.`
 	},
 }
 
-var getSecretCmd = &cobra.Command{
-	Use:   "secret <vault> <secret>",
-	Short: "Get secret",
-	Long:  `The command will print the content of the secret to standard out.`,
-	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) != 2 {
-			fmt.Println(cmd.UseLine())
-			return
-		}
-
-		if output, err := getcmdObject.Secret(args[0], args[1]); err == nil {
-			fmt.Println(output)
-		} else {
-			fmt.Println(err)
-		}
-	},
-}
-
 func init() {
 	RootCmd.AddCommand(getCmd)
 	getCmd.AddCommand(getFileCmd)
-	getCmd.AddCommand(getSecretCmd)
-
 	getCmd.AddCommand(getAppsCmd)
 	getCmd.AddCommand(getEnvsCmd)
 	getCmd.AddCommand(getDeploymentsCmd)

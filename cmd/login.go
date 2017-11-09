@@ -4,7 +4,7 @@ package cmd
 
 import (
 	"fmt"
-	aoConfig "github.com/skatteetaten/ao/pkg/config"
+	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -41,13 +41,13 @@ one is available.
 		}
 
 		if recreateConfig {
-			conf := &aoConfig.DefaultAOConfig
+			conf := &config.DefaultAOConfig
 			conf.InitClusters()
 			conf.SelectApiCluster()
 			ao = conf
 		}
 
-		options := aoConfig.LoginOptions{
+		options := config.LoginOptions{
 			APICluster:  apiCluster,
 			Affiliation: affiliation,
 			UserName:    userName,

@@ -34,6 +34,19 @@ func Password() string {
 	return string(pass[:])
 }
 
+func ConfirmUpdate(version string) bool {
+	p := &survey.Confirm{
+		Message: fmt.Sprintf("Do you want update to version %s?", version),
+	}
+
+	var update bool
+	err := survey.AskOne(p, &update, nil)
+	if err != nil {
+		logrus.Error(err)
+	}
+	return update
+}
+
 func ConfirmDeployAll(applications []string) bool {
 
 	p := &survey.Confirm{

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/skatteetaten/ao/pkg/command"
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
 	"os"
@@ -13,7 +14,7 @@ var saveCmd = &cobra.Command{
 	Short: "Save changed, new and deleted files for AuroraConfig",
 	Run: func(cmd *cobra.Command, args []string) {
 		user, _ := cmd.Flags().GetString("user")
-		url := getGitUrl(ao.Affiliation, user)
+		url := command.GetGitUrl(ao.Affiliation, user, DefaultApiClient)
 
 		if _, err := versioncontrol.Save(url, DefaultApiClient); err != nil {
 			fmt.Println(err.Error())

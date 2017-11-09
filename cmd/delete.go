@@ -9,7 +9,7 @@ import (
 
 var forceFlag bool
 var deletecmdObject = &pkgDelteCmd.DeletecmdClass{
-	Configuration: config,
+	Configuration: oldConfig,
 	Force:         forceFlag,
 }
 

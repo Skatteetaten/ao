@@ -18,7 +18,7 @@ to ping the specified address and port from each node.`,
 		pingPort, _ := cmd.Flags().GetString("port")
 		pingCluster, _ := cmd.Flags().GetString("cluster")
 
-		output, err := pkgPingCmd.PingAddress(args, pingPort, pingCluster, config)
+		output, err := pkgPingCmd.PingAddress(args, pingPort, pingCluster, oldConfig)
 		if err != nil {
 			l := log.New(os.Stderr, "", 0)
 			l.Println(err.Error())

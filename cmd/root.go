@@ -5,7 +5,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/command"
-	aoConfig "github.com/skatteetaten/ao/pkg/config"
+	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/spf13/cobra"
 	"os"
@@ -20,13 +20,13 @@ var DefaultApiClient *client.ApiClient
 var configLocation string
 
 // TODO: rename import aoConfig to config
-var ao *aoConfig.AOConfig
+var ao *config.AOConfig
 
 // TODO: Change class name
 var persistentOptions cmdoptions.CommonCommandOptions
 
 // TODO: Remove all config references
-var config = &configuration.ConfigurationClass{
+var oldConfig = &configuration.ConfigurationClass{
 	PersistentOptions: &persistentOptions,
 }
 
@@ -79,4 +79,28 @@ func init() {
 
 	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Localhost, "localhost", "l", false, "Send all request to localhost api on port 8080")
 	RootCmd.PersistentFlags().MarkHidden("localhost")
+	setHelpTemplate(RootCmd)
+}
+
+func setHelpTemplate(root *cobra.Command) {
+	tmp := `{{.Long}}
+Usage:
+  {{.CommandPath}} [command] [flags]
+
+File Commands:{{range .Commands}}{{if (eq (index .Annotations "type") "file")}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
+
+Other Commands:{{range .Commands}}{{if (eq (index .Annotations "type") "")}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
+
+{{if .HasPersistentFlags}}
+Global Flags:
+{{.PersistentFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
+
+Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
+  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
+
+Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
+`
+	root.SetHelpTemplate(tmp)
 }

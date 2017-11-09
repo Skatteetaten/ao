@@ -52,7 +52,7 @@ func (deploy *DeployClass) generateJson(
 	}
 
 	//setupCommand.SetupParams.DryRun = dryRun
-	deploy.setupCommand.SetupParams.Overrides, err = jsonutil.OverrideJsons2map(deploy.overrideJsons)
+	//deploy.setupCommand.SetupParams.Overrides, err = jsonutil.OverrideJsons2map(deploy.overrideJsons)
 	if err != nil {
 		return "", err
 	}

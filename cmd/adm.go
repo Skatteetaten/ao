@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	config2 "github.com/skatteetaten/ao/pkg/config"
+	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -54,7 +54,7 @@ var recreateConfigCmd = &cobra.Command{
 	Short: "adm recreate-config",
 	Long:  `The command will recreate the .ao.json file.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		conf := &config2.DefaultAOConfig
+		conf := &config.DefaultAOConfig
 		conf.InitClusters()
 		conf.SelectApiCluster()
 

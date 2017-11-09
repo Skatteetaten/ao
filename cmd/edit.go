@@ -3,15 +3,10 @@ package cmd
 import (
 	"fmt"
 	"github.com/skatteetaten/ao/pkg/command"
-	pkgEditCmd "github.com/skatteetaten/ao/pkg/editcmd"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
 )
-
-var editcmdObject = &pkgEditCmd.EditcmdClass{
-	Configuration: config,
-}
 
 var editCmd = &cobra.Command{
 	Use:   "edit [env/]file",
@@ -22,6 +17,9 @@ The file can be specified using unique shortened name, so given that the file su
 	ao edit test/about
 
 will edit this file, if there is no other file matching the same shortening.`,
+	Annotations: map[string]string{
+		"type": "file",
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
 			cmd.Usage()

@@ -3,13 +3,12 @@ package cmd
 import (
 	"fmt"
 
-	_ "go/token"
-	"os"
-	"strings"
-
 	"github.com/sirupsen/logrus"
+	"github.com/skatteetaten/ao/pkg/command"
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
+	_ "go/token"
+	"os"
 )
 
 var checkoutCmd = &cobra.Command{
@@ -31,7 +30,7 @@ var checkoutCmd = &cobra.Command{
 			path = fmt.Sprintf("%s/%s", wd, affiliation)
 		}
 
-		url := getGitUrl(affiliation, user)
+		url := command.GetGitUrl(affiliation, user, DefaultApiClient)
 
 		logrus.Debug(url)
 		fmt.Printf("Cloning AuroraConfig for affiliation %s\n", affiliation)
@@ -53,24 +52,6 @@ var checkoutCmd = &cobra.Command{
 
 		fmt.Println("Checkout success")
 	},
-}
-
-// TODO: Move this
-func getGitUrl(affiliation, user string) string {
-	clientConfig, err := DefaultApiClient.GetClientConfig()
-	if err != nil {
-		fmt.Println(err)
-		return ""
-	}
-	gitUrlPattern := clientConfig.GitUrlPattern
-
-	if !strings.Contains(gitUrlPattern, "https://") {
-		return fmt.Sprintf(gitUrlPattern, affiliation)
-	}
-
-	host := strings.TrimPrefix(gitUrlPattern, "https://")
-	newPattern := fmt.Sprintf("https://%s@%s", user, host)
-	return fmt.Sprintf(newPattern, affiliation)
 }
 
 func init() {

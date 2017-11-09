@@ -5,6 +5,8 @@ import (
 
 	"strings"
 
+	"github.com/skatteetaten/ao/pkg/editcmd"
+	pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
 	"github.com/skatteetaten/ao/pkg/vault"
 	"github.com/spf13/cobra"
 )
@@ -15,6 +17,15 @@ var vaultAddUser string
 var vaultRemoveUser string
 
 var vaultFolder string
+var showSecretContent bool
+
+var editCmdObject = &editcmd.EditcmdClass{
+	Configuration: oldConfig,
+}
+
+var getcmdObject = &pkgGetCmd.GetcmdClass{
+	Configuration: oldConfig,
+}
 
 // vaultCmd represents the vault command
 var vaultCmd = &cobra.Command{
@@ -41,7 +52,7 @@ If no vaultname is given, the vault will be named the same as the <folder>.`,
 			if len(args) == 1 {
 				vaultname = args[0]
 			}
-			vault.CreateVault(vaultname, config, vaultFolder, vaultAddUser, vaultAddGroup)
+			vault.CreateVault(vaultname, oldConfig, vaultFolder, vaultAddUser, vaultAddGroup)
 		} else {
 			fmt.Println(cmd.UseLine())
 		}
@@ -77,9 +88,9 @@ If secret-name is given, the editor will present the decoded secret string for e
 		}
 
 		if secretname != "" {
-			output, err = editcmdObject.EditSecret(vaultname, secretname)
+			output, err = editCmdObject.EditSecret(vaultname, secretname)
 		} else {
-			output, err = editcmdObject.EditVault(vaultname)
+			output, err = editCmdObject.EditVault(vaultname)
 		}
 		if err == nil {
 			fmt.Print(output)
@@ -95,7 +106,7 @@ var vaultPermissionsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) == 1 {
-			if output, err := vault.Permissions(args[0], config, vaultAddGroup, vaultRemoveGroup, vaultAddUser, vaultRemoveUser); err == nil {
+			if output, err := vault.Permissions(args[0], oldConfig, vaultAddGroup, vaultRemoveGroup, vaultAddUser, vaultRemoveUser); err == nil {
 				fmt.Print(output)
 			} else {
 				fmt.Println(err.Error())
@@ -129,7 +140,7 @@ var vaultRenameCmd = &cobra.Command{
 
 		if len(args) == 2 {
 
-			if output, err := vault.Rename(args[0], args[1], config); err == nil {
+			if output, err := vault.Rename(args[0], args[1], oldConfig); err == nil {
 				fmt.Println(output)
 			} else {
 				fmt.Println(err.Error())
@@ -160,7 +171,7 @@ Vault2 will contain 1 secret: secretfile3.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) == 1 {
-			if output, err := vault.ImportVaults(args[0], config); err == nil {
+			if output, err := vault.ImportVaults(args[0], oldConfig); err == nil {
 				fmt.Print(output)
 			} else {
 				fmt.Println(err.Error())
