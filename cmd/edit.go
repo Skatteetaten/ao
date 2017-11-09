@@ -3,8 +3,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/skatteetaten/ao/pkg/command"
-	"github.com/skatteetaten/ao/pkg/fuzzy"
-	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
 )
 
@@ -26,33 +24,16 @@ will edit this file, if there is no other file matching the same shortening.`,
 			return
 		}
 
-		fileNames, err := DefaultApiClient.GetFileNames()
+		filename, err := command.SelectFile(args[0], DefaultApiClient)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		options, err := fuzzy.SearchForFile(args[0], fileNames)
+		status, err := command.EditFile(filename, DefaultApiClient)
 		if err != nil {
 			fmt.Println(err)
 			return
-		}
-
-		filename := ""
-		if len(options) > 1 {
-			message := fmt.Sprintf("Matched %d files. Which file do you want?", len(options))
-			filename = prompt.Select(message, options)
-		} else if len(options) == 1 {
-			filename = options[0]
-		}
-
-		if filename == "" {
-			fmt.Println("No file to edit")
-		}
-
-		status, err := command.EditFile(filename, *DefaultApiClient)
-		if err != nil {
-			fmt.Println(err)
 		}
 
 		fmt.Println(status)

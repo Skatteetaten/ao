@@ -39,11 +39,32 @@ func (f *AuroraConfigFile) ToPrettyJson() string {
 
 type FileNames []string
 
-func (f FileNames) FilterDeployments() []string {
+func (f FileNames) GetDeployments() []string {
 	var filteredFiles []string
 	for _, file := range f {
 		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
 			filteredFiles = append(filteredFiles, strings.TrimSuffix(file, ".json"))
+		}
+	}
+	return filteredFiles
+}
+
+func (f FileNames) GetApplications() []string {
+	var filteredFiles []string
+	for _, file := range f {
+		if !strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
+			filteredFiles = append(filteredFiles, strings.TrimSuffix(file, ".json"))
+		}
+	}
+	return filteredFiles
+}
+
+func (f FileNames) GetEnvironments() []string {
+	var filteredFiles []string
+	for _, file := range f {
+		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
+			split := strings.Split(file, "/")
+			filteredFiles = append(filteredFiles, split[0])
 		}
 	}
 	return filteredFiles

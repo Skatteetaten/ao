@@ -3,7 +3,10 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/skatteetaten/ao/pkg/command"
 	pkgDelteCmd "github.com/skatteetaten/ao/pkg/deletecmd"
+	"github.com/skatteetaten/ao/pkg/fuzzy"
+	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
 )
 
@@ -37,13 +40,17 @@ var deleteAppCmd = &cobra.Command{
 	Use:   "app <appname>",
 	Short: "Delete application",
 	Run: func(cmd *cobra.Command, args []string) {
-
 		if len(args) != 1 {
-			fmt.Println(cmd.UseLine())
+			cmd.Usage()
 			return
 		}
 
-		deletecmdObject.DeleteApp(args[0])
+		err := command.DeleteFilesFor(fuzzy.APP_FILTER, args[0], DefaultApiClient)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println("Delete success")
+		}
 	},
 }
 
@@ -57,21 +64,12 @@ var deleteEnvCmd = &cobra.Command{
 			return
 		}
 
-		deletecmdObject.DeleteEnv(args[0])
-	},
-}
-
-var deleteDeploymentCmd = &cobra.Command{
-	Use:   "deployment <envname> <appname>",
-	Short: "Delete deployment",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) != 2 {
-			fmt.Println(cmd.UseLine())
-			return
+		err := command.DeleteFilesFor(fuzzy.ENV_FILTER, args[0], DefaultApiClient)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println("Delete success")
 		}
-
-		deletecmdObject.DeleteDeployment(args[0], args[1])
 	},
 }
 
@@ -79,28 +77,30 @@ var deleteFileCmd = &cobra.Command{
 	Use:   "file <filename>",
 	Short: "Delete file",
 	Run: func(cmd *cobra.Command, args []string) {
-
 		if len(args) != 1 {
 			fmt.Println(cmd.UseLine())
 			return
 		}
 
-		deletecmdObject.DeleteFile(args[0])
-	},
-}
+		files, err := command.MultiSelectFile(args[0], DefaultApiClient)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
-var deleteVaultCmd = &cobra.Command{
-	Use:   "vault <vaultname>",
-	Short: "Delete a vault",
-	Run: func(cmd *cobra.Command, args []string) {
+		command.DefaultTablePrinter(command.GetFilesTable(files))
+		message := fmt.Sprintf("Do you want to delete %d file(s)?", len(files))
+		shouldDelete := prompt.Confirm(message)
 
-		if len(args) == 1 {
-			if err := deletecmdObject.DeleteVault(args[0]); err == nil {
-			} else {
-				fmt.Println(err.Error())
-			}
+		if !shouldDelete {
+			return
+		}
+
+		err = command.DeleteFiles(files, DefaultApiClient)
+		if err != nil {
+			fmt.Println(err)
 		} else {
-			fmt.Println(cmd.UseLine())
+			fmt.Println("Delete success")
 		}
 	},
 }
@@ -109,9 +109,7 @@ func init() {
 	RootCmd.AddCommand(deleteCmd)
 	deleteCmd.AddCommand(deleteAppCmd)
 	deleteCmd.AddCommand(deleteEnvCmd)
-	deleteCmd.AddCommand(deleteDeploymentCmd)
 	deleteCmd.AddCommand(deleteFileCmd)
-	deleteCmd.AddCommand(deleteVaultCmd)
 
 	deleteCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "ignore nonexistent files and arguments, never prompt")
 }

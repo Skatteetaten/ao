@@ -20,10 +20,10 @@ var getCmd = &cobra.Command{
 }
 
 var getDeploymentsCmd = &cobra.Command{
-	Use:     "deployment",
-	Short:   "get deployments",
-	Long:    `Lists the deployments defined in the Auroraconfig`,
-	Aliases: []string{"deployments", "dep", "deps", "all"},
+	Use:     "all",
+	Short:   "Get all deployments",
+	Long:    `Lists the deployments defined in the AuroraConfig`,
+	Aliases: []string{"deployments"},
 	Run: func(cmd *cobra.Command, args []string) {
 
 		fileNames, err := DefaultApiClient.GetFileNames()
@@ -32,7 +32,7 @@ var getDeploymentsCmd = &cobra.Command{
 			return
 		}
 
-		deployments := fileNames.FilterDeployments()
+		deployments := fileNames.GetDeployments()
 		sort.Strings(deployments)
 		table := command.GetDeploymentTable(deployments)
 		command.DefaultTablePrinter(table)
@@ -41,7 +41,7 @@ var getDeploymentsCmd = &cobra.Command{
 
 var getAppsCmd = &cobra.Command{
 	Use:     "app",
-	Short:   "get app",
+	Short:   "Get all applications",
 	Long:    `Lists the apps defined in the Auroraconfig`,
 	Aliases: []string{"apps"},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -52,12 +52,11 @@ var getAppsCmd = &cobra.Command{
 			return
 		}
 
-		applications := fileNames.FilterDeployments()
 		var table []string
 		if len(args) > 0 {
-			table = command.GetApplicationsTable(applications, args[0])
+			table = command.GetApplicationsTable(fileNames, args[0])
 		} else {
-			table = command.GetApplicationsTable(applications, "")
+			table = command.GetApplicationsTable(fileNames, "")
 		}
 
 		if len(table) < 2 {
@@ -71,7 +70,7 @@ var getAppsCmd = &cobra.Command{
 
 var getEnvsCmd = &cobra.Command{
 	Use:     "env",
-	Short:   "get env",
+	Short:   "Get all environments",
 	Long:    `Lists the envs defined in the Auroraconfig`,
 	Aliases: []string{"envs"},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -82,12 +81,11 @@ var getEnvsCmd = &cobra.Command{
 			return
 		}
 
-		applications := fileNames.FilterDeployments()
 		var table []string
 		if len(args) > 0 {
-			table = command.GetEnvironmentTable(applications, args[0])
+			table = command.GetEnvironmentTable(fileNames, args[0])
 		} else {
-			table = command.GetEnvironmentTable(applications, "")
+			table = command.GetEnvironmentTable(fileNames, "")
 		}
 
 		if len(table) < 2 {
@@ -100,20 +98,20 @@ var getEnvsCmd = &cobra.Command{
 }
 
 var getFileCmd = &cobra.Command{
-	Use:   "file [envname] <filename>",
-	Short: "Get file",
+	Use:   "files [envname]/<filename>",
+	Short: "Get all files",
 	Long: `Prints the content of the file to standard output.
 Environmentnames and filenames can be abbrevated, and can be specified either as separate strings,
 or on a env/file basis.
 
 Given that a file called superapp-test/about.json exists in the repository, the command
 
-	ao get file test ab
+	ao get file test/ab
 
 will print the file.
 
 If no argument is given, the command will list all the files in the repository.`,
-	Aliases: []string{"files"},
+	Aliases: []string{"file"},
 	Run: func(cmd *cobra.Command, args []string) {
 
 		fileNames, err := DefaultApiClient.GetFileNames()
@@ -153,6 +151,7 @@ If no argument is given, the command will list all the files in the repository.`
 			fmt.Println(err)
 			return
 		}
+		fmt.Println(auroraConfigFile.Name)
 		fmt.Println(auroraConfigFile.ToPrettyJson())
 	},
 }

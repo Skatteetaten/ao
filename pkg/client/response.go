@@ -82,6 +82,16 @@ func NewErrorResponse(message string) *ErrorResponse {
 	}
 }
 
+func (e *ErrorResponse) String() string {
+	var status string
+	messages := e.GetAllErrors()
+	for _, message := range messages {
+		status += fmt.Sprintf("%s", message)
+	}
+
+	return status
+}
+
 func (e *ErrorResponse) SetMessage(m string) {
 	e.message = m
 	e.ContainsError = true

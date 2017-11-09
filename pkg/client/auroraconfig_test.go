@@ -162,7 +162,7 @@ func TestApiClient_GetAuroraConfigFile(t *testing.T) {
 
 func TestFileNames_FilterDeployments(t *testing.T) {
 	fileNames := FileNames{"about.json", "boober.json", "test/about.json", "test/boober.json"}
-	deployments := fileNames.FilterDeployments()
+	deployments := fileNames.GetDeployments()
 
 	assert.Len(t, deployments, 1)
 	assert.Equal(t, "test/boober", deployments[0])

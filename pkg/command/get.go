@@ -3,7 +3,6 @@ package command
 import (
 	"fmt"
 	"github.com/skatteetaten/ao/pkg/client"
-	"github.com/skatteetaten/ao/pkg/collections"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"sort"
 	"strings"
@@ -71,39 +70,34 @@ func GetDeploymentTable(deployments []string) []string {
 	return table
 }
 
-func GetEnvironmentTable(applications []string, env string) []string {
-	return filterApplicationForTable(fuzzy.ENV_FILTER, applications, env)
+func GetEnvironmentTable(fileNames client.FileNames, env string) []string {
+	return filterApplicationForTable(fuzzy.ENV_FILTER, fileNames, env)
 }
 
-func GetApplicationsTable(applications []string, app string) []string {
-	return filterApplicationForTable(fuzzy.APP_FILTER, applications, app)
+func GetApplicationsTable(fileNames client.FileNames, app string) []string {
+	return filterApplicationForTable(fuzzy.APP_FILTER, fileNames, app)
 }
 
-func filterApplicationForTable(mode fuzzy.FilterMode, applications []string, search string) []string {
-	index := 0
+func filterApplicationForTable(mode fuzzy.FilterMode, fileNames client.FileNames, search string) []string {
 	header := "ENVIRONMENT"
 	if mode == fuzzy.APP_FILTER {
 		header = "APPLICATION"
-		index = 1
 	}
 
 	var matches []string
 	if search != "" {
-		matches = fuzzy.FindAllDeploysFor(mode, search, applications)
+		matches = fuzzy.FindAllDeploysFor(mode, search, fileNames.GetDeployments())
 		sort.Strings(matches)
 		return GetDeploymentTable(matches)
 	}
-	set := collections.NewStringSet()
-	for _, application := range applications {
-		appId := strings.Split(application, "/")
-		set.Add(appId[index])
-	}
 
 	table := []string{header}
+	matches = fileNames.GetEnvironments()
+	if mode == fuzzy.APP_FILTER {
+		matches = fileNames.GetApplications()
+	}
 
-	matches = set.All()
 	sort.Strings(matches)
-
 	for _, match := range matches {
 		table = append(table, match)
 	}

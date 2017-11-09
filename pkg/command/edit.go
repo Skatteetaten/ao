@@ -6,7 +6,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/editor"
 )
 
-func EditFile(fileName string, api client.ApiClient) (string, error) {
+func EditFile(fileName string, api *client.ApiClient) (string, error) {
 
 	file, err := api.GetAuroraConfigFile(fileName)
 	if err != nil {

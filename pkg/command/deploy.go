@@ -55,7 +55,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		return nil
 	}
 
-	possibleDeploys := files.FilterDeployments()
+	possibleDeploys := files.GetDeployments()
 	appsToDeploy := []string{}
 	if options.DeployAll {
 		args = []string{}
@@ -67,7 +67,7 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 		if !options.Force && len(applications) > 1 {
 			selectedApps := applications
 			printDeployments(applications)
-			message := fmt.Sprintf("Do you want to add all %d application(s) to deploy?", len(applications))
+			message := fmt.Sprintf("Add all %d application(s) to deploy?", len(applications))
 			deployAll := prompt.Confirm(message)
 			if !deployAll {
 				selectedApps = prompt.MultiSelect("Which applications do you want to deploy?", applications)
