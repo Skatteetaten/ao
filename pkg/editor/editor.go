@@ -9,9 +9,12 @@ import (
 	"os"
 )
 
+const cancelMessage = "Edit cancelled, no changes made."
+
 const editPattern = `# Name: %s
-# Please edit the object below. Lines beginning with a '#' will be ignored.
-# If an error occurs while saving this file will be reopened with the relevant failures.
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
 %s%s
 `
 
@@ -35,23 +38,14 @@ func Edit(content string, fileName string, onSave OnSaveFunc) (string, error) {
 	currentContent := originalContent
 
 	for {
+		previousContent := currentContent
 		contentToEdit := fmt.Sprintf(editPattern, fileName, editErrors, currentContent)
 		err = ioutil.WriteFile(tempFilePath, []byte(contentToEdit), 0700)
 		if err != nil {
 			return "", err
 		}
 
-		beforeEdit, err := os.Stat(tempFilePath)
-		if err != nil {
-			return "", err
-		}
-
 		err = OpenEditor(tempFilePath)
-		if err != nil {
-			return "", err
-		}
-
-		afterEdit, err := os.Stat(tempFilePath)
 		if err != nil {
 			return "", err
 		}
@@ -62,11 +56,13 @@ func Edit(content string, fileName string, onSave OnSaveFunc) (string, error) {
 		}
 
 		currentContent = stripComments(string(fileContent))
+		if previousContent == currentContent {
+			return cancelMessage, nil
+		}
 
 		originalHasChanges := HasContentChanged(originalContent, currentContent)
-		noWrite := beforeEdit.ModTime().Equal(afterEdit.ModTime())
-		if !originalHasChanges || noWrite {
-			return "Edit cancelled, no changes made.", nil
+		if !originalHasChanges {
+			return cancelMessage, nil
 		}
 
 		if !json.Valid([]byte(currentContent)) {
@@ -75,10 +71,10 @@ func Edit(content string, fileName string, onSave OnSaveFunc) (string, error) {
 		}
 
 		validationErrors, err := onSave(currentContent)
-		if err != nil {
-			return "", err
-		} else if validationErrors != nil {
+		if validationErrors != nil {
 			editErrors = addErrorMessage(validationErrors)
+		} else if err != nil {
+			return "", err
 		} else {
 			// Content has been saved successfully
 			break

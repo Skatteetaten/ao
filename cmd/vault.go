@@ -8,6 +8,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/command"
 	"github.com/skatteetaten/ao/pkg/editcmd"
+	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/skatteetaten/ao/pkg/vault"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +16,6 @@ import (
 var vaultAddGroup string
 var vaultRemoveGroup string
 var vaultAddUser string
-var vaultRemoveUser string
 
 var vaultFolder string
 
@@ -100,16 +100,32 @@ var vaultPermissionsCmd = &cobra.Command{
 	Use:   "permissions <vaultname>",
 	Short: "Add or remove permissions on a vault",
 	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) == 1 {
-			if output, err := vault.Permissions(args[0], oldConfig, vaultAddGroup, vaultRemoveGroup, vaultAddUser, vaultRemoveUser); err == nil {
-				fmt.Print(output)
-			} else {
-				fmt.Println(err.Error())
-			}
-		} else {
-			fmt.Println(cmd.UseLine())
+		if len(args) < 1 {
+			cmd.Usage()
+			return
 		}
+
+		vault, err := DefaultApiClient.GetVault(args[0])
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		if vaultRemoveGroup != "" {
+			err = vault.Permissions.DeleteGroup(vaultRemoveGroup)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+
+		if vaultAddGroup != "" {
+			err = vault.Permissions.AddGroup(vaultAddGroup)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+
+		// TODO: Save vault
 	},
 }
 
@@ -117,14 +133,22 @@ var vaultDeleteCmd = &cobra.Command{
 	Use:   "delete <vaultname>",
 	Short: "Delete a vault",
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) < 1 {
+			cmd.Usage()
+			return
+		}
 
-		if len(args) == 1 {
-			if err := deletecmdObject.DeleteVault(args[0]); err == nil {
-			} else {
-				fmt.Println(err.Error())
-			}
+		message := fmt.Sprintf("Do you want to delete vault %s?", args[0])
+		shouldDelete := prompt.Confirm(message)
+		if !shouldDelete {
+			return
+		}
+
+		err := DefaultApiClient.DeleteVault(args[0])
+		if err != nil {
+			fmt.Println(err)
 		} else {
-			fmt.Println(cmd.UseLine())
+			fmt.Println("Delete success")
 		}
 	},
 }
@@ -187,6 +211,10 @@ If a vaultname is specified, the command will list the secrets in the given vaul
 To access a secret, use the get secret command.`,
 	Aliases: []string{"vaults"},
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) > 1 {
+			cmd.Usage()
+			return
+		}
 
 		var vaults []*client.AuroraSecretVault
 		if len(args) > 0 {
@@ -216,22 +244,16 @@ To access a secret, use the get secret command.`,
 
 func init() {
 	RootCmd.AddCommand(vaultCmd)
-	vaultCreateCmd.Flags().StringVarP(&vaultFolder, "folder", "f", "", "Creates a vault from a set of secret files")
-	vaultCreateCmd.Flags().StringVarP(&vaultAddUser, "user", "u", "", "Adds a permission for the given user")
-	vaultCreateCmd.Flags().StringVarP(&vaultAddGroup, "group", "g", "", "Adds a permission for the given group")
 
+	vaultCmd.AddCommand(vaultPermissionsCmd)
+	vaultCmd.AddCommand(vaultDeleteCmd)
+	vaultCmd.AddCommand(vaultImportCmd)
+	vaultCmd.AddCommand(vaultListCmd)
 	vaultCmd.AddCommand(vaultCreateCmd)
 	vaultCmd.AddCommand(vaultEditCmd)
 	vaultCmd.AddCommand(vaultRenameCmd)
 
+	vaultCreateCmd.Flags().StringVarP(&vaultFolder, "folder", "f", "", "Creates a vault from a set of secret files")
 	vaultPermissionsCmd.Flags().StringVarP(&vaultAddGroup, "add-group", "", "", "Add a group permission to the vault")
 	vaultPermissionsCmd.Flags().StringVarP(&vaultRemoveGroup, "remove-group", "", "", "Remove a group permission from the vault")
-	vaultPermissionsCmd.Flags().StringVarP(&vaultAddUser, "add-user", "", "", "Add a user permission to the vault")
-	vaultPermissionsCmd.Flags().StringVarP(&vaultRemoveUser, "remove-user", "", "", "Remove a user permission from the vault")
-	vaultCmd.AddCommand(vaultPermissionsCmd)
-	vaultCmd.AddCommand(vaultDeleteCmd)
-
-	vaultCmd.AddCommand(vaultImportCmd)
-
-	vaultCmd.AddCommand(vaultListCmd)
 }

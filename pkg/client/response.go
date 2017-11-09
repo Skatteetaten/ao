@@ -122,6 +122,7 @@ func (e *ErrorResponse) Contains(key string) bool {
 }
 
 func (e *ErrorResponse) FormatValidationError(res *responseErrorItem) {
+	// TODO: Structs?
 	illegalFieldFormat := `Filename:    %s
 Path:        %s
 Value:       %s
