@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sort"
 	"strings"
 )
 
@@ -30,6 +29,7 @@ type DeployPayload struct {
 	Deploy         bool                       `json:"deploy"`
 }
 
+// TODO: Remove error
 func NewDeployPayload(applications []string, overrides map[string]json.RawMessage) (*DeployPayload, error) {
 	applicationIds := createApplicationIds(applications)
 	return &DeployPayload{
@@ -60,10 +60,6 @@ func (api *ApiClient) Deploy(deployPayload *DeployPayload) ([]DeployResult, erro
 	if err != nil {
 		return nil, err
 	}
-
-	sort.Slice(deploys, func(i, j int) bool {
-		return strings.Compare(deploys[i].ADS.Name, deploys[j].ADS.Name) < 1
-	})
 
 	return deploys, nil
 }

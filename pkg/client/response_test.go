@@ -20,11 +20,24 @@ var failedResponseText = `{
 				"path": "/name/test",
 				"value": "baz",
 				"source": "about.json"
-			}
-		}]
+			}}, {
+		  "type": "INVALID",
+		  "message": "/asdlkjf is not a valid config field pointer",
+		  "field": {
+			"path": "/asdlkjf",
+			"value": "",
+			"source": "boober-utv/reference.json"
+		  }}, {
+		  "type": "MISSING",
+		  "message": "Name must be alphanumeric and no more than 40 characters",
+		  "field": {
+			"path": "/name",
+			"value": "",
+			"source": "Unknown"
+		  }}]
 	}],
-	"count": 1
-	}`
+	"count": 3
+}`
 
 var responseText = `{
 	"success": true,
@@ -100,4 +113,35 @@ func TestResponse_ParseFirstItem(t *testing.T) {
 
 	version, _ := ac.Versions["about.json"]
 	assert.Equal(t, "tewt", version)
+}
+
+func TestResponse_ToErrorResponse(t *testing.T) {
+
+	var response Response
+	err := json.Unmarshal([]byte(failedResponseText), &response)
+	if err != nil {
+		t.Error(err)
+	}
+
+	errorResponse, err := response.ToErrorResponse()
+	assert.NoError(t, err)
+
+	assert.Len(t, errorResponse.IllegalFieldErrors, 1)
+	assert.Len(t, errorResponse.InvalidFieldErrors, 1)
+	assert.Len(t, errorResponse.MissingFieldErrors, 1)
+
+	assert.Len(t, errorResponse.GetAllErrors(), 3)
+}
+
+func TestErrorResponse_SetMessage(t *testing.T) {
+
+	errorResponse := &ErrorResponse{
+		UniqueErrors: make(map[string]bool),
+	}
+
+	assert.Equal(t, false, errorResponse.ContainsError)
+	errorResponse.SetMessage("Failed")
+	assert.Equal(t, true, errorResponse.ContainsError)
+	assert.Equal(t, "Failed\n", errorResponse.String())
+
 }

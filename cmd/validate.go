@@ -22,7 +22,7 @@ var validateCmd = &cobra.Command{
 			return
 		}
 		if res != nil {
-			res.PrintAllErrors()
+			fmt.Println(res)
 		} else {
 			fmt.Println("OK")
 		}

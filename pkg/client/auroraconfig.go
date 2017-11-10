@@ -29,7 +29,7 @@ type AuroraConfigFile struct {
 
 func (f *AuroraConfigFile) ToPrettyJson() string {
 
-	data, err := json.MarshalIndent(f.Contents, "", " ")
+	data, err := json.MarshalIndent(f.Contents, "", "  ")
 	if err != nil {
 		return ""
 	}
@@ -166,7 +166,7 @@ func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatch
 	}
 
 	if !response.Success {
-		return errors.New("patch was not successful")
+		return errors.New(response.Message)
 	}
 
 	return nil

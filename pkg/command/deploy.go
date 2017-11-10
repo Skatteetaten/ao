@@ -134,6 +134,10 @@ func Deploy(args []string, api *client.ApiClient, clusters map[string]*config.Cl
 
 	allResults := deployToReachableClusters(options.Affiliation, options.Token, clusters, payload)
 
+	sort.Slice(allResults, func(i, j int) bool {
+		return strings.Compare(allResults[i].ADS.Name, allResults[j].ADS.Name) < 1
+	})
+
 	return allResults
 }
 

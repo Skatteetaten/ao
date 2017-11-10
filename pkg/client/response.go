@@ -84,6 +84,11 @@ func NewErrorResponse(message string) *ErrorResponse {
 
 func (e *ErrorResponse) String() string {
 	var status string
+
+	if e.ContainsError {
+		status += fmt.Sprintf("%s\n", e.message)
+	}
+
 	messages := e.GetAllErrors()
 	for _, message := range messages {
 		status += fmt.Sprintf("%s", message)
@@ -100,21 +105,6 @@ func (e *ErrorResponse) SetMessage(m string) {
 func (e *ErrorResponse) GetAllErrors() []string {
 	errorMessages := append(e.IllegalFieldErrors, e.InvalidFieldErrors...)
 	return append(errorMessages, e.MissingFieldErrors...)
-}
-
-func (e *ErrorResponse) PrintAllErrors() {
-	allErrors := e.GetAllErrors()
-
-	if e.ContainsError {
-		fmt.Println(e.message)
-	}
-
-	for i, e := range allErrors {
-		fmt.Println(e)
-		if len(allErrors)-1 > i {
-			fmt.Println()
-		}
-	}
 }
 
 func (e *ErrorResponse) Contains(key string) bool {

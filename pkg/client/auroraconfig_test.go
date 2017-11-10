@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -145,7 +146,7 @@ func TestApiClient_GetAuroraConfigFile(t *testing.T) {
 	t.Run("Should return error message when AuroraConfigFile return success false", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
-			response := `{"status": false}`
+			response := `{"success": false}`
 			w.Write([]byte(response))
 		}))
 		defer ts.Close()
@@ -157,13 +158,78 @@ func TestApiClient_GetAuroraConfigFile(t *testing.T) {
 		assert.EqualError(t, err, "Failed getting file about.json")
 		assert.Empty(t, file)
 	})
-
 }
 
-func TestFileNames_FilterDeployments(t *testing.T) {
+func TestApiClient_PatchAuroraConfigFile(t *testing.T) {
+	t.Run("", func(t *testing.T) {
+		fileName := "test/foo.json"
+		getAuroraConfigPath := fmt.Sprintf("/affiliation/%s/auroraconfigfile/%s", affiliation, fileName)
+
+		res := &Response{
+			Success: true,
+			Message: "OK",
+			Items:   json.RawMessage(`[{"name":"test/foo.json","contents":"{}","version":"abbcc"}]`),
+			Count:   1,
+		}
+
+		getResponse, err := json.Marshal(&res)
+		if err != nil {
+			t.Error(err)
+		}
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.WriteHeader(http.StatusOK)
+
+			var response []byte
+			if req.URL.Path == getAuroraConfigPath && req.Method == http.MethodGet {
+				response = getResponse
+			} else {
+				response = []byte(`{"success": true}`)
+			}
+
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewApiClient(ts.URL, "", affiliation)
+
+		op := JsonPatchOp{
+			OP:    "add",
+			Path:  "/version",
+			Value: "develop-SNAPSHOT",
+		}
+
+		err = api.PatchAuroraConfigFile(fileName, op)
+		if err != nil {
+			t.Error(err)
+		}
+	})
+}
+
+func TestFileNames_Filter(t *testing.T) {
 	fileNames := FileNames{"about.json", "boober.json", "test/about.json", "test/boober.json"}
 	deployments := fileNames.GetDeployments()
+	environments := fileNames.GetEnvironments()
+	applications := fileNames.GetApplications()
 
 	assert.Len(t, deployments, 1)
+	assert.Len(t, environments, 1)
+	assert.Len(t, applications, 1)
 	assert.Equal(t, "test/boober", deployments[0])
+	assert.Equal(t, "test", environments[0])
+	assert.Equal(t, "boober", applications[0])
+}
+
+func TestAuroraConfigFile_ToPrettyJson(t *testing.T) {
+	acf := &AuroraConfigFile{
+		Name:     "about.json",
+		Version:  "aaabb",
+		Override: false,
+		Contents: json.RawMessage(`{"type":"development"}`),
+	}
+
+	expected := `{
+  "type": "development"
+}`
+	assert.Equal(t, expected, acf.ToPrettyJson())
 }
