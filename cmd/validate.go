@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
 )
@@ -9,26 +10,28 @@ import (
 var validateCmd = &cobra.Command{
 	Use:   "validate",
 	Short: "Validate local AuroraConfig",
-	Run: func(cmd *cobra.Command, args []string) {
-		ac, err := versioncontrol.CollectFiles()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		res, err := DefaultApiClient.ValidateAuroraConfig(ac)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		if res != nil {
-			fmt.Println(res)
-		} else {
-			fmt.Println("OK")
-		}
-	},
+	RunE:  Validate,
 }
 
 func init() {
 	RootCmd.AddCommand(validateCmd)
+}
+
+func Validate(cmd *cobra.Command, args []string) error {
+	ac, err := versioncontrol.CollectFiles()
+	if err != nil {
+		return err
+	}
+
+	res, err := DefaultApiClient.ValidateAuroraConfig(ac)
+	if err != nil {
+		return err
+	}
+	if res != nil {
+		return errors.New(res.String())
+	} else {
+		fmt.Println("OK")
+	}
+
+	return nil
 }

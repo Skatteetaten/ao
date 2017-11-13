@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/config"
@@ -43,7 +44,8 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 		return nil, err
 	}
 
-	req.Header.Set("User-Agent", "ao/"+config.Version)
+	userAgentHeader := fmt.Sprintf("Go-http-client/1.1 ao/%s", config.Version)
+	req.Header.Set("User-Agent", userAgentHeader)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+api.Token)

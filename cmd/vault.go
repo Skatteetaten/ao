@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/skatteetaten/ao/pkg/client"
-	"github.com/skatteetaten/ao/pkg/command"
 	"github.com/skatteetaten/ao/pkg/editcmd"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/skatteetaten/ao/pkg/vault"
 	"github.com/spf13/cobra"
+	"sort"
 )
 
 var vaultAddGroup string
@@ -233,12 +233,12 @@ To access a secret, use the get secret command.`,
 			}
 		}
 
-		table := command.GetVaultTable(vaults)
+		table := GetVaultTable(vaults)
 		if len(table) == 1 {
 			fmt.Println("No vaults available")
 			return
 		}
-		command.DefaultTablePrinter(table)
+		DefaultTablePrinter(table)
 	},
 }
 
@@ -256,4 +256,25 @@ func init() {
 	vaultCreateCmd.Flags().StringVarP(&vaultFolder, "folder", "f", "", "Creates a vault from a set of secret files")
 	vaultPermissionsCmd.Flags().StringVarP(&vaultAddGroup, "add-group", "", "", "Add a group permission to the vault")
 	vaultPermissionsCmd.Flags().StringVarP(&vaultRemoveGroup, "remove-group", "", "", "Remove a group permission from the vault")
+}
+
+func GetVaultTable(vaults []*client.AuroraSecretVault) []string {
+	table := []string{"VAULT\tPERMISSIONS\tSECRET\t"}
+
+	sort.Slice(vaults, func(i, j int) bool {
+		return strings.Compare(vaults[i].Name, vaults[j].Name) < 1
+	})
+
+	for _, vault := range vaults {
+		name := vault.Name
+		permissions := vault.Permissions.GetGroups()
+
+		for s := range vault.Secrets {
+			line := fmt.Sprintf("%s\t%s\t%s\t", name, permissions, s)
+			table = append(table, line)
+			name = " "
+		}
+	}
+
+	return table
 }

@@ -3,18 +3,15 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/skatteetaten/ao/pkg/command"
-	pkgDelteCmd "github.com/skatteetaten/ao/pkg/deletecmd"
+	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
+	"sort"
 )
 
 var forceFlag bool
-var deletecmdObject = &pkgDelteCmd.DeletecmdClass{
-	Configuration: oldConfig,
-	Force:         forceFlag,
-}
 
 var deleteCmd = &cobra.Command{
 	Use:   "delete app <appname> | env <envname> | deployment <envname> <appname> | file <filename> | vault <vaultname>",
@@ -45,7 +42,7 @@ var deleteAppCmd = &cobra.Command{
 			return
 		}
 
-		err := command.DeleteFilesFor(fuzzy.APP_FILTER, args[0], DefaultApiClient)
+		err := DeleteFilesFor(fuzzy.APP_FILTER, args[0], DefaultApiClient)
 		if err != nil {
 			fmt.Println(err)
 		} else {
@@ -64,7 +61,7 @@ var deleteEnvCmd = &cobra.Command{
 			return
 		}
 
-		err := command.DeleteFilesFor(fuzzy.ENV_FILTER, args[0], DefaultApiClient)
+		err := DeleteFilesFor(fuzzy.ENV_FILTER, args[0], DefaultApiClient)
 		if err != nil {
 			fmt.Println(err)
 		} else {
@@ -82,13 +79,13 @@ var deleteFileCmd = &cobra.Command{
 			return
 		}
 
-		files, err := command.MultiSelectFile(args[0], DefaultApiClient)
+		files, err := MultiSelectFile(args[0], DefaultApiClient)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		command.DefaultTablePrinter(command.GetFilesTable(files))
+		DefaultTablePrinter(GetFilesTable(files))
 		message := fmt.Sprintf("Do you want to delete %d file(s)?", len(files))
 		shouldDelete := prompt.Confirm(message)
 
@@ -96,7 +93,7 @@ var deleteFileCmd = &cobra.Command{
 			return
 		}
 
-		err = command.DeleteFiles(files, DefaultApiClient)
+		err = DeleteFiles(files, DefaultApiClient)
 		if err != nil {
 			fmt.Println(err)
 		} else {
@@ -112,4 +109,101 @@ func init() {
 	deleteCmd.AddCommand(deleteFileCmd)
 
 	deleteCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "ignore nonexistent files and arguments, never prompt")
+}
+
+func MultiSelectFile(search string, api *client.ApiClient) ([]string, error) {
+	var files []string
+	fileNames, err := api.GetFileNames()
+	if err != nil {
+		return files, err
+	}
+
+	options, err := fuzzy.SearchForFile(search, fileNames)
+	if err != nil {
+		return files, err
+	}
+
+	if len(options) > 1 {
+		message := fmt.Sprintf("Matched %d files. Which file do you want?", len(options))
+		files = prompt.MultiSelect(message, options)
+	} else if len(options) == 1 {
+		files = []string{options[0]}
+	}
+
+	if len(files) == 0 {
+		return files, errors.New("No file to edit")
+	}
+
+	return files, nil
+}
+
+func DeleteFilesFor(mode fuzzy.FilterMode, search string, api *client.ApiClient) error {
+
+	fileNames, err := api.GetFileNames()
+	if err != nil {
+		return err
+	}
+
+	files, err := findAllFiles(mode, search, fileNames)
+	if err != nil {
+		return err
+	}
+
+	table := GetFilesTable(files)
+	DefaultTablePrinter(table)
+	message := fmt.Sprintf("Do you want to delete %s?", search)
+	deleteAll := prompt.Confirm(message)
+
+	if !deleteAll {
+		return errors.New("Delete aborted")
+	}
+
+	return DeleteFiles(files, api)
+}
+
+func DeleteFiles(files []string, api *client.ApiClient) error {
+
+	ac, err := api.GetAuroraConfig()
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		delete(ac.Files, file)
+	}
+
+	res, err := api.SaveAuroraConfig(ac)
+	if err != nil {
+		return err
+	}
+
+	if res != nil {
+		return errors.New(res.String())
+	}
+
+	return nil
+}
+
+func findAllFiles(mode fuzzy.FilterMode, search string, fileNames client.FileNames) ([]string, error) {
+
+	matches := fuzzy.FindAllDeploysFor(mode, search, fileNames.GetDeployments())
+
+	if len(matches) == 0 {
+		return nil, errors.New("No matches")
+	}
+
+	if mode == fuzzy.APP_FILTER {
+		matches = append(matches, search)
+	} else {
+		matches = append(matches, search+"/about")
+	}
+
+	sort.Strings(matches)
+
+	var files []string
+	for _, m := range matches {
+		files = append(files, m+".json")
+	}
+
+	return files, nil
 }

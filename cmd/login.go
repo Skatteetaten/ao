@@ -9,12 +9,14 @@ import (
 	"os"
 )
 
-var userName string
-var recreateConfig bool
-var apiCluster string
-var doUpdate bool
+var (
+	userName       string
+	recreateConfig bool
+	apiCluster     string
+	doUpdate       bool
+	localhost      bool
+)
 
-// loginCmd represents the login command
 var loginCmd = &cobra.Command{
 	Aliases: []string{"affiliation"},
 	Use:     "login <Affiliation>",
@@ -51,7 +53,7 @@ one is available.
 			APICluster:  apiCluster,
 			Affiliation: affiliation,
 			UserName:    userName,
-			LocalHost:   persistentOptions.Localhost,
+			LocalHost:   localhost,
 		}
 
 		ao.Login(configLocation, options)
@@ -69,4 +71,6 @@ func init() {
 	loginCmd.Flags().BoolVarP(&recreateConfig, "recreate-config", "", false, "Removes current cluster config and recreates")
 	loginCmd.Flags().StringVarP(&apiCluster, "apicluster", "a", "", "Set a specific API cluster to use")
 	loginCmd.Flags().BoolVarP(&doUpdate, "do-update", "", false, "Do an update if available")
+	loginCmd.Flags().BoolVarP(&localhost, "localhost", "l", false, "Development mode")
+	loginCmd.Flags().MarkHidden("localhost")
 }

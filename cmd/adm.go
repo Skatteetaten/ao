@@ -11,9 +11,6 @@ var admCmd = &cobra.Command{
 	Use:   "adm",
 	Short: "Perform administrative commands on AO or other resources not related to vaults of AuroraConfig",
 	Long:  `Can be used to retrieve one file or all the files from the respository.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Usage()
-	},
 }
 
 var getClusterCmd = &cobra.Command{
@@ -26,44 +23,21 @@ API cluster.
 The Deploy command will send the same request to all the reachable clusters, allowing each to filter deploys
 intended for that particular cluster.`,
 	Aliases: []string{"clusters"},
-	Run: func(cmd *cobra.Command, args []string) {
-		clusterName := ""
-
-		if len(args) > 0 {
-			clusterName = args[0]
-		}
-
-		allClusters, _ := cmd.Flags().GetBool("all")
-		ao.PrintClusters(clusterName, allClusters)
-	},
+	Run:     PrintClusters,
 }
 
 var updateClustersCmd = &cobra.Command{
 	Use:   "update-clusters",
 	Short: "Will update clusters",
 	Long:  `The command will updated cluster with latest clusterUrlPattern and booberUrlPattern.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ao.InitClusters()
-		ao.SelectApiCluster()
-		ao.Write(configLocation)
-	},
+	Run:   UpdateClusters,
 }
 
 var recreateConfigCmd = &cobra.Command{
 	Use:   "recreate-config",
 	Short: "adm recreate-config",
 	Long:  `The command will recreate the .ao.json file.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		conf := &config.DefaultAOConfig
-		conf.InitClusters()
-		conf.SelectApiCluster()
-
-		cluster, _ := cmd.Flags().GetString("cluster")
-		if cluster != "" {
-			conf.AvailableClusters = []string{cluster}
-		}
-		conf.Write(configLocation)
-	},
+	Run:   RecreateConfig,
 }
 
 var completionCmd = &cobra.Command{
@@ -76,14 +50,7 @@ By typing
 	source ./ao.sh
 you will have bash completion in ao
 To persist this across login sessions, please update your .bashrc file.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := RootCmd.GenBashCompletionFile("ao.sh"); err == nil {
-			wd, _ := os.Getwd()
-			fmt.Println("Bash completion file created at", wd+"/ao.sh")
-		} else {
-			fmt.Println(err)
-		}
-	},
+	RunE: BashCompletion,
 }
 
 func init() {
@@ -93,9 +60,62 @@ func init() {
 	admCmd.AddCommand(recreateConfigCmd)
 	admCmd.AddCommand(updateClustersCmd)
 
-	// Get cluster
 	getClusterCmd.Flags().BoolP("all", "a", false, "Show all clusters, not just the reachable ones")
+}
 
-	// Recreate config
-	recreateConfigCmd.Flags().StringP("cluster", "c", "", "Limit recreate-config to the given Tax Norway cluster")
+func PrintClusters(cmd *cobra.Command, args []string) {
+	allClusters, _ := cmd.Flags().GetBool("all")
+	table := []string{"\tCLUSTER NAME\tREACHABLE\tLOGGED IN\tAPI\tURL"}
+
+	for name, cluster := range ao.Clusters {
+		if !(cluster.Reachable || allClusters) {
+			continue
+		}
+		reachable := ""
+		if cluster.Reachable {
+			reachable = "Yes"
+		}
+
+		loggedIn := ""
+		if cluster.HasValidToken() {
+			loggedIn = "Yes"
+		}
+
+		api := ""
+		if name == ao.APICluster {
+			api = "Yes"
+		}
+		line := fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s\t", name, reachable, loggedIn, api, cluster.Url)
+		table = append(table, line)
+	}
+
+	DefaultTablePrinter(table)
+}
+
+func UpdateClusters(cmd *cobra.Command, args []string) {
+	ao.InitClusters()
+	ao.SelectApiCluster()
+	ao.Write(configLocation)
+}
+
+func RecreateConfig(cmd *cobra.Command, args []string) {
+	conf := &config.DefaultAOConfig
+	conf.InitClusters()
+	conf.SelectApiCluster()
+
+	cluster, _ := cmd.Flags().GetString("cluster")
+	if cluster != "" {
+		conf.AvailableClusters = []string{cluster}
+	}
+	conf.Write(configLocation)
+}
+
+func BashCompletion(cmd *cobra.Command, args []string) error {
+	err := RootCmd.GenBashCompletionFile("ao.sh")
+	if err != nil {
+		return err
+	}
+	wd, _ := os.Getwd()
+	fmt.Println("Bash completion file created at", wd+"/ao.sh")
+	return nil
 }

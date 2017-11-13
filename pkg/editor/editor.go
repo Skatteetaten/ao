@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -20,11 +21,11 @@ const editPattern = `# Name: %s
 
 type OnSaveFunc func(modifiedContent string) ([]string, error)
 
-func Edit(content string, fileName string, onSave OnSaveFunc) (string, error) {
+func Edit(content string, fileName string, onSave OnSaveFunc) error {
 
 	tempFilePath, err := CreateTempFile()
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer func() {
 		err := os.Remove(tempFilePath)
@@ -42,27 +43,27 @@ func Edit(content string, fileName string, onSave OnSaveFunc) (string, error) {
 		contentToEdit := fmt.Sprintf(editPattern, fileName, editErrors, currentContent)
 		err = ioutil.WriteFile(tempFilePath, []byte(contentToEdit), 0700)
 		if err != nil {
-			return "", err
+			return err
 		}
 
 		err = OpenEditor(tempFilePath)
 		if err != nil {
-			return "", err
+			return err
 		}
 
 		fileContent, err := ioutil.ReadFile(tempFilePath)
 		if err != nil {
-			return "", err
+			return err
 		}
 
 		currentContent = stripComments(string(fileContent))
 		if previousContent == currentContent {
-			return cancelMessage, nil
+			return errors.New(cancelMessage)
 		}
 
 		originalHasChanges := HasContentChanged(originalContent, currentContent)
 		if !originalHasChanges {
-			return cancelMessage, nil
+			return errors.New(cancelMessage)
 		}
 
 		if !json.Valid([]byte(currentContent)) {
@@ -74,14 +75,14 @@ func Edit(content string, fileName string, onSave OnSaveFunc) (string, error) {
 		if validationErrors != nil {
 			editErrors = addErrorMessage(validationErrors)
 		} else if err != nil {
-			return "", err
+			return err
 		} else {
 			// Content has been saved successfully
 			break
 		}
 	}
 
-	return fmt.Sprintf("%s edited", fileName), nil
+	return nil
 }
 
 func HasContentChanged(original, edited string) bool {

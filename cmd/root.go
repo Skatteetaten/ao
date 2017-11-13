@@ -1,14 +1,21 @@
 package cmd
 
 import (
-	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/cmdoptions"
-	"github.com/skatteetaten/ao/pkg/command"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/configuration"
+	"github.com/skatteetaten/ao/pkg/log"
 	"github.com/spf13/cobra"
 	"os"
+)
+
+var (
+	logLevel        string
+	prettyLog       bool
+	persistentHost  string
+	persistentToken string
 )
 
 // TODO: UPDATE DOCUMENTATION
@@ -39,44 +46,16 @@ This application has two main parts.
 1. manage the AuroraConfig configuration via cli
 2. apply the aoc configuration to the clusters
 `,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		home, _ := os.LookupEnv("HOME")
-		configLocation = home + "/.ao.json"
-
-		ao, DefaultApiClient = command.Initialize(configLocation, command.InitializeOptions{
-			Host:        persistentOptions.ServerApi,
-			Token:       persistentOptions.Token,
-			LogLevel:    persistentOptions.LogLevel,
-			PrettyLog:   persistentOptions.Pretty,
-			CommandName: cmd.Name(),
-			CommandPath: cmd.CommandPath(),
-		})
-	},
-}
-
-// Execute adds all child commands to the root command sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
+	PersistentPreRunE: Initialize,
 }
 
 func init() {
 	// TODO: Mark as hidden?
-	RootCmd.PersistentFlags().StringVarP(&persistentOptions.LogLevel, "loglevel", "", "fatal", "Set loglevel. Valid log levels are [info, debug, warning, error, fatal]")
+	RootCmd.PersistentFlags().StringVarP(&logLevel, "loglevel", "", "fatal", "Set loglevel. Valid log levels are [info, debug, warning, error, fatal]")
+	RootCmd.PersistentFlags().BoolVarP(&prettyLog, "prettylog", "", false, "Pretty print log")
+	RootCmd.PersistentFlags().StringVarP(&persistentHost, "serverapi", "", "", "Override default server API address")
+	RootCmd.PersistentFlags().StringVarP(&persistentToken, "token", "", "", "Token to be used for serverapi connections")
 
-	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Pretty, "prettylog",
-		"", false, "Pretty print log")
-
-	RootCmd.PersistentFlags().StringVarP(&persistentOptions.ServerApi, "serverapi",
-		"", "", "Override default server API address")
-	RootCmd.PersistentFlags().StringVarP(&persistentOptions.Token, "token",
-		"", "", "Token to be used for serverapi connections")
-
-	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Localhost, "localhost", "l", false, "Send all request to localhost api on port 8080")
-	RootCmd.PersistentFlags().MarkHidden("localhost")
 	// TODO: Rework
 	//setHelpTemplate(RootCmd)
 }
@@ -102,4 +81,67 @@ Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
 Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
 `
 	root.SetHelpTemplate(tmp)
+}
+
+func Initialize(cmd *cobra.Command, args []string) error {
+
+	cmd.SilenceErrors = true
+	cmd.SilenceUsage = true
+
+	home, _ := os.LookupEnv("HOME")
+	configLocation = home + "/.ao.json"
+
+	err := setLogging(logLevel, prettyLog)
+	if err != nil {
+		return err
+	}
+
+	ao, err = config.LoadConfigFile(configLocation)
+	if err != nil {
+		logrus.Error(err)
+	}
+
+	if ao == nil {
+		logrus.Info("Creating new config")
+		ao = &config.DefaultAOConfig
+		ao.InitClusters()
+		ao.SelectApiCluster()
+		ao.Write(configLocation)
+	}
+
+	apiCluster := ao.Clusters[ao.APICluster]
+	if apiCluster == nil {
+		apiCluster = &config.Cluster{}
+	}
+
+	DefaultApiClient = client.NewApiClient(apiCluster.BooberUrl, apiCluster.Token, ao.Affiliation)
+
+	if persistentHost != "" {
+		DefaultApiClient.Host = persistentHost
+	} else if ao.Localhost {
+		// TODO: Move to config?
+		DefaultApiClient.Host = "http://localhost:8080"
+	}
+
+	if persistentToken != "" {
+		DefaultApiClient.Token = persistentToken
+	}
+
+	return nil
+}
+
+func setLogging(level string, pretty bool) error {
+	logrus.SetOutput(os.Stdout)
+
+	lvl, err := logrus.ParseLevel(level)
+	if err != nil {
+		return err
+	}
+	logrus.SetLevel(lvl)
+
+	if pretty {
+		logrus.SetFormatter(&log.PrettyFormatter{})
+	}
+
+	return nil
 }

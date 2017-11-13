@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/pkg/printutil"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"io/ioutil"
 	"os"
@@ -148,44 +147,4 @@ func (ao *AOConfig) replaceAO(data []byte) error {
 	}
 
 	return nil
-}
-
-// TODO: Move
-func (ao *AOConfig) PrintClusters(clusterName string, allClusters bool) {
-
-	var headers []string = []string{"CLUSTER NAME", "REACHABLE", "LOGGED IN", "API", "URL"}
-	var clusterNames []string
-	var reachable []string
-	var loggedIn []string
-	var api []string
-	var url []string
-
-	for name, cluster := range ao.Clusters {
-		if cluster.Reachable || allClusters {
-			if name == clusterName || clusterName == "" {
-				clusterNames = append(clusterNames, name)
-				reachableColumn := ""
-				if cluster.Reachable {
-					reachableColumn = "Yes"
-				}
-				reachable = append(reachable, reachableColumn)
-
-				loggedInColumn := ""
-				if cluster.HasValidToken() {
-					loggedInColumn = "Yes"
-				}
-				loggedIn = append(loggedIn, loggedInColumn)
-
-				apiColumn := ""
-				if name == ao.APICluster {
-					apiColumn = "Yes"
-				}
-				api = append(api, apiColumn)
-
-				url = append(url, cluster.Url)
-			}
-		}
-	}
-
-	fmt.Println(printutil.FormatTable(headers, clusterNames, reachable, loggedIn, api, url))
 }
