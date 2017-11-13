@@ -12,6 +12,8 @@ import (
 	"os"
 )
 
+// TODO: UPDATE DOCUMENTATION
+
 const rootLong = `A command line interface that interacts with the Boober API
 to enable the user to manipulate the Aurora Config for an affiliation, and to
  deploy one or more application.
@@ -25,13 +27,9 @@ var (
 	prettyLog       bool
 	persistentHost  string
 	persistentToken string
-)
 
-// TODO: UPDATE DOCUMENTATION
-
-// DefaultApiClient will use APICluster from ao config as default values
-// if persistent token and/or server api url is specified these will override default values
-var (
+	// DefaultApiClient will use APICluster from ao config as default values
+	// if persistent token and/or server api url is specified these will override default values
 	DefaultApiClient *client.ApiClient
 	ao               *config.AOConfig
 	configLocation   string
