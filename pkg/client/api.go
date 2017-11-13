@@ -64,12 +64,26 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 		return nil, err
 	}
 
-	// TODO: Create proper error for each code
-	errorCodes := []int{http.StatusNotFound, http.StatusForbidden, http.StatusInternalServerError, http.StatusServiceUnavailable}
-	for _, c := range errorCodes {
-		if res.StatusCode == c {
-			return nil, errors.New(string(body))
-		}
+	var fields logrus.Fields
+	err = json.Unmarshal(body, &fields)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode > 399 {
+		logrus.WithFields(fields).Error("Request Error")
+	}
+
+	switch res.StatusCode {
+	case http.StatusNotFound:
+		return nil, errors.Errorf("Resource %s not found", endpoint)
+	case http.StatusForbidden:
+		return nil, errors.New("Token has expired. Please login: ao login <affiliation>")
+	case http.StatusInternalServerError:
+		logrus.WithFields(fields).Fatal("Unexpected error")
+		return nil, errors.Errorf("Unexpected error from %s", url)
+	case http.StatusServiceUnavailable:
+		return nil, errors.Errorf("Service unavailable %s", api.Host)
 	}
 
 	var response Response
@@ -78,21 +92,17 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		response = Response{
-			Success: true,
-			Message: res.Status,
-		}
 	}
 
 	logrus.WithFields(logrus.Fields{
 		"status":  res.StatusCode,
-		"url":     api.Host + endpoint,
+		"url":     url,
 		"success": response.Success,
 		"message": response.Message,
 		"count":   response.Count,
 	}).Info("Response")
-	logrus.Debug("ResponseBody", string(body))
+
+	logrus.WithFields(fields).Debug("ResponseBody")
 
 	return &response, nil
 }
