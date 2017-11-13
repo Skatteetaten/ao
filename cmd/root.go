@@ -137,10 +137,7 @@ func setLogging(level string, pretty bool) error {
 const customHelpTemplate = `{{.Long}}
 
 Usage:
-  {{.CommandPath}} [command] [flags]{{if .HasExample}}
-
-Examples:
-{{.Example}}{{end}}{{if .HasAvailableSubCommands}}
+  {{.CommandPath}} [command] [flags]
 
 Basic Commands:{{range .Commands}}{{if (and (eq (index .Annotations "type") "") (ne .Name "help"))}}
   {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
@@ -149,16 +146,10 @@ File Commands:{{range .Commands}}{{if eq (index .Annotations "type") "file"}}
   {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
 
 Util Commands:{{range .Commands}}{{if eq (index .Annotations "type") "util"}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
 
 Flags:
-{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}
-
-Global Flags:
-{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
-
-Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
-  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableSubCommands}}
 
 Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
 `
