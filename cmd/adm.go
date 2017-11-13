@@ -8,9 +8,10 @@ import (
 )
 
 var admCmd = &cobra.Command{
-	Use:   "adm",
-	Short: "Perform administrative commands on AO or other resources not related to vaults of AuroraConfig",
-	Long:  `Can be used to retrieve one file or all the files from the respository.`,
+	Use:         "adm",
+	Short:       "Perform administrative commands on AO or other resources not related to vaults of AuroraConfig",
+	Long:        `Can be used to retrieve one file or all the files from the respository.`,
+	Annotations: map[string]string{"type": "util"},
 }
 
 var getClusterCmd = &cobra.Command{

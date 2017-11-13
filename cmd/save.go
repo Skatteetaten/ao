@@ -9,9 +9,10 @@ import (
 )
 
 var saveCmd = &cobra.Command{
-	Use:   "save",
-	Short: "Save changed, new and deleted files for AuroraConfig",
-	RunE:  Save,
+	Use:         "save",
+	Short:       "Save changed, new and deleted files for AuroraConfig",
+	Annotations: map[string]string{"type": "file"},
+	RunE:        Save,
 }
 
 func init() {

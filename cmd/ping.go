@@ -13,6 +13,7 @@ var pingCmd = &cobra.Command{
 	Short: "Checks for open connectivity from all nodes in the cluster to a specific ip address and port. ",
 	Long: `Invokes the network debug service in the Aurora Console
 to ping the specified address and port from each node.`,
+	Annotations: map[string]string{"type": "util"},
 	Run: func(cmd *cobra.Command, args []string) {
 
 		pingPort, _ := cmd.Flags().GetString("port")

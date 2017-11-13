@@ -8,9 +8,10 @@ import (
 )
 
 var pullCmd = &cobra.Command{
-	Use:   "pull",
-	Short: "Update local repo for AuroraConfig",
-	RunE:  Pull,
+	Use:         "pull",
+	Short:       "Update local repo for AuroraConfig",
+	Annotations: map[string]string{"type": "file"},
+	RunE:        Pull,
 }
 
 func init() {

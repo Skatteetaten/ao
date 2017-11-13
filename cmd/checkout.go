@@ -11,9 +11,10 @@ import (
 )
 
 var checkoutCmd = &cobra.Command{
-	Use:   "checkout",
-	Short: "Checkout AuroraConfig (git repository) for current affiliation",
-	RunE:  Checkout,
+	Use:         "checkout",
+	Short:       "Checkout AuroraConfig (git repository) for current affiliation",
+	Annotations: map[string]string{"type": "file"},
+	RunE:        Checkout,
 }
 
 func init() {

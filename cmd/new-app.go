@@ -47,6 +47,7 @@ If the folder is not empty, the command will return an error.
 If the generate-app is set to false, the generator will not be called, and the command will generate a set of Aurora config files based upon the arguments.
 
 If the artifactid is not given, it will default to the appname.`,
+	Annotations: map[string]string{"type": "util"},
 	Run: func(cmd *cobra.Command, args []string) {
 		newappcmdObject := newappcmd.NewappcmdClass{Configuration: oldConfig}
 		output, err := newappcmdObject.NewappCommand(args, newappArtifactId, newappCluster, newappEnv, newappGroupId, newappFolder, newappOutputfolder, newappType, newappVersion, newappGenerateApp, &persistentOptions, newappDeploy)

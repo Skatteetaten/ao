@@ -6,10 +6,11 @@ import (
 )
 
 var updateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "Check for available updates for the ao client, and downloads the update if available.",
-	Long:  `Available updates are searched for using a service in the OpenShift cluster.`,
-	RunE:  Update,
+	Use:         "update",
+	Short:       "Check for available updates for the ao client, and downloads the update if available.",
+	Long:        `Available updates are searched for using a service in the OpenShift cluster.`,
+	Annotations: map[string]string{"type": "util"},
+	RunE:        Update,
 }
 
 func init() {

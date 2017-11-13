@@ -8,10 +8,11 @@ import (
 )
 
 var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Shows the version of the ao client",
-	Long:  `Shows the version of the ao client application`,
-	RunE:  Version,
+	Use:         "version",
+	Short:       "Shows the version of the ao client",
+	Long:        `Shows the version of the ao client application`,
+	Annotations: map[string]string{"type": "util"},
+	RunE:        Version,
 }
 
 func init() {

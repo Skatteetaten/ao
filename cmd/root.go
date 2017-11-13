@@ -49,7 +49,9 @@ var RootCmd = &cobra.Command{
 	Use:               "ao",
 	Short:             "Aurora Openshift CLI",
 	Long:              rootLong,
+	SilenceUsage:      true,
 	PersistentPreRunE: Initialize,
+	RunE:              ShowAoHelp,
 }
 
 func init() {
@@ -57,6 +59,12 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&prettyLog, "prettylog", "", false, "Pretty print log")
 	RootCmd.PersistentFlags().StringVarP(&persistentHost, "serverapi", "", "", "Override default server API address")
 	RootCmd.PersistentFlags().StringVarP(&persistentToken, "token", "", "", "Token to be used for serverapi connections")
+
+}
+
+func ShowAoHelp(cmd *cobra.Command, args []string) error {
+	cmd.SetHelpTemplate(customUsageTemplate)
+	return cmd.Help()
 }
 
 func Initialize(cmd *cobra.Command, args []string) error {
@@ -126,25 +134,31 @@ func setLogging(level string, pretty bool) error {
 	return nil
 }
 
-func setHelpTemplate(root *cobra.Command) {
-	tmp := `{{.Long}}
+const customUsageTemplate = `{{.Long}}
+
 Usage:
-  {{.CommandPath}} [command] [flags]
+  {{.CommandPath}} [command] [flags]{{if .HasExample}}
 
-File Commands:{{range .Commands}}{{if (eq (index .Annotations "type") "file")}}
+Examples:
+{{.Example}}{{end}}{{if .HasAvailableSubCommands}}
+
+Basic Commands:{{range .Commands}}{{if (and (eq (index .Annotations "type") "") (ne .Name "help"))}}
   {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
 
-Other Commands:{{range .Commands}}{{if (eq (index .Annotations "type") "")}}
+File Commands:{{range .Commands}}{{if eq (index .Annotations "type") "file"}}
   {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
 
-{{if .HasPersistentFlags}}
+Util Commands:{{range .Commands}}{{if eq (index .Annotations "type") "util"}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+
+Flags:
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}
+
 Global Flags:
-{{.PersistentFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
+{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
 
 Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
   {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
 
 Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
 `
-	root.SetHelpTemplate(tmp)
-}
