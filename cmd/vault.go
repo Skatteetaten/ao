@@ -103,9 +103,7 @@ var vaultPermissionsCmd = &cobra.Command{
 var vaultRenameCmd = &cobra.Command{
 	Use:   "rename <vaultname> <new vaultname>",
 	Short: "Rename a vault",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("Not implemented")
-	},
+	RunE:  RenameVault,
 }
 
 func init() {
@@ -122,6 +120,37 @@ func init() {
 	vaultCreateCmd.Flags().StringVarP(&vaultFolder, "folder", "f", "", "Creates a vault from a set of secret files")
 	vaultPermissionsCmd.Flags().StringVarP(&vaultAddGroup, "add-group", "", "", "Add a group permission to the vault")
 	vaultPermissionsCmd.Flags().StringVarP(&vaultRemoveGroup, "remove-group", "", "", "Remove a group permission from the vault")
+}
+
+func RenameVault(cmd *cobra.Command, args []string) error {
+	if len(args) != 2 {
+		return cmd.Usage()
+	}
+
+	vault, err := DefaultApiClient.GetVault(args[1])
+	if vault != nil {
+		return errors.Errorf("Can't rename vault. %s already exists", args[1])
+	}
+
+	vault, err = DefaultApiClient.GetVault(args[0])
+	if err != nil {
+		return err
+	}
+
+	vault.Name = args[1]
+
+	err = DefaultApiClient.SaveVault(*vault, false)
+	if err != nil {
+		return err
+	}
+
+	err = DefaultApiClient.DeleteVault(args[0])
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%s has been renamed to %s\n", args[0], args[1])
+	return nil
 }
 
 func CreateVault(cmd *cobra.Command, args []string) error {
