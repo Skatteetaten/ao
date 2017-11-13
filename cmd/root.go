@@ -63,7 +63,7 @@ func init() {
 }
 
 func ShowAoHelp(cmd *cobra.Command, args []string) error {
-	cmd.SetHelpTemplate(customUsageTemplate)
+	cmd.SetHelpTemplate(customHelpTemplate)
 	return cmd.Help()
 }
 
@@ -134,7 +134,7 @@ func setLogging(level string, pretty bool) error {
 	return nil
 }
 
-const customUsageTemplate = `{{.Long}}
+const customHelpTemplate = `{{.Long}}
 
 Usage:
   {{.CommandPath}} [command] [flags]{{if .HasExample}}
