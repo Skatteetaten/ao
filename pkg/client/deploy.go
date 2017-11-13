@@ -29,14 +29,13 @@ type DeployPayload struct {
 	Deploy         bool                       `json:"deploy"`
 }
 
-// TODO: Remove error
-func NewDeployPayload(applications []string, overrides map[string]json.RawMessage) (*DeployPayload, error) {
+func NewDeployPayload(applications []string, overrides map[string]json.RawMessage) *DeployPayload {
 	applicationIds := createApplicationIds(applications)
 	return &DeployPayload{
 		ApplicationIds: applicationIds,
 		Overrides:      overrides,
 		Deploy:         true,
-	}, nil
+	}
 }
 
 func (api *ApiClient) Deploy(deployPayload *DeployPayload) ([]DeployResult, error) {
@@ -47,15 +46,13 @@ func (api *ApiClient) Deploy(deployPayload *DeployPayload) ([]DeployResult, erro
 
 	}
 
-	endpoint := fmt.Sprintf("/affiliation/%s/apply", api.Affiliation)
+	endpoint := fmt.Sprintf("/apply/%s", api.Affiliation)
 	response, err := api.Do(http.MethodPut, endpoint, payload)
 	if err != nil {
 		return nil, err
 	}
 
 	var deploys []DeployResult
-	// If deploy fail, the DeployResult will contain errors so we can't check if the
-	// Response is successfully or not
 	err = json.Unmarshal(response.Items, &deploys)
 	if err != nil {
 		return nil, err
@@ -65,7 +62,7 @@ func (api *ApiClient) Deploy(deployPayload *DeployPayload) ([]DeployResult, erro
 }
 
 func createApplicationIds(apps []string) []ApplicationId {
-	applicationIds := []ApplicationId{}
+	var applicationIds []ApplicationId
 	for _, app := range apps {
 		envApp := strings.Split(app, "/")
 		applicationIds = append(applicationIds, ApplicationId{

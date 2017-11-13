@@ -11,6 +11,8 @@ import (
 	"net/http"
 )
 
+const BooberApiVersion = "/v1"
+
 type ApiClient struct {
 	Host        string
 	Token       string
@@ -27,7 +29,7 @@ func NewApiClient(host, token, affiliation string) *ApiClient {
 
 func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Response, error) {
 
-	url := api.Host + endpoint
+	url := api.Host + BooberApiVersion + endpoint
 	logrus.WithFields(logrus.Fields{
 		"method": method,
 		"url":    url,

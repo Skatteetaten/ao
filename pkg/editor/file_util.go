@@ -9,13 +9,8 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 )
-
-const SpecIllegal = -1
-const SpecIsFile = 1
-const SpecIsFolder = 2
 
 func OpenEditor(filename string) error {
 	const vi = "vim"
@@ -59,31 +54,7 @@ func CreateTempFile() (string, error) {
 	if err != nil {
 		return "", errors.New("Unable to create temporary file: " + err.Error())
 	}
-	if isLegalFileFolder(tmpFile.Name()) != SpecIsFile {
-		return "", errors.New("Internal error: Illegal temp file name: " + tmpFile.Name())
-	}
-	filename := tmpFile.Name()
-	return filename, nil
-}
-
-func isLegalFileFolder(filespec string) int {
-	var err error
-	var absolutePath string
-	var fi os.FileInfo
-
-	absolutePath, err = filepath.Abs(filespec)
-	fi, err = os.Stat(absolutePath)
-	if os.IsNotExist(err) {
-		return SpecIllegal
-	} else {
-		switch mode := fi.Mode(); {
-		case mode.IsDir():
-			return SpecIsFolder
-		case mode.IsRegular():
-			return SpecIsFile
-		}
-	}
-	return SpecIllegal
+	return tmpFile.Name(), nil
 }
 
 func prettyPrintJson(jsonString string) string {

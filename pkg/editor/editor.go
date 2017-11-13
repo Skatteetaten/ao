@@ -21,7 +21,7 @@ const editPattern = `# Name: %s
 
 type OnSaveFunc func(modifiedContent string) ([]string, error)
 
-func Edit(content string, fileName string, onSave OnSaveFunc) error {
+func Edit(content string, name string, isJson bool, onSave OnSaveFunc) error {
 
 	tempFilePath, err := CreateTempFile()
 	if err != nil {
@@ -40,7 +40,7 @@ func Edit(content string, fileName string, onSave OnSaveFunc) error {
 
 	for {
 		previousContent := currentContent
-		contentToEdit := fmt.Sprintf(editPattern, fileName, editErrors, currentContent)
+		contentToEdit := fmt.Sprintf(editPattern, name, editErrors, currentContent)
 		err = ioutil.WriteFile(tempFilePath, []byte(contentToEdit), 0700)
 		if err != nil {
 			return err
@@ -61,14 +61,16 @@ func Edit(content string, fileName string, onSave OnSaveFunc) error {
 			return errors.New(cancelMessage)
 		}
 
-		originalHasChanges := HasContentChanged(originalContent, currentContent)
-		if !originalHasChanges {
-			return errors.New(cancelMessage)
-		}
+		if isJson {
+			originalHasChanges := HasContentChanged(originalContent, currentContent)
+			if !originalHasChanges {
+				return errors.New(cancelMessage)
+			}
 
-		if !json.Valid([]byte(currentContent)) {
-			editErrors = addErrorMessage([]string{"Invalid JSON format"})
-			continue
+			if !json.Valid([]byte(currentContent)) {
+				editErrors = addErrorMessage([]string{"Invalid JSON format"})
+				continue
+			}
 		}
 
 		validationErrors, err := onSave(currentContent)

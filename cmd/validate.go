@@ -29,9 +29,8 @@ func Validate(cmd *cobra.Command, args []string) error {
 	}
 	if res != nil {
 		return errors.New(res.String())
-	} else {
-		fmt.Println("OK")
 	}
+	fmt.Println("OK")
 
 	return nil
 }

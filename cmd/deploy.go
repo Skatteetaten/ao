@@ -15,11 +15,11 @@ import (
 )
 
 var (
+	affiliation string
 	overrides   []string
 	deployAll   bool
 	noPrompt    bool
 	version     string
-	affiliation string
 	cluster     string
 )
 
@@ -151,10 +151,7 @@ func Deploy(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	payload, err := client.NewDeployPayload(appsToDeploy, overrides)
-	if err != nil {
-		return err
-	}
+	payload := client.NewDeployPayload(appsToDeploy, overrides)
 
 	if version != "" {
 		if len(appsToDeploy) > 1 {

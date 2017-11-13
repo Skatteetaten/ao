@@ -36,12 +36,7 @@ func TestApiClient_Deploy(t *testing.T) {
 		applications := []string{"boober-utv/reference"}
 
 		api := NewApiClient(ts.URL, "test", affiliation)
-		deployPayload, err := NewDeployPayload(applications, make(map[string]json.RawMessage))
-		if err != nil {
-			t.Error(err)
-			return
-		}
-
+		deployPayload := NewDeployPayload(applications, make(map[string]json.RawMessage))
 		deploys, err := api.Deploy(deployPayload)
 
 		assert.NoError(t, err)

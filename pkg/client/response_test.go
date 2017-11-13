@@ -2,7 +2,6 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -66,7 +65,6 @@ func TestResponse_ParseItemsWithErrors(t *testing.T) {
 	if err == nil {
 		t.Error("Expected response to contain errors")
 	}
-	fmt.Println(err)
 }
 
 func TestResponse_ParseItems(t *testing.T) {

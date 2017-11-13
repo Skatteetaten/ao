@@ -21,7 +21,6 @@ func init() {
 }
 
 func Version(cmd *cobra.Command, args []string) error {
-
 	asJson, _ := cmd.Flags().GetBool("json")
 
 	if !asJson {

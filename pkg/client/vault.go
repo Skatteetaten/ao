@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"net/http"
@@ -9,17 +10,22 @@ import (
 
 type Secrets map[string]string
 
-func (s Secrets) ShowContent(name string) string {
-	secret := s[name]
-	if secret == "" {
-		return ""
+func (s Secrets) GetSecret(name string) (string, error) {
+	secret, found := s[name]
+	if !found {
+		return "", errors.Errorf("Did not find secret %s", name)
 	}
 	data, err := base64.StdEncoding.DecodeString(secret)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	return string(data)
+	return string(data), nil
+}
+
+func (s Secrets) AddSecret(name, content string) {
+	encoded := base64.StdEncoding.EncodeToString([]byte(content))
+	s[name] = encoded
 }
 
 type Permissions map[string][]string
@@ -28,7 +34,7 @@ func (p Permissions) AddGroup(group string) error {
 	groups := p["groups"]
 	for _, g := range groups {
 		if g == group {
-			return errors.New("Group already exists, " + group)
+			return errors.Errorf("Group %s already exists", group)
 		}
 	}
 	p["groups"] = append(groups, group)
@@ -47,7 +53,7 @@ func (p Permissions) DeleteGroup(group string) error {
 		}
 	}
 	if !hasDeleted {
-		return errors.New("Did not find group " + group)
+		return errors.Errorf("Did not find group %s", group)
 	}
 	return nil
 }
@@ -56,21 +62,38 @@ func (p Permissions) GetGroups() []string {
 	return p["groups"]
 }
 
-type AuroraSecretVault struct {
+type AuroraVaultInfo struct {
 	Name        string      `json:"name"`
-	Secrets     Secrets     `json:"secrets"`
 	Permissions Permissions `json:"permissions"`
+	Secrets     []string    `json:"secrets"`
+	Admin       bool        `json:"admin"`
 }
 
-func (api *ApiClient) GetVaults() ([]*AuroraSecretVault, error) {
-	endpoint := fmt.Sprintf("/affiliation/%s/vault", api.Affiliation)
+type AuroraSecretVault struct {
+	Name        string            `json:"name"`
+	Permissions Permissions       `json:"permissions"`
+	Secrets     Secrets           `json:"secrets"`
+	Versions    map[string]string `json:"versions"`
+}
+
+func NewAuroraSecretVault(name string) *AuroraSecretVault {
+	return &AuroraSecretVault{
+		Name:        name,
+		Permissions: make(Permissions),
+		Secrets:     make(Secrets),
+		Versions:    make(map[string]string),
+	}
+}
+
+func (api *ApiClient) GetVaults() ([]*AuroraVaultInfo, error) {
+	endpoint := fmt.Sprintf("/vault/%s", api.Affiliation)
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var vaults []*AuroraSecretVault
+	var vaults []*AuroraVaultInfo
 	err = response.ParseItems(&vaults)
 	if err != nil {
 		return nil, err
@@ -80,7 +103,7 @@ func (api *ApiClient) GetVaults() ([]*AuroraSecretVault, error) {
 }
 
 func (api *ApiClient) GetVault(vaultName string) (*AuroraSecretVault, error) {
-	endpoint := fmt.Sprintf("/affiliation/%s/vault/%s", api.Affiliation, vaultName)
+	endpoint := fmt.Sprintf("/vault/%s/%s", api.Affiliation, vaultName)
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
 	if err != nil {
@@ -96,9 +119,52 @@ func (api *ApiClient) GetVault(vaultName string) (*AuroraSecretVault, error) {
 }
 
 func (api *ApiClient) DeleteVault(vaultName string) error {
-	endpoint := fmt.Sprintf("/affiliation/%s/vault/%s", api.Affiliation, vaultName)
+	endpoint := fmt.Sprintf("/vault/%s/%s", api.Affiliation, vaultName)
 
 	response, err := api.Do(http.MethodDelete, endpoint, nil)
+	if err != nil {
+		return err
+	}
+
+	if !response.Success {
+		return errors.New(response.Message)
+	}
+
+	return nil
+}
+
+func (api *ApiClient) SaveVault(vault AuroraSecretVault, validate bool) error {
+	endpoint := fmt.Sprintf("/vault/%s", api.Affiliation)
+
+	payload := struct {
+		Vault            AuroraSecretVault `json:"vault"`
+		ValidateVersions bool              `json:"validateVersions"`
+	}{
+		Vault:            vault,
+		ValidateVersions: validate,
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	response, err := api.Do(http.MethodPut, endpoint, data)
+	if err != nil {
+		return err
+	}
+
+	if !response.Success {
+		return errors.New(response.Message)
+	}
+
+	return nil
+}
+
+func (api *ApiClient) UpdateSecretFile(vault, secret string, content []byte) error {
+	endpoint := fmt.Sprintf("/vault/%s/%s/secret/%s", api.Affiliation, vault, secret)
+
+	response, err := api.Do(http.MethodPut, endpoint, content)
 	if err != nil {
 		return err
 	}

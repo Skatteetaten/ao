@@ -46,7 +46,7 @@ func EditFile(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	onSave := func(modified string) ([]string, error) {
+	err = editor.Edit(string(file.Contents), file.Name, true, func(modified string) ([]string, error) {
 		file.Contents = json.RawMessage(modified)
 		res, err := DefaultApiClient.PutAuroraConfigFile(file)
 		if err != nil {
@@ -56,9 +56,8 @@ func EditFile(cmd *cobra.Command, args []string) error {
 			return res.GetAllErrors(), nil
 		}
 		return nil, nil
-	}
+	})
 
-	err = editor.Edit(string(file.Contents), file.Name, onSave)
 	if err != nil {
 		return err
 	}
