@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/collections"
 	"net/http"
 	"strings"
 )
@@ -50,24 +51,24 @@ func (f FileNames) GetDeployments() []string {
 }
 
 func (f FileNames) GetApplications() []string {
-	var filteredFiles []string
+	unique := collections.NewStringSet()
 	for _, file := range f {
 		if !strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
-			filteredFiles = append(filteredFiles, strings.TrimSuffix(file, ".json"))
+			unique.Add(strings.TrimSuffix(file, ".json"))
 		}
 	}
-	return filteredFiles
+	return unique.All()
 }
 
 func (f FileNames) GetEnvironments() []string {
-	var filteredFiles []string
+	unique := collections.NewStringSet()
 	for _, file := range f {
 		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
 			split := strings.Split(file, "/")
-			filteredFiles = append(filteredFiles, split[0])
+			unique.Add(split[0])
 		}
 	}
-	return filteredFiles
+	return unique.All()
 }
 
 func (api *ApiClient) GetFileNames() (FileNames, error) {
