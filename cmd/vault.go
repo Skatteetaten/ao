@@ -35,16 +35,13 @@ If the --folder / -f flag is given, ao will read all the files in <folder>, and 
 The secret will be named the same as the file.
 If no vaultname is given, the vault will be named the same as the <folder>.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) < 2 {
-			vaultname := ""
-			if len(args) == 1 {
-				vaultname = args[0]
-			}
-			vault.CreateVault(vaultname, config, vaultFolder, vaultAddUser, vaultAddGroup)
-		} else {
-			fmt.Println(cmd.UseLine())
+		if len(args) != 1 {
+			cmd.Usage()
+			return
 		}
+
+		vaultname := args[0]
+		vault.CreateVault(vaultname, config, vaultFolder, vaultAddUser, vaultAddGroup)
 	},
 }
 
