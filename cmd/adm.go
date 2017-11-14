@@ -90,7 +90,7 @@ func PrintClusters(cmd *cobra.Command, args []string) {
 		table = append(table, line)
 	}
 
-	DefaultTablePrinter(table)
+	DefaultTablePrinter(table, cmd.OutOrStdout())
 }
 
 func UpdateClusters(cmd *cobra.Command, args []string) {

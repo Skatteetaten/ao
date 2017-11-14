@@ -40,6 +40,6 @@ func TestApiClient_Deploy(t *testing.T) {
 		deploys, err := api.Deploy(deployPayload)
 
 		assert.NoError(t, err)
-		assert.Len(t, deploys, 1)
+		assert.Len(t, deploys.Results, 1)
 	})
 }

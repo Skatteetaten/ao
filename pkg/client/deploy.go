@@ -13,6 +13,12 @@ type ApplicationId struct {
 	Application string `json:"application"`
 }
 
+type DeployResults struct {
+	Message string
+	Success bool
+	Results []DeployResult
+}
+
 type DeployResult struct {
 	DeployId string `json:"deployId"`
 	ADS      struct {
@@ -38,7 +44,7 @@ func NewDeployPayload(applications []string, overrides map[string]json.RawMessag
 	}
 }
 
-func (api *ApiClient) Deploy(deployPayload *DeployPayload) ([]DeployResult, error) {
+func (api *ApiClient) Deploy(deployPayload *DeployPayload) (*DeployResults, error) {
 
 	payload, err := json.Marshal(deployPayload)
 	if err != nil {
@@ -52,13 +58,18 @@ func (api *ApiClient) Deploy(deployPayload *DeployPayload) ([]DeployResult, erro
 		return nil, err
 	}
 
-	var deploys []DeployResult
-	err = json.Unmarshal(response.Items, &deploys)
+	var deploys DeployResults
+	err = json.Unmarshal(response.Items, &deploys.Results)
 	if err != nil {
 		return nil, err
 	}
 
-	return deploys, nil
+	deploys.Message = response.Message
+	if response.Success {
+		deploys.Success = true
+	}
+
+	return &deploys, nil
 }
 
 func createApplicationIds(apps []string) []ApplicationId {

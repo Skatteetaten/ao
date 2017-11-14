@@ -27,7 +27,6 @@ func NewApiClient(host, token, affiliation string) *ApiClient {
 	}
 }
 
-// TODO: Deploymentspec
 func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Response, error) {
 
 	url := api.Host + BooberApiVersion + endpoint
@@ -68,7 +67,7 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 	var fields logrus.Fields
 	err = json.Unmarshal(body, &fields)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "field unmarshal")
 	}
 
 	if res.StatusCode > 399 {
@@ -91,7 +90,7 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 	if len(body) > 0 {
 		err = json.Unmarshal(body, &response)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "response unmarshal")
 		}
 	}
 

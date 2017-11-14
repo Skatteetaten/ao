@@ -8,6 +8,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
+	"io"
 	"sort"
 )
 
@@ -42,7 +43,7 @@ var deleteAppCmd = &cobra.Command{
 			return
 		}
 
-		err := DeleteFilesFor(fuzzy.APP_FILTER, args[0], DefaultApiClient)
+		err := DeleteFilesFor(fuzzy.APP_FILTER, args[0], DefaultApiClient, cmd.OutOrStdout())
 		if err != nil {
 			fmt.Println(err)
 		} else {
@@ -61,7 +62,7 @@ var deleteEnvCmd = &cobra.Command{
 			return
 		}
 
-		err := DeleteFilesFor(fuzzy.ENV_FILTER, args[0], DefaultApiClient)
+		err := DeleteFilesFor(fuzzy.ENV_FILTER, args[0], DefaultApiClient, cmd.OutOrStdout())
 		if err != nil {
 			fmt.Println(err)
 		} else {
@@ -85,7 +86,7 @@ var deleteFileCmd = &cobra.Command{
 			return
 		}
 
-		DefaultTablePrinter(GetFilesTable(files))
+		DefaultTablePrinter(GetFilesTable(files), cmd.OutOrStdout())
 		message := fmt.Sprintf("Do you want to delete %d file(s)?", len(files))
 		shouldDelete := prompt.Confirm(message)
 
@@ -137,7 +138,7 @@ func MultiSelectFile(search string, api *client.ApiClient) ([]string, error) {
 	return files, nil
 }
 
-func DeleteFilesFor(mode fuzzy.FilterMode, search string, api *client.ApiClient) error {
+func DeleteFilesFor(mode fuzzy.FilterMode, search string, api *client.ApiClient, out io.Writer) error {
 
 	fileNames, err := api.GetFileNames()
 	if err != nil {
@@ -150,7 +151,7 @@ func DeleteFilesFor(mode fuzzy.FilterMode, search string, api *client.ApiClient)
 	}
 
 	table := GetFilesTable(files)
-	DefaultTablePrinter(table)
+	DefaultTablePrinter(table, out)
 	message := fmt.Sprintf("Do you want to delete %s?", search)
 	deleteAll := prompt.Confirm(message)
 

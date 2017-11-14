@@ -281,7 +281,7 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 	if len(table) == 1 {
 		return errors.New("No vaults available")
 	}
-	DefaultTablePrinter(table)
+	DefaultTablePrinter(table, cmd.OutOrStdout())
 
 	return nil
 }

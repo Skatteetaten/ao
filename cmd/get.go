@@ -3,12 +3,13 @@ package cmd
 import (
 	"fmt"
 
+	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
-	"os"
+	"io"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -44,6 +45,13 @@ var getEnvsCmd = &cobra.Command{
 	RunE:    PrintEnvironments,
 }
 
+var getSpecCmd = &cobra.Command{
+	Use:   "spec <search>",
+	Short: "Get deploy spec for an application",
+	Long:  `Deploy spec is the final result for merged AuroraConfig for one application`,
+	RunE:  GetDeploySpec,
+}
+
 var getFileCmd = &cobra.Command{
 	Use:   "files [envname]/<filename>",
 	Short: "Get all files",
@@ -68,6 +76,71 @@ func init() {
 	getCmd.AddCommand(getAppsCmd)
 	getCmd.AddCommand(getEnvsCmd)
 	getCmd.AddCommand(getDeploymentsCmd)
+	getCmd.AddCommand(getSpecCmd)
+
+	getSpecCmd.Flags().BoolP("json", "", false, "print deploy spec as json")
+}
+
+func GetDeploySpec(cmd *cobra.Command, args []string) error {
+	if len(args) > 2 || len(args) < 1 {
+		return cmd.Usage()
+	}
+
+	asJson, _ := cmd.Flags().GetBool("json")
+
+	search := args[0]
+	if len(args) == 2 {
+		search = fmt.Sprintf("%s/%s", args[0], args[1])
+	}
+
+	fileNames, err := DefaultApiClient.GetFileNames()
+	if err != nil {
+		return err
+	}
+
+	matches, err := fuzzy.SearchForApplications(search, fileNames.GetDeployments())
+	if err != nil {
+		return err
+	}
+
+	if len(matches) == 0 {
+		return errors.Errorf("No matches for %s", search)
+	}
+
+	sort.Strings(matches)
+
+	selected := matches[0]
+	if len(matches) > 1 {
+		selected = prompt.Select("Select application", matches)
+	}
+
+	if selected == "" {
+		return nil
+	}
+
+	split := strings.Split(selected, "/")
+
+	if !asJson {
+		spec, err := DefaultApiClient.GetAuroraDeploySpecFormatted(split[0], split[1])
+		if err != nil {
+			return err
+		}
+		cmd.Println(spec)
+		return nil
+	}
+
+	spec, err := DefaultApiClient.GetAuroraDeploySpec(split[0], split[1])
+	if err != nil {
+		return err
+	}
+
+	data, err := json.MarshalIndent(spec, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	cmd.Println(string(data))
+	return nil
 }
 
 func PrintDeployments(cmd *cobra.Command, args []string) error {
@@ -79,7 +152,7 @@ func PrintDeployments(cmd *cobra.Command, args []string) error {
 	deployments := fileNames.GetDeployments()
 	sort.Strings(deployments)
 	table := GetDeploymentTable(deployments)
-	DefaultTablePrinter(table)
+	DefaultTablePrinter(table, cmd.OutOrStdout())
 
 	return nil
 }
@@ -101,7 +174,7 @@ func PrintApplications(cmd *cobra.Command, args []string) error {
 		return errors.New("Did not find any applications")
 	}
 
-	DefaultTablePrinter(table)
+	DefaultTablePrinter(table, cmd.OutOrStdout())
 	return nil
 }
 
@@ -122,7 +195,7 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 		return errors.New("Did not find any environments")
 	}
 
-	DefaultTablePrinter(table)
+	DefaultTablePrinter(table, cmd.OutOrStdout())
 	return nil
 }
 
@@ -134,7 +207,7 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 
 	if len(args) < 1 {
 		table := GetFilesTable(fileNames)
-		DefaultTablePrinter(table)
+		DefaultTablePrinter(table, cmd.OutOrStdout())
 		return nil
 	}
 
@@ -166,8 +239,8 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func DefaultTablePrinter(table []string) {
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', tabwriter.TabIndent)
+func DefaultTablePrinter(table []string, out io.Writer) {
+	w := tabwriter.NewWriter(out, 0, 0, 3, ' ', tabwriter.TabIndent)
 	for _, line := range table {
 		fmt.Fprintln(w, line)
 	}

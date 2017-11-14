@@ -98,38 +98,33 @@ func Deploy(cmd *cobra.Command, args []string) error {
 	}
 
 	possibleDeploys := files.GetDeployments()
-	var appsToDeploy []string
 	applications, _ := fuzzy.SearchForApplications(search, possibleDeploys)
-	if !noPrompt && len(applications) > 1 {
-		selectedApps := applications
-		printDeployments(applications)
-		message := fmt.Sprintf("Add all %d application(s) to deploy?", len(applications))
-		deployAll := prompt.Confirm(message)
-		if !deployAll {
-			selectedApps = prompt.MultiSelect("Which applications do you want to deploy?", applications)
-		}
-		appsToDeploy = append(appsToDeploy, selectedApps...)
-	} else {
-		appsToDeploy = append(appsToDeploy, applications...)
+
+	if len(applications) == 0 {
+		return errors.New("No applications to deploy")
 	}
 
-	if len(appsToDeploy) == 0 {
-		errors.New("No applications to deploy")
-	}
+	sort.Strings(applications)
+	lines := GetDeploymentTable(applications)
+	DefaultTablePrinter(lines, cmd.OutOrStdout())
 
+	shouldDeploy := true
 	if !noPrompt {
-		printDeployments(appsToDeploy)
-		message := fmt.Sprintf("Do you want to deploy %d application(s)?", len(appsToDeploy))
-		shouldDeploy := prompt.Confirm(message)
-		if !shouldDeploy {
-			return nil
-		}
+		message := fmt.Sprintf("Do you want to deploy %d application(s)?", len(applications))
+		shouldDeploy = prompt.Confirm(message)
 	}
 
-	payload := client.NewDeployPayload(appsToDeploy, overrides)
+	if !noPrompt && !shouldDeploy && len(applications) > 1 {
+		applications = prompt.MultiSelect("Which applications do you want to deploy?", applications)
+		shouldDeploy = len(applications) > 0
+	}
+
+	if !shouldDeploy {
+		return errors.New("No applications to deploy")
+	}
 
 	if version != "" {
-		if len(appsToDeploy) > 1 {
+		if len(applications) > 1 {
 			return errors.New("Deploy with version does only support one application")
 		}
 		operation := client.JsonPatchOp{
@@ -138,35 +133,51 @@ func Deploy(cmd *cobra.Command, args []string) error {
 			Value: version,
 		}
 
-		fileName := appsToDeploy[0] + ".json"
+		fileName := applications[0] + ".json"
 		err := api.PatchAuroraConfigFile(fileName, operation)
 		if err != nil {
 			return err
 		}
 	}
 
-	var result []client.DeployResult
+	payload := client.NewDeployPayload(applications, overrides)
+
+	var result []*client.DeployResults
 	if ao.Localhost || cluster != "" {
-		result, err = api.Deploy(payload)
+		res, err := api.Deploy(payload)
 		if err != nil {
 			return err
 		}
+		result = append(result, res)
 	} else {
 		result = deployToReachableClusters(affiliation, persistentToken, ao.Clusters, payload)
 	}
 
-	sort.Slice(result, func(i, j int) bool {
-		return strings.Compare(result[i].ADS.Name, result[j].ADS.Name) < 1
+	var results []client.DeployResult
+	for _, r := range result {
+		if !r.Success {
+			cmd.Println("deploy error:", r.Message)
+		}
+		results = append(results, r.Results...)
+	}
+
+	if len(results) == 0 {
+		return errors.New("No deploys were made")
+	}
+
+	sort.Slice(results, func(i, j int) bool {
+		return strings.Compare(results[i].ADS.Name, results[j].ADS.Name) < 1
 	})
 
-	PrintDeployResults(result)
+	table := PrintDeployResults(results)
+	DefaultTablePrinter(table, cmd.OutOrStdout())
 	return nil
 }
 
-func deployToReachableClusters(affiliation, token string, clusters map[string]*config.Cluster, payload *client.DeployPayload) []client.DeployResult {
+func deployToReachableClusters(affiliation, token string, clusters map[string]*config.Cluster, payload *client.DeployPayload) []*client.DeployResults {
 
 	reachableClusters := 0
-	deployResult := make(chan []client.DeployResult)
+	deployResult := make(chan *client.DeployResults)
 	deployErrors := make(chan error)
 	for _, c := range clusters {
 		if !c.Reachable {
@@ -191,13 +202,13 @@ func deployToReachableClusters(affiliation, token string, clusters map[string]*c
 		}()
 	}
 
-	var allResults []client.DeployResult
+	var allResults []*client.DeployResults
 	for i := 0; i < reachableClusters; i++ {
 		select {
 		case err := <-deployErrors:
 			fmt.Println(err)
 		case result := <-deployResult:
-			allResults = append(allResults, result...)
+			allResults = append(allResults, result)
 		}
 	}
 
@@ -221,7 +232,7 @@ func parseOverride(override []string) (map[string]json.RawMessage, error) {
 	return returnMap, nil
 }
 
-func PrintDeployResults(deploys []client.DeployResult) {
+func PrintDeployResults(deploys []client.DeployResult) []string {
 	results := []string{"\x1b[00mSTATUS\x1b[0m\tAPPLICATION\tENVIRONMENT\tCLUSTER\tDEPLOY_ID\t"}
 	for _, item := range deploys {
 		ads := item.ADS
@@ -234,13 +245,5 @@ func PrintDeployResults(deploys []client.DeployResult) {
 		results = append(results, result)
 	}
 
-	if len(deploys) > 0 {
-		DefaultTablePrinter(results)
-	}
-}
-
-func printDeployments(deployments []string) {
-	sort.Strings(deployments)
-	lines := GetDeploymentTable(deployments)
-	DefaultTablePrinter(lines)
+	return results
 }
