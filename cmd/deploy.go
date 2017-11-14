@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
-	"github.com/skatteetaten/ao/pkg/collections"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/prompt"
@@ -17,7 +16,6 @@ import (
 var (
 	affiliation string
 	overrides   []string
-	deployAll   bool
 	noPrompt    bool
 	version     string
 	cluster     string
@@ -49,34 +47,25 @@ var deployCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(deployCmd)
 
-	deployCmd.Flags().StringArrayVarP(&overrides, "overrides",
-		"o", []string{}, "Override in the form [env/]file:{<json override>}")
-
-	deployCmd.Flags().BoolVarP(&deployAll, "all",
-		"", false, "Will deploy all applications in all clusters reachable")
-
-	deployCmd.Flags().BoolVarP(&noPrompt, "noprompt",
-		"", false, "Supress prompts")
-
+	deployCmd.Flags().StringVarP(&affiliation, "affiliation", "", "", "Overrides the logged in affiliation")
+	deployCmd.Flags().StringVarP(&cluster, "cluster", "c", "", "Limit deploy to given clustername")
+	deployCmd.Flags().BoolVarP(&noPrompt, "noprompt", "", false, "Supress prompts")
+	deployCmd.Flags().StringArrayVarP(&overrides, "overrides", "o", []string{}, "Override in the form [env/]file:{<json override>}")
 	deployCmd.Flags().StringVarP(&version, "version",
 		"v", "", "Will update the version tag in the app of base configuration file prior to deploy, depending on which file contains the version tag.  If both files "+
 			"files contains the tag, the tag will be updated in the app configuration file.")
-
-	deployCmd.Flags().StringVarP(&affiliation, "affiliation",
-		"", "", "Overrides the logged in affiliation")
-
-	deployCmd.Flags().StringVarP(&cluster, "cluster", "c", "", "Limit deploy to given clustername")
 }
 
 func Deploy(cmd *cobra.Command, args []string) error {
 
-	// One application
-	if len(args) < 1 && !deployAll {
-		cmd.Usage()
-		return nil
+	if len(args) > 2 || len(args) < 1 {
+		return cmd.Usage()
 	}
 
-	deployOnce := ao.Localhost || cluster != ""
+	search := args[0]
+	if len(args) == 2 {
+		search = fmt.Sprintf("%s/%s", args[0], args[1])
+	}
 
 	overrides, err := parseOverride(overrides)
 	if err != nil {
@@ -110,33 +99,19 @@ func Deploy(cmd *cobra.Command, args []string) error {
 
 	possibleDeploys := files.GetDeployments()
 	var appsToDeploy []string
-	if deployAll {
-		args = []string{}
-		appsToDeploy = possibleDeploys
-	}
-
-	for _, arg := range args {
-		applications, _ := fuzzy.SearchForApplications(arg, possibleDeploys)
-		if !noPrompt && len(applications) > 1 {
-			selectedApps := applications
-			printDeployments(applications)
-			message := fmt.Sprintf("Add all %d application(s) to deploy?", len(applications))
-			deployAll := prompt.Confirm(message)
-			if !deployAll {
-				selectedApps = prompt.MultiSelect("Which applications do you want to deploy?", applications)
-			}
-			appsToDeploy = append(appsToDeploy, selectedApps...)
-		} else {
-			appsToDeploy = append(appsToDeploy, applications...)
+	applications, _ := fuzzy.SearchForApplications(search, possibleDeploys)
+	if !noPrompt && len(applications) > 1 {
+		selectedApps := applications
+		printDeployments(applications)
+		message := fmt.Sprintf("Add all %d application(s) to deploy?", len(applications))
+		deployAll := prompt.Confirm(message)
+		if !deployAll {
+			selectedApps = prompt.MultiSelect("Which applications do you want to deploy?", applications)
 		}
+		appsToDeploy = append(appsToDeploy, selectedApps...)
+	} else {
+		appsToDeploy = append(appsToDeploy, applications...)
 	}
-
-	// Only deploy unique applications
-	deploySet := collections.NewStringSet()
-	for _, app := range appsToDeploy {
-		deploySet.Add(app)
-	}
-	appsToDeploy = deploySet.All()
 
 	if len(appsToDeploy) == 0 {
 		errors.New("No applications to deploy")
@@ -171,7 +146,7 @@ func Deploy(cmd *cobra.Command, args []string) error {
 	}
 
 	var result []client.DeployResult
-	if deployOnce {
+	if ao.Localhost || cluster != "" {
 		result, err = api.Deploy(payload)
 		if err != nil {
 			return err
@@ -229,21 +204,21 @@ func deployToReachableClusters(affiliation, token string, clusters map[string]*c
 	return allResults
 }
 
-func parseOverride(override []string) (returnMap map[string]json.RawMessage, err error) {
-	returnMap = make(map[string]json.RawMessage)
-
+func parseOverride(override []string) (map[string]json.RawMessage, error) {
+	returnMap := make(map[string]json.RawMessage)
 	for i := 0; i < len(override); i++ {
 		indexByte := strings.IndexByte(override[i], ':')
 		filename := override[i][:indexByte]
-
 		jsonOverride := override[i][indexByte+1:]
+
 		if !json.Valid([]byte(jsonOverride)) {
 			msg := fmt.Sprintf("%s is not a valid json", jsonOverride)
 			return nil, errors.New(msg)
 		}
+
 		returnMap[filename] = json.RawMessage(jsonOverride)
 	}
-	return returnMap, err
+	return returnMap, nil
 }
 
 func PrintDeployResults(deploys []client.DeployResult) {

@@ -27,6 +27,7 @@ func NewApiClient(host, token, affiliation string) *ApiClient {
 	}
 }
 
+// TODO: Deploymentspec
 func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Response, error) {
 
 	url := api.Host + BooberApiVersion + endpoint
