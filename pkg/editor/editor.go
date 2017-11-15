@@ -13,14 +13,17 @@ import (
 	"strings"
 )
 
-const cancelMessage = "Edit cancelled, no changes made."
+const (
+	invalidJson   = "Invalid JSON format"
+	cancelMessage = "Edit cancelled, no changes made."
 
-const editPattern = `# Name: %s
+	editPattern = `# Name: %s
 # Please edit the object below. Lines beginning with a '#' will be ignored,
 # and an empty file will abort the edit. If an error occurs while saving this file will be
 # reopened with the relevant failures.
 %s%s
 `
+)
 
 type (
 	OnSaveFunc func(modifiedContent string) ([]string, error)
@@ -52,7 +55,10 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 	}()
 
 	var editErrors string
-	originalContent := prettyPrintJson(content)
+	originalContent := content
+	if isJson {
+		originalContent = prettyPrintJson(content)
+	}
 	currentContent := originalContent
 
 	for {
@@ -85,7 +91,7 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 			}
 
 			if !json.Valid([]byte(currentContent)) {
-				editErrors = addErrorMessage([]string{"Invalid JSON format"})
+				editErrors = addErrorMessage([]string{invalidJson})
 				continue
 			}
 		}
@@ -105,13 +111,12 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 }
 
 func openEditor(filename string) error {
-	const vi = "vim"
 	var editor = os.Getenv("EDITOR")
-	var editorParts []string
 	if editor == "" {
-		editor = vi
+		editor = "vim"
 	}
-	editorParts = strings.Split(editor, " ")
+
+	editorParts := strings.Split(editor, " ")
 	editorPath := editorParts[0]
 
 	path, err := exec.LookPath(editorPath)
@@ -134,9 +139,7 @@ func openEditor(filename string) error {
 	if err != nil {
 		return err
 	}
-	err = cmd.Wait()
-
-	return err
+	return cmd.Wait()
 }
 
 func createTempFile() (string, error) {

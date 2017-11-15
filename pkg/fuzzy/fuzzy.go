@@ -72,6 +72,8 @@ const (
 	Search string must match either environment or application exact
 */
 func FindAllDeploysFor(mode FilterMode, search string, files []string) []string {
+
+	search = strings.TrimSuffix(search, ".json")
 	deploys := make(map[string]*collections.StringSet)
 
 	for _, file := range files {

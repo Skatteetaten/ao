@@ -115,6 +115,8 @@ func TestFindAllFor(t *testing.T) {
 
 	filteredFiles := fileNames.GetDeployments()
 
+	filteredFiles = append(filteredFiles, "illegalfile")
+
 	for _, test := range tests {
 		deploys := FindAllDeploysFor(test.Mode, test.Search, filteredFiles)
 		assert.Equal(t, test.Expected, deploys)
