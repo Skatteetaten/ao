@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"strings"
 )
 
@@ -45,7 +44,6 @@ func (res *Response) ParseItems(data interface{}) error {
 		return errors.New(res.Message)
 	}
 
-	logrus.Info("Response Items", res.Items)
 	return json.Unmarshal(res.Items, data)
 }
 

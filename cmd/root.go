@@ -43,7 +43,7 @@ var RootCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.PersistentFlags().StringVarP(&pFlagLogLevel, "loglevel", "", "fatal", "Set loglevel. Valid log levels are [info, debug, warning, error, fatal]")
+	RootCmd.PersistentFlags().StringVarP(&pFlagLogLevel, "log", "", "fatal", "Set loglevel. Valid log levels are [info, debug, warning, error, fatal]")
 	RootCmd.PersistentFlags().BoolVarP(&pFlagPrettyLog, "prettylog", "", false, "Pretty print log")
 	RootCmd.PersistentFlags().StringVarP(&pFlagHost, "serverapi", "", "", "Override default server API address")
 	RootCmd.PersistentFlags().StringVarP(&pFlagToken, "token", "", "", "Token to be used for serverapi connections")
