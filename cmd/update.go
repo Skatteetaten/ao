@@ -6,11 +6,10 @@ import (
 )
 
 var updateCmd = &cobra.Command{
-	Use:         "update",
-	Short:       "Check for available updates for the ao client, and downloads the update if available.",
-	Long:        `Available updates are searched for using a service in the OpenShift cluster.`,
-	Annotations: map[string]string{"type": "util"},
-	RunE:        Update,
+	Use:   "update",
+	Short: "Check for available updates for the ao client, and downloads the update if available.",
+	Long:  `Available updates are searched for using a service in the OpenShift cluster.`,
+	RunE:  Update,
 }
 
 func init() {
@@ -18,7 +17,7 @@ func init() {
 }
 
 func Update(cmd *cobra.Command, args []string) error {
-	err := ao.Update()
+	err := AO.Update(false)
 	if err != nil {
 		return err
 	} else {

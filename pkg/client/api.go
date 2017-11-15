@@ -76,7 +76,7 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 
 	switch res.StatusCode {
 	case http.StatusNotFound:
-		return nil, errors.Errorf("Resource %s not found", endpoint)
+		return nil, errors.Errorf("Resource %s not found", BooberApiVersion+endpoint)
 	case http.StatusForbidden:
 		return nil, errors.New("Token has expired. Please login: ao login <affiliation>")
 	case http.StatusInternalServerError:

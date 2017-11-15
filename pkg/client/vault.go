@@ -8,73 +8,24 @@ import (
 	"net/http"
 )
 
-type Secrets map[string]string
+type (
+	Secrets     map[string]string
+	Permissions map[string][]string
 
-func (s Secrets) GetSecret(name string) (string, error) {
-	secret, found := s[name]
-	if !found {
-		return "", errors.Errorf("Did not find secret %s", name)
+	AuroraVaultInfo struct {
+		Name        string      `json:"name"`
+		Permissions Permissions `json:"permissions"`
+		Secrets     []string    `json:"secrets"`
+		Admin       bool        `json:"admin"`
 	}
-	data, err := base64.StdEncoding.DecodeString(secret)
-	if err != nil {
-		return "", err
+
+	AuroraSecretVault struct {
+		Name        string            `json:"name"`
+		Permissions Permissions       `json:"permissions"`
+		Secrets     Secrets           `json:"secrets"`
+		Versions    map[string]string `json:"versions"`
 	}
-
-	return string(data), nil
-}
-
-func (s Secrets) AddSecret(name, content string) {
-	encoded := base64.StdEncoding.EncodeToString([]byte(content))
-	s[name] = encoded
-}
-
-type Permissions map[string][]string
-
-func (p Permissions) AddGroup(group string) error {
-	groups := p["groups"]
-	for _, g := range groups {
-		if g == group {
-			return errors.Errorf("Group %s already exists", group)
-		}
-	}
-	p["groups"] = append(groups, group)
-
-	return nil
-}
-
-func (p Permissions) DeleteGroup(group string) error {
-	groups := p["groups"]
-	var hasDeleted bool
-	for i, g := range groups {
-		if g == group {
-			p["groups"] = append(groups[:i], groups[i+1:]...)
-			hasDeleted = true
-			break
-		}
-	}
-	if !hasDeleted {
-		return errors.Errorf("Did not find group %s", group)
-	}
-	return nil
-}
-
-func (p Permissions) GetGroups() []string {
-	return p["groups"]
-}
-
-type AuroraVaultInfo struct {
-	Name        string      `json:"name"`
-	Permissions Permissions `json:"permissions"`
-	Secrets     []string    `json:"secrets"`
-	Admin       bool        `json:"admin"`
-}
-
-type AuroraSecretVault struct {
-	Name        string            `json:"name"`
-	Permissions Permissions       `json:"permissions"`
-	Secrets     Secrets           `json:"secrets"`
-	Versions    map[string]string `json:"versions"`
-}
+)
 
 func NewAuroraSecretVault(name string) *AuroraSecretVault {
 	return &AuroraSecretVault{
@@ -174,4 +125,54 @@ func (api *ApiClient) UpdateSecretFile(vault, secret string, content []byte) err
 	}
 
 	return nil
+}
+
+func (s Secrets) GetSecret(name string) (string, error) {
+	secret, found := s[name]
+	if !found {
+		return "", errors.Errorf("Did not find secret %s", name)
+	}
+	data, err := base64.StdEncoding.DecodeString(secret)
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
+}
+
+func (s Secrets) AddSecret(name, content string) {
+	encoded := base64.StdEncoding.EncodeToString([]byte(content))
+	s[name] = encoded
+}
+
+func (p Permissions) AddGroup(group string) error {
+	groups := p["groups"]
+	for _, g := range groups {
+		if g == group {
+			return errors.Errorf("Group %s already exists", group)
+		}
+	}
+	p["groups"] = append(groups, group)
+
+	return nil
+}
+
+func (p Permissions) DeleteGroup(group string) error {
+	groups := p["groups"]
+	var hasDeleted bool
+	for i, g := range groups {
+		if g == group {
+			p["groups"] = append(groups[:i], groups[i+1:]...)
+			hasDeleted = true
+			break
+		}
+	}
+	if !hasDeleted {
+		return errors.Errorf("Did not find group %s", group)
+	}
+	return nil
+}
+
+func (p Permissions) GetGroups() []string {
+	return p["groups"]
 }

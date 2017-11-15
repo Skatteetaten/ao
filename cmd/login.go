@@ -24,11 +24,11 @@ one is available.
 `
 
 var (
-	userName       string
-	recreateConfig bool
-	apiCluster     string
-	doUpdate       bool
-	localhost      bool
+	flagUserName       string
+	flagRecreateConfig bool
+	flagApiCluster     string
+	flagNoUpdatePrompt bool
+	flagLocalhost      bool
 )
 
 var loginCmd = &cobra.Command{
@@ -42,11 +42,11 @@ var loginCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(loginCmd)
 	user, _ := os.LookupEnv("USER")
-	loginCmd.Flags().StringVarP(&userName, "username", "u", user, "the username to log in with, standard is $USER")
-	loginCmd.Flags().BoolVarP(&recreateConfig, "recreate-config", "", false, "Removes current cluster config and recreates")
-	loginCmd.Flags().StringVarP(&apiCluster, "apicluster", "a", "", "Set a specific API cluster to use")
-	loginCmd.Flags().BoolVarP(&doUpdate, "do-update", "", false, "Do an update if available")
-	loginCmd.Flags().BoolVarP(&localhost, "localhost", "l", false, "Development mode")
+	loginCmd.Flags().StringVarP(&flagUserName, "username", "u", user, "the username to log in with, standard is $USER")
+	loginCmd.Flags().BoolVarP(&flagRecreateConfig, "recreate-config", "", false, "Removes current cluster config and recreates")
+	loginCmd.Flags().StringVarP(&flagApiCluster, "apicluster", "a", "", "Set a specific API cluster to use")
+	loginCmd.Flags().BoolVarP(&flagNoUpdatePrompt, "do-update", "", false, "Do an update if available")
+	loginCmd.Flags().BoolVarP(&flagLocalhost, "localhost", "l", false, "Development mode")
 	loginCmd.Flags().MarkHidden("localhost")
 }
 
@@ -55,22 +55,22 @@ func Login(cmd *cobra.Command, args []string) error {
 		return errors.New("Please specify affiliation to log in to")
 	}
 
-	if recreateConfig {
+	if flagRecreateConfig {
 		conf := &config.DefaultAOConfig
 		conf.InitClusters()
 		conf.SelectApiCluster()
-		ao = conf
+		AO = conf
 	}
 
 	options := config.LoginOptions{
-		APICluster:  apiCluster,
+		APICluster:  flagApiCluster,
 		Affiliation: args[0],
-		UserName:    userName,
-		LocalHost:   localhost,
+		UserName:    flagUserName,
+		LocalHost:   flagLocalhost,
 	}
 
-	ao.Login(configLocation, options)
-	err := ao.Update()
+	AO.Login(ConfigLocation, options)
+	err := AO.Update(flagNoUpdatePrompt)
 	if err != nil {
 		return err
 	}

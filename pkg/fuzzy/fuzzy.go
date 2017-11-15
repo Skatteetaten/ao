@@ -1,14 +1,13 @@
 package fuzzy
 
 import (
-	"github.com/pkg/errors"
 	"github.com/renstrom/fuzzysearch/fuzzy"
 	"github.com/skatteetaten/ao/pkg/collections"
 	"sort"
 	"strings"
 )
 
-func FindMatches(search string, fileNames []string, withSuffix bool) ([]string, error) {
+func FindMatches(search string, fileNames []string, withSuffix bool) []string {
 
 	var files []string
 	for _, file := range fileNames {
@@ -24,12 +23,12 @@ func FindMatches(search string, fileNames []string, withSuffix bool) ([]string, 
 	sort.Sort(matches)
 
 	if len(matches) == 0 {
-		return []string{}, errors.New("No matches for " + search)
+		return []string{}
 	}
 
 	firstMatch := matches[0]
 	if firstMatch.Distance == 0 || len(matches) == 1 {
-		return []string{firstMatch.Target + suffix}, nil
+		return []string{firstMatch.Target + suffix}
 	}
 
 	var options []string
@@ -37,20 +36,15 @@ func FindMatches(search string, fileNames []string, withSuffix bool) ([]string, 
 		options = append(options, match.Target+suffix)
 	}
 
-	return options, nil
+	return options
 }
 
-func SearchForFile(search string, files []string) ([]string, error) {
+func SearchForFile(search string, files []string) []string {
 
-	options, err := FindMatches(search, files, true)
-	if err != nil {
-		return []string{}, err
-	}
-
-	return options, nil
+	return FindMatches(search, files, true)
 }
 
-func SearchForApplications(search string, files []string) ([]string, error) {
+func SearchForApplications(search string, files []string) []string {
 
 	var options []string
 	if !strings.Contains(search, "/") {
@@ -61,14 +55,10 @@ func SearchForApplications(search string, files []string) ([]string, error) {
 	}
 
 	if len(options) == 0 {
-		opts, err := FindMatches(search, files, false)
-		if err != nil {
-			return []string{}, err
-		}
-		options = opts
+		options = FindMatches(search, files, false)
 	}
 
-	return options, nil
+	return options
 }
 
 type FilterMode uint

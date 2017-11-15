@@ -29,6 +29,7 @@ or to cancel all deletions by pressing C.
 
 Specifying the force flag will suppress the confirmation prompts, and delete all matching files.
 `,
+	Annotations: map[string]string{"type": "remote"},
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Usage()
 	},
@@ -119,10 +120,7 @@ func MultiSelectFile(search string, api *client.ApiClient) ([]string, error) {
 		return files, err
 	}
 
-	options, err := fuzzy.SearchForFile(search, fileNames)
-	if err != nil {
-		return files, err
-	}
+	options := fuzzy.SearchForFile(search, fileNames)
 
 	if len(options) > 1 {
 		message := fmt.Sprintf("Matched %d files. Which file do you want?", len(options))

@@ -10,10 +10,16 @@ import (
 	"os"
 )
 
+var (
+	flagCheckoutAffiliation string
+	flagCheckoutPath        string
+	flagCheckoutUser        string
+)
+
 var checkoutCmd = &cobra.Command{
 	Use:         "checkout",
 	Short:       "Checkout AuroraConfig (git repository) for current affiliation",
-	Annotations: map[string]string{"type": "file"},
+	Annotations: map[string]string{"type": "local"},
 	RunE:        Checkout,
 }
 
@@ -21,28 +27,25 @@ func init() {
 	RootCmd.AddCommand(checkoutCmd)
 
 	user, _ := os.LookupEnv("USER")
-	checkoutCmd.Flags().StringP("affiliation", "a", "", "Affiliation to clone")
-	checkoutCmd.Flags().StringP("path", "p", "", "Checkout repo to path")
-	checkoutCmd.Flags().StringP("user", "u", user, "Checkout repo as user")
+	checkoutCmd.Flags().StringVarP(&flagCheckoutAffiliation, "affiliation", "a", "", "Affiliation to clone")
+	checkoutCmd.Flags().StringVarP(&flagCheckoutPath, "path", "p", "", "Checkout repo to path")
+	checkoutCmd.Flags().StringVarP(&flagCheckoutUser, "user", "u", user, "Checkout repo as user")
 }
 
 func Checkout(cmd *cobra.Command, args []string) error {
 
-	user, _ := cmd.LocalFlags().GetString("user")
-	path, _ := cmd.LocalFlags().GetString("path")
-	affiliationFlag, _ := cmd.LocalFlags().GetString("affiliation")
-
-	affiliation := ao.Affiliation
-	if affiliationFlag != "" {
-		affiliation = affiliationFlag
+	affiliation := AO.Affiliation
+	if flagCheckoutAffiliation != "" {
+		affiliation = flagCheckoutAffiliation
 	}
 
-	if len(path) < 1 {
-		wd, _ := os.Getwd()
-		path = fmt.Sprintf("%s/%s", wd, affiliation)
+	wd, _ := os.Getwd()
+	path := fmt.Sprintf("%s/%s", wd, affiliation)
+	if flagCheckoutPath != "" {
+		path = flagCheckoutPath
 	}
 
-	url := versioncontrol.GetGitUrl(affiliation, user, DefaultApiClient)
+	url := versioncontrol.GetGitUrl(affiliation, flagCheckoutUser, DefaultApiClient)
 
 	logrus.Debug(url)
 	fmt.Printf("Cloning AuroraConfig for affiliation %s\n", affiliation)
@@ -55,7 +58,7 @@ func Checkout(cmd *cobra.Command, args []string) error {
 		fmt.Print(output)
 	}
 
-	err = ao.AddCheckoutPath(affiliation, path, configLocation)
+	err = AO.AddCheckoutPath(affiliation, path, ConfigLocation)
 	if err != nil {
 		return err
 	}

@@ -8,23 +8,21 @@ import (
 )
 
 var versionCmd = &cobra.Command{
-	Use:         "version",
-	Short:       "Shows the version of the ao client",
-	Long:        `Shows the version of the ao client application`,
-	Annotations: map[string]string{"type": "util"},
-	RunE:        Version,
+	Use:   "version",
+	Short: "Shows the version of the ao client",
+	Long:  `Shows the version of the ao client application`,
+	RunE:  Version,
 }
 
 func init() {
 	RootCmd.AddCommand(versionCmd)
 
-	versionCmd.Flags().BoolP("json", "", false, "output version as json")
+	versionCmd.Flags().BoolVarP(&flagJson, "json", "", false, "output version as json")
 }
 
 func Version(cmd *cobra.Command, args []string) error {
-	asJson, _ := cmd.Flags().GetBool("json")
 
-	if !asJson {
+	if !flagJson {
 		fmt.Println("AO version " + config.Version)
 		fmt.Println("Build time " + config.BuildStamp)
 		return nil

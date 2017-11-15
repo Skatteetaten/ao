@@ -15,10 +15,13 @@ import (
 	"text/tabwriter"
 )
 
+var flagJson bool
+
 var getCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Retrieves information from the AuroraConfig repository",
-	Long:  `Can be used to retrieve one file or all the files from the respository.`,
+	Use:         "get",
+	Short:       "Retrieves information from the AuroraConfig repository",
+	Long:        `Can be used to retrieve one file or all the files from the respository.`,
+	Annotations: map[string]string{"type": "remote"},
 }
 
 var getDeploymentsCmd = &cobra.Command{
@@ -78,15 +81,13 @@ func init() {
 	getCmd.AddCommand(getDeploymentsCmd)
 	getCmd.AddCommand(getSpecCmd)
 
-	getSpecCmd.Flags().BoolP("json", "", false, "print deploy spec as json")
+	getSpecCmd.Flags().BoolVarP(&flagJson, "json", "", false, "print deploy spec as json")
 }
 
 func GetDeploySpec(cmd *cobra.Command, args []string) error {
 	if len(args) > 2 || len(args) < 1 {
 		return cmd.Usage()
 	}
-
-	asJson, _ := cmd.Flags().GetBool("json")
 
 	search := args[0]
 	if len(args) == 2 {
@@ -98,11 +99,7 @@ func GetDeploySpec(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	matches, err := fuzzy.SearchForApplications(search, fileNames.GetDeployments())
-	if err != nil {
-		return err
-	}
-
+	matches := fuzzy.SearchForApplications(search, fileNames.GetDeployments())
 	if len(matches) == 0 {
 		return errors.Errorf("No matches for %s", search)
 	}
@@ -120,7 +117,7 @@ func GetDeploySpec(cmd *cobra.Command, args []string) error {
 
 	split := strings.Split(selected, "/")
 
-	if !asJson {
+	if !flagJson {
 		spec, err := DefaultApiClient.GetAuroraDeploySpecFormatted(split[0], split[1])
 		if err != nil {
 			return err
@@ -212,11 +209,7 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 	}
 
 	file := args[0]
-	matches, err := fuzzy.SearchForFile(file, fileNames)
-	if err != nil {
-		return err
-	}
-
+	matches := fuzzy.SearchForFile(file, fileNames)
 	if len(matches) < 1 {
 		return errors.New("Did not find file " + file)
 	}

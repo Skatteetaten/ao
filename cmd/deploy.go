@@ -14,11 +14,11 @@ import (
 )
 
 var (
-	affiliation string
-	overrides   []string
-	noPrompt    bool
-	version     string
-	cluster     string
+	flagAffiliation string
+	flagOverrides   []string
+	flagNoPrompt    bool
+	flagVersion     string
+	flagCluster     string
 )
 
 const deployLong = `Deploy applications for the current affiliation.
@@ -37,21 +37,22 @@ The --force flag will override this, and execute the deploy without confirmation
 `
 
 var deployCmd = &cobra.Command{
-	Aliases: []string{"setup"},
-	Use:     "deploy",
-	Short:   "Deploy applications for the current affiliation",
-	Long:    deployLong,
-	RunE:    Deploy,
+	Aliases:     []string{"setup", "apply"},
+	Use:         "deploy",
+	Short:       "Deploy applications for the current affiliation",
+	Long:        deployLong,
+	Annotations: map[string]string{"type": "actions"},
+	RunE:        Deploy,
 }
 
 func init() {
 	RootCmd.AddCommand(deployCmd)
 
-	deployCmd.Flags().StringVarP(&affiliation, "affiliation", "", "", "Overrides the logged in affiliation")
-	deployCmd.Flags().StringVarP(&cluster, "cluster", "c", "", "Limit deploy to given clustername")
-	deployCmd.Flags().BoolVarP(&noPrompt, "noprompt", "", false, "Supress prompts")
-	deployCmd.Flags().StringArrayVarP(&overrides, "overrides", "o", []string{}, "Override in the form [env/]file:{<json override>}")
-	deployCmd.Flags().StringVarP(&version, "version",
+	deployCmd.Flags().StringVarP(&flagAffiliation, "affiliation", "", "", "Overrides the logged in affiliation")
+	deployCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Limit deploy to given clustername")
+	deployCmd.Flags().BoolVarP(&flagNoPrompt, "noprompt", "", false, "Supress prompts")
+	deployCmd.Flags().StringArrayVarP(&flagOverrides, "overrides", "o", []string{}, "Override in the form [env/]file:{<json override>}")
+	deployCmd.Flags().StringVarP(&flagVersion, "version",
 		"v", "", "Will update the version tag in the app of base configuration file prior to deploy, depending on which file contains the version tag.  If both files "+
 			"files contains the tag, the tag will be updated in the app configuration file.")
 }
@@ -67,28 +68,28 @@ func Deploy(cmd *cobra.Command, args []string) error {
 		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	overrides, err := parseOverride(overrides)
+	overrides, err := parseOverride(flagOverrides)
 	if err != nil {
 		return err
 	}
 
-	if affiliation == "" {
-		affiliation = ao.Affiliation
+	if flagAffiliation == "" {
+		flagAffiliation = AO.Affiliation
 	}
 
 	api := DefaultApiClient
-	api.Affiliation = affiliation
+	api.Affiliation = flagAffiliation
 
-	if cluster != "" {
-		c := ao.Clusters[cluster]
+	if flagCluster != "" {
+		c := AO.Clusters[flagCluster]
 		if c == nil {
-			return errors.New("No such cluster " + cluster)
+			return errors.New("No such cluster " + flagCluster)
 		}
 
 		api.Host = c.BooberUrl
 		api.Token = c.Token
-		if persistentToken != "" {
-			api.Token = persistentToken
+		if pFlagToken != "" {
+			api.Token = pFlagToken
 		}
 	}
 
@@ -98,7 +99,7 @@ func Deploy(cmd *cobra.Command, args []string) error {
 	}
 
 	possibleDeploys := files.GetDeployments()
-	applications, _ := fuzzy.SearchForApplications(search, possibleDeploys)
+	applications := fuzzy.SearchForApplications(search, possibleDeploys)
 
 	if len(applications) == 0 {
 		return errors.New("No applications to deploy")
@@ -109,12 +110,12 @@ func Deploy(cmd *cobra.Command, args []string) error {
 	DefaultTablePrinter(lines, cmd.OutOrStdout())
 
 	shouldDeploy := true
-	if !noPrompt {
+	if !flagNoPrompt {
 		message := fmt.Sprintf("Do you want to deploy %d application(s)?", len(applications))
 		shouldDeploy = prompt.Confirm(message)
 	}
 
-	if !noPrompt && !shouldDeploy && len(applications) > 1 {
+	if !flagNoPrompt && !shouldDeploy && len(applications) > 1 {
 		applications = prompt.MultiSelect("Which applications do you want to deploy?", applications)
 		shouldDeploy = len(applications) > 0
 	}
@@ -123,14 +124,14 @@ func Deploy(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications to deploy")
 	}
 
-	if version != "" {
+	if flagVersion != "" {
 		if len(applications) > 1 {
 			return errors.New("Deploy with version does only support one application")
 		}
 		operation := client.JsonPatchOp{
 			OP:    "add",
 			Path:  "/version",
-			Value: version,
+			Value: flagVersion,
 		}
 
 		fileName := applications[0] + ".json"
@@ -143,14 +144,14 @@ func Deploy(cmd *cobra.Command, args []string) error {
 	payload := client.NewDeployPayload(applications, overrides)
 
 	var result []*client.DeployResults
-	if ao.Localhost || cluster != "" {
+	if AO.Localhost || flagCluster != "" {
 		res, err := api.Deploy(payload)
 		if err != nil {
 			return err
 		}
 		result = append(result, res)
 	} else {
-		result = deployToReachableClusters(affiliation, persistentToken, ao.Clusters, payload)
+		result = deployToReachableClusters(flagAffiliation, pFlagToken, AO.Clusters, payload)
 	}
 
 	var results []client.DeployResult

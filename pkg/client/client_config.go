@@ -5,9 +5,11 @@ import (
 	"net/http"
 )
 
-type ClientConfig struct {
-	GitUrlPattern string `json:"gitUrlPattern"`
-}
+type (
+	ClientConfig struct {
+		GitUrlPattern string `json:"gitUrlPattern"`
+	}
+)
 
 func (api *ApiClient) GetClientConfig() (*ClientConfig, error) {
 	endpoint := "/clientconfig/"

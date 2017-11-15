@@ -47,14 +47,15 @@ If a vaultname is specified, the command will list the secrets in the given vaul
 To access a secret, use the get secret command.`
 
 var (
-	vaultAddGroup    string
-	vaultRemoveGroup string
-	vaultFolder      string
+	flagAddGroup    string
+	flagRemoveGroup string
+	flagVaultFolder string
 )
 
 var vaultCmd = &cobra.Command{
-	Use:   "vault",
-	Short: "Create and perform operations on a vault",
+	Use:         "vault",
+	Short:       "Create and perform operations on a vault",
+	Annotations: map[string]string{"type": "remote"},
 }
 
 var vaultCreateCmd = &cobra.Command{
@@ -117,9 +118,9 @@ func init() {
 	vaultCmd.AddCommand(vaultEditCmd)
 	vaultCmd.AddCommand(vaultRenameCmd)
 
-	vaultCreateCmd.Flags().StringVarP(&vaultFolder, "folder", "f", "", "Creates a vault from a set of secret files")
-	vaultPermissionsCmd.Flags().StringVarP(&vaultAddGroup, "add-group", "", "", "Add a group permission to the vault")
-	vaultPermissionsCmd.Flags().StringVarP(&vaultRemoveGroup, "remove-group", "", "", "Remove a group permission from the vault")
+	vaultCreateCmd.Flags().StringVarP(&flagVaultFolder, "folder", "f", "", "Creates a vault from a set of secret files")
+	vaultPermissionsCmd.Flags().StringVarP(&flagAddGroup, "add-group", "", "", "Add a group permission to the vault")
+	vaultPermissionsCmd.Flags().StringVarP(&flagRemoveGroup, "remove-group", "", "", "Remove a group permission from the vault")
 }
 
 func RenameVault(cmd *cobra.Command, args []string) error {
@@ -161,22 +162,22 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 	// TODO: Check if vault exists
 	vault := client.NewAuroraSecretVault(args[0])
 
-	if vaultFolder != "" {
-		err := collectSecrets(vaultFolder, vault)
+	if flagVaultFolder != "" {
+		err := collectSecrets(flagVaultFolder, vault)
 		if err != nil {
 			return err
 		}
 	}
 
-	if vaultRemoveGroup != "" {
-		err := vault.Permissions.DeleteGroup(vaultRemoveGroup)
+	if flagRemoveGroup != "" {
+		err := vault.Permissions.DeleteGroup(flagRemoveGroup)
 		if err != nil {
 			return err
 		}
 	}
 
-	if vaultAddGroup != "" {
-		err := vault.Permissions.AddGroup(vaultAddGroup)
+	if flagAddGroup != "" {
+		err := vault.Permissions.AddGroup(flagAddGroup)
 		if err != nil {
 			return err
 		}
@@ -296,15 +297,15 @@ func VaultPermissions(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if vaultRemoveGroup != "" {
-		err = vault.Permissions.DeleteGroup(vaultRemoveGroup)
+	if flagRemoveGroup != "" {
+		err = vault.Permissions.DeleteGroup(flagRemoveGroup)
 		if err != nil {
 			return err
 		}
 	}
 
-	if vaultAddGroup != "" {
-		err = vault.Permissions.AddGroup(vaultAddGroup)
+	if flagAddGroup != "" {
+		err = vault.Permissions.AddGroup(flagAddGroup)
 		if err != nil {
 			return err
 		}

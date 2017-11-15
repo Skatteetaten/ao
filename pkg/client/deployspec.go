@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"net/http"
 )
 
@@ -14,10 +13,6 @@ func (api *ApiClient) GetAuroraDeploySpec(environment, application string) (Auro
 	response, err := api.Do(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
-	}
-
-	if !response.Success {
-		return nil, errors.New(response.Message)
 	}
 
 	var spec AuroraDeploySpec
@@ -35,10 +30,6 @@ func (api *ApiClient) GetAuroraDeploySpecFormatted(environment, application stri
 	response, err := api.Do(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return "", err
-	}
-
-	if !response.Success {
-		return "", errors.New(response.Message)
 	}
 
 	var spec string

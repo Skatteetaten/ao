@@ -7,11 +7,12 @@ import (
 	"os"
 )
 
+var flagShowAll bool
+
 var admCmd = &cobra.Command{
-	Use:         "adm",
-	Short:       "Perform administrative commands on AO or other resources not related to vaults of AuroraConfig",
-	Long:        `Can be used to retrieve one file or all the files from the respository.`,
-	Annotations: map[string]string{"type": "util"},
+	Use:   "adm",
+	Short: "Perform administrative commands on AO or other resources not related to vaults of AuroraConfig",
+	Long:  `Can be used to retrieve one file or all the files from the respository.`,
 }
 
 var getClusterCmd = &cobra.Command{
@@ -61,15 +62,14 @@ func init() {
 	admCmd.AddCommand(recreateConfigCmd)
 	admCmd.AddCommand(updateClustersCmd)
 
-	getClusterCmd.Flags().BoolP("all", "a", false, "Show all clusters, not just the reachable ones")
+	getClusterCmd.Flags().BoolVarP(&flagShowAll, "all", "a", false, "Show all clusters, not just the reachable ones")
 }
 
 func PrintClusters(cmd *cobra.Command, args []string) {
-	allClusters, _ := cmd.Flags().GetBool("all")
 	table := []string{"\tCLUSTER NAME\tREACHABLE\tLOGGED IN\tAPI\tURL"}
 
-	for name, cluster := range ao.Clusters {
-		if !(cluster.Reachable || allClusters) {
+	for name, cluster := range AO.Clusters {
+		if !(cluster.Reachable || flagShowAll) {
 			continue
 		}
 		reachable := ""
@@ -83,7 +83,7 @@ func PrintClusters(cmd *cobra.Command, args []string) {
 		}
 
 		api := ""
-		if name == ao.APICluster {
+		if name == AO.APICluster {
 			api = "Yes"
 		}
 		line := fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s\t", name, reachable, loggedIn, api, cluster.Url)
@@ -94,9 +94,9 @@ func PrintClusters(cmd *cobra.Command, args []string) {
 }
 
 func UpdateClusters(cmd *cobra.Command, args []string) {
-	ao.InitClusters()
-	ao.SelectApiCluster()
-	ao.Write(configLocation)
+	AO.InitClusters()
+	AO.SelectApiCluster()
+	AO.Write(ConfigLocation)
 }
 
 func RecreateConfig(cmd *cobra.Command, args []string) {
@@ -108,7 +108,7 @@ func RecreateConfig(cmd *cobra.Command, args []string) {
 	if cluster != "" {
 		conf.AvailableClusters = []string{cluster}
 	}
-	conf.Write(configLocation)
+	conf.Write(ConfigLocation)
 }
 
 func BashCompletion(cmd *cobra.Command, args []string) error {

@@ -8,32 +8,34 @@ import (
 	"strings"
 )
 
-type ApplicationId struct {
-	Environment string `json:"environment"`
-	Application string `json:"application"`
-}
+type (
+	ApplicationId struct {
+		Environment string `json:"environment"`
+		Application string `json:"application"`
+	}
 
-type DeployResults struct {
-	Message string
-	Success bool
-	Results []DeployResult
-}
+	DeployResults struct {
+		Message string
+		Success bool
+		Results []DeployResult
+	}
 
-type DeployResult struct {
-	DeployId string `json:"deployId"`
-	ADS      struct {
-		Name      string `json:"name"`
-		Namespace string `json:"namespace"`
-		Cluster   string `json:"cluster"`
-	} `json:"auroraDeploymentSpec"`
-	Success bool `json:"success"`
-}
+	DeployResult struct {
+		DeployId string `json:"deployId"`
+		ADS      struct {
+			Name      string `json:"name"`
+			Namespace string `json:"namespace"`
+			Cluster   string `json:"cluster"`
+		} `json:"auroraDeploymentSpec"`
+		Success bool `json:"success"`
+	}
 
-type DeployPayload struct {
-	ApplicationIds []ApplicationId            `json:"applicationIds"`
-	Overrides      map[string]json.RawMessage `json:"overrides"`
-	Deploy         bool                       `json:"deploy"`
-}
+	DeployPayload struct {
+		ApplicationIds []ApplicationId            `json:"applicationIds"`
+		Overrides      map[string]json.RawMessage `json:"overrides"`
+		Deploy         bool                       `json:"deploy"`
+	}
+)
 
 func NewDeployPayload(applications []string, overrides map[string]json.RawMessage) *DeployPayload {
 	applicationIds := createApplicationIds(applications)

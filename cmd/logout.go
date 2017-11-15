@@ -16,9 +16,5 @@ func init() {
 }
 
 func Logout(cmd *cobra.Command, args []string) error {
-	err := ao.Logout(configLocation)
-	if err != nil {
-		return err
-	}
-	return nil
+	return AO.Logout(ConfigLocation)
 }

@@ -23,16 +23,16 @@ This application has two main parts.
 2. apply the aoc configuration to the clusters`
 
 var (
-	logLevel        string
-	prettyLog       bool
-	persistentHost  string
-	persistentToken string
+	pFlagLogLevel  string
+	pFlagPrettyLog bool
+	pFlagHost      string
+	pFlagToken     string
 
 	// DefaultApiClient will use APICluster from ao config as default values
 	// if persistent token and/or server api url is specified these will override default values
 	DefaultApiClient *client.ApiClient
-	ao               *config.AOConfig
-	configLocation   string
+	AO               *config.AOConfig
+	ConfigLocation   string
 )
 
 // TODO: Replace with InitializeOptions
@@ -48,24 +48,45 @@ var RootCmd = &cobra.Command{
 	Short:             "Aurora Openshift CLI",
 	Long:              rootLong,
 	SilenceUsage:      true,
-	PersistentPreRunE: Initialize,
-	RunE:              ShowAoHelp,
+	PersistentPreRunE: initialize,
+	RunE:              showAoHelp,
 }
 
 func init() {
-	RootCmd.PersistentFlags().StringVarP(&logLevel, "loglevel", "", "fatal", "Set loglevel. Valid log levels are [info, debug, warning, error, fatal]")
-	RootCmd.PersistentFlags().BoolVarP(&prettyLog, "prettylog", "", false, "Pretty print log")
-	RootCmd.PersistentFlags().StringVarP(&persistentHost, "serverapi", "", "", "Override default server API address")
-	RootCmd.PersistentFlags().StringVarP(&persistentToken, "token", "", "", "Token to be used for serverapi connections")
+	RootCmd.PersistentFlags().StringVarP(&pFlagLogLevel, "loglevel", "", "fatal", "Set loglevel. Valid log levels are [info, debug, warning, error, fatal]")
+	RootCmd.PersistentFlags().BoolVarP(&pFlagPrettyLog, "prettylog", "", false, "Pretty print log")
+	RootCmd.PersistentFlags().StringVarP(&pFlagHost, "serverapi", "", "", "Override default server API address")
+	RootCmd.PersistentFlags().StringVarP(&pFlagToken, "token", "", "", "Token to be used for serverapi connections")
 
 }
 
-func ShowAoHelp(cmd *cobra.Command, args []string) error {
-	cmd.SetHelpTemplate(customHelpTemplate)
+func showAoHelp(cmd *cobra.Command, args []string) error {
+	cmd.SetHelpTemplate(`{{.Long}}
+
+Usage:
+  {{.CommandPath}} [command] [flags]
+
+OpenShift Action Commands:{{range .Commands}}{{if eq (index .Annotations "type") "actions"}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
+
+Remote AuroraConfig Commands:{{range .Commands}}{{if eq (index .Annotations "type") "remote"}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
+
+Local File Commands:{{range .Commands}}{{if eq (index .Annotations "type") "local"}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
+
+Commands:{{range .Commands}}{{if (and (eq (index .Annotations "type") "") (ne .Name "help"))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+
+Flags:
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableSubCommands}}
+
+Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
+`)
 	return cmd.Help()
 }
 
-func Initialize(cmd *cobra.Command, args []string) error {
+func initialize(cmd *cobra.Command, args []string) error {
 
 	// Errors will be printed from main
 	cmd.SilenceErrors = true
@@ -73,14 +94,14 @@ func Initialize(cmd *cobra.Command, args []string) error {
 	cmd.SilenceUsage = true
 
 	home, _ := os.LookupEnv("HOME")
-	configLocation = home + "/.ao.json"
+	ConfigLocation = home + "/.ao.json"
 
-	err := setLogging(logLevel, prettyLog)
+	err := setLogging(pFlagLogLevel, pFlagPrettyLog)
 	if err != nil {
 		return err
 	}
 
-	aoConfig, err := config.LoadConfigFile(configLocation)
+	aoConfig, err := config.LoadConfigFile(ConfigLocation)
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -90,7 +111,7 @@ func Initialize(cmd *cobra.Command, args []string) error {
 		aoConfig = &config.DefaultAOConfig
 		aoConfig.InitClusters()
 		aoConfig.SelectApiCluster()
-		aoConfig.Write(configLocation)
+		aoConfig.Write(ConfigLocation)
 	}
 
 	apiCluster := aoConfig.Clusters[aoConfig.APICluster]
@@ -100,18 +121,18 @@ func Initialize(cmd *cobra.Command, args []string) error {
 
 	api := client.NewApiClient(apiCluster.BooberUrl, apiCluster.Token, aoConfig.Affiliation)
 
-	if persistentHost != "" {
-		api.Host = persistentHost
+	if pFlagHost != "" {
+		api.Host = pFlagHost
 	} else if aoConfig.Localhost {
 		// TODO: Move to config?
 		api.Host = "http://localhost:8080"
 	}
 
-	if persistentToken != "" {
-		api.Token = persistentToken
+	if pFlagToken != "" {
+		api.Token = pFlagToken
 	}
 
-	ao, DefaultApiClient = aoConfig, api
+	AO, DefaultApiClient = aoConfig, api
 
 	return nil
 }
@@ -131,23 +152,3 @@ func setLogging(level string, pretty bool) error {
 
 	return nil
 }
-
-const customHelpTemplate = `{{.Long}}
-
-Usage:
-  {{.CommandPath}} [command] [flags]
-
-Basic Commands:{{range .Commands}}{{if (and (eq (index .Annotations "type") "") (ne .Name "help"))}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
-
-File Commands:{{range .Commands}}{{if eq (index .Annotations "type") "file"}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
-
-Util Commands:{{range .Commands}}{{if eq (index .Annotations "type") "util"}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
-
-Flags:
-{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableSubCommands}}
-
-Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
-`

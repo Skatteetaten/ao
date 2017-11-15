@@ -7,27 +7,45 @@ import (
 	"strings"
 )
 
-type responseErrorItem struct {
-	Application string `json:"application"`
-	Environment string `json:"environment"`
-	Messages    []struct {
-		Type    string `json:"type"`
-		Message string `json:"message"`
-		Field   struct {
-			Path   string `json:"path"`
-			Value  string `json:"value"`
-			Source string `json:"source"`
-		} `json:"field"`
-	} `json:"messages"`
-}
+type (
+	Response struct {
+		Success bool            `json:"success"`
+		Message string          `json:"message"`
+		Items   json.RawMessage `json:"items"`
+		Count   int             `json:"count"`
+	}
 
-type Response struct {
-	Success bool            `json:"success"`
-	Message string          `json:"message"`
-	Items   json.RawMessage `json:"items"`
-	Count   int             `json:"count"`
-}
+	ErrorResponse struct {
+		message            string
+		ContainsError      bool
+		IllegalFieldErrors []string
+		MissingFieldErrors []string
+		InvalidFieldErrors []string
+		UniqueErrors       map[string]bool
+	}
 
+	responseErrorItem struct {
+		Application string `json:"application"`
+		Environment string `json:"environment"`
+		Messages    []struct {
+			Type    string `json:"type"`
+			Message string `json:"message"`
+			Field   struct {
+				Path   string `json:"path"`
+				Value  string `json:"value"`
+				Source string `json:"source"`
+			} `json:"field"`
+		} `json:"messages"`
+	}
+)
+
+func NewErrorResponse(message string) *ErrorResponse {
+	return &ErrorResponse{
+		message:       message,
+		ContainsError: true,
+		UniqueErrors:  make(map[string]bool),
+	}
+}
 func (res *Response) ParseItems(data interface{}) error {
 	if !res.Success {
 		return errors.New(res.Message)
@@ -63,23 +81,6 @@ func (res *Response) ToErrorResponse() (*ErrorResponse, error) {
 	}
 
 	return errorResponse, nil
-}
-
-type ErrorResponse struct {
-	message            string
-	ContainsError      bool
-	IllegalFieldErrors []string
-	MissingFieldErrors []string
-	InvalidFieldErrors []string
-	UniqueErrors       map[string]bool
-}
-
-func NewErrorResponse(message string) *ErrorResponse {
-	return &ErrorResponse{
-		message:       message,
-		ContainsError: true,
-		UniqueErrors:  make(map[string]bool),
-	}
 }
 
 func (e *ErrorResponse) String() string {

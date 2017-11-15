@@ -22,7 +22,7 @@ var editCmd = &cobra.Command{
 	Use:         "edit [env/]file",
 	Short:       "Edit a single file in the AuroraConfig repository, or a secret in a vault",
 	Long:        editFileLong,
-	Annotations: map[string]string{"type": "file"},
+	Annotations: map[string]string{"type": "remote"},
 	RunE:        EditFile,
 }
 
@@ -32,8 +32,7 @@ func init() {
 
 func EditFile(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		cmd.Usage()
-		return nil
+		return cmd.Usage()
 	}
 
 	fileName, err := SelectFile(args[0], DefaultApiClient)
@@ -73,10 +72,7 @@ func SelectFile(search string, api *client.ApiClient) (string, error) {
 		return fileName, err
 	}
 
-	options, err := fuzzy.SearchForFile(search, fileNames)
-	if err != nil {
-		return fileName, err
-	}
+	options := fuzzy.SearchForFile(search, fileNames)
 
 	if len(options) > 1 {
 		message := fmt.Sprintf("Matched %d files. Which file do you want?", len(options))

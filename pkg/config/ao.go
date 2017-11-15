@@ -88,7 +88,7 @@ func (ao *AOConfig) SelectApiCluster() {
 	}
 }
 
-func (ao *AOConfig) Update() error {
+func (ao *AOConfig) Update(noPrompt bool) error {
 	serverVersion, err := ao.GetCurrentVersionFromServer()
 	if err != nil {
 		return err
@@ -98,10 +98,12 @@ func (ao *AOConfig) Update() error {
 		return errors.New("No update available")
 	}
 
-	message := fmt.Sprintf("Do you want update AO from version %s -> %s?", Version, serverVersion.Version)
-	update := prompt.Confirm(message)
-	if !update {
-		return errors.New("Update aborted")
+	if !noPrompt {
+		message := fmt.Sprintf("Do you want update AO from version %s -> %s?", Version, serverVersion.Version)
+		update := prompt.Confirm(message)
+		if !update {
+			return errors.New("Update aborted")
+		}
 	}
 
 	data, err := ao.GetNewAOClient()

@@ -9,66 +9,39 @@ import (
 	"strings"
 )
 
-type AuroraConfig struct {
-	Files    map[string]json.RawMessage `json:"files"`
-	Versions map[string]string          `json:"versions"`
-}
+type (
+	FileNames []string
+
+	AuroraConfig struct {
+		Files    map[string]json.RawMessage `json:"files"`
+		Versions map[string]string          `json:"versions"`
+	}
+
+	AuroraConfigFile struct {
+		Name     string          `json:"name"`
+		Version  string          `json:"version"`
+		Override bool            `json:"override"`
+		Contents json.RawMessage `json:"contents"`
+	}
+
+	JsonPatchOp struct {
+		OP    string      `json:"op"`
+		Path  string      `json:"path"`
+		Value interface{} `json:"value"`
+	}
+
+	AuroraConfigFilePayload struct {
+		Version          string `json:"version"`
+		ValidateVersions bool   `json:"validateVersions"`
+		Content          string `json:"content"`
+	}
+)
 
 func NewAuroraConfig() *AuroraConfig {
 	return &AuroraConfig{
 		Files:    make(map[string]json.RawMessage),
 		Versions: make(map[string]string),
 	}
-}
-
-type AuroraConfigFile struct {
-	Name     string          `json:"name"`
-	Version  string          `json:"version"`
-	Override bool            `json:"override"`
-	Contents json.RawMessage `json:"contents"`
-}
-
-func (f *AuroraConfigFile) ToPrettyJson() string {
-
-	data, err := json.MarshalIndent(f.Contents, "", "  ")
-	if err != nil {
-		return ""
-	}
-
-	return string(data)
-}
-
-type FileNames []string
-
-func (f FileNames) GetDeployments() []string {
-	var filteredFiles []string
-	for _, file := range f {
-		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
-			filteredFiles = append(filteredFiles, strings.TrimSuffix(file, ".json"))
-		}
-	}
-	return filteredFiles
-}
-
-func (f FileNames) GetApplications() []string {
-	unique := collections.NewStringSet()
-	for _, file := range f {
-		if !strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
-			unique.Add(strings.TrimSuffix(file, ".json"))
-		}
-	}
-	return unique.All()
-}
-
-func (f FileNames) GetEnvironments() []string {
-	unique := collections.NewStringSet()
-	for _, file := range f {
-		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
-			split := strings.Split(file, "/")
-			unique.Add(split[0])
-		}
-	}
-	return unique.All()
 }
 
 func (api *ApiClient) GetFileNames() (FileNames, error) {
@@ -132,18 +105,6 @@ func (api *ApiClient) SaveAuroraConfig(ac *AuroraConfig) (*ErrorResponse, error)
 func (api *ApiClient) ValidateAuroraConfig(ac *AuroraConfig) (*ErrorResponse, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/validate", api.Affiliation)
 	return api.PutAuroraConfig(endpoint, ac)
-}
-
-type AuroraConfigFilePayload struct {
-	Version          string `json:"version"`
-	ValidateVersions bool   `json:"validateVersions"`
-	Content          string `json:"content"`
-}
-
-type JsonPatchOp struct {
-	OP    string      `json:"op"`
-	Path  string      `json:"path"`
-	Value interface{} `json:"value"`
 }
 
 func (api *ApiClient) GetAuroraConfigFile(fileName string) (*AuroraConfigFile, error) {
@@ -227,4 +188,45 @@ func (api *ApiClient) PutAuroraConfigFile(file *AuroraConfigFile) (*ErrorRespons
 	}
 
 	return nil, nil
+}
+
+func (f *AuroraConfigFile) ToPrettyJson() string {
+
+	data, err := json.MarshalIndent(f.Contents, "", "  ")
+	if err != nil {
+		return ""
+	}
+
+	return string(data)
+}
+
+func (f FileNames) GetDeployments() []string {
+	var filteredFiles []string
+	for _, file := range f {
+		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
+			filteredFiles = append(filteredFiles, strings.TrimSuffix(file, ".json"))
+		}
+	}
+	return filteredFiles
+}
+
+func (f FileNames) GetApplications() []string {
+	unique := collections.NewStringSet()
+	for _, file := range f {
+		if !strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
+			unique.Add(strings.TrimSuffix(file, ".json"))
+		}
+	}
+	return unique.All()
+}
+
+func (f FileNames) GetEnvironments() []string {
+	unique := collections.NewStringSet()
+	for _, file := range f {
+		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
+			split := strings.Split(file, "/")
+			unique.Add(split[0])
+		}
+	}
+	return unique.All()
 }
