@@ -4,9 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/client"
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
 	"github.com/skatteetaten/ao/pkg/config"
-	"github.com/skatteetaten/ao/pkg/configuration"
 	"github.com/skatteetaten/ao/pkg/log"
 	"github.com/spf13/cobra"
 	"os"
@@ -34,14 +32,6 @@ var (
 	AO               *config.AOConfig
 	ConfigLocation   string
 )
-
-// TODO: Replace with InitializeOptions
-var persistentOptions cmdoptions.CommonCommandOptions
-
-// TODO: Remove all config references
-var oldConfig = &configuration.ConfigurationClass{
-	PersistentOptions: &persistentOptions,
-}
 
 var RootCmd = &cobra.Command{
 	Use:               "ao",

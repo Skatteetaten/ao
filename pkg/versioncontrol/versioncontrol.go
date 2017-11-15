@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
-	"github.com/skatteetaten/ao/pkg/jsonutil"
 )
 
 const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
@@ -322,7 +322,7 @@ func addFilesToAuroraConfig(ac *client.AuroraConfig) error {
 			return errors.Wrap(err, "Could not read file "+filename)
 		}
 
-		if !jsonutil.IsLegalJson(string(file)) {
+		if !json.Valid(file) {
 			err = errors.New("Illegal JSON in file " + filename)
 			return err
 		}

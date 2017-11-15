@@ -1,5 +1,5 @@
 hash: 742f5f345d7730b08191ebfae37320ea8355554c933ba5210b486b7134aff43e
-updated: 2017-10-31T16:43:52.245124632+01:00
+updated: 2017-11-14T10:59:31.342681566+01:00
 imports:
 - name: github.com/c-bata/go-prompt
   version: ba233229562fbeebe1328788a6245cda9124af27
@@ -22,12 +22,10 @@ imports:
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/magiconair/properties
   version: 8d7837e64d3c1ee4e54a880c5a920ab4316fc90a
-  subpackages:
-  - assert
 - name: github.com/mattn/go-colorable
-  version: ad5389df28cdac544c99bd7b9161a0b5b6ca9d1b
+  version: 6fcc0c1fd9b620311d821b106a400b35dc95c497
 - name: github.com/mattn/go-isatty
-  version: a5cdd64afdee435007ee3e9f6ed4684af949d568
+  version: 6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c
 - name: github.com/mgutz/ansi
   version: 9520e82c474b0a04dd04f8a40959027271bab992
 - name: github.com/mitchellh/mapstructure
@@ -62,6 +60,8 @@ imports:
   version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: github.com/stretchr/testify
   version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
+  subpackages:
+  - assert
 - name: github.com/stromland/cobra-prompt
   version: 954ec300b77540a32ca2f10ed10626540818ef01
 - name: golang.org/x/crypto
@@ -79,12 +79,20 @@ imports:
   - transform
   - unicode/norm
 - name: gopkg.in/AlecAivazis/survey.v1
-  version: 344ec26ea976135df7508f1f513e5490a4686e11
+  version: 0aa8b6a162b391fe2d95648b7677d1d6ac2090a6
   subpackages:
   - core
   - terminal
 - name: gopkg.in/yaml.v2
   version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
 testImports:
+- name: github.com/davecgh/go-spew
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
 - name: gopkg.in/h2non/gock.v1
   version: 84d599244901620fb3eb96473eb9e50619f69b47
