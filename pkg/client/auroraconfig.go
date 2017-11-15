@@ -129,7 +129,7 @@ func (api *ApiClient) GetAuroraConfigFile(fileName string) (*AuroraConfigFile, e
 }
 
 func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatchOp) error {
-	endpoint := fmt.Sprintf("/auroraconfigfile/%s/%s", api.Affiliation, fileName)
+	endpoint := fmt.Sprintf("/auroraconfigfile/%s/%s/", api.Affiliation, fileName)
 
 	file, err := api.GetAuroraConfigFile(fileName)
 	if err != nil {

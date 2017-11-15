@@ -30,78 +30,24 @@ or to cancel all deletions by pressing C.
 Specifying the force flag will suppress the confirmation prompts, and delete all matching files.
 `,
 	Annotations: map[string]string{"type": "remote"},
-	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Usage()
-	},
 }
 
 var deleteAppCmd = &cobra.Command{
 	Use:   "app <appname>",
 	Short: "Delete application",
-	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 1 {
-			cmd.Usage()
-			return
-		}
-
-		err := DeleteFilesFor(fuzzy.APP_FILTER, args[0], DefaultApiClient, cmd.OutOrStdout())
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Println("Delete success")
-		}
-	},
+	RunE:  DeleteApplication,
 }
 
 var deleteEnvCmd = &cobra.Command{
 	Use:   "env <envname>",
 	Short: "Delete environment",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) != 1 {
-			fmt.Println(cmd.UseLine())
-			return
-		}
-
-		err := DeleteFilesFor(fuzzy.ENV_FILTER, args[0], DefaultApiClient, cmd.OutOrStdout())
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Println("Delete success")
-		}
-	},
+	RunE:  DeleteEnvironment,
 }
 
 var deleteFileCmd = &cobra.Command{
 	Use:   "file <filename>",
 	Short: "Delete file",
-	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 1 {
-			fmt.Println(cmd.UseLine())
-			return
-		}
-
-		files, err := MultiSelectFile(args[0], DefaultApiClient)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		DefaultTablePrinter(GetFilesTable(files), cmd.OutOrStdout())
-		message := fmt.Sprintf("Do you want to delete %d file(s)?", len(files))
-		shouldDelete := prompt.Confirm(message)
-
-		if !shouldDelete {
-			return
-		}
-
-		err = DeleteFiles(files, DefaultApiClient)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Println("Delete success")
-		}
-	},
+	RunE:  DeleteFile,
 }
 
 func init() {
@@ -113,14 +59,44 @@ func init() {
 	deleteCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "ignore nonexistent files and arguments, never prompt")
 }
 
-func MultiSelectFile(search string, api *client.ApiClient) ([]string, error) {
-	var files []string
-	fileNames, err := api.GetFileNames()
-	if err != nil {
-		return files, err
+func DeleteApplication(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return cmd.Usage()
 	}
 
-	options := fuzzy.SearchForFile(search, fileNames)
+	err := DeleteFilesFor(fuzzy.APP_FILTER, args[0], DefaultApiClient, cmd.OutOrStdout())
+	if err != nil {
+		return err
+	}
+	cmd.Println("Delete success")
+	return nil
+}
+
+func DeleteEnvironment(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return cmd.Usage()
+	}
+
+	err := DeleteFilesFor(fuzzy.ENV_FILTER, args[0], DefaultApiClient, cmd.OutOrStdout())
+	if err != nil {
+		return err
+	}
+	cmd.Println("Delete success")
+	return nil
+}
+
+func DeleteFile(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return cmd.Usage()
+	}
+
+	var files []string
+	fileNames, err := DefaultApiClient.GetFileNames()
+	if err != nil {
+		return err
+	}
+
+	options := fuzzy.SearchForFile(args[0], fileNames)
 
 	if len(options) > 1 {
 		message := fmt.Sprintf("Matched %d files. Which file do you want?", len(options))
@@ -130,10 +106,24 @@ func MultiSelectFile(search string, api *client.ApiClient) ([]string, error) {
 	}
 
 	if len(files) == 0 {
-		return files, errors.New("No file to edit")
+		return errors.New("No file to edit")
 	}
 
-	return files, nil
+	DefaultTablePrinter(GetFilesTable(files), cmd.OutOrStdout())
+	message := fmt.Sprintf("Do you want to delete %d file(s)?", len(files))
+	shouldDelete := prompt.Confirm(message)
+
+	if !shouldDelete {
+		return nil
+	}
+
+	err = DeleteFiles(files, DefaultApiClient)
+	if err != nil {
+		return err
+	}
+
+	cmd.Println("Delete success")
+	return nil
 }
 
 func DeleteFilesFor(mode fuzzy.FilterMode, search string, api *client.ApiClient, out io.Writer) error {

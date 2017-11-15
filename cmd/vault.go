@@ -223,7 +223,7 @@ func EditVault(cmd *cobra.Command, args []string) error {
 	}
 
 	name := vaultName + " " + secretName
-	err = editor.Edit(contentToEdit, name, false, func(modifiedContent string) ([]string, error) {
+	vaultEditor := editor.NewEditor(func(modifiedContent string) ([]string, error) {
 		if secretName == "" {
 			err := json.Unmarshal([]byte(modifiedContent), &vault)
 			if err != nil {
@@ -239,6 +239,7 @@ func EditVault(cmd *cobra.Command, args []string) error {
 		return nil, nil
 	})
 
+	err = vaultEditor.Edit(contentToEdit, name, false)
 	if err != nil {
 		return err
 	}

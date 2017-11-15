@@ -2,25 +2,12 @@ package versioncontrol
 
 import (
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
-	"github.com/skatteetaten/ao/pkg/configuration"
-	"github.com/skatteetaten/ao/pkg/openshift"
 	"os"
 	"os/exec"
 	"testing"
 )
 
 const REPO_PATH = "/tmp/ao/testRepo"
-
-var testConfig *configuration.ConfigurationClass = &configuration.ConfigurationClass{
-	OpenshiftConfig: &openshift.OpenshiftConfig{
-		Localhost:   true,
-		Affiliation: "aurora",
-	},
-	PersistentOptions: &cmdoptions.CommonCommandOptions{
-		Localhost: true,
-	},
-}
 
 func repoSetup(gitRemoteUrl string) {
 	// Clear old test files
@@ -33,7 +20,7 @@ func repoSetup(gitRemoteUrl string) {
 }
 
 func TestValidateRepo(t *testing.T) {
-	gitRemoteUrl := fmt.Sprintf(GIT_URL_FORMAT, "user", testConfig.GetAffiliation())
+	gitRemoteUrl := fmt.Sprintf(GIT_URL_FORMAT, "user", "aurora")
 	repoSetup(gitRemoteUrl)
 
 	if err := ValidateRepo(gitRemoteUrl); err != nil {
@@ -42,7 +29,7 @@ func TestValidateRepo(t *testing.T) {
 }
 
 func TestFindGitPath(t *testing.T) {
-	gitRemoteUrl := fmt.Sprintf(GIT_URL_FORMAT, "user", testConfig.GetAffiliation())
+	gitRemoteUrl := fmt.Sprintf(GIT_URL_FORMAT, "user", "aurora")
 	repoSetup(gitRemoteUrl)
 
 	test := REPO_PATH + "/random/test"

@@ -80,7 +80,7 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 	case http.StatusForbidden:
 		return nil, errors.New("Token has expired. Please login: ao login <affiliation>")
 	case http.StatusInternalServerError:
-		logrus.WithFields(fields).Fatal("Unexpected error")
+		logrus.WithFields(fields).Error("Unexpected error")
 		return nil, errors.Errorf("Unexpected error from %s", url)
 	case http.StatusServiceUnavailable:
 		return nil, errors.Errorf("Service unavailable %s", api.Host)

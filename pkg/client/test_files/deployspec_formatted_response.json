@@ -1,0 +1,8 @@
+{
+  "count": 1,
+  "items": [
+    "{\n  name:          \"redis\"                       // redis.json\n  namespace:     \"paas-aotest\"                 // generated\n  envName:       \"aotest\"                      // folderName\n  schemaVersion: \"v1\"                          // about.json\n  type:          \"template\"                    // redis.json\n  envFile:       \"about-template.json\"         // aotest/redis.json\n  affiliation:   \"paas\"                        // about.json\n  cluster:       \"utv\"                         // aotest/about-template.json\n  permissions: {\n    admin:       \"APP_PaaS_drift APP_PaaS_utv\" // about.json\n  }\n  splunkIndex:   \"openshift-test\"              // about.json\n  certificate:   true                          // about.json\n  route:         true                          // aotest/redis.json\n  parameters: {\n    APP_NAME:    \"redis\"                       // redis.json\n    AFFILIATION: \"paas2\"                       // aotest/about-template.json\n  }\n  template:      \"redis\"                       // redis.json\n}"
+  ],
+  "message": "OK",
+  "success": true
+}

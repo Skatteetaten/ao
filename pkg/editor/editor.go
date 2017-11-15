@@ -22,9 +22,23 @@ const editPattern = `# Name: %s
 %s%s
 `
 
-type OnSaveFunc func(modifiedContent string) ([]string, error)
+type (
+	OnSaveFunc func(modifiedContent string) ([]string, error)
 
-func Edit(content string, name string, isJson bool, onSave OnSaveFunc) error {
+	Editor struct {
+		OpenEditor func(string) error
+		OnSave     OnSaveFunc
+	}
+)
+
+func NewEditor(saveFunc OnSaveFunc) *Editor {
+	return &Editor{
+		OpenEditor: openEditor,
+		OnSave:     saveFunc,
+	}
+}
+
+func (e Editor) Edit(content string, name string, isJson bool) error {
 
 	tempFilePath, err := createTempFile()
 	if err != nil {
@@ -49,7 +63,7 @@ func Edit(content string, name string, isJson bool, onSave OnSaveFunc) error {
 			return err
 		}
 
-		err = openEditor(tempFilePath)
+		err = e.OpenEditor(tempFilePath)
 		if err != nil {
 			return err
 		}
@@ -76,7 +90,7 @@ func Edit(content string, name string, isJson bool, onSave OnSaveFunc) error {
 			}
 		}
 
-		validationErrors, err := onSave(currentContent)
+		validationErrors, err := e.OnSave(currentContent)
 		if validationErrors != nil {
 			editErrors = addErrorMessage(validationErrors)
 		} else if err != nil {

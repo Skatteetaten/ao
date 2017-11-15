@@ -56,7 +56,7 @@ func TestFindMatches(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		matches, _ := FindMatches(test.Search, fileNames, test.WithSuffix)
+		matches := FindMatches(test.Search, fileNames, test.WithSuffix)
 		assert.Equal(t, test.Expected, matches, test.Search+" returned unexpected matches than expected.")
 	}
 }
@@ -72,11 +72,7 @@ func TestFindFileToEdit(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		filename, err := SearchForFile(test.Search, fileNames)
-		if err != nil {
-			t.Error(err)
-		}
-
+		filename := SearchForFile(test.Search, fileNames)
 		assert.Equal(t, test.Expected, filename)
 	}
 }
@@ -98,7 +94,7 @@ func TestFindApplicationsToDeploy(t *testing.T) {
 	filteredFiles := fileNames.GetDeployments()
 
 	for _, test := range tests {
-		deploys, _ := SearchForApplications(test.Search, filteredFiles)
+		deploys := SearchForApplications(test.Search, filteredFiles)
 		assert.Equal(t, test.Expected, deploys, "Searching for "+test.Search)
 	}
 }

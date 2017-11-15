@@ -13,12 +13,12 @@ func TestApiClient_Deploy(t *testing.T) {
 
 	t.Run("Should successfully deploy applications", func(t *testing.T) {
 		fileName := "deploy_paas_success_response"
-		data := ReadTestFile(fileName)
+		response := ReadTestFile(fileName)
+
+		expectedPayload := `{"applicationIds":[{"environment":"boober-utv","application":"reference"}],"overrides":{},"deploy":true}`
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-
 			defer req.Body.Close()
 			body, err := ioutil.ReadAll(req.Body)
 			if err != nil {
@@ -26,10 +26,8 @@ func TestApiClient_Deploy(t *testing.T) {
 				return
 			}
 
-			payload := `{"applicationIds":[{"environment":"boober-utv","application":"reference"}],"overrides":{},"deploy":true}`
-			assert.JSONEq(t, payload, string(body))
-
-			w.Write(data)
+			assert.JSONEq(t, expectedPayload, string(body))
+			w.Write(response)
 		}))
 		defer ts.Close()
 

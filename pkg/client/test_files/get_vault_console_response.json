@@ -1,0 +1,16 @@
+{
+  "count": 1,
+  "items": [
+    {
+      "name": "console",
+      "secrets": {
+        "foo": "ASDwWlg="
+      },
+      "versions": {
+        "foo": "8b4868a"
+      }
+    }
+  ],
+  "message": "OK",
+  "success": true
+}

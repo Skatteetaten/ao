@@ -3,7 +3,6 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -86,13 +85,18 @@ func TestApiClient_Do(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("Should send payload correctly", func(t *testing.T) {
-		ac := NewAuroraConfig()
+	t.Run("Should send payload and retrieve response correctly", func(t *testing.T) {
 
+		ac := NewAuroraConfig()
 		assert.NotNil(t, ac.Files)
 		assert.NotNil(t, ac.Versions)
 
-		data, err := json.Marshal(ac)
+		response := Response{
+			Items: json.RawMessage(`[]`),
+		}
+
+		responseBody, err := json.Marshal(response)
+		payload, err := json.Marshal(ac)
 		assert.NoError(t, err)
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -103,16 +107,17 @@ func TestApiClient_Do(t *testing.T) {
 			body, err := ioutil.ReadAll(req.Body)
 			assert.NoError(t, err)
 
-			assert.Equal(t, data, body)
+			assert.Equal(t, payload, body)
+			w.Write(responseBody)
 		}))
 		defer ts.Close()
 
 		api := NewApiClient(ts.URL, "", "")
-		_, err = api.Do(http.MethodPut, "/", data)
+		_, err = api.Do(http.MethodPut, "/", payload)
 		assert.NoError(t, err)
 	})
 
-	t.Run("Should return error when status code is 403, 404", func(t *testing.T) {
+	t.Run("Should return error when status code is 403, 404, 500, 503", func(t *testing.T) {
 		testCases := []struct {
 			StatusCode int
 			Message    string
@@ -120,6 +125,8 @@ func TestApiClient_Do(t *testing.T) {
 		}{
 			{http.StatusForbidden, `{"message": "Access denied", "path": "/"}`, "/"},
 			{http.StatusNotFound, `{"message": "Not Found", "path": "/"}`, "/"},
+			{http.StatusInternalServerError, `{"message": "Server error", "path": "/"}`, "/"},
+			{http.StatusServiceUnavailable, `{"message": "Service unavailable", "path": "/"}`, "/"},
 		}
 
 		var testServers []*httptest.Server
@@ -135,7 +142,8 @@ func TestApiClient_Do(t *testing.T) {
 
 			api := NewApiClient(ts.URL, "test", affiliation)
 			_, err := api.Do(http.MethodGet, test.Path, nil)
-			assert.Equal(t, errors.New(test.Message).Error(), err.Error())
+
+			assert.Error(t, err)
 		}
 
 		for _, ts := range testServers {

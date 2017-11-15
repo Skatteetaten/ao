@@ -2,7 +2,6 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -163,7 +162,6 @@ func TestApiClient_GetAuroraConfigFile(t *testing.T) {
 func TestApiClient_PatchAuroraConfigFile(t *testing.T) {
 	t.Run("", func(t *testing.T) {
 		fileName := "test/foo.json"
-		getAuroraConfigPath := fmt.Sprintf("/affiliation/%s/auroraconfigfile/%s", affiliation, fileName)
 
 		res := &Response{
 			Success: true,
@@ -180,14 +178,11 @@ func TestApiClient_PatchAuroraConfigFile(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			w.WriteHeader(http.StatusOK)
 
-			var response []byte
-			if req.URL.Path == getAuroraConfigPath && req.Method == http.MethodGet {
-				response = getResponse
-			} else {
-				response = []byte(`{"success": true}`)
+			if req.Method == http.MethodGet {
+				w.Write(getResponse)
+			} else if req.Method == http.MethodPatch {
+				w.Write([]byte(`{"success": true}`))
 			}
-
-			w.Write(response)
 		}))
 		defer ts.Close()
 

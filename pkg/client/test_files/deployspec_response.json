@@ -1,0 +1,73 @@
+{
+  "count": 1,
+  "items": [
+    {
+      "affiliation": {
+        "source": "about.json",
+        "value": "paas"
+      },
+      "certificate": {
+        "source": "about.json",
+        "value": true
+      },
+      "cluster": {
+        "source": "aotest/about-template.json",
+        "value": "utv"
+      },
+      "envFile": {
+        "source": "aotest/redis.json",
+        "value": "about-template.json"
+      },
+      "envName": {
+        "source": "folderName",
+        "value": "aotest"
+      },
+      "name": {
+        "source": "redis.json",
+        "value": "redis"
+      },
+      "namespace": {
+        "source": "generated",
+        "value": "paas-aotest"
+      },
+      "parameters": {
+        "AFFILIATION": {
+          "source": "aotest/about-template.json",
+          "value": "paas2"
+        },
+        "APP_NAME": {
+          "source": "redis.json",
+          "value": "redis"
+        }
+      },
+      "permissions": {
+        "admin": {
+          "source": "about.json",
+          "value": "APP_PaaS_drift APP_PaaS_utv"
+        }
+      },
+      "route": {
+        "source": "aotest/redis.json",
+        "value": true
+      },
+      "schemaVersion": {
+        "source": "about.json",
+        "value": "v1"
+      },
+      "splunkIndex": {
+        "source": "about.json",
+        "value": "openshift-test"
+      },
+      "template": {
+        "source": "redis.json",
+        "value": "redis"
+      },
+      "type": {
+        "source": "redis.json",
+        "value": "template"
+      }
+    }
+  ],
+  "message": "OK",
+  "success": true
+}

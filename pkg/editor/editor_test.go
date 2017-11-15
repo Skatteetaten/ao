@@ -42,5 +42,4 @@ func TestHasContentChanged(t *testing.T) {
 	for _, test := range testCases {
 		assert.Equal(t, test.Expected, hasContentChanged(test.Original, test.Edited))
 	}
-
 }
