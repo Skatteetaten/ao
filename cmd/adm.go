@@ -63,6 +63,7 @@ func init() {
 	admCmd.AddCommand(updateClustersCmd)
 
 	getClusterCmd.Flags().BoolVarP(&flagShowAll, "all", "a", false, "Show all clusters, not just the reachable ones")
+	recreateConfigCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Recreate config with one cluster")
 }
 
 func PrintClusters(cmd *cobra.Command, args []string) {
@@ -104,9 +105,8 @@ func RecreateConfig(cmd *cobra.Command, args []string) error {
 	conf.InitClusters()
 	conf.SelectApiCluster()
 
-	cluster, _ := cmd.Flags().GetString("cluster")
-	if cluster != "" {
-		conf.AvailableClusters = []string{cluster}
+	if flagCluster != "" {
+		conf.AvailableClusters = []string{flagCluster}
 	}
 
 	return config.WriteConfig(*conf, ConfigLocation)

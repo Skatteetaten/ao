@@ -28,22 +28,13 @@ var (
 	}
 )
 
-type (
-	Cluster struct {
-		Name      string `json:"name"`
-		Url       string `json:"url"`
-		Token     string `json:"token"`
-		Reachable bool   `json:"reachable"`
-		BooberUrl string `json:"booberUrl"`
-	}
-
-	LoginOptions struct {
-		Affiliation string
-		UserName    string
-		APICluster  string
-		LocalHost   bool
-	}
-)
+type Cluster struct {
+	Name      string `json:"name"`
+	Url       string `json:"url"`
+	Token     string `json:"token"`
+	Reachable bool   `json:"reachable"`
+	BooberUrl string `json:"booberUrl"`
+}
 
 func (ao *AOConfig) InitClusters() {
 	ao.Clusters = make(map[string]*Cluster)

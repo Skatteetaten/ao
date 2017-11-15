@@ -7,8 +7,14 @@ import (
 	"strings"
 )
 
-func FindMatches(search string, fileNames []string, withSuffix bool) []string {
+type FilterMode uint
 
+const (
+	APP_FILTER FilterMode = iota
+	ENV_FILTER
+)
+
+func FindMatches(search string, fileNames []string, withSuffix bool) []string {
 	var files []string
 	for _, file := range fileNames {
 		files = append(files, strings.TrimSuffix(file, ".json"))
@@ -40,12 +46,10 @@ func FindMatches(search string, fileNames []string, withSuffix bool) []string {
 }
 
 func SearchForFile(search string, files []string) []string {
-
 	return FindMatches(search, files, true)
 }
 
 func SearchForApplications(search string, files []string) []string {
-
 	var options []string
 	if !strings.Contains(search, "/") {
 		options = FindAllDeploysFor(APP_FILTER, search, files)
@@ -61,18 +65,10 @@ func SearchForApplications(search string, files []string) []string {
 	return options
 }
 
-type FilterMode uint
-
-const (
-	APP_FILTER FilterMode = iota
-	ENV_FILTER
-)
-
 /*
 	Search string must match either environment or application exact
 */
 func FindAllDeploysFor(mode FilterMode, search string, files []string) []string {
-
 	search = strings.TrimSuffix(search, ".json")
 	deploys := make(map[string]*collections.StringSet)
 
