@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
-	"github.com/skatteetaten/ao/pkg/config"
 )
 
 const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
@@ -164,24 +163,6 @@ func isCleanRepo() bool {
 	}
 
 	return false
-}
-
-func UpdateLocalRepository(affiliation string, config config.AOConfig) error {
-	path := config.CheckoutPaths[affiliation]
-	if path == "" {
-		return errors.New("No local repository for affiliation " + affiliation)
-	}
-
-	wd, _ := os.Getwd()
-	if err := os.Chdir(path); err != nil {
-		return err
-	}
-
-	if _, err := Pull(); err != nil {
-		return err
-	}
-
-	return os.Chdir(wd)
 }
 
 func ValidateRepo(expectedUrl string) error {

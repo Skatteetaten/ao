@@ -40,13 +40,6 @@ type (
 	}
 )
 
-func NewErrorResponse(message string) *ErrorResponse {
-	return &ErrorResponse{
-		message:       message,
-		ContainsError: true,
-		UniqueErrors:  make(map[string]bool),
-	}
-}
 func (res *Response) ParseItems(data interface{}) error {
 	if !res.Success {
 		return errors.New(res.Message)
@@ -83,6 +76,14 @@ func (res *Response) ToErrorResponse() (*ErrorResponse, error) {
 	}
 
 	return errorResponse, nil
+}
+
+func NewErrorResponse(message string) *ErrorResponse {
+	return &ErrorResponse{
+		message:       message,
+		ContainsError: true,
+		UniqueErrors:  make(map[string]bool),
+	}
 }
 
 func (e *ErrorResponse) String() string {

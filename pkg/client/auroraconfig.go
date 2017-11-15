@@ -30,7 +30,7 @@ type (
 		Value interface{} `json:"value"`
 	}
 
-	AuroraConfigFilePayload struct {
+	auroraConfigFilePayload struct {
 		Version          string `json:"version"`
 		ValidateVersions bool   `json:"validateVersions"`
 		Content          string `json:"content"`
@@ -141,7 +141,7 @@ func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatch
 		return err
 	}
 
-	payload := AuroraConfigFilePayload{
+	payload := auroraConfigFilePayload{
 		Version:          file.Version,
 		ValidateVersions: true,
 		Content:          string(op),
@@ -167,7 +167,7 @@ func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatch
 func (api *ApiClient) PutAuroraConfigFile(file *AuroraConfigFile) (*ErrorResponse, error) {
 	endpoint := fmt.Sprintf("/auroraconfigfile/%s/%s", api.Affiliation, file.Name)
 
-	payload := AuroraConfigFilePayload{
+	payload := auroraConfigFilePayload{
 		Version:          file.Version,
 		Content:          string(file.Contents),
 		ValidateVersions: true,

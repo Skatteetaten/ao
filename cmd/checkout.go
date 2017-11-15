@@ -58,11 +58,6 @@ func Checkout(cmd *cobra.Command, args []string) error {
 		fmt.Print(output)
 	}
 
-	err = AO.AddCheckoutPath(affiliation, path, ConfigLocation)
-	if err != nil {
-		return err
-	}
-
 	fmt.Println("Checkout success")
 	return nil
 }

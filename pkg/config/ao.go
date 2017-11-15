@@ -21,13 +21,10 @@ type AOConfig struct {
 	ClusterUrlPattern       string   `json:"clusterUrlPattern"`
 	BooberUrlPattern        string   `json:"booberUrlPattern"`
 	UpdateUrlPattern        string   `json:"updateUrlPattern"`
-
-	CheckoutPaths map[string]string `json:"checkoutPaths"`
 }
 
 var DefaultAOConfig = AOConfig{
 	Clusters:                make(map[string]*Cluster),
-	CheckoutPaths:           make(map[string]string),
 	AvailableClusters:       []string{"utv", "utv-relay", "test", "test-relay", "prod", "prod-relay", "qa"},
 	PreferredAPIClusters:    []string{"utv", "test"},
 	AvailableUpdateClusters: []string{"utv", "test"},
@@ -51,7 +48,7 @@ func LoadConfigFile(configLocation string) (*AOConfig, error) {
 	return c, nil
 }
 
-func (ao *AOConfig) Write(configLocation string) error {
+func WriteConfig(ao AOConfig, configLocation string) error {
 	data, err := json.MarshalIndent(ao, "", "  ")
 	if err != nil {
 		return err
@@ -112,23 +109,6 @@ func (ao *AOConfig) Update(noPrompt bool) error {
 	}
 
 	return ao.replaceAO(data)
-}
-
-// TODO: Remove checkout paths?
-func (ao *AOConfig) AddCheckoutPath(affiliation, path, configLocation string) error {
-	if ao.CheckoutPaths == nil {
-		ao.CheckoutPaths = make(map[string]string)
-	}
-	ao.CheckoutPaths[affiliation] = path
-	return ao.Write(configLocation)
-}
-
-func (ao *AOConfig) RemoveCheckoutPath(affiliation string, configLocation string) error {
-	if ao.CheckoutPaths == nil {
-		return errors.New("There are no checkout path to remove")
-	}
-	delete(ao.CheckoutPaths, affiliation)
-	return ao.Write(configLocation)
 }
 
 func (ao *AOConfig) replaceAO(data []byte) error {

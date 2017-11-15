@@ -9,7 +9,7 @@ import (
 )
 
 type (
-	ApplicationId struct {
+	applicationId struct {
 		Environment string `json:"environment"`
 		Application string `json:"application"`
 	}
@@ -31,7 +31,7 @@ type (
 	}
 
 	DeployPayload struct {
-		ApplicationIds []ApplicationId            `json:"applicationIds"`
+		ApplicationIds []applicationId            `json:"applicationIds"`
 		Overrides      map[string]json.RawMessage `json:"overrides"`
 		Deploy         bool                       `json:"deploy"`
 	}
@@ -74,11 +74,11 @@ func (api *ApiClient) Deploy(deployPayload *DeployPayload) (*DeployResults, erro
 	return &deploys, nil
 }
 
-func createApplicationIds(apps []string) []ApplicationId {
-	var applicationIds []ApplicationId
+func createApplicationIds(apps []string) []applicationId {
+	var applicationIds []applicationId
 	for _, app := range apps {
 		envApp := strings.Split(app, "/")
-		applicationIds = append(applicationIds, ApplicationId{
+		applicationIds = append(applicationIds, applicationId{
 			Environment: envApp[0],
 			Application: envApp[1],
 		})

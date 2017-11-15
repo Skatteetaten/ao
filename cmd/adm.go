@@ -32,14 +32,14 @@ var updateClustersCmd = &cobra.Command{
 	Use:   "update-clusters",
 	Short: "Will update clusters",
 	Long:  `The command will updated cluster with latest clusterUrlPattern and booberUrlPattern.`,
-	Run:   UpdateClusters,
+	RunE:  UpdateClusters,
 }
 
 var recreateConfigCmd = &cobra.Command{
 	Use:   "recreate-config",
 	Short: "adm recreate-config",
 	Long:  `The command will recreate the .ao.json file.`,
-	Run:   RecreateConfig,
+	RunE:  RecreateConfig,
 }
 
 var completionCmd = &cobra.Command{
@@ -93,13 +93,13 @@ func PrintClusters(cmd *cobra.Command, args []string) {
 	DefaultTablePrinter(table, cmd.OutOrStdout())
 }
 
-func UpdateClusters(cmd *cobra.Command, args []string) {
+func UpdateClusters(cmd *cobra.Command, args []string) error {
 	AO.InitClusters()
 	AO.SelectApiCluster()
-	AO.Write(ConfigLocation)
+	return config.WriteConfig(*AO, ConfigLocation)
 }
 
-func RecreateConfig(cmd *cobra.Command, args []string) {
+func RecreateConfig(cmd *cobra.Command, args []string) error {
 	conf := &config.DefaultAOConfig
 	conf.InitClusters()
 	conf.SelectApiCluster()
@@ -108,7 +108,8 @@ func RecreateConfig(cmd *cobra.Command, args []string) {
 	if cluster != "" {
 		conf.AvailableClusters = []string{cluster}
 	}
-	conf.Write(ConfigLocation)
+
+	return config.WriteConfig(*conf, ConfigLocation)
 }
 
 func BashCompletion(cmd *cobra.Command, args []string) error {

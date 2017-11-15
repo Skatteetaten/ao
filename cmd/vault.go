@@ -159,7 +159,11 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	// TODO: Check if vault exists
+	v, _ := DefaultApiClient.GetVault(args[0])
+	if v != nil {
+		return errors.Errorf("vault %s already exists", args[0])
+	}
+
 	vault := client.NewAuroraSecretVault(args[0])
 
 	if flagVaultFolder != "" {

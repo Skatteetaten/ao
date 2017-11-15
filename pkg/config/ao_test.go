@@ -5,6 +5,18 @@ import (
 	"testing"
 )
 
+const configTmpFile = "/tmp/ao_test.json"
+
+func TestLoadConfigFile(t *testing.T) {
+	ao, _ := LoadConfigFile(configTmpFile)
+	assert.Empty(t, ao)
+
+	ao = &DefaultAOConfig
+
+	ao.Write()
+
+}
+
 func TestAOConfig_SelectApiCluster(t *testing.T) {
 	tests := []struct {
 		Clusters map[string]bool

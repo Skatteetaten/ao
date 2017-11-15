@@ -101,7 +101,10 @@ func initialize(cmd *cobra.Command, args []string) error {
 		aoConfig = &config.DefaultAOConfig
 		aoConfig.InitClusters()
 		aoConfig.SelectApiCluster()
-		aoConfig.Write(ConfigLocation)
+		err = config.WriteConfig(*aoConfig, ConfigLocation)
+		if err != nil {
+			return err
+		}
 	}
 
 	apiCluster := aoConfig.Clusters[aoConfig.APICluster]

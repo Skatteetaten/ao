@@ -29,13 +29,22 @@ var (
 	}
 )
 
-type Cluster struct {
-	Name      string `json:"name"`
-	Url       string `json:"url"`
-	Token     string `json:"token"`
-	Reachable bool   `json:"reachable"`
-	BooberUrl string `json:"booberUrl"`
-}
+type (
+	Cluster struct {
+		Name      string `json:"name"`
+		Url       string `json:"url"`
+		Token     string `json:"token"`
+		Reachable bool   `json:"reachable"`
+		BooberUrl string `json:"booberUrl"`
+	}
+
+	LoginOptions struct {
+		Affiliation string
+		UserName    string
+		APICluster  string
+		LocalHost   bool
+	}
+)
 
 func (c *Cluster) HasValidToken() bool {
 	if c.Token == "" {
@@ -103,19 +112,12 @@ func (ao *AOConfig) Logout(configLocation string) error {
 
 	ao.Localhost = false
 
-	err := ao.Write(configLocation)
+	err := WriteConfig(*ao, configLocation)
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-type LoginOptions struct {
-	Affiliation string
-	UserName    string
-	APICluster  string
-	LocalHost   bool
 }
 
 func (ao *AOConfig) Login(configLocation string, options LoginOptions) {
@@ -155,7 +157,7 @@ func (ao *AOConfig) Login(configLocation string, options LoginOptions) {
 	}
 
 	ao.Localhost = options.LocalHost
-	ao.Write(configLocation)
+	WriteConfig(*ao, configLocation)
 }
 
 func getToken(cluster string, username string, password string) (string, error) {
