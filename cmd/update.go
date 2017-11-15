@@ -17,7 +17,7 @@ func init() {
 }
 
 func Update(cmd *cobra.Command, args []string) error {
-	err := AO.Update(false)
+	err := AO.Update(true)
 	if err != nil {
 		return err
 	} else {

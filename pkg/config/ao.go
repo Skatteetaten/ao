@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"io/ioutil"
 	"os"
@@ -86,12 +87,16 @@ func (ao *AOConfig) SelectApiCluster() {
 }
 
 func (ao *AOConfig) Update(noPrompt bool) error {
-	serverVersion, err := ao.GetCurrentVersionFromServer()
+	url := ao.getUpdateUrl()
+	if url == "" {
+		return errors.New("No update server is available, check config")
+	}
+	serverVersion, err := GetCurrentVersionFromServer(url)
 	if err != nil {
 		return err
 	}
 
-	if !serverVersion.IsNewVersion(Version) {
+	if !serverVersion.IsNewVersion() {
 		return errors.New("No update available")
 	}
 
@@ -103,7 +108,7 @@ func (ao *AOConfig) Update(noPrompt bool) error {
 		}
 	}
 
-	data, err := ao.GetNewAOClient()
+	data, err := GetNewAOClient(url)
 	if err != nil {
 		return err
 	}
@@ -129,4 +134,22 @@ func (ao *AOConfig) replaceAO(data []byte) error {
 	}
 
 	return nil
+}
+
+func (ao *AOConfig) getUpdateUrl() string {
+	var updateCluster string
+	for _, c := range ao.AvailableUpdateClusters {
+		available, found := ao.Clusters[c]
+		logrus.WithField("exists", found).Info("update server", c)
+		if found && available.Reachable {
+			updateCluster = c
+			break
+		}
+	}
+
+	if updateCluster == "" {
+		return ""
+	}
+
+	return fmt.Sprintf(ao.UpdateUrlPattern, updateCluster)
 }

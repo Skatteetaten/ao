@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/skatteetaten/ao/pkg/prompt"
 	"net"
 	"net/http"
 	"net/url"
@@ -46,30 +45,6 @@ type (
 	}
 )
 
-func (c *Cluster) HasValidToken() bool {
-	if c.Token == "" {
-		return false
-	}
-
-	clusterUrl := fmt.Sprintf("%s/%s", c.Url, "oapi")
-	req, err := http.NewRequest("GET", clusterUrl, nil)
-	if err != nil {
-		return false
-	}
-
-	req.Header.Add("Authorization", "Bearer "+c.Token)
-	logrus.WithField("url", clusterUrl).Debug("Check for valid token")
-	resp, err := client.Do(req)
-	if err != nil {
-		return false
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return false
-	}
-	return true
-}
-
 func (ao *AOConfig) InitClusters() {
 	ao.Clusters = make(map[string]*Cluster)
 	ch := make(chan *Cluster)
@@ -104,65 +79,33 @@ func (ao *AOConfig) InitClusters() {
 	}
 }
 
-func (ao *AOConfig) Logout(configLocation string) error {
-	ao.Affiliation = ""
-	for _, c := range ao.Clusters {
-		c.Token = ""
+func (c *Cluster) HasValidToken() bool {
+	if c.Token == "" {
+		return false
 	}
 
-	ao.Localhost = false
-
-	err := WriteConfig(*ao, configLocation)
+	clusterUrl := fmt.Sprintf("%s/%s", c.Url, "oapi")
+	req, err := http.NewRequest("GET", clusterUrl, nil)
 	if err != nil {
-		return err
+		return false
 	}
 
-	return nil
+	req.Header.Add("Authorization", "Bearer "+c.Token)
+	logrus.WithField("url", clusterUrl).Debug("Check for valid token")
+	resp, err := client.Do(req)
+	if err != nil {
+		return false
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return false
+	}
+	return true
 }
 
-func (ao *AOConfig) Login(configLocation string, options LoginOptions) {
-
-	if options.Affiliation != "" {
-		ao.Affiliation = options.Affiliation
-	}
-
-	if ao.Affiliation == "" {
-		ao.Affiliation = prompt.Affiliation("Login")
-	}
-
-	var password string
-	for _, c := range ao.Clusters {
-		if !c.Reachable || c.HasValidToken() {
-			continue
-		}
-		if password == "" {
-			password = prompt.Password()
-		}
-		token, err := getToken(c.Url, options.UserName, password)
-		if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"url":      c.Url,
-				"userName": options.UserName,
-			}).Fatal(err)
-		}
-		c.Token = token
-	}
-	if options.APICluster != "" {
-		if cluster, found := ao.Clusters[options.APICluster]; found && cluster.Reachable {
-			ao.APICluster = options.APICluster
-		} else {
-			ao.SelectApiCluster()
-			fmt.Printf("Specified api cluster %s is not available, using %s\n", options.APICluster, ao.APICluster)
-		}
-	}
-
-	ao.Localhost = options.LocalHost
-	WriteConfig(*ao, configLocation)
-}
-
-func getToken(cluster string, username string, password string) (string, error) {
+func GetToken(host string, username string, password string) (string, error) {
 	urlSuffix := "/oauth/authorize?client_id=openshift-challenging-client&response_type=token"
-	clusterUrl := cluster + urlSuffix
+	clusterUrl := host + urlSuffix
 	resp, err := getBasicAuth(clusterUrl, username, password)
 	if err != nil {
 		return "", err

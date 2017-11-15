@@ -2,19 +2,27 @@ package config
 
 import (
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
 const configTmpFile = "/tmp/ao_test.json"
 
 func TestLoadConfigFile(t *testing.T) {
+	defer os.Remove(configTmpFile)
 	ao, _ := LoadConfigFile(configTmpFile)
 	assert.Empty(t, ao)
 
 	ao = &DefaultAOConfig
 
-	ao.Write()
+	assert.Empty(t, ao.Affiliation)
+	ao.Affiliation = "paas"
+	WriteConfig(*ao, configTmpFile)
 
+	ao, _ = LoadConfigFile(configTmpFile)
+	assert.NotEmpty(t, ao)
+
+	assert.Equal(t, "paas", ao.Affiliation)
 }
 
 func TestAOConfig_SelectApiCluster(t *testing.T) {

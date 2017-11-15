@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -10,10 +9,24 @@ import (
 )
 
 // The version variables will be set during build time, see build/build.sh
-var BuildStamp string
-var Branch string
-var GitHash string
-var Version string
+var (
+	BuildStamp string
+	Branch     string
+	GitHash    string
+	Version    string
+
+	DefaultAOVersion = AOVersion{
+		Version:    Version,
+		BuildStamp: BuildStamp,
+		Branch:     Branch,
+		GitHash:    GitHash,
+	}
+)
+
+const (
+	aoDownloadPath       = "/api/ao"
+	aoCurrentVersionPath = "/api/version"
+)
 
 type AOVersion struct {
 	Version    string `json:"version"`
@@ -22,23 +35,13 @@ type AOVersion struct {
 	BuildStamp string `json:"buildStamp"`
 }
 
-func (v *AOVersion) IsNewVersion(version string) bool {
+func (v *AOVersion) IsNewVersion() bool {
 	// TODO: Should do better check then this
-	return v.Version != version
+	return v.Version != Version
 }
 
-var DefaultAOVersion = AOVersion{
-	Version:    Version,
-	BuildStamp: BuildStamp,
-	Branch:     Branch,
-	GitHash:    GitHash,
-}
-
-const aoDownloadPath = "/api/ao"
-const aoCurrentVersionPath = "/api/version"
-
-func (ao *AOConfig) GetCurrentVersionFromServer() (*AOVersion, error) {
-	data, err := ao.FetchFromUpdateServer(aoCurrentVersionPath, "application/json")
+func GetCurrentVersionFromServer(url string) (*AOVersion, error) {
+	data, err := fetchFromUpdateServer(url, aoCurrentVersionPath, "application/json")
 	if err != nil {
 		return nil, err
 	}
@@ -52,16 +55,11 @@ func (ao *AOConfig) GetCurrentVersionFromServer() (*AOVersion, error) {
 	return &aoVersion, nil
 }
 
-func (ao *AOConfig) GetNewAOClient() ([]byte, error) {
-	return ao.FetchFromUpdateServer(aoDownloadPath, "application/octet-stream")
+func GetNewAOClient(url string) ([]byte, error) {
+	return fetchFromUpdateServer(url, aoDownloadPath, "application/octet-stream")
 }
 
-func (ao *AOConfig) FetchFromUpdateServer(endpoint, contentType string) ([]byte, error) {
-	url, err := ao.getUpdateUrl()
-	if err != nil {
-		return nil, err
-	}
-
+func fetchFromUpdateServer(url, endpoint, contentType string) ([]byte, error) {
 	logrus.WithField("url", url).Info("Request")
 	req, err := http.NewRequest(http.MethodGet, url+endpoint, nil)
 	if err != nil {
@@ -83,22 +81,4 @@ func (ao *AOConfig) FetchFromUpdateServer(endpoint, contentType string) ([]byte,
 	file, err := ioutil.ReadAll(res.Body)
 
 	return file, err
-}
-
-func (ao *AOConfig) getUpdateUrl() (string, error) {
-	var updateCluster string
-	for _, c := range ao.AvailableUpdateClusters {
-		available, found := ao.Clusters[c]
-		logrus.WithField("exists", found).Info("update server", c)
-		if found && available.Reachable {
-			updateCluster = c
-			break
-		}
-	}
-
-	if updateCluster == "" {
-		return "", errors.New("No update servers available")
-	}
-
-	return fmt.Sprintf(ao.UpdateUrlPattern, updateCluster), nil
 }

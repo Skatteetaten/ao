@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
 )
 
@@ -16,5 +17,12 @@ func init() {
 }
 
 func Logout(cmd *cobra.Command, args []string) error {
-	return AO.Logout(ConfigLocation)
+	AO.Affiliation = ""
+	for _, c := range AO.Clusters {
+		c.Token = ""
+	}
+
+	AO.Localhost = false
+
+	return config.WriteConfig(*AO, ConfigLocation)
 }

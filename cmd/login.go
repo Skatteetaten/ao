@@ -5,7 +5,9 @@ package cmd
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/config"
+	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -62,14 +64,40 @@ func Login(cmd *cobra.Command, args []string) error {
 		AO = conf
 	}
 
-	options := config.LoginOptions{
-		APICluster:  flagApiCluster,
-		Affiliation: args[0],
-		UserName:    flagUserName,
-		LocalHost:   flagLocalhost,
+	if args[0] != "" {
+		AO.Affiliation = args[0]
 	}
 
-	AO.Login(ConfigLocation, options)
+	var password string
+	for _, c := range AO.Clusters {
+		if !c.Reachable || c.HasValidToken() {
+			continue
+		}
+		if password == "" {
+			password = prompt.Password()
+		}
+		token, err := config.GetToken(c.Url, flagUserName, password)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"url":      c.Url,
+				"userName": flagUserName,
+			}).Fatal(err)
+		}
+		c.Token = token
+	}
+
+	if flagApiCluster != "" {
+		if cluster, found := AO.Clusters[flagApiCluster]; found && cluster.Reachable {
+			AO.APICluster = flagApiCluster
+		} else {
+			AO.SelectApiCluster()
+			fmt.Printf("Specified api cluster %s is not available, using %s\n", flagApiCluster, AO.APICluster)
+		}
+	}
+
+	AO.Localhost = flagLocalhost
+	config.WriteConfig(*AO, ConfigLocation)
+
 	err := AO.Update(flagNoUpdatePrompt)
 	if err != nil {
 		return err
