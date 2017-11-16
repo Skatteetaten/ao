@@ -60,7 +60,7 @@ func GetNewAOClient(url string) ([]byte, error) {
 }
 
 func fetchFromUpdateServer(url, endpoint, contentType string) ([]byte, error) {
-	logrus.WithField("url", url).Info("Request")
+	logrus.WithField("url", url).WithField("endpoint", endpoint).Info("Request")
 	req, err := http.NewRequest(http.MethodGet, url+endpoint, nil)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func fetchFromUpdateServer(url, endpoint, contentType string) ([]byte, error) {
 
 	logrus.WithField("url", url).WithField("status", res.StatusCode).Info("Response")
 	if res.StatusCode != http.StatusOK {
-		return nil, errors.New(res.Status)
+		return nil, errors.New("Cannot reach update server: " + res.Status)
 	}
 
 	defer res.Body.Close()

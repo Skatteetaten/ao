@@ -23,7 +23,7 @@ Yb,_,dP       `8b, `Y8b,,__,,d8P'
   </pre>
 
   </em>
-  <a href="/api/ao" class="btn" download>
+  <a href="/assets/ao" class="btn" download>
     <h1>
       <em>Download</em>
     </h1>
@@ -39,7 +39,7 @@ Yb,_,dP       `8b, `Y8b,,__,,d8P'
         document.getElementById('version').innerHTML = 'Version: ' + version;
     }
 
-    fetch('/api/version').then(function (res) {
+    fetch('/assets/version.json').then(function (res) {
       res.json().then(showVersion);
     });
   </script>

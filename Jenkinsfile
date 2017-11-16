@@ -24,8 +24,9 @@ node {
     }
 
     stage('Copy ao to assets') {
-        sh 'mkdir ./website/assets'
-        sh 'cp ./bin/amd64/ao ./website/assets'
+        sh 'mkdir ./website/public/assets'
+        sh './bin/amd64/ao version --json > ./website/public/assets/version.json'
+        sh 'cp ./bin/amd64/ao ./website/public/assets'
     }
 
     String version = git.getTagFromCommit()
