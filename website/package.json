@@ -12,12 +12,5 @@
     "assets",
     "metadata",
     "public"
-  ],
-  "scripts": {
-    "start": "nodemon test-server.js --watch public --watch api --watch test-server.js",
-    "deploy": "aurora-openshift deploy"
-  },
-  "devDependencies": {
-    "aurora-openshift": "0.0.12"
-  }
+  ]
 }
