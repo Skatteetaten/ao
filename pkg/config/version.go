@@ -24,8 +24,8 @@ var (
 )
 
 const (
-	aoDownloadPath       = "/api/ao"
-	aoCurrentVersionPath = "/api/version"
+	aoDownloadPath       = "/assets/ao"
+	aoCurrentVersionPath = "/assets/version.json"
 )
 
 type AOVersion struct {
