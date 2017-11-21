@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const authenticationUrlSuffix = "/oauth/authorize?client_id=openshift-challenging-client&response_type=token"
+
 var (
 	transport = http.Transport{
 		Dial: func(network, addr string) (net.Conn, error) {
@@ -95,8 +97,7 @@ func (c *Cluster) HasValidToken() bool {
 }
 
 func GetToken(host string, username string, password string) (string, error) {
-	urlSuffix := "/oauth/authorize?client_id=openshift-challenging-client&response_type=token"
-	clusterUrl := host + urlSuffix
+	clusterUrl := host + authenticationUrlSuffix
 	resp, err := getBasicAuth(clusterUrl, username, password)
 	if err != nil {
 		return "", err

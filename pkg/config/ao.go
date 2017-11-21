@@ -113,7 +113,6 @@ func (ao *AOConfig) Update(noPrompt bool) error {
 }
 
 func (ao *AOConfig) replaceAO(data []byte) error {
-
 	executablePath, err := os.Executable()
 	if err != nil {
 		return err
@@ -124,12 +123,8 @@ func (ao *AOConfig) replaceAO(data []byte) error {
 	if err != nil {
 		return err
 	}
-	err = os.Rename(releasePath, executablePath)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return os.Rename(releasePath, executablePath)
 }
 
 func (ao *AOConfig) getUpdateUrl() string {

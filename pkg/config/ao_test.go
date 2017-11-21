@@ -2,6 +2,8 @@ package config
 
 import (
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 )
@@ -57,4 +59,23 @@ func TestAOConfig_SelectApiCluster(t *testing.T) {
 
 	aoConfig.SelectApiCluster()
 	assert.Equal(t, "test", aoConfig.APICluster, "Should not override APICluster when set")
+}
+
+func TestAOConfig_Update(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	aoConfig := &AOConfig{
+		ClusterUrlPattern:       "%s",
+		UpdateUrlPattern:        "%s",
+		AvailableClusters:       []string{ts.URL},
+		AvailableUpdateClusters: []string{ts.URL},
+	}
+
+	aoConfig.InitClusters()
+	aoConfig.SelectApiCluster()
+
+	assert.Equal(t, ts.URL, aoConfig.getUpdateUrl())
 }
