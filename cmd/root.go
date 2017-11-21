@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
@@ -14,11 +14,7 @@ import (
 
 const rootLong = `A command line interface that interacts with the Boober API
 to enable the user to manipulate the Aurora Config for an affiliation, and to
- deploy one or more application.
-
-This application has two main parts.
-1. manage the AuroraConfig configuration via cli
-2. apply the aoc configuration to the clusters`
+deploy one or more application.`
 
 var (
 	pFlagLogLevel  string
@@ -35,9 +31,8 @@ var (
 
 var RootCmd = &cobra.Command{
 	Use:               "ao",
-	Short:             "Aurora Openshift CLI",
+	Short:             "Aurora OpenShift CLI",
 	Long:              rootLong,
-	SilenceUsage:      true,
 	PersistentPreRunE: initialize,
 	RunE:              showAoHelp,
 }
@@ -47,7 +42,6 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&pFlagPrettyLog, "prettylog", "", false, "Pretty print log")
 	RootCmd.PersistentFlags().StringVarP(&pFlagHost, "serverapi", "", "", "Override default server API address")
 	RootCmd.PersistentFlags().StringVarP(&pFlagToken, "token", "", "", "Token to be used for serverapi connections")
-
 }
 
 func showAoHelp(cmd *cobra.Command, args []string) error {
@@ -78,6 +72,8 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 
 func initialize(cmd *cobra.Command, args []string) error {
 
+	// Setting output for cmd.Print methods
+	cmd.SetOutput(os.Stdout)
 	// Errors will be printed from main
 	cmd.SilenceErrors = true
 	// Disable print usage when an error occurs
@@ -109,7 +105,8 @@ func initialize(cmd *cobra.Command, args []string) error {
 
 	apiCluster := aoConfig.Clusters[aoConfig.APICluster]
 	if apiCluster == nil {
-		return errors.Errorf("Api cluster %s is not available. Check config.", aoConfig.APICluster)
+		fmt.Printf("Api cluster %s is not available. Check config.\n", aoConfig.APICluster)
+		apiCluster = &config.Cluster{}
 	}
 
 	api := client.NewApiClient(apiCluster.BooberUrl, apiCluster.Token, aoConfig.Affiliation)

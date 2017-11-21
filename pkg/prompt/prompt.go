@@ -5,20 +5,6 @@ import (
 	"gopkg.in/AlecAivazis/survey.v1"
 )
 
-func Affiliation(cmd string) string {
-	p := &survey.Input{
-		Message: cmd + " affiliation:",
-	}
-
-	var affiliation string
-	err := survey.AskOne(p, &affiliation, nil)
-	if err != nil {
-		logrus.Error(err)
-	}
-
-	return affiliation
-}
-
 func Password() string {
 	p := &survey.Password{
 		Message: "Password:",
