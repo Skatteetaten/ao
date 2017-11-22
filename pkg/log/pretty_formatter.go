@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"strings"
+	"time"
 )
 
 type PrettyFormatter struct{}
@@ -18,8 +19,8 @@ func (df *PrettyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		b = &bytes.Buffer{}
 	}
 	level := strings.ToUpper(entry.Level.String())
-	time := entry.Time.Format("02-01-2006 15:04:05 CET")
-	b.WriteString(fmt.Sprintf("%s %s ", level, time))
+	timeStamp := entry.Time.Format(time.RFC1123)
+	b.WriteString(fmt.Sprintf("%s %s ", level, timeStamp))
 
 	jsonStart := strings.Index(entry.Message, "{")
 
