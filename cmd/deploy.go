@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/cmd/common"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
@@ -111,15 +110,15 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	possibleDeploys := files.GetDeployments()
+	possibleDeploys := files.GetApplicationIds()
 	applications := fuzzy.SearchForApplications(search, possibleDeploys)
 
 	if len(applications) == 0 {
 		return errors.New("No applications to deploy")
 	}
 
-	table := common.GetDeploymentTable(applications)
-	common.DefaultTablePrinter(table, cmd.OutOrStdout())
+	header, rows := GetApplicationIdTable(applications)
+	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 
 	shouldDeploy := true
 	if !flagNoPrompt {
@@ -182,8 +181,8 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return strings.Compare(results[i].ADS.Name, results[j].ADS.Name) < 1
 	})
 
-	table = printDeployResults(results)
-	common.DefaultTablePrinter(table, cmd.OutOrStdout())
+	header, rows = getDeployResultTable(results)
+	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 	return nil
 }
 
@@ -245,18 +244,19 @@ func parseOverride(override []string) (map[string]json.RawMessage, error) {
 	return returnMap, nil
 }
 
-func printDeployResults(deploys []client.DeployResult) []string {
-	results := []string{"\x1b[00mSTATUS\x1b[0m\tAPPLICATION\tENVIRONMENT\tCLUSTER\tDEPLOY_ID\t"}
+func getDeployResultTable(deploys []client.DeployResult) (string, []string) {
+	var rows []string
 	for _, item := range deploys {
 		ads := item.ADS
-		pattern := "%s\t%s\t%s\t%s\t%s\t"
+		pattern := "%s\t%s\t%s\t%s\t%s"
 		status := "\x1b[32mDeployed\x1b[0m"
 		if !item.Success {
 			status = "\x1b[31mFailed\x1b[0m"
 		}
 		result := fmt.Sprintf(pattern, status, ads.Name, ads.Namespace, ads.Cluster, item.DeployId)
-		results = append(results, result)
+		rows = append(rows, result)
 	}
 
-	return results
+	header := "\x1b[00mSTATUS\x1b[0m\tAPPLICATION\tENVIRONMENT\tCLUSTER\tDEPLOY_ID"
+	return header, rows
 }

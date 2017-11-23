@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/cmd/common"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/prompt"
@@ -100,8 +99,8 @@ func DeleteFile(cmd *cobra.Command, args []string) error {
 		return errors.New("No file to edit")
 	}
 
-	table := common.GetFilesTable(files)
-	common.DefaultTablePrinter(table, cmd.OutOrStdout())
+	header, rows := GetFilesTable(files)
+	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 	message := fmt.Sprintf("Do you want to delete %d file(s)?", len(files))
 	shouldDelete := prompt.Confirm(message)
 
@@ -125,7 +124,7 @@ func deleteFilesFor(mode fuzzy.FilterMode, search string, api *client.ApiClient,
 		return err
 	}
 
-	matches := fuzzy.FindAllDeploysFor(mode, search, fileNames.GetDeployments())
+	matches := fuzzy.FindAllDeploysFor(mode, search, fileNames.GetApplicationIds())
 
 	if len(matches) == 0 {
 		return errors.New("No matches")
@@ -144,8 +143,8 @@ func deleteFilesFor(mode fuzzy.FilterMode, search string, api *client.ApiClient,
 		files = append(files, m+".json")
 	}
 
-	table := common.GetFilesTable(files)
-	common.DefaultTablePrinter(table, out)
+	header, rows := GetFilesTable(files)
+	DefaultTablePrinter(header, rows, out)
 	message := fmt.Sprintf("Do you want to delete %s?", search)
 	deleteAll := prompt.Confirm(message)
 
