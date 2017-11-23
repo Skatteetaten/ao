@@ -18,7 +18,7 @@ var forceFlag bool
 var (
 	deleteCmd = &cobra.Command{
 		Use:         "delete",
-		Short:       "Delete a resource",
+		Short:       "Delete AuroraConfig files",
 		Annotations: map[string]string{"type": "remote"},
 	}
 
