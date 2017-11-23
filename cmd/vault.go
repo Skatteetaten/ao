@@ -352,7 +352,7 @@ func getVaultTable(vaults []*client.AuroraVaultInfo) (string, []string) {
 		permissions := vault.Permissions.GetGroups()
 
 		for _, secret := range vault.Secrets {
-			line := fmt.Sprintf("%s\t%s\t%s\t%v\t", name, permissions, secret, vault.Admin)
+			line := fmt.Sprintf("%s\t%s\t%s\t%v", name, permissions, secret, vault.Admin)
 			rows = append(rows, line)
 			name = " "
 		}

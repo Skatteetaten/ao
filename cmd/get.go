@@ -104,9 +104,9 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 		return errors.New("No environments available")
 	}
 
-	applications := fileNames.GetEnvironments()
-	sort.Strings(applications)
-	DefaultTablePrinter("ENVIRONMENTS", applications, cmd.OutOrStdout())
+	envrionments := fileNames.GetEnvironments()
+	sort.Strings(envrionments)
+	DefaultTablePrinter("ENVIRONMENTS", envrionments, cmd.OutOrStdout())
 	return nil
 }
 

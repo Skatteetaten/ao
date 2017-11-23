@@ -59,7 +59,7 @@ func init() {
 }
 
 func PrintClusters(cmd *cobra.Command, args []string) {
-	var table []string
+	var rows []string
 	for _, name := range AO.AvailableClusters {
 		cluster := AO.Clusters[name]
 
@@ -81,11 +81,11 @@ func PrintClusters(cmd *cobra.Command, args []string) {
 			api = "Yes"
 		}
 		line := fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s", name, reachable, loggedIn, api, cluster.Url)
-		table = append(table, line)
+		rows = append(rows, line)
 	}
 
 	header := "\tCLUSTER NAME\tREACHABLE\tLOGGED IN\tAPI\tURL"
-	DefaultTablePrinter(header, table, cmd.OutOrStdout())
+	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 }
 
 func UpdateClusters(cmd *cobra.Command, args []string) error {
