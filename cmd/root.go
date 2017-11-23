@@ -12,14 +12,15 @@ import (
 
 // TODO: UPDATE DOCUMENTATION
 
-const rootLong = `A command line interface that interacts with the Boober API
-to enable the user to manipulate the Aurora Config for an affiliation, and to
-deploy one or more application.`
+const rootLong = `A command line interface for the Boober API.
+  * Deploy one or more ApplicationId (environment/application) to one or more clusters
+  * Manipulate AuroraConfig remotely
+  * Support modifying AuroraConfig locally
+  * Manipulate vaults and secrets`
 
 var (
 	pFlagLogLevel  string
 	pFlagPrettyLog bool
-	pFlagHost      string
 	pFlagToken     string
 
 	// DefaultApiClient will use APICluster from ao config as default values
@@ -38,10 +39,9 @@ var RootCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.PersistentFlags().StringVarP(&pFlagLogLevel, "log", "", "fatal", "Set loglevel. Valid log levels are [info, debug, warning, error, fatal]")
-	RootCmd.PersistentFlags().BoolVarP(&pFlagPrettyLog, "prettylog", "", false, "Pretty print log")
-	RootCmd.PersistentFlags().StringVarP(&pFlagHost, "serverapi", "", "", "Override default server API address")
-	RootCmd.PersistentFlags().StringVarP(&pFlagToken, "token", "", "", "Token to be used for serverapi connections")
+	RootCmd.PersistentFlags().StringVarP(&pFlagLogLevel, "log", "l", "fatal", "Set loglevel. Valid log levels are [info, debug, warning, error, fatal]")
+	RootCmd.PersistentFlags().BoolVarP(&pFlagPrettyLog, "pretty", "p", false, "Pretty print json output for log")
+	RootCmd.PersistentFlags().StringVarP(&pFlagToken, "token", "t", "", "Boober authorization token")
 }
 
 func showAoHelp(cmd *cobra.Command, args []string) error {
@@ -111,9 +111,7 @@ func initialize(cmd *cobra.Command, args []string) error {
 
 	api := client.NewApiClient(apiCluster.BooberUrl, apiCluster.Token, aoConfig.Affiliation)
 
-	if pFlagHost != "" {
-		api.Host = pFlagHost
-	} else if aoConfig.Localhost {
+	if aoConfig.Localhost {
 		// TODO: Move to config?
 		api.Host = "http://localhost:8080"
 	}

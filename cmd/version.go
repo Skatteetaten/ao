@@ -10,7 +10,6 @@ import (
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Shows the version of the ao client",
-	Long:  `Shows the version of the ao client application`,
 	RunE:  Version,
 }
 

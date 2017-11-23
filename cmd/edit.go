@@ -3,26 +3,35 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/cmd/common"
 	"github.com/skatteetaten/ao/pkg/editor"
-	"github.com/skatteetaten/ao/pkg/fuzzy"
-	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
 )
 
-const editFileLong = `Edit a single file in the AuroraConfig repository, or a secret in a vault.
-The file can be specified using unique shortened name, so given that the file superapp-test/about.json exists, then the command
+const editLong = `The arguments to edit are fuzzy match, if there are multiple matches you are prompted to select
+one file to edit.`
 
-	ao edit test/about
+const exampleEdit = `Given the following AuroraConfig:
+  - about.json
+  - foobar.json
+  - bar.json
+  - foo/about.json
+  - foo/bar.json
+  - foo/foobar.json
 
-will edit this file, if there is no other file matching the same shortening.`
+Fuzzy matching
+  ao edit fo/ba == foo/bar.json and foo/foobar.json
+
+Exact matching
+  ao edit foo/bar == only foo/bar.json
+`
 
 var editCmd = &cobra.Command{
 	Use:         "edit [env/]file",
-	Short:       "Edit a single file in the AuroraConfig repository, or a secret in a vault",
-	Long:        editFileLong,
+	Short:       "Edit a single file in the AuroraConfig repository",
+	Long:        editLong,
 	Annotations: map[string]string{"type": "remote"},
+	Example:     exampleEdit,
 	RunE:        EditFile,
 }
 
@@ -35,7 +44,12 @@ func EditFile(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	fileName, err := SelectFile(args[0], DefaultApiClient)
+	fileNames, err := DefaultApiClient.GetFileNames()
+	if err != nil {
+		return err
+	}
+
+	fileName, err := common.SelectOne(args, fileNames, true)
 	if err != nil {
 		return err
 	}
@@ -64,27 +78,4 @@ func EditFile(cmd *cobra.Command, args []string) error {
 
 	fmt.Println(fileName, "edited")
 	return nil
-}
-
-func SelectFile(search string, api *client.ApiClient) (string, error) {
-	var fileName string
-	fileNames, err := api.GetFileNames()
-	if err != nil {
-		return fileName, err
-	}
-
-	options := fuzzy.SearchForFile(search, fileNames)
-
-	if len(options) > 1 {
-		message := fmt.Sprintf("Matched %d files. Which file do you want?", len(options))
-		fileName = prompt.Select(message, options)
-	} else if len(options) == 1 {
-		fileName = options[0]
-	}
-
-	if fileName == "" {
-		return fileName, errors.New("No files")
-	}
-
-	return fileName, nil
 }

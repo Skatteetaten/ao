@@ -10,6 +10,7 @@ import (
 	"os"
 )
 
+// TODO: Change affiliation to auroraconfig, flags
 var (
 	flagCheckoutAffiliation string
 	flagCheckoutPath        string
@@ -18,7 +19,7 @@ var (
 
 var checkoutCmd = &cobra.Command{
 	Use:         "checkout",
-	Short:       "Checkout AuroraConfig (git repository) for current affiliation",
+	Short:       "Checkout the given AuroraConfig (git repository)",
 	Annotations: map[string]string{"type": "local"},
 	RunE:        Checkout,
 }
@@ -27,7 +28,7 @@ func init() {
 	RootCmd.AddCommand(checkoutCmd)
 
 	user, _ := os.LookupEnv("USER")
-	checkoutCmd.Flags().StringVarP(&flagCheckoutAffiliation, "affiliation", "a", "", "Affiliation to clone")
+	checkoutCmd.Flags().StringVarP(&flagCheckoutAffiliation, "auroraconfig", "a", "", "AuroraConfig to clone")
 	checkoutCmd.Flags().StringVarP(&flagCheckoutPath, "path", "p", "", "Checkout repo to path")
 	checkoutCmd.Flags().StringVarP(&flagCheckoutUser, "user", "u", user, "Checkout repo as user")
 }
@@ -48,7 +49,7 @@ func Checkout(cmd *cobra.Command, args []string) error {
 	url := versioncontrol.GetGitUrl(affiliation, flagCheckoutUser, DefaultApiClient)
 
 	logrus.Debug(url)
-	fmt.Printf("Cloning AuroraConfig for affiliation %s\n", affiliation)
+	fmt.Printf("Cloning AuroraConfig %s\n", affiliation)
 	fmt.Printf("From: %s\n\n", url)
 
 	output, err := versioncontrol.Checkout(url, path)

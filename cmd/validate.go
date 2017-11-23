@@ -9,7 +9,7 @@ import (
 
 var validateCmd = &cobra.Command{
 	Use:         "validate",
-	Short:       "Validate local AuroraConfig",
+	Short:       "Validate local AuroraConfig changes",
 	Annotations: map[string]string{"type": "local"},
 	RunE:        Validate,
 }

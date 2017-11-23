@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/skatteetaten/ao/cmd/common"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
 	"os"
@@ -11,27 +12,19 @@ var flagShowAll bool
 
 var admCmd = &cobra.Command{
 	Use:   "adm",
-	Short: "Perform administrative commands on AO or other resources not related to vaults of AuroraConfig",
-	Long:  `Can be used to retrieve one file or all the files from the respository.`,
+	Short: "Perform administrative commands on AO configuration",
 }
 
 var getClusterCmd = &cobra.Command{
-	Use:   "cluster [clustername]",
-	Short: "Get cluster",
-	Long: `The command will list the reachable OpenShift clusters defined in the configuration file (~/ao.json).
-If the --all flag is specified, all clusters will be listed.
-The API cluster is the one used to serve configuration requests.  All the commands except Deploy will only use the
-API cluster.
-The Deploy command will send the same request to all the reachable clusters, allowing each to filter deploys
-intended for that particular cluster.`,
-	Aliases: []string{"clusters"},
+	Use:     "clusters",
+	Short:   "List configured clusters",
+	Aliases: []string{"cluster"},
 	Run:     PrintClusters,
 }
 
 var updateClustersCmd = &cobra.Command{
 	Use:   "update-clusters",
 	Short: "Will update clusters",
-	Long:  `The command will updated cluster with latest clusterUrlPattern and booberUrlPattern.`,
 	RunE:  UpdateClusters,
 }
 
@@ -69,7 +62,9 @@ func init() {
 func PrintClusters(cmd *cobra.Command, args []string) {
 	table := []string{"\tCLUSTER NAME\tREACHABLE\tLOGGED IN\tAPI\tURL"}
 
-	for name, cluster := range AO.Clusters {
+	for _, name := range AO.AvailableClusters {
+		cluster := AO.Clusters[name]
+
 		if !(cluster.Reachable || flagShowAll) {
 			continue
 		}
@@ -87,11 +82,11 @@ func PrintClusters(cmd *cobra.Command, args []string) {
 		if name == AO.APICluster {
 			api = "Yes"
 		}
-		line := fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s\t", name, reachable, loggedIn, api, cluster.Url)
+		line := fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s", name, reachable, loggedIn, api, cluster.Url)
 		table = append(table, line)
 	}
 
-	DefaultTablePrinter(table, cmd.OutOrStdout())
+	common.DefaultTablePrinter(table, cmd.OutOrStdout())
 }
 
 func UpdateClusters(cmd *cobra.Command, args []string) error {

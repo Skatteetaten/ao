@@ -8,7 +8,6 @@ import (
 var logoutCmd = &cobra.Command{
 	Use:   "logout",
 	Short: "Logout of all connected clusters",
-	Long:  `Removes the tokens stored for each cluster in the configuration file.`,
 	RunE:  Logout,
 }
 
@@ -17,12 +16,12 @@ func init() {
 }
 
 func Logout(cmd *cobra.Command, args []string) error {
+	AO.Localhost = false
 	AO.Affiliation = ""
+
 	for _, c := range AO.Clusters {
 		c.Token = ""
 	}
-
-	AO.Localhost = false
 
 	return config.WriteConfig(*AO, ConfigLocation)
 }

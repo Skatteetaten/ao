@@ -7,6 +7,7 @@ import (
 
 	"encoding/json"
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/cmd/common"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/editor"
 	"github.com/skatteetaten/ao/pkg/prompt"
@@ -26,21 +27,6 @@ The editor will present a JSON view of the vault.
 The secrets will be presented as Base64 encoded strings.
 If secret-name is given, the editor will present the decoded secret string for editing.`
 
-const importVaultLong = `Import works on a set of folders, each of which will become a separate vault.
-Given the catalog structure:
-
-vaultsfolder
-  vault1
-    secretfile1
-    secretfile1
-  vault2
-    secretfile3
-
-Then the command
-	ao vault import vaultsfolder
-will create 2 vaults: vault1 and vault2.  Vault1 will contain 2 secrets: secretfile1 and secretfile2.
-Vault2 will contain 1 secret: secretfile3.`
-
 const listVaultLong = `If no argument is given, the command will list the vaults in the current affiliation, along with the
 numer of secrets in the vault.
 If a vaultname is specified, the command will list the secrets in the given vault.
@@ -58,6 +44,7 @@ var vaultCmd = &cobra.Command{
 	Annotations: map[string]string{"type": "remote"},
 }
 
+// TODO: Create name file/folder. Name and file/folder is required
 var vaultCreateCmd = &cobra.Command{
 	Use:   "create [<vaultname>] [-f <folder>]",
 	Short: "Creates a vault and optionally imports the contents of a set of secretfiles into a vault",
@@ -76,15 +63,6 @@ var vaultDeleteCmd = &cobra.Command{
 	Use:   "delete <vaultname>",
 	Short: "Delete a vault",
 	RunE:  DeleteVault,
-}
-
-var vaultImportCmd = &cobra.Command{
-	Use:   "import <catalog>",
-	Short: "Imports the contents of a set of files into a set of vaults",
-	Long:  importVaultLong,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("Not implemented")
-	},
 }
 
 var vaultListCmd = &cobra.Command{
@@ -112,7 +90,6 @@ func init() {
 
 	vaultCmd.AddCommand(vaultPermissionsCmd)
 	vaultCmd.AddCommand(vaultDeleteCmd)
-	vaultCmd.AddCommand(vaultImportCmd)
 	vaultCmd.AddCommand(vaultListCmd)
 	vaultCmd.AddCommand(vaultCreateCmd)
 	vaultCmd.AddCommand(vaultEditCmd)
@@ -287,7 +264,7 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 	if len(table) == 1 {
 		return errors.New("No vaults available")
 	}
-	DefaultTablePrinter(table, cmd.OutOrStdout())
+	common.DefaultTablePrinter(table, cmd.OutOrStdout())
 
 	return nil
 }
@@ -295,6 +272,10 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 func VaultPermissions(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return cmd.Usage()
+	}
+
+	if flagRemoveGroup == "" && flagAddGroup == "" {
+		return errors.New("Please specify --add-group <group> or/and --remove-group <group>")
 	}
 
 	vault, err := DefaultApiClient.GetVault(args[0])
