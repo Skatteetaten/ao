@@ -200,7 +200,7 @@ func (f *AuroraConfigFile) ToPrettyJson() string {
 	return string(data)
 }
 
-func (f FileNames) GetDeployments() []string {
+func (f FileNames) GetApplicationIds() []string {
 	var filteredFiles []string
 	for _, file := range f {
 		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {

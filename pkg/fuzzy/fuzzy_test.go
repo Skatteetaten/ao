@@ -33,7 +33,7 @@ func TestFilterFileNamesForDeploy(t *testing.T) {
 		"test-relay/boober",
 	}
 
-	actual := fileNames.GetDeployments()
+	actual := fileNames.GetApplicationIds()
 	assert.Equal(t, expected, actual)
 }
 
@@ -91,7 +91,7 @@ func TestFindApplicationsToDeploy(t *testing.T) {
 		{"boo", []string{"utv/boober", "test/boober", "utv-relay/boober", "test-relay/boober"}},
 	}
 
-	filteredFiles := fileNames.GetDeployments()
+	filteredFiles := fileNames.GetApplicationIds()
 
 	for _, test := range tests {
 		deploys := SearchForApplications(test.Search, filteredFiles)
@@ -113,7 +113,7 @@ func TestFindAllFor(t *testing.T) {
 		{"boo", APP_FILTER, []string{}},
 	}
 
-	filteredFiles := fileNames.GetDeployments()
+	filteredFiles := fileNames.GetApplicationIds()
 
 	filteredFiles = append(filteredFiles, "illegalfile")
 

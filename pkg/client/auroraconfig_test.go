@@ -203,7 +203,7 @@ func TestApiClient_PatchAuroraConfigFile(t *testing.T) {
 
 func TestFileNames_Filter(t *testing.T) {
 	fileNames := FileNames{"about.json", "boober.json", "test/about.json", "test/boober.json"}
-	deployments := fileNames.GetDeployments()
+	deployments := fileNames.GetApplicationIds()
 	environments := fileNames.GetEnvironments()
 	applications := fileNames.GetApplications()
 
