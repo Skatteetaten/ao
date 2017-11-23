@@ -1,5 +1,0 @@
-{
-  "gitUrlPattern":"http://git-test",
-  "openshiftCluster":"utv",
-  "openshiftUrl":"https://utv-master"
-}

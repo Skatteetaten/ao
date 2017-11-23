@@ -3,28 +3,35 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"os"
 )
 
+var flagSaveAsUser string
+
 var saveCmd = &cobra.Command{
-	Use:   "save",
-	Short: "Save changed, new and deleted files for AuroraConfig",
-	Run: func(cmd *cobra.Command, args []string) {
-		user, _ := cmd.Flags().GetString("user")
-		url := getGitUrl(config.GetAffiliation(), user)
-		if _, err := auroraconfig.Save(url, config); err != nil {
-			fmt.Println(err.Error())
-		} else {
-			fmt.Println("Save success")
-		}
-	},
+	Use:         "save",
+	Short:       "Save changed, new and deleted files for AuroraConfig",
+	Annotations: map[string]string{"type": "local"},
+	RunE:        Save,
 }
 
 func init() {
 	RootCmd.AddCommand(saveCmd)
 
-	viper.BindEnv("USER")
-	saveCmd.Flags().StringP("user", "u", viper.GetString("USER"), "Save AuroraConfig as user")
+	user, _ := os.LookupEnv("USER")
+	saveCmd.Flags().StringVarP(&flagSaveAsUser, "user", "u", user, "Save AuroraConfig as user")
+}
+
+func Save(cmd *cobra.Command, args []string) error {
+	url := versioncontrol.GetGitUrl(AO.Affiliation, flagSaveAsUser, DefaultApiClient)
+
+	if _, err := versioncontrol.Save(url, DefaultApiClient); err != nil {
+		return err
+	} else {
+		fmt.Println("Save success")
+	}
+
+	return nil
 }

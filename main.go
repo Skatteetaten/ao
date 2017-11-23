@@ -1,7 +1,14 @@
 package main
 
-import "github.com/skatteetaten/ao/cmd"
+import (
+	"fmt"
+	"github.com/skatteetaten/ao/cmd"
+	"os"
+)
 
 func main() {
-	cmd.Execute()
+	if err := cmd.RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
 }

@@ -24,7 +24,7 @@ TARGETS=$(for d in "$@"; do echo ./$d/...; done)
 
 echo "Running tests:"
 if [ -z "${JUNIT_REPORT+x}" ]; then
-    go test -pkgdir=${GOPATH}/pkg ${TARGETS}
+    go test -cover -pkgdir=${GOPATH}/pkg ${TARGETS}
 else
     go test -v -pkgdir=${GOPATH}/pkg ${TARGETS} | go-junit-report > ${JUNIT_REPORT}
 fi

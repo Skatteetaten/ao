@@ -1,0 +1,37 @@
+{
+  "success": false,
+  "message": "AuroraConfig contained errors for one or more applications.",
+  "items": [
+    {
+      "application": "reference-web",
+      "environment": "boober-utv",
+      "messages": [
+        {
+          "type": "ILLEGAL",
+          "message": "Must be one of [deploy, development, localTemplate, template, build]",
+          "field": {
+            "path": "/type",
+            "value": "aslkdjf",
+            "source": "boober-utv/about.json"
+          }
+        }
+      ]
+    },
+    {
+      "application": "reference",
+      "environment": "boober-utv",
+      "messages": [
+        {
+          "type": "ILLEGAL",
+          "message": "Must be one of [deploy, development, localTemplate, template, build]",
+          "field": {
+            "path": "/type",
+            "value": "aslkdjf",
+            "source": "boober-utv/about.json"
+          }
+        }
+      ]
+    }
+  ],
+  "count": 2
+}
