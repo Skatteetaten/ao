@@ -29,7 +29,7 @@ func init() {
 
 	user, _ := os.LookupEnv("USER")
 	checkoutCmd.Flags().StringVarP(&flagCheckoutAffiliation, "auroraconfig", "a", "", "AuroraConfig to clone")
-	checkoutCmd.Flags().StringVarP(&flagCheckoutPath, "path", "p", "", "Checkout repo to path")
+	checkoutCmd.Flags().StringVarP(&flagCheckoutPath, "path", "", "", "Checkout repo to path")
 	checkoutCmd.Flags().StringVarP(&flagCheckoutUser, "user", "u", user, "Checkout repo as user")
 }
 
