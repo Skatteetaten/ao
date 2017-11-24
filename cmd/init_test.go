@@ -4,7 +4,6 @@ import (
 	"flag"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
-	"io/ioutil"
 )
 
 var (
@@ -14,7 +13,9 @@ var (
 
 func init() {
 	flag.Parse()
+}
 
+func GetDefaultAOConfig() *config.AOConfig {
 	clusters := map[string]*config.Cluster{
 		"utv": {
 			Name:      "utv",
@@ -33,15 +34,9 @@ func init() {
 		},
 	}
 
-	AO = &config.AOConfig{
+	return &config.AOConfig{
 		APICluster:        "utv",
 		AvailableClusters: []string{"utv", "relay", "test"},
 		Clusters:          clusters,
-	}
-}
-
-func UpdateTestFile(path string, data []byte) {
-	if *updateFiles {
-		ioutil.WriteFile(path, data, 666)
 	}
 }

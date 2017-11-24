@@ -20,6 +20,7 @@ var (
 	pFlagLogLevel  string
 	pFlagPrettyLog bool
 	pFlagToken     string
+	pFlagNoHeader  bool
 
 	// DefaultApiClient will use APICluster from ao config as default values
 	// if persistent token and/or server api url is specified these will override default values
@@ -37,9 +38,11 @@ var RootCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.PersistentFlags().StringVarP(&pFlagLogLevel, "log", "l", "fatal", "Set loglevel. Valid log levels are [info, debug, warning, error, fatal]")
+	RootCmd.PersistentFlags().StringVarP(&pFlagLogLevel, "log", "l", "fatal", "Set log level. Valid log levels are [info, debug, warning, error, fatal]")
 	RootCmd.PersistentFlags().BoolVarP(&pFlagPrettyLog, "pretty", "p", false, "Pretty print json output for log")
 	RootCmd.PersistentFlags().StringVarP(&pFlagToken, "token", "t", "", "Boober authorization token")
+	RootCmd.PersistentFlags().BoolVarP(&pFlagNoHeader, "no-header", "", false, "Print tables without headers")
+	RootCmd.PersistentFlags().MarkHidden("no-header")
 }
 
 func showAoHelp(cmd *cobra.Command, args []string) error {

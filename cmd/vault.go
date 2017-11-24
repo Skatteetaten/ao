@@ -7,7 +7,6 @@ import (
 
 	"encoding/json"
 	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/cmd/common"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/editor"
 	"github.com/skatteetaten/ao/pkg/prompt"
@@ -260,11 +259,11 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	table := getVaultTable(vaults)
-	if len(table) == 1 {
+	header, rows := getVaultTable(vaults)
+	if len(rows) == 0 {
 		return errors.New("No vaults available")
 	}
-	common.DefaultTablePrinter(table, cmd.OutOrStdout())
+	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 
 	return nil
 }
@@ -341,23 +340,24 @@ func collectSecrets(folder string, vault *client.AuroraSecretVault) error {
 	return nil
 }
 
-func getVaultTable(vaults []*client.AuroraVaultInfo) []string {
-	table := []string{"VAULT\tPERMISSIONS\tSECRET\tACCESS"}
+func getVaultTable(vaults []*client.AuroraVaultInfo) (string, []string) {
 
 	sort.Slice(vaults, func(i, j int) bool {
 		return strings.Compare(vaults[i].Name, vaults[j].Name) < 1
 	})
 
+	var rows []string
 	for _, vault := range vaults {
 		name := vault.Name
 		permissions := vault.Permissions.GetGroups()
 
-		for _, s := range vault.Secrets {
-			line := fmt.Sprintf("%s\t%s\t%s\t%v\t", name, permissions, s, vault.Admin)
-			table = append(table, line)
+		for _, secret := range vault.Secrets {
+			line := fmt.Sprintf("%s\t%s\t%s\t%v", name, permissions, secret, vault.Admin)
+			rows = append(rows, line)
 			name = " "
 		}
 	}
 
-	return table
+	header := "VAULT\tPERMISSIONS\tSECRET\tACCESS"
+	return header, rows
 }

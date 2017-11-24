@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/cmd/common"
 	"github.com/spf13/cobra"
+	"sort"
 	"strings"
 )
 
@@ -70,9 +71,9 @@ func PrintAll(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deployments := fileNames.GetDeployments()
-	table := common.GetDeploymentTable(deployments)
-	common.DefaultTablePrinter(table, cmd.OutOrStdout())
+	deployments := fileNames.GetApplicationIds()
+	header, rows := GetApplicationIdTable(deployments)
+	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 
 	return nil
 }
@@ -87,8 +88,9 @@ func PrintApplications(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications available")
 	}
 
-	table := common.SortedTable("APPLICATIONS", fileNames.GetApplications())
-	common.DefaultTablePrinter(table, cmd.OutOrStdout())
+	applications := fileNames.GetApplications()
+	sort.Strings(applications)
+	DefaultTablePrinter("APPLICATIONS", applications, cmd.OutOrStdout())
 	return nil
 }
 
@@ -102,8 +104,9 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 		return errors.New("No environments available")
 	}
 
-	table := common.SortedTable("ENVIRONMENTS", fileNames.GetEnvironments())
-	common.DefaultTablePrinter(table, cmd.OutOrStdout())
+	envrionments := fileNames.GetEnvironments()
+	sort.Strings(envrionments)
+	DefaultTablePrinter("ENVIRONMENTS", envrionments, cmd.OutOrStdout())
 	return nil
 }
 
@@ -116,7 +119,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	selected, err := common.SelectOne(args, fileNames.GetDeployments(), false)
+	selected, err := common.SelectOne(args, fileNames.GetApplicationIds(), false)
 	if err != nil {
 		return err
 	}
@@ -153,8 +156,8 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) < 1 {
-		table := common.GetFilesTable(fileNames)
-		common.DefaultTablePrinter(table, cmd.OutOrStdout())
+		header, rows := GetFilesTable(fileNames)
+		DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 		return nil
 	}
 

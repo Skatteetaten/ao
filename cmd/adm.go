@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/ao/cmd/common"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
 	"os"
@@ -60,8 +59,7 @@ func init() {
 }
 
 func PrintClusters(cmd *cobra.Command, args []string) {
-	table := []string{"\tCLUSTER NAME\tREACHABLE\tLOGGED IN\tAPI\tURL"}
-
+	var rows []string
 	for _, name := range AO.AvailableClusters {
 		cluster := AO.Clusters[name]
 
@@ -83,10 +81,11 @@ func PrintClusters(cmd *cobra.Command, args []string) {
 			api = "Yes"
 		}
 		line := fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s", name, reachable, loggedIn, api, cluster.Url)
-		table = append(table, line)
+		rows = append(rows, line)
 	}
 
-	common.DefaultTablePrinter(table, cmd.OutOrStdout())
+	header := "\tCLUSTER NAME\tREACHABLE\tLOGGED IN\tAPI\tURL"
+	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 }
 
 func UpdateClusters(cmd *cobra.Command, args []string) error {
