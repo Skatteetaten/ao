@@ -15,10 +15,6 @@ var (
 	permissionsFile = ".permissions"
 )
 
-func TestCreateVault(t *testing.T) {
-
-}
-
 func Test_collectSecrets(t *testing.T) {
 	secret := path.Join(vaultTestFolder, secretFile)
 
