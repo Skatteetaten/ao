@@ -12,8 +12,13 @@ import (
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
 	"io/ioutil"
+	"os"
 	"path"
 	"sort"
+)
+
+var (
+	ErrEmptyGroups = errors.New("Cannot find groups in permissions")
 )
 
 const createVaultLong = `Create <vaultname> will create an empty vault.
@@ -43,16 +48,15 @@ var vaultCmd = &cobra.Command{
 	Annotations: map[string]string{"type": "remote"},
 }
 
-// TODO: Create name file/folder. Name and file/folder is required
 var vaultCreateCmd = &cobra.Command{
-	Use:   "create [<vaultname>] [-f <folder>]",
-	Short: "Creates a vault and optionally imports the contents of a set of secretfiles into a vault",
+	Use:   "create <vaultname> <folder/file>",
+	Short: "Creates a vault and imports the contents of a set of secret files into a vault",
 	Long:  createVaultLong,
 	RunE:  CreateVault,
 }
 
 var vaultEditCmd = &cobra.Command{
-	Use:   "edit <vaultname> | <vaultname>/<secretname> | <vaultname> <secretname>",
+	Use:   "edit <vaultname>/<secretname>",
 	Short: "Edit a vault or a secret",
 	Long:  editVaultLong,
 	RunE:  EditVault,
@@ -65,11 +69,10 @@ var vaultDeleteCmd = &cobra.Command{
 }
 
 var vaultListCmd = &cobra.Command{
-	Use:     "list [vaultname]",
-	Short:   "list all vaults",
-	Aliases: []string{"vaults"},
-	Long:    listVaultLong,
-	RunE:    ListVaults,
+	Use:   "list",
+	Short: "list all vaults",
+	Long:  listVaultLong,
+	RunE:  ListVaults,
 }
 
 var vaultPermissionsCmd = &cobra.Command{
@@ -131,7 +134,7 @@ func RenameVault(cmd *cobra.Command, args []string) error {
 }
 
 func CreateVault(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 {
+	if len(args) != 2 {
 		return cmd.Usage()
 	}
 
@@ -142,11 +145,9 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 
 	vault := client.NewAuroraSecretVault(args[0])
 
-	if flagVaultFolder != "" {
-		err := collectSecrets(flagVaultFolder, vault)
-		if err != nil {
-			return err
-		}
+	err := collectSecrets(args[1], vault)
+	if err != nil {
+		return err
 	}
 
 	if flagRemoveGroup != "" {
@@ -163,7 +164,7 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	err := DefaultApiClient.SaveVault(*vault, false)
+	err = DefaultApiClient.SaveVault(*vault, false)
 	if err != nil {
 		return err
 	}
@@ -305,39 +306,78 @@ func VaultPermissions(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func collectSecrets(folder string, vault *client.AuroraSecretVault) error {
-	files, err := ioutil.ReadDir(folder)
+func collectSecrets(filePath string, vault *client.AuroraSecretVault) error {
+	root, err := os.Stat(filePath)
 	if err != nil {
 		return err
 	}
+
+	var files []os.FileInfo
+	if root.IsDir() {
+		files, err = ioutil.ReadDir(filePath)
+		if err != nil {
+			return err
+		}
+	} else {
+		files = append(files, root)
+	}
+
 	for _, f := range files {
 		if f.IsDir() {
 			continue
 		}
-		data, err := ioutil.ReadFile(path.Join(folder, f.Name()))
-		if err != nil {
-			return err
-		}
-		if !strings.Contains(f.Name(), "permission") {
-			vault.Secrets.AddSecret(f.Name(), string(data))
-			continue
+
+		currentFilePath := filePath
+		if root.IsDir() {
+			currentFilePath = path.Join(filePath, f.Name())
 		}
 
-		permissions := struct {
-			Groups []string `json:"groups"`
-		}{}
-
-		err = json.Unmarshal(data, &permissions)
-		if err != nil {
-			return err
+		if strings.Contains(f.Name(), "permission") {
+			groups, err := readPermissionFile(currentFilePath)
+			if err != nil {
+				return err
+			}
+			vault.Permissions["groups"] = groups
+		} else {
+			secret, err := readSecretFile(currentFilePath)
+			if err != nil {
+				return err
+			}
+			vault.Secrets.AddSecret(f.Name(), secret)
 		}
-		if permissions.Groups == nil {
-			return errors.New("Cannot find groups in permissions")
-		}
-		vault.Permissions["groups"] = permissions.Groups
 	}
 
 	return nil
+}
+
+func readSecretFile(fileName string) (string, error) {
+	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
+}
+
+func readPermissionFile(path string) ([]string, error) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	permissions := struct {
+		Groups []string `json:"groups"`
+	}{}
+
+	err = json.Unmarshal(data, &permissions)
+	if err != nil {
+		return nil, err
+	}
+	if permissions.Groups == nil {
+		return nil, ErrEmptyGroups
+	}
+
+	return permissions.Groups, nil
 }
 
 func getVaultTable(vaults []*client.AuroraVaultInfo) (string, []string) {
