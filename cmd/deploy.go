@@ -72,7 +72,7 @@ func init() {
 func deploy(cmd *cobra.Command, args []string) error {
 
 	if len(args) > 2 || len(args) < 1 {
-		return cmd.Usage()
+		return cmd.Help()
 	}
 
 	search := args[0]
