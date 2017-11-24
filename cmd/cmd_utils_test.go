@@ -37,9 +37,12 @@ func TestDefaultTablePrinter(t *testing.T) {
 		DefaultTablePrinter(tc.Header, tc.Rows, buffer)
 
 		fileName := "test_files/" + tc.Expected
-		UpdateTestFile(fileName, buffer.Bytes())
-		data, _ := ioutil.ReadFile(fileName)
 
+		if *updateFiles {
+			ioutil.WriteFile(fileName, buffer.Bytes(), 644)
+		}
+
+		data, _ := ioutil.ReadFile(fileName)
 		assert.Equal(t, string(data), buffer.String())
 	}
 }

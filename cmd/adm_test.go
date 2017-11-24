@@ -16,6 +16,8 @@ func TestPrintClusters(t *testing.T) {
 		{true, "adm_clusters_all.txt"},
 	}
 
+	AO = GetDefaultAOConfig()
+
 	for _, tc := range cases {
 		buffer := &bytes.Buffer{}
 		testCommand.SetOutput(buffer)
@@ -25,8 +27,9 @@ func TestPrintClusters(t *testing.T) {
 
 		fileName := "test_files/" + tc.ExpectedStringFile
 
-		// Will update test file if update.files flag is set during testing
-		UpdateTestFile(fileName, buffer.Bytes())
+		if *updateFiles {
+			ioutil.WriteFile(fileName, buffer.Bytes(), 644)
+		}
 
 		data, _ := ioutil.ReadFile(fileName)
 		assert.Equal(t, string(data), buffer.String())
