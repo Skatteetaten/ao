@@ -10,6 +10,29 @@ import (
 	"os"
 )
 
+const (
+	bashCompletionFunc = `__ao_parse_get()
+{
+    local ao_output out
+    if ao_output=$(ao get "$1" --no-headers 2>/dev/null); then
+        out=($(echo "${ao_output}" | awk '{print $1}'))
+        COMPREPLY=( $( compgen -W "${out[*]}" -- "$cur" ) )
+    fi
+}
+
+__custom_func() {
+    case ${last_command} in
+        ao_edit)
+            __ao_parse_get files
+            return
+            ;;
+        *)
+            ;;
+    esac
+}
+`
+)
+
 const rootLong = `A command line interface for the Boober API.
   * Deploy one or more ApplicationId (environment/application) to one or more clusters
   * Manipulate AuroraConfig remotely
@@ -40,8 +63,8 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&pFlagLogLevel, "log", "l", "fatal", "Set log level. Valid log levels are [info, debug, warning, error, fatal]")
 	RootCmd.PersistentFlags().BoolVarP(&pFlagPrettyLog, "pretty", "p", false, "Pretty print json output for log")
 	RootCmd.PersistentFlags().StringVarP(&pFlagToken, "token", "t", "", "Boober authorization token")
-	RootCmd.PersistentFlags().BoolVarP(&pFlagNoHeader, "no-header", "", false, "Print tables without headers")
-	RootCmd.PersistentFlags().MarkHidden("no-header")
+	RootCmd.PersistentFlags().BoolVarP(&pFlagNoHeader, "no-headers", "", false, "Print tables without headers")
+	RootCmd.PersistentFlags().MarkHidden("no-headers")
 }
 
 func initialize(cmd *cobra.Command, args []string) error {
