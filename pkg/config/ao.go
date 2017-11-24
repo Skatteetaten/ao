@@ -118,6 +118,7 @@ func (ao *AOConfig) replaceAO(data []byte) error {
 		return err
 	}
 
+	// TODO: Write to tmp folder, then rename
 	releasePath := executablePath + "_" + "update"
 	err = ioutil.WriteFile(releasePath, data, 0750)
 	if err != nil {

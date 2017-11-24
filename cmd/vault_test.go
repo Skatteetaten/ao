@@ -5,12 +5,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
-	"strings"
+	"path"
 	"testing"
 )
 
 var (
-	vaultTestFolder = "test_files/vault_test"
+	vaultTestFolder = "test_files/vault"
+	secretFile      = "latest.properties"
+	permissionsFile = ".permissions"
 )
 
 func TestCreateVault(t *testing.T) {
@@ -18,21 +20,15 @@ func TestCreateVault(t *testing.T) {
 }
 
 func Test_collectSecrets(t *testing.T) {
-	tmp, err := ioutil.TempFile(vaultTestFolder, "latest.properties_")
-	defer os.Remove(tmp.Name())
-	if err != nil {
-		t.Error(err)
-	}
-	tmp.WriteString("FOO=BAR\nBAZ=FOOBAR")
+	secret := path.Join(vaultTestFolder, secretFile)
 
 	t.Run("should add secret latest.properties from given file to vault 'test'", func(t *testing.T) {
 		vault := client.NewAuroraSecretVault("test")
 
-		err = collectSecrets(tmp.Name(), vault)
+		err := collectSecrets(secret, vault, true)
 		assert.NoError(t, err)
 
-		secretName := strings.Split(tmp.Name(), vaultTestFolder+"/")
-		secret, err := vault.Secrets.GetSecret(secretName[1])
+		secret, err := vault.Secrets.GetSecret(secretFile)
 		assert.NoError(t, err)
 		assert.Equal(t, "FOO=BAR\nBAZ=FOOBAR", secret)
 	})
@@ -40,22 +36,20 @@ func Test_collectSecrets(t *testing.T) {
 	t.Run("should add secret and permission from given folder to vault 'test'", func(t *testing.T) {
 		vault := client.NewAuroraSecretVault("test")
 
-		err = collectSecrets(vaultTestFolder, vault)
+		err := collectSecrets(vaultTestFolder, vault, true)
 		assert.NoError(t, err)
 
-		secretName := strings.Split(tmp.Name(), vaultTestFolder+"/")
-		secret, err := vault.Secrets.GetSecret(secretName[1])
+		secret, err := vault.Secrets.GetSecret(secretFile)
 		assert.NoError(t, err)
 		assert.Equal(t, "FOO=BAR\nBAZ=FOOBAR", secret)
 		assert.Equal(t, []string{"test_group"}, vault.Permissions.GetGroups())
 	})
-
 }
 
 func Test_readPermissionFile(t *testing.T) {
 
 	t.Run("should get groups from .permissions file", func(t *testing.T) {
-		groups, err := readPermissionFile(vaultTestFolder + "/.permissions")
+		groups, err := readPermissionFile(path.Join(vaultTestFolder, permissionsFile))
 
 		assert.NoError(t, err)
 		assert.Len(t, groups, 1)

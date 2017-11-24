@@ -99,7 +99,7 @@ func TestApiClient_UpdateSecretFile(t *testing.T) {
 	})
 }
 
-func TestSecrets_GetSecret(t *testing.T) {
+func TestSecrets(t *testing.T) {
 	secrets := Secrets{
 		"latest.properties": "Rk9PPVRFU1QK",
 	}
@@ -114,9 +114,13 @@ func TestSecrets_GetSecret(t *testing.T) {
 	secret, err = secrets.GetSecret("latest.properties2")
 	assert.NoError(t, err)
 	assert.Equal(t, secret, "FOO=TEST2")
+
+	secrets.RemoveSecret("latest.properties2")
+	_, err = secrets.GetSecret("latest.properties2")
+	assert.Error(t, err)
 }
 
-func TestPermissions_GetGroups(t *testing.T) {
+func TestPermissions(t *testing.T) {
 	permissions := Permissions{
 		"groups": []string{"devops"},
 	}

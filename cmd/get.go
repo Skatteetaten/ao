@@ -62,6 +62,7 @@ func init() {
 	getCmd.AddCommand(getDeploymentsCmd)
 	getCmd.AddCommand(getSpecCmd)
 
+	// TODO: Default flag for AuroraDeploySpec
 	getSpecCmd.Flags().BoolVarP(&flagJson, "json", "", false, "print deploy spec as json")
 }
 

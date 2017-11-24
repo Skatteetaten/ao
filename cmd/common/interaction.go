@@ -5,7 +5,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/prompt"
-	"sort"
 )
 
 func SelectOne(args []string, items []string, withSuffix bool) (string, error) {
@@ -18,8 +17,6 @@ func SelectOne(args []string, items []string, withSuffix bool) (string, error) {
 	if len(matches) == 0 {
 		return "", errors.Errorf("No matches for %s", search)
 	}
-
-	sort.Strings(matches)
 
 	selected := matches[0]
 	if len(matches) > 1 {
