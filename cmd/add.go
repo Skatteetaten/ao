@@ -37,7 +37,7 @@ func init() {
 
 func Add(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return cmd.Usage()
+		return cmd.Help()
 	}
 
 	fileName := args[0]

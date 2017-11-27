@@ -12,6 +12,7 @@ import (
 )
 
 var flagJson bool
+var flagAsList bool
 
 var (
 	getCmd = &cobra.Command{
@@ -64,6 +65,7 @@ func init() {
 
 	// TODO: Default flag for AuroraDeploySpec
 	getSpecCmd.Flags().BoolVarP(&flagJson, "json", "", false, "print deploy spec as json")
+	getDeploymentsCmd.Flags().BoolVarP(&flagAsList, "list", "", false, "print ApplicationIds as a list")
 }
 
 func PrintAll(cmd *cobra.Command, args []string) error {
@@ -73,7 +75,17 @@ func PrintAll(cmd *cobra.Command, args []string) error {
 	}
 
 	deployments := fileNames.GetApplicationIds()
-	header, rows := GetApplicationIdTable(deployments)
+
+	var header string
+	var rows []string
+	if flagAsList {
+		sort.Strings(deployments)
+		header = "APPLICATIONID"
+		rows = deployments
+	} else {
+		header, rows = GetApplicationIdTable(deployments)
+	}
+
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 
 	return nil

@@ -26,7 +26,7 @@ func init() {
 
 func Set(cmd *cobra.Command, args []string) error {
 	if len(args) != 3 {
-		return cmd.Usage()
+		return cmd.Help()
 	}
 
 	fileName := args[0]
@@ -52,7 +52,7 @@ func Set(cmd *cobra.Command, args []string) error {
 		return errors.New(res.String())
 	}
 
-	cmd.Printf("%s has been updated\n", fileName)
+	cmd.Printf("%s has been updated with %s %s\n", fileName, path, value)
 
 	return nil
 }

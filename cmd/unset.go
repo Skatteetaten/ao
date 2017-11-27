@@ -24,7 +24,7 @@ func init() {
 
 func Unset(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
-		return cmd.Usage()
+		return cmd.Help()
 	}
 
 	fileName := args[0]

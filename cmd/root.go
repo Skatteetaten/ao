@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	bashCompletionFunc = `__ao_parse_get()
+	bashCompletionFunc = `__ao_parse()
 {
     local ao_output out
-    if ao_output=$(ao get "$1" --no-headers 2>/dev/null); then
+    if ao_output=$(ao $@ --no-headers 2>/dev/null); then
         out=($(echo "${ao_output}" | awk '{print $1}'))
         COMPREPLY=( $( compgen -W "${out[*]}" -- "$cur" ) )
     fi
@@ -23,7 +23,19 @@ const (
 __custom_func() {
     case ${last_command} in
         ao_edit | ao_get_file | ao_delete_file | ao_set | ao_unset)
-            __ao_parse_get files
+            __ao_parse get files
+            return
+            ;;
+        ao_deploy | ao_get_spec)
+            __ao_parse get all --list
+            return
+            ;;
+        ao_vault_edit | ao_vault_delete-secret | ao_vault_rename-secret)
+            __ao_parse vault get --list
+            return
+            ;;
+        ao_vault_delete | ao_vault_rename | ao_vault_permissions)
+            __ao_parse vault get --only-vaults
             return
             ;;
         *)
