@@ -11,7 +11,7 @@ const (
 	helpTemplate = `{{with (or .Long .Short)}}{{. | trimTrailingWhitespaces}}{{end}}
 
 Usage:
-  {{.CommandPath}} [command] [flags]{{if gt (len .Aliases) 0}}
+  {{.UseLine}}{{if gt (len .Aliases) 0}}
 
 Aliases:
   {{.NameAndAliases}}{{end}}{{if .HasExample}}
