@@ -9,6 +9,10 @@ import (
 	"strings"
 )
 
+var (
+	ErrJsonPathPrefix = errors.New("json path must start with /")
+)
+
 type (
 	FileNames []string
 
@@ -128,17 +132,17 @@ func (api *ApiClient) GetAuroraConfigFile(fileName string) (*AuroraConfigFile, e
 	return &file, nil
 }
 
-func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatchOp) error {
+func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatchOp) (*ErrorResponse, error) {
 	endpoint := fmt.Sprintf("/auroraconfigfile/%s/%s/", api.Affiliation, fileName)
 
 	file, err := api.GetAuroraConfigFile(fileName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	op, err := json.Marshal([]JsonPatchOp{operation})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	payload := auroraConfigFilePayload{
@@ -149,19 +153,19 @@ func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatch
 
 	data, err := json.Marshal(payload)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	response, err := api.Do(http.MethodPatch, endpoint, data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !response.Success {
-		return errors.New(response.Message)
+		return response.ToErrorResponse()
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (api *ApiClient) PutAuroraConfigFile(file *AuroraConfigFile) (*ErrorResponse, error) {
@@ -229,4 +233,11 @@ func (f FileNames) GetEnvironments() []string {
 		}
 	}
 	return unique.All()
+}
+
+func (op JsonPatchOp) Validate() error {
+	if !strings.HasPrefix(op.Path, "/") {
+		return ErrJsonPathPrefix
+	}
+	return nil
 }

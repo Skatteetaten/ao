@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -109,6 +110,7 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 
 		errResponse, err := api.ValidateAuroraConfig(&ac)
 		if errResponse == nil {
+			fmt.Println(errResponse)
 			t.Error("Expected errResponse to not be nil")
 			return
 		}
@@ -194,11 +196,34 @@ func TestApiClient_PatchAuroraConfigFile(t *testing.T) {
 			Value: "develop-SNAPSHOT",
 		}
 
-		err = api.PatchAuroraConfigFile(fileName, op)
+		errRes, err := api.PatchAuroraConfigFile(fileName, op)
 		if err != nil {
 			t.Error(err)
 		}
+
+		assert.Empty(t, errRes)
 	})
+}
+
+func TestJsonPatchOp_Validate(t *testing.T) {
+	cases := []struct {
+		JsonPath string
+		Expected error
+	}{
+		{"/version", nil},
+		{"version", ErrJsonPathPrefix},
+	}
+
+	for _, tc := range cases {
+		op := JsonPatchOp{
+			Path: tc.JsonPath,
+		}
+
+		err := op.Validate()
+		if err != nil {
+			assert.Error(t, err, tc.Expected.Error())
+		}
+	}
 }
 
 func TestFileNames_Filter(t *testing.T) {
