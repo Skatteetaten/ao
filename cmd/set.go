@@ -6,10 +6,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const setExample = `ao set foo.json /pause true
+
+ao set test/about.json /cluster utv
+
+ao set test/foo.json /config/IMPORTANT_ENV 'Hello World'`
+
 var setCmd = &cobra.Command{
 	Use:         "set <file> <json-path> <value>",
 	Short:       "Sets the config to the value for the given AuroraConfig file",
 	Annotations: map[string]string{"type": "remote"},
+	Example:     setExample,
 	RunE:        Set,
 }
 

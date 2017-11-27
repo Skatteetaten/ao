@@ -6,10 +6,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const unsetExample = `ao unset foo.json /pause
+
+ao unset test/foo.json /config/IMPORTANT_ENV`
+
 var unsetCmd = &cobra.Command{
 	Use:         "unset <file> <json-path>",
-	Short:       "Removes the json-path for the given AuroraConfig file",
+	Short:       "Removes the config for the given json-path for a file",
 	Annotations: map[string]string{"type": "remote"},
+	Example:     unsetExample,
 	RunE:        Unset,
 }
 
