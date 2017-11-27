@@ -80,8 +80,7 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 	case http.StatusForbidden:
 		return nil, errors.New("Token has expired. Please login: ao login <affiliation>")
 	case http.StatusInternalServerError:
-		logrus.WithFields(fields).Error("Unexpected error")
-		return nil, errors.Errorf("Unexpected error from %s", url)
+		return nil, handleInternalServerError(body, url)
 	case http.StatusServiceUnavailable:
 		return nil, errors.Errorf("Service unavailable %s", api.Host)
 	}
@@ -105,4 +104,17 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 	logrus.WithFields(fields).Debug("ResponseBody")
 
 	return &response, nil
+}
+
+func handleInternalServerError(body []byte, url string) error {
+	internalError := struct {
+		Message   string `json:"message"`
+		Exception string `json:"exception"`
+	}{}
+	err := json.Unmarshal(body, &internalError)
+	if err != nil {
+		return err
+	}
+
+	return errors.Errorf("Unexpected error from %s\nMessage: %s\nException: %s", url, internalError.Message, internalError.Exception)
 }

@@ -145,6 +145,10 @@ func (s Secrets) AddSecret(name, content string) {
 	s[name] = encoded
 }
 
+func (s Secrets) RemoveSecret(name string) {
+	delete(s, name)
+}
+
 func (p Permissions) AddGroup(group string) error {
 	groups := p["groups"]
 	for _, g := range groups {

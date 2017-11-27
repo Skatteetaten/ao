@@ -12,91 +12,158 @@ import (
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
 	"io/ioutil"
+	"os"
 	"path"
 	"sort"
 )
 
-const createVaultLong = `Create <vaultname> will create an empty vault.
-If the --folder / -f flag is given, ao will read all the files in <folder>, and each file will become a secret.
-The secret will be named the same as the file.
-If no vaultname is given, the vault will be named the same as the <folder>.`
-
-const editVaultLong = `This command will edit the content of the given vault.
-The editor will present a JSON view of the vault.
-The secrets will be presented as Base64 encoded strings.
-If secret-name is given, the editor will present the decoded secret string for editing.`
-
-const listVaultLong = `If no argument is given, the command will list the vaults in the current affiliation, along with the
-numer of secrets in the vault.
-If a vaultname is specified, the command will list the secrets in the given vault.
-To access a secret, use the get secret command.`
-
 var (
 	flagAddGroup    string
 	flagRemoveGroup string
-	flagVaultFolder string
+
+	ErrEmptyGroups            = errors.New("Cannot find groups in permissions")
+	ErrNotValidSecretArgument = errors.New("not a valid argument, must be <vaultname/secret>")
 )
 
-var vaultCmd = &cobra.Command{
-	Use:         "vault",
-	Short:       "Create and perform operations on a vault",
-	Annotations: map[string]string{"type": "remote"},
-}
+var (
+	vaultCmd = &cobra.Command{
+		Use:         "vault",
+		Short:       "Create and perform operations on a vault",
+		Annotations: map[string]string{"type": "remote"},
+	}
 
-// TODO: Create name file/folder. Name and file/folder is required
-var vaultCreateCmd = &cobra.Command{
-	Use:   "create [<vaultname>] [-f <folder>]",
-	Short: "Creates a vault and optionally imports the contents of a set of secretfiles into a vault",
-	Long:  createVaultLong,
-	RunE:  CreateVault,
-}
+	vaultAddSecretCmd = &cobra.Command{
+		Use:   "add-secret <vaultname> <[folder/]file>",
+		Short: "Add a secret to an existing vault",
+		RunE:  AddSecret,
+	}
 
-var vaultEditCmd = &cobra.Command{
-	Use:   "edit <vaultname> | <vaultname>/<secretname> | <vaultname> <secretname>",
-	Short: "Edit a vault or a secret",
-	Long:  editVaultLong,
-	RunE:  EditVault,
-}
+	vaultCreateCmd = &cobra.Command{
+		Use:   "create <vaultname> <folder/file>",
+		Short: "Create a new vault with secrets",
+		RunE:  CreateVault,
+	}
 
-var vaultDeleteCmd = &cobra.Command{
-	Use:   "delete <vaultname>",
-	Short: "Delete a vault",
-	RunE:  DeleteVault,
-}
+	vaultEditCmd = &cobra.Command{
+		Use:   "edit <vaultname/secret>",
+		Short: "Edit an existing secret",
+		RunE:  EditSecret,
+	}
 
-var vaultListCmd = &cobra.Command{
-	Use:     "list [vaultname]",
-	Short:   "list all vaults",
-	Aliases: []string{"vaults"},
-	Long:    listVaultLong,
-	RunE:    ListVaults,
-}
+	vaultDeleteCmd = &cobra.Command{
+		Use:   "delete <vaultname>",
+		Short: "Delete a vault",
+		RunE:  DeleteVault,
+	}
 
-var vaultPermissionsCmd = &cobra.Command{
-	Use:   "permissions <vaultname>",
-	Short: "Add or remove permissions on a vault",
-	RunE:  VaultPermissions,
-}
+	vaultDeleteSecretCmd = &cobra.Command{
+		Use:   "delete-secret <vaultname/secret>",
+		Short: "Delete a secret",
+		RunE:  DeleteSecret,
+	}
 
-var vaultRenameCmd = &cobra.Command{
-	Use:   "rename <vaultname> <new vaultname>",
-	Short: "Rename a vault",
-	RunE:  RenameVault,
-}
+	vaultListCmd = &cobra.Command{
+		Use:   "list",
+		Short: "list all vaults",
+		RunE:  ListVaults,
+	}
+
+	vaultPermissionsCmd = &cobra.Command{
+		Use:   "permissions <vaultname>",
+		Short: "Add or remove permissions on a vault",
+		RunE:  VaultPermissions,
+	}
+
+	vaultRenameCmd = &cobra.Command{
+		Use:   "rename <vaultname> <new vaultname>",
+		Short: "Rename a vault",
+		RunE:  RenameVault,
+	}
+	vaultRenameSecretCmd = &cobra.Command{
+		Use:   "rename-secret <vaultname/secretname> <new secretname>",
+		Short: "Rename a secret",
+		RunE:  RenameSecret,
+	}
+)
 
 func init() {
 	RootCmd.AddCommand(vaultCmd)
 
+	vaultCmd.AddCommand(vaultAddSecretCmd)
 	vaultCmd.AddCommand(vaultPermissionsCmd)
 	vaultCmd.AddCommand(vaultDeleteCmd)
+	vaultCmd.AddCommand(vaultDeleteSecretCmd)
 	vaultCmd.AddCommand(vaultListCmd)
 	vaultCmd.AddCommand(vaultCreateCmd)
 	vaultCmd.AddCommand(vaultEditCmd)
 	vaultCmd.AddCommand(vaultRenameCmd)
+	vaultCmd.AddCommand(vaultRenameSecretCmd)
 
-	vaultCreateCmd.Flags().StringVarP(&flagVaultFolder, "folder", "f", "", "Creates a vault from a set of secret files")
 	vaultPermissionsCmd.Flags().StringVarP(&flagAddGroup, "add-group", "", "", "Add a group permission to the vault")
 	vaultPermissionsCmd.Flags().StringVarP(&flagRemoveGroup, "remove-group", "", "", "Remove a group permission from the vault")
+}
+
+func AddSecret(cmd *cobra.Command, args []string) error {
+	if len(args) != 2 {
+		return cmd.Help()
+	}
+
+	vault, err := DefaultApiClient.GetVault(args[0])
+	if err != nil {
+		return err
+	}
+
+	err = collectSecrets(args[1], vault, false)
+	if err != nil {
+		return err
+	}
+
+	err = DefaultApiClient.SaveVault(*vault, true)
+	if err != nil {
+		return err
+	}
+
+	cmd.Printf("New secrets has been added to vault %s\n", args[0])
+	return nil
+}
+
+func RenameSecret(cmd *cobra.Command, args []string) error {
+	if len(args) != 2 {
+		return cmd.Usage()
+	}
+
+	split := strings.Split(args[0], "/")
+	if len(split) != 2 {
+		return ErrNotValidSecretArgument
+	}
+
+	newSecretName := args[1]
+	vaultName, secretName := split[0], split[1]
+	vault, err := DefaultApiClient.GetVault(vaultName)
+	if err != nil {
+		return err
+	}
+
+	_, err = vault.Secrets.GetSecret(secretName)
+	if err != nil {
+		return err
+	}
+
+	_, ok := vault.Secrets[newSecretName]
+	if ok {
+		return errors.Errorf("Secret %s already exists\n", newSecretName)
+	}
+
+	vault.Secrets[newSecretName] = vault.Secrets[secretName]
+	vault.Secrets.RemoveSecret(secretName)
+
+	err = DefaultApiClient.SaveVault(*vault, true)
+	if err != nil {
+		return err
+	}
+
+	cmd.Printf("Secret %s has been renamed to %s\n", secretName, newSecretName)
+	return nil
 }
 
 func RenameVault(cmd *cobra.Command, args []string) error {
@@ -131,7 +198,7 @@ func RenameVault(cmd *cobra.Command, args []string) error {
 }
 
 func CreateVault(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 {
+	if len(args) != 2 {
 		return cmd.Usage()
 	}
 
@@ -142,11 +209,9 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 
 	vault := client.NewAuroraSecretVault(args[0])
 
-	if flagVaultFolder != "" {
-		err := collectSecrets(flagVaultFolder, vault)
-		if err != nil {
-			return err
-		}
+	err := collectSecrets(args[1], vault, true)
+	if err != nil {
+		return err
 	}
 
 	if flagRemoveGroup != "" {
@@ -163,7 +228,7 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	err := DefaultApiClient.SaveVault(*vault, false)
+	err = DefaultApiClient.SaveVault(*vault, false)
 	if err != nil {
 		return err
 	}
@@ -172,60 +237,77 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func EditVault(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 || len(args) > 2 {
+func EditSecret(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
 		return cmd.Usage()
 	}
 
-	vaultName := args[0]
-	var secretName string
-	if len(args) == 2 {
-		secretName = args[1]
+	split := strings.Split(args[0], "/")
+	if len(split) != 2 {
+		return ErrNotValidSecretArgument
 	}
 
-	var contentToEdit string
+	vaultName, secretName := split[0], split[1]
 	vault, err := DefaultApiClient.GetVault(vaultName)
 	if err != nil {
 		return err
 	}
 
-	if secretName == "" {
-		data, err := json.Marshal(vault)
-		if err != nil {
-			return err
-		}
-		contentToEdit = string(data)
-	} else {
-		contentToEdit, err = vault.Secrets.GetSecret(secretName)
-		if err != nil {
-			return err
-		}
-	}
-
-	name := vaultName + " " + secretName
-	vaultEditor := editor.NewEditor(func(modifiedContent string) ([]string, error) {
-		if secretName == "" {
-			err := json.Unmarshal([]byte(modifiedContent), &vault)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			vault.Secrets.AddSecret(secretName, modifiedContent)
-		}
-		err := DefaultApiClient.SaveVault(*vault, true)
-		if err != nil {
-			return []string{err.Error()}, nil
-		}
-		return nil, nil
-	})
-
-	err = vaultEditor.Edit(contentToEdit, name, false)
+	contentToEdit, err := vault.Secrets.GetSecret(secretName)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("Secret saved")
+	secretEditor := editor.NewEditor(func(modifiedContent string) ([]string, error) {
+		vault.Secrets.AddSecret(secretName, modifiedContent)
 
+		err := DefaultApiClient.SaveVault(*vault, true)
+		if err != nil {
+			return []string{err.Error()}, nil
+		}
+
+		return nil, nil
+	})
+
+	err = secretEditor.Edit(contentToEdit, args[0], false)
+	if err != nil {
+		return err
+	}
+
+	cmd.Printf("Secret %s in vault %s edited\n", secretName, vaultName)
+	return nil
+}
+
+func DeleteSecret(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return cmd.Help()
+	}
+
+	split := strings.Split(args[0], "/")
+	if len(split) != 2 {
+		return ErrNotValidSecretArgument
+	}
+
+	vaultName, secret := split[0], split[1]
+	vault, err := DefaultApiClient.GetVault(vaultName)
+	if err != nil {
+		return err
+	}
+
+	message := fmt.Sprintf("Do you want to delete secret %s?", args[0])
+	shouldDelete := prompt.Confirm(message)
+	if !shouldDelete {
+		return nil
+	}
+
+	vault.Secrets.RemoveSecret(secret)
+
+	err = DefaultApiClient.SaveVault(*vault, true)
+	if err != nil {
+		return err
+	}
+
+	cmd.Printf("Secret %s deleted\n", args[0])
 	return nil
 }
 
@@ -234,18 +316,18 @@ func DeleteVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
+	err := DefaultApiClient.DeleteVault(args[0])
+	if err != nil {
+		return err
+	}
+
 	message := fmt.Sprintf("Do you want to delete vault %s?", args[0])
 	shouldDelete := prompt.Confirm(message)
 	if !shouldDelete {
 		return nil
 	}
 
-	err := DefaultApiClient.DeleteVault(args[0])
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("Delete success")
+	cmd.Printf("Vault %s deleted\n", args[0])
 	return nil
 }
 
@@ -301,43 +383,82 @@ func VaultPermissions(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Println("Vault saved")
+	cmd.Printf("Vault %s saved\n", args[0])
 	return nil
 }
 
-func collectSecrets(folder string, vault *client.AuroraSecretVault) error {
-	files, err := ioutil.ReadDir(folder)
+func collectSecrets(filePath string, vault *client.AuroraSecretVault, includePermissions bool) error {
+	root, err := os.Stat(filePath)
 	if err != nil {
 		return err
 	}
+
+	var files []os.FileInfo
+	if root.IsDir() {
+		files, err = ioutil.ReadDir(filePath)
+		if err != nil {
+			return err
+		}
+	} else {
+		files = append(files, root)
+	}
+
 	for _, f := range files {
 		if f.IsDir() {
 			continue
 		}
-		data, err := ioutil.ReadFile(path.Join(folder, f.Name()))
-		if err != nil {
-			return err
-		}
-		if !strings.Contains(f.Name(), "permission") {
-			vault.Secrets.AddSecret(f.Name(), string(data))
-			continue
+
+		currentFilePath := filePath
+		if root.IsDir() {
+			currentFilePath = path.Join(filePath, f.Name())
 		}
 
-		permissions := struct {
-			Groups []string `json:"groups"`
-		}{}
-
-		err = json.Unmarshal(data, &permissions)
-		if err != nil {
-			return err
+		if strings.Contains(f.Name(), "permission") && includePermissions {
+			groups, err := readPermissionFile(currentFilePath)
+			if err != nil {
+				return err
+			}
+			vault.Permissions["groups"] = groups
+		} else {
+			secret, err := readSecretFile(currentFilePath)
+			if err != nil {
+				return err
+			}
+			vault.Secrets.AddSecret(f.Name(), secret)
 		}
-		if permissions.Groups == nil {
-			return errors.New("Cannot find groups in permissions")
-		}
-		vault.Permissions["groups"] = permissions.Groups
 	}
 
 	return nil
+}
+
+func readSecretFile(fileName string) (string, error) {
+	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
+}
+
+func readPermissionFile(path string) ([]string, error) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	permissions := struct {
+		Groups []string `json:"groups"`
+	}{}
+
+	err = json.Unmarshal(data, &permissions)
+	if err != nil {
+		return nil, err
+	}
+	if permissions.Groups == nil {
+		return nil, ErrEmptyGroups
+	}
+
+	return permissions.Groups, nil
 }
 
 func getVaultTable(vaults []*client.AuroraVaultInfo) (string, []string) {
