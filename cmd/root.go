@@ -22,7 +22,7 @@ const (
 
 __custom_func() {
     case ${last_command} in
-        ao_edit)
+        ao_edit | ao_get_file | ao_delete_file | ao_set | ao_unset)
             __ao_parse_get files
             return
             ;;
@@ -53,10 +53,11 @@ var (
 )
 
 var RootCmd = &cobra.Command{
-	Use:               "ao",
-	Short:             "Aurora OpenShift CLI",
-	Long:              rootLong,
-	PersistentPreRunE: initialize,
+	Use:   "ao",
+	Short: "Aurora OpenShift CLI",
+	Long:  rootLong,
+	BashCompletionFunction: bashCompletionFunc,
+	PersistentPreRunE:      initialize,
 }
 
 func init() {
