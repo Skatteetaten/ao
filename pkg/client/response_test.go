@@ -16,23 +16,44 @@ var failedResponseText = `{
 			"type": "ILLEGAL",
 			"message": "baz is not a legal value",
 			"field": {
-				"path": "/name/test",
-				"value": "baz",
-				"source": "about.json"
+				"handler": {
+				  "path": "/name/test"
+				},
+				"source": {
+				  "configName": "about.json",
+				  "contents": "",
+				  "name": "about.json",
+				  "override": false
+				},
+				"value": "baz"
 			}}, {
 		  "type": "INVALID",
 		  "message": "/asdlkjf is not a valid config field pointer",
 		  "field": {
-			"path": "/asdlkjf",
-			"value": "",
-			"source": "boober-utv/reference.json"
+				"handler": {
+				  "path": "/asdlkjf"
+				},
+				"source": {
+				  "configName": "boober-utv/reference.json",
+				  "contents": "",
+				  "name": "boober-utv/reference.json",
+				  "override": false
+				},
+				"value": null
 		  }}, {
 		  "type": "MISSING",
 		  "message": "Name must be alphanumeric and no more than 40 characters",
 		  "field": {
-			"path": "/name",
-			"value": "",
-			"source": "Unknown"
+				"handler": {
+				  "path": "/name"
+				},
+				"source": {
+				  "configName": "boober-utv/reference.json",
+				  "contents": "",
+				  "name": "boober-utv/reference.json",
+				  "override": false
+				},
+				"value": null
 		  }}]
 	}],
 	"count": 3

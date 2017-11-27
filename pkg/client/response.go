@@ -24,17 +24,23 @@ type (
 		UniqueErrors       map[string]bool
 	}
 
+	errorField struct {
+		Handler struct {
+			Path string `json:"path"`
+		} `json:"handler"`
+		Source struct {
+			Name string `json:"name"`
+		} `json:"source"`
+		Value interface{} `json:"value"`
+	}
+
 	responseErrorItem struct {
 		Application string `json:"application"`
 		Environment string `json:"environment"`
 		Messages    []struct {
-			Type    string `json:"type"`
-			Message string `json:"message"`
-			Field   struct {
-				Path   string `json:"path"`
-				Value  string `json:"value"`
-				Source string `json:"source"`
-			} `json:"field"`
+			Type    string     `json:"type"`
+			Message string     `json:"message"`
+			Field   errorField `json:"field"`
 		} `json:"messages"`
 	}
 )
@@ -129,9 +135,8 @@ Message:     %s`
 
 	for _, message := range res.Messages {
 		k := []string{
-			message.Field.Source,
-			message.Field.Path,
-			message.Field.Value,
+			message.Field.Source.Name,
+			message.Field.Handler.Path,
 		}
 		key := strings.Join(k, "|")
 
@@ -147,8 +152,8 @@ Message:     %s`
 		case "ILLEGAL":
 			{
 				illegal := fmt.Sprintf(illegalFieldFormat,
-					message.Field.Source,
-					message.Field.Path,
+					message.Field.Source.Name,
+					message.Field.Handler.Path,
 					message.Field.Value,
 					message.Message,
 				)
@@ -158,8 +163,8 @@ Message:     %s`
 		case "INVALID":
 			{
 				invalid := fmt.Sprintf(invalidFieldFormat,
-					message.Field.Source,
-					message.Field.Path,
+					message.Field.Source.Name,
+					message.Field.Handler.Path,
 					message.Message,
 				)
 				e.InvalidFieldErrors = append(e.InvalidFieldErrors, invalid)
@@ -170,7 +175,7 @@ Message:     %s`
 				missing := fmt.Sprintf(missingFieldFormat,
 					res.Environment,
 					res.Application,
-					message.Field.Path,
+					message.Field.Handler.Path,
 					message.Message,
 				)
 				e.MissingFieldErrors = append(e.MissingFieldErrors, missing)

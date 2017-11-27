@@ -10,9 +10,20 @@
           "type": "ILLEGAL",
           "message": "Must be one of [deploy, development, localTemplate, template, build]",
           "field": {
-            "path": "/type",
-            "value": "aslkdjf",
-            "source": "boober-utv/about.json"
+            "handler": {
+              "defaultSource": "default",
+              "path": "/type",
+              "validator": {
+                "arity": 1
+              }
+            },
+            "source": {
+              "configName": "boober-utv/about.json",
+              "contents": "",
+              "name": "boober-utv/about.json",
+              "override": false
+            },
+            "value": "aslkdjf"
           }
         }
       ]
@@ -25,9 +36,20 @@
           "type": "ILLEGAL",
           "message": "Must be one of [deploy, development, localTemplate, template, build]",
           "field": {
-            "path": "/type",
-            "value": "aslkdjf",
-            "source": "boober-utv/about.json"
+            "handler": {
+              "defaultSource": "default",
+              "path": "/type",
+              "validator": {
+                "arity": 1
+              }
+            },
+            "source": {
+              "configName": "boober-utv/about.json",
+              "contents": "",
+              "name": "boober-utv/about.json",
+              "override": false
+            },
+            "value": "aslkdjf"
           }
         }
       ]

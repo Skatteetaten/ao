@@ -146,9 +146,13 @@ func deploy(cmd *cobra.Command, args []string) error {
 		}
 
 		fileName := applications[0] + ".json"
-		err := api.PatchAuroraConfigFile(fileName, operation)
+		res, err := api.PatchAuroraConfigFile(fileName, operation)
 		if err != nil {
 			return err
+		}
+
+		if res != nil {
+			return errors.New(res.String())
 		}
 	}
 
