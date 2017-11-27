@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 var addCmd = &cobra.Command{
@@ -24,7 +25,8 @@ func Add(cmd *cobra.Command, args []string) error {
 		return cmd.Help()
 	}
 
-	file, err := os.Stat(args[0])
+	fileName := args[0]
+	file, err := os.Stat(fileName)
 	if err != nil {
 		return err
 	}
@@ -33,13 +35,13 @@ func Add(cmd *cobra.Command, args []string) error {
 		return errors.New("Only files are supported")
 	}
 
-	data, err := ioutil.ReadFile(args[0])
+	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return err
 	}
 
 	if !json.Valid(data) {
-		return errors.Errorf("%s contains illegal json format", args[0])
+		return errors.Errorf("%s contains illegal json format", fileName)
 	}
 
 	ac, err := DefaultApiClient.GetAuroraConfig()
@@ -47,7 +49,13 @@ func Add(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	ac.Files[args[0]] = data
+	path := getValidFileNameFromPath(fileName)
+
+	if _, ok := ac.Files[path]; ok {
+		return errors.Errorf("File %s already exists", path)
+	}
+
+	ac.Files[fileName] = data
 
 	res, err := DefaultApiClient.SaveAuroraConfig(ac)
 	if err != nil {
@@ -57,5 +65,24 @@ func Add(cmd *cobra.Command, args []string) error {
 		return errors.New(res.String())
 	}
 
+	cmd.Printf("%s has been added", fileName)
+
 	return nil
+}
+
+func getValidFileNameFromPath(fileName string) string {
+	split := strings.Split(fileName, "/")
+
+	if len(split) <= 1 {
+		return fileName
+	}
+
+	app := split[len(split)-1]
+	env := split[len(split)-2]
+
+	if env == "." || env == "~" {
+		return app
+	}
+
+	return env + "/" + app
 }
