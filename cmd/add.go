@@ -41,7 +41,7 @@ func Add(cmd *cobra.Command, args []string) error {
 	}
 
 	if !json.Valid(data) {
-		return errors.Errorf("%s contains illegal json format", fileName)
+		return errors.Errorf("%s contains illegal json format\n", fileName)
 	}
 
 	ac, err := DefaultApiClient.GetAuroraConfig()
@@ -52,7 +52,7 @@ func Add(cmd *cobra.Command, args []string) error {
 	path := getValidFileNameFromPath(fileName)
 
 	if _, ok := ac.Files[path]; ok {
-		return errors.Errorf("File %s already exists", path)
+		return errors.Errorf("File %s already exists\n", path)
 	}
 
 	ac.Files[fileName] = data
@@ -65,7 +65,7 @@ func Add(cmd *cobra.Command, args []string) error {
 		return errors.New(res.String())
 	}
 
-	cmd.Printf("%s has been added", fileName)
+	cmd.Printf("%s has been added\n", fileName)
 
 	return nil
 }
