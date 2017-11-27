@@ -51,7 +51,7 @@ func init() {
 
 func DeleteApplication(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return cmd.Usage()
+		return cmd.Help()
 	}
 
 	err := deleteFilesFor(fuzzy.APP_FILTER, args[0], DefaultApiClient, cmd.OutOrStdout())
@@ -64,7 +64,7 @@ func DeleteApplication(cmd *cobra.Command, args []string) error {
 
 func DeleteEnvironment(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return cmd.Usage()
+		return cmd.Help()
 	}
 
 	err := deleteFilesFor(fuzzy.ENV_FILTER, args[0], DefaultApiClient, cmd.OutOrStdout())
@@ -77,7 +77,7 @@ func DeleteEnvironment(cmd *cobra.Command, args []string) error {
 
 func DeleteFile(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return cmd.Usage()
+		return cmd.Help()
 	}
 
 	var files []string

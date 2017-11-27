@@ -34,7 +34,6 @@ var RootCmd = &cobra.Command{
 	Short:             "Aurora OpenShift CLI",
 	Long:              rootLong,
 	PersistentPreRunE: initialize,
-	RunE:              showAoHelp,
 }
 
 func init() {
@@ -43,32 +42,6 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&pFlagToken, "token", "t", "", "Boober authorization token")
 	RootCmd.PersistentFlags().BoolVarP(&pFlagNoHeader, "no-header", "", false, "Print tables without headers")
 	RootCmd.PersistentFlags().MarkHidden("no-header")
-}
-
-func showAoHelp(cmd *cobra.Command, args []string) error {
-	cmd.SetHelpTemplate(`{{.Long}}
-
-Usage:
-  {{.CommandPath}} [command] [flags]
-
-OpenShift Action Commands:{{range .Commands}}{{if eq (index .Annotations "type") "actions"}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
-
-Remote AuroraConfig Commands:{{range .Commands}}{{if eq (index .Annotations "type") "remote"}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
-
-Local File Commands:{{range .Commands}}{{if eq (index .Annotations "type") "local"}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}
-
-Commands:{{range .Commands}}{{if (and (eq (index .Annotations "type") "") (ne .Name "help"))}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
-
-Flags:
-{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableSubCommands}}
-
-Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
-`)
-	return cmd.Help()
 }
 
 func initialize(cmd *cobra.Command, args []string) error {
