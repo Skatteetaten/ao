@@ -15,6 +15,7 @@ import (
 
 const ao5Url = "http://ao-update-service-paas-ao-update.utv.paas.skead.no"
 const ao5UrlTest = "http://ao-update-service-paas-ao-update.test.paas.skead.no"
+const executableFilePermission = 0755
 
 func InstallAuroraOpenshiftGenerator() (err error) {
 	const gitExec = "git"
@@ -105,7 +106,7 @@ func doUpdate(url string, version string) (err error) {
 
 	releasePath := executablePath + "_" + version
 	body, err := getFile(releaseUrl)
-	err = ioutil.WriteFile(releasePath, []byte(body), 0750)
+	err = ioutil.WriteFile(releasePath, []byte(body), executableFilePermission)
 	if err != nil {
 		return
 	}
