@@ -163,18 +163,13 @@ func (p Permissions) AddGroup(group string) error {
 
 func (p Permissions) DeleteGroup(group string) error {
 	groups := p["groups"]
-	var hasDeleted bool
 	for i, g := range groups {
 		if g == group {
 			p["groups"] = append(groups[:i], groups[i+1:]...)
-			hasDeleted = true
-			break
+			return nil
 		}
 	}
-	if !hasDeleted {
-		return errors.Errorf("Did not find group %s", group)
-	}
-	return nil
+	return errors.Errorf("Did not find group %s", group)
 }
 
 func (p Permissions) GetGroups() []string {

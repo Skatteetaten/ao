@@ -139,20 +139,11 @@ func deploy(cmd *cobra.Command, args []string) error {
 		if len(applications) > 1 {
 			return errors.New("Deploy with version does only support one application")
 		}
-		operation := client.JsonPatchOp{
-			OP:    "add",
-			Path:  "/version",
-			Value: flagVersion,
-		}
-
 		fileName := applications[0] + ".json"
-		res, err := api.PatchAuroraConfigFile(fileName, operation)
+
+		err = Set(cmd, []string{fileName, "/version", flagVersion})
 		if err != nil {
 			return err
-		}
-
-		if res != nil {
-			return errors.New(res.String())
 		}
 	}
 
