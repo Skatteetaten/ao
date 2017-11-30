@@ -20,14 +20,18 @@ func TestApiClient_GetApplyResult(t *testing.T) {
 			expectedPath := fmt.Sprintf("/v1/apply-result/%s/%s", affiliation, deployId)
 			assert.Equal(t, expectedPath, req.URL.Path)
 
-			w.Write([]byte(`{"items": ["failed"]}`))
+			// Not a real apply result, just testing indenting from items and first item is received
+			response := `{"success": true, "message": "OK", "items": [{"deploy": "failed"}], "count": 0}`
+			w.Write([]byte(response))
 		}))
 		defer ts.Close()
 
 		api := NewApiClient(ts.URL, "test", affiliation)
 		result, err := api.GetApplyResult(deployId)
-		assert.NoError(t, err)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		assert.Equal(t, "[\n  \"failed\"\n]", result)
+		assert.Equal(t, "{\n  \"deploy\": \"failed\"\n}", result)
 	})
 }

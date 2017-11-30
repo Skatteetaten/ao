@@ -14,10 +14,16 @@ func (api *ApiClient) GetApplyResult(deployId string) (string, error) {
 		return "", err
 	}
 
-	result, err := json.MarshalIndent(response.Items, "", "  ")
+	var result json.RawMessage
+	err = response.ParseFirstItem(&result)
 	if err != nil {
 		return "", err
 	}
 
-	return string(result), nil
+	applyResult, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	return string(applyResult), nil
 }
