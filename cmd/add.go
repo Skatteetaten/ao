@@ -9,23 +9,26 @@ import (
 	"strings"
 )
 
-const addExample = `Given the following AuroraConfig:
-	- about.json
-	- foobar.json
-	- bar.json
-	- foo/about.json
-	- foo/bar.json
-	- foo/foobar.json
+const addExample = `  Given the following AuroraConfig:
+    - about.json
+    - foobar.json
+    - bar.json
+    - foo/about.json
+    - foo/bar.json
+    - foo/foobar.json
 
-ao add test/about.json, adds test/about.json to AuroraConfig
+  # adds test/about.json to AuroraConfig
+  ao add test/about.json
 
-ao add about.json, will throw an error because about.json already exists
+  # will throw an error because about.json already exists
+  ao add about.json
 
-ao add ~/files/prod/about.json, adds prod/about.json to AuroraConfig`
+  # adds prod/about.json to AuroraConfig
+  ao add ~/files/prod/about.json`
 
 var addCmd = &cobra.Command{
 	Use:         "add <file>",
-	Short:       "Add a single file to AuroraConfig",
+	Short:       "Add a single file to the current AuroraConfig",
 	Annotations: map[string]string{"type": "remote"},
 	Example:     addExample,
 	RunE:        Add,

@@ -19,9 +19,10 @@ func Password() string {
 	return string(pass[:])
 }
 
-func Confirm(message string) bool {
+func Confirm(message string, defaultAnswer bool) bool {
 	p := &survey.Confirm{
 		Message: message,
+		Default: defaultAnswer,
 	}
 
 	var update bool

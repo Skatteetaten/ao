@@ -21,26 +21,25 @@ var (
 	flagCluster     string
 )
 
-const deployLong = `When specifying applicationId you can use fuzzy matching. If there are multiple applications to deploy,
-you can choose to deploy all or select desired applications.
-For use in CI environments please use --noprompt and --cluster flag or else you may get unexpected results.
+const deployLong = `Deploys applications from the current AuroraConfig.
+For use in CI environments use --no-prompt to disable interactivity.
 `
 
-const exampleDeploy = `Given the following AuroraConfig:
-  - about.json
-  - foobar.json
-  - bar.json
-  - foo/about.json
-  - foo/bar.json
-  - foo/foobar.json
+const exampleDeploy = `  Given the following AuroraConfig:
+    - about.json
+    - foobar.json
+    - bar.json
+    - foo/about.json
+    - foo/bar.json
+    - foo/foobar.json
 
-Fuzzy matching
-  ao deploy fo/ba == foo/bar and foo/foobar
+  # Fuzzy matching: deploy foo/bar and foo/foobar
+  ao deploy fo/ba
 
-Exact matching
-  ao deploy foo/bar == only foo/bar
+  # Exact matching: deploy foo/bar
+  ao deploy foo/bar
 
-Deploy an application with override for application file
+  # Deploy an application with override for application file
   ao deploy foo/bar -o 'foo/bar.json:{"pause": true}'
 `
 
@@ -63,7 +62,7 @@ func init() {
 	deployCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Limit deploy to given cluster name")
 	deployCmd.Flags().BoolVarP(&flagNoPrompt, "force", "f", false, "Suppress prompts")
 	deployCmd.Flags().MarkHidden("force")
-	deployCmd.Flags().BoolVarP(&flagNoPrompt, "noprompt", "", false, "Suppress prompts")
+	deployCmd.Flags().BoolVarP(&flagNoPrompt, "no-prompt", "", false, "Suppress prompts")
 
 	deployCmd.Flags().StringArrayVarP(&flagOverrides, "overrides", "o", []string{}, "Override in the form '[env/]file:{<json override>}'")
 	deployCmd.Flags().StringVarP(&flagVersion, "version", "v", "", "Set the given version in AuroraConfig before deploy")
@@ -122,8 +121,9 @@ func deploy(cmd *cobra.Command, args []string) error {
 
 	shouldDeploy := true
 	if !flagNoPrompt {
+		defaultAnswer := len(applications) == 1
 		message := fmt.Sprintf("Do you want to deploy %d application(s)?", len(applications))
-		shouldDeploy = prompt.Confirm(message)
+		shouldDeploy = prompt.Confirm(message, defaultAnswer)
 	}
 
 	if !flagNoPrompt && !shouldDeploy && len(applications) > 1 {

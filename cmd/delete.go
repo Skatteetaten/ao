@@ -23,19 +23,19 @@ var (
 
 	deleteAppCmd = &cobra.Command{
 		Use:   "app <appname>",
-		Short: "Delete application",
+		Short: "Delete application files from current AuroraConfig, does not affect deployed applications",
 		RunE:  DeleteApplication,
 	}
 
 	deleteEnvCmd = &cobra.Command{
 		Use:   "env <envname>",
-		Short: "Delete environment",
+		Short: "Delete all files for a single environment from current AuroraConfig, does not affect deployed applications",
 		RunE:  DeleteEnvironment,
 	}
 
 	deleteFileCmd = &cobra.Command{
 		Use:   "file <filename>",
-		Short: "Delete file",
+		Short: "Delete a single file from current AuroraConfig",
 		RunE:  DeleteFile,
 	}
 )
@@ -46,7 +46,7 @@ func init() {
 	deleteCmd.AddCommand(deleteEnvCmd)
 	deleteCmd.AddCommand(deleteFileCmd)
 
-	deleteCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "ignore nonexistent files and arguments, never prompt")
+	deleteCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "no interactive prompt")
 }
 
 func DeleteApplication(cmd *cobra.Command, args []string) error {
@@ -102,7 +102,7 @@ func DeleteFile(cmd *cobra.Command, args []string) error {
 	header, rows := GetFilesTable(files)
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 	message := fmt.Sprintf("Do you want to delete %d file(s)?", len(files))
-	shouldDelete := prompt.Confirm(message)
+	shouldDelete := prompt.Confirm(message, false)
 
 	if !shouldDelete {
 		return nil
@@ -146,7 +146,7 @@ func deleteFilesFor(mode fuzzy.FilterMode, search string, api *client.ApiClient,
 	header, rows := GetFilesTable(files)
 	DefaultTablePrinter(header, rows, out)
 	message := fmt.Sprintf("Do you want to delete %s?", search)
-	deleteAll := prompt.Confirm(message)
+	deleteAll := prompt.Confirm(message, false)
 
 	if !deleteAll {
 		return errors.New("Delete aborted")

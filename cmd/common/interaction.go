@@ -7,7 +7,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/prompt"
 )
 
-func SelectOne(args []string, items []string, withSuffix bool) (string, error) {
+func SelectOne(message string, args []string, items []string, withSuffix bool) (string, error) {
 	search := args[0]
 	if len(args) == 2 {
 		search = fmt.Sprintf("%s/%s", args[0], args[1])
@@ -20,7 +20,7 @@ func SelectOne(args []string, items []string, withSuffix bool) (string, error) {
 
 	selected := matches[0]
 	if len(matches) > 1 {
-		selected = prompt.Select("Select one", matches)
+		selected = prompt.Select(message, matches)
 	}
 
 	if selected == "" {

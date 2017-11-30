@@ -14,7 +14,7 @@ ao set test/foo.json /config/IMPORTANT_ENV 'Hello World'`
 
 var setCmd = &cobra.Command{
 	Use:         "set <file> <json-path> <value>",
-	Short:       "Sets the config to the value for the given AuroraConfig file",
+	Short:       "Set a single configuration value in the current AuroraConfig",
 	Annotations: map[string]string{"type": "remote"},
 	Example:     setExample,
 	RunE:        Set,

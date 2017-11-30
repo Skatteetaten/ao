@@ -12,7 +12,7 @@ ao unset test/foo.json /config/IMPORTANT_ENV`
 
 var unsetCmd = &cobra.Command{
 	Use:         "unset <file> <json-path>",
-	Short:       "Removes the config for the given json-path for a file",
+	Short:       "Remove a single configuration value in the current AuroraConfig",
 	Annotations: map[string]string{"type": "remote"},
 	Example:     unsetExample,
 	RunE:        Unset,

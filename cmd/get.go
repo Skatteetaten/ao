@@ -11,8 +11,11 @@ import (
 	"strings"
 )
 
-var flagJson bool
-var flagAsList bool
+var (
+	flagJson       bool
+	flagAsList     bool
+	flagNoDefaults bool
+)
 
 var (
 	getCmd = &cobra.Command{
@@ -63,7 +66,7 @@ func init() {
 	getCmd.AddCommand(getDeploymentsCmd)
 	getCmd.AddCommand(getSpecCmd)
 
-	// TODO: Default flag for AuroraDeploySpec
+	getSpecCmd.Flags().BoolVarP(&flagNoDefaults, "no-defaults", "", false, "exclude default values from output")
 	getSpecCmd.Flags().BoolVarP(&flagJson, "json", "", false, "print deploy spec as json")
 	getDeploymentsCmd.Flags().BoolVarP(&flagAsList, "list", "", false, "print ApplicationIds as a list")
 }
@@ -132,7 +135,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	selected, err := common.SelectOne(args, fileNames.GetApplicationIds(), false)
+	selected, err := common.SelectOne("", args, fileNames.GetApplicationIds(), false)
 	if err != nil {
 		return err
 	}
@@ -140,7 +143,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	split := strings.Split(selected, "/")
 
 	if !flagJson {
-		spec, err := DefaultApiClient.GetAuroraDeploySpecFormatted(split[0], split[1])
+		spec, err := DefaultApiClient.GetAuroraDeploySpecFormatted(split[0], split[1], !flagNoDefaults)
 		if err != nil {
 			return err
 		}
@@ -148,7 +151,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	spec, err := DefaultApiClient.GetAuroraDeploySpec(split[0], split[1])
+	spec, err := DefaultApiClient.GetAuroraDeploySpec(split[0], split[1], !flagNoDefaults)
 	if err != nil {
 		return err
 	}
@@ -174,7 +177,7 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	selected, err := common.SelectOne(args, fileNames, true)
+	selected, err := common.SelectOne("", args, fileNames, true)
 	if err != nil {
 		return err
 	}

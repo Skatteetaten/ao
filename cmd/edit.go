@@ -8,22 +8,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const editLong = `The arguments to edit are fuzzy match, if there are multiple matches you are prompted to select
-one file to edit.`
+const editLong = `Edit a single file in the current AuroraConfig.`
 
-const exampleEdit = `Given the following AuroraConfig:
-  - about.json
-  - foobar.json
-  - bar.json
-  - foo/about.json
-  - foo/bar.json
-  - foo/foobar.json
+const exampleEdit = `  Given the following AuroraConfig:
+    - about.json
+    - foobar.json
+    - bar.json
+    - foo/about.json
+    - foo/bar.json
+    - foo/foobar.json
 
-Fuzzy matching
-  ao edit fo/ba == foo/bar.json and foo/foobar.json
+  # Exact matching: will open foo/bar.json in editor
+  ao edit foo/bar
 
-Exact matching
-  ao edit foo/bar == only foo/bar.json
+  # Fuzzy matching: will open foo/foobar.json in editor
+  ao edit fofoba
 `
 
 var editCmd = &cobra.Command{
@@ -49,7 +48,8 @@ func EditFile(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fileName, err := common.SelectOne(args, fileNames, true)
+	message := fmt.Sprintf("Choose a file to edit")
+	fileName, err := common.SelectOne(message, args, fileNames, true)
 	if err != nil {
 		return err
 	}

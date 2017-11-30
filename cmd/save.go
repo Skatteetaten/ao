@@ -12,7 +12,7 @@ var flagSaveAsUser string
 
 var saveCmd = &cobra.Command{
 	Use:         "save",
-	Short:       "Save changed, new and deleted files for AuroraConfig",
+	Short:       "Validate and save local modifications in the current AuroraConfig",
 	Annotations: map[string]string{"type": "local"},
 	RunE:        Save,
 }
