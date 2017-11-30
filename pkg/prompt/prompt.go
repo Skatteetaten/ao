@@ -32,36 +32,3 @@ func Confirm(message string, defaultAnswer bool) bool {
 	}
 	return update
 }
-
-func MultiSelect(message string, options []string) []string {
-	p := &survey.MultiSelect{
-		Message:  message,
-		PageSize: 10,
-		Options:  options,
-	}
-
-	var applications []string
-	err := survey.AskOne(p, &applications, nil)
-	if err != nil {
-		logrus.Error(err)
-	}
-
-	return applications
-}
-
-func Select(message string, options []string) string {
-
-	p := &survey.Select{
-		Message:  message,
-		PageSize: 10,
-		Options:  options,
-	}
-
-	var filename string
-	err := survey.AskOne(p, &filename, nil)
-	if err != nil {
-		logrus.Error(err)
-	}
-
-	return filename
-}

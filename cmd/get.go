@@ -5,7 +5,7 @@ import (
 
 	"encoding/json"
 	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/cmd/common"
+	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/spf13/cobra"
 	"sort"
 	"strings"
@@ -135,12 +135,20 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	selected, err := common.SelectOne("", args, fileNames.GetApplicationIds(), false)
-	if err != nil {
-		return err
+
+	search := args[0]
+	if len(args) == 2 {
+		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	split := strings.Split(selected, "/")
+	matches := fuzzy.FindMatches(search, fileNames.GetApplicationIds(), false)
+	if len(matches) == 0 {
+		return errors.Errorf("No matches for %s", search)
+	} else if len(matches) > 1 {
+		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+	}
+
+	split := strings.Split(matches[0], "/")
 
 	if !flagJson {
 		spec, err := DefaultApiClient.GetAuroraDeploySpecFormatted(split[0], split[1], !flagNoDefaults)
@@ -177,12 +185,19 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	selected, err := common.SelectOne("", args, fileNames, true)
-	if err != nil {
-		return err
+	search := args[0]
+	if len(args) == 2 {
+		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	auroraConfigFile, err := DefaultApiClient.GetAuroraConfigFile(selected)
+	matches := fuzzy.FindMatches(search, fileNames, true)
+	if len(matches) == 0 {
+		return errors.Errorf("No matches for %s", search)
+	} else if len(matches) > 1 {
+		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+	}
+
+	auroraConfigFile, err := DefaultApiClient.GetAuroraConfigFile(matches[0])
 	if err != nil {
 		return err
 	}

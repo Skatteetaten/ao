@@ -80,35 +80,35 @@ func DeleteFile(cmd *cobra.Command, args []string) error {
 		return cmd.Help()
 	}
 
-	var files []string
 	fileNames, err := DefaultApiClient.GetFileNames()
 	if err != nil {
 		return err
 	}
 
-	options := fuzzy.SearchForFile(args[0], fileNames)
-
-	if len(options) > 1 {
-		message := fmt.Sprintf("Matched %d files. Which file do you want?", len(options))
-		files = prompt.MultiSelect(message, options)
-	} else if len(options) == 1 {
-		files = []string{options[0]}
+	search := args[0]
+	if len(args) == 2 {
+		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	if len(files) == 0 {
-		return errors.New("No file to edit")
+	matches := fuzzy.FindMatches(search, fileNames, true)
+
+	var fileName string
+	if len(matches) > 1 {
+		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+	} else if len(matches) < 1 {
+		return errors.New("No file to delete")
+	} else {
+		fileName = matches[0]
 	}
 
-	header, rows := GetFilesTable(files)
-	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
-	message := fmt.Sprintf("Do you want to delete %d file(s)?", len(files))
+	message := fmt.Sprintf("Do you want to delete %s?", fileName)
 	shouldDelete := prompt.Confirm(message, false)
 
 	if !shouldDelete {
 		return nil
 	}
 
-	err = deleteFiles(files, DefaultApiClient)
+	err = deleteFiles([]string{fileName}, DefaultApiClient)
 	if err != nil {
 		return err
 	}

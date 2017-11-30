@@ -3,8 +3,9 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/skatteetaten/ao/cmd/common"
+	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/editor"
+	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/spf13/cobra"
 )
 
@@ -40,7 +41,7 @@ func init() {
 
 func EditFile(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	fileNames, err := DefaultApiClient.GetFileNames()
@@ -48,12 +49,19 @@ func EditFile(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	message := fmt.Sprintf("Choose a file to edit")
-	fileName, err := common.SelectOne(message, args, fileNames, true)
-	if err != nil {
-		return err
+	search := args[0]
+	if len(args) == 2 {
+		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
+	matches := fuzzy.FindMatches(search, fileNames, true)
+	if len(matches) == 0 {
+		return errors.Errorf("No matches for %s", search)
+	} else if len(matches) > 1 {
+		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+	}
+
+	fileName := matches[0]
 	file, err := DefaultApiClient.GetAuroraConfigFile(fileName)
 	if err != nil {
 		return err

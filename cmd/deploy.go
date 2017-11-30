@@ -126,11 +126,6 @@ func deploy(cmd *cobra.Command, args []string) error {
 		shouldDeploy = prompt.Confirm(message, defaultAnswer)
 	}
 
-	if !flagNoPrompt && !shouldDeploy && len(applications) > 1 {
-		applications = prompt.MultiSelect("Which applications do you want to deploy?", applications)
-		shouldDeploy = len(applications) > 0
-	}
-
 	if !shouldDeploy {
 		return errors.New("No applications to deploy")
 	}
