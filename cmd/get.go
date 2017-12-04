@@ -4,15 +4,16 @@ import (
 	"fmt"
 
 	"encoding/json"
+	"sort"
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/spf13/cobra"
-	"sort"
-	"strings"
 )
 
 var (
-	flagJson       bool
+	flagJSON       bool
 	flagAsList     bool
 	flagNoDefaults bool
 )
@@ -67,7 +68,7 @@ func init() {
 	getCmd.AddCommand(getSpecCmd)
 
 	getSpecCmd.Flags().BoolVarP(&flagNoDefaults, "no-defaults", "", false, "exclude default values from output")
-	getSpecCmd.Flags().BoolVarP(&flagJson, "json", "", false, "print deploy spec as json")
+	getSpecCmd.Flags().BoolVarP(&flagJSON, "json", "", false, "print deploy spec as json")
 	getDeploymentsCmd.Flags().BoolVarP(&flagAsList, "list", "", false, "print ApplicationIds as a list")
 }
 
@@ -128,7 +129,7 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 
 func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	if len(args) > 2 || len(args) < 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	fileNames, err := DefaultApiClient.GetFileNames()
@@ -150,7 +151,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 
 	split := strings.Split(matches[0], "/")
 
-	if !flagJson {
+	if !flagJSON {
 		spec, err := DefaultApiClient.GetAuroraDeploySpecFormatted(split[0], split[1], !flagNoDefaults)
 		if err != nil {
 			return err

@@ -1,6 +1,8 @@
 package cmd
 
 import "github.com/spf13/cobra"
+import "strings"
+import "github.com/pkg/errors"
 
 var inspectCmd = &cobra.Command{
 	Use:    "inspect <deploy-id>",
@@ -11,6 +13,7 @@ var inspectCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(inspectCmd)
+	inspectCmd.Flags().StringVarP(&flagAffiliation, "auroraconfig", "a", "", "set auroraconfigId to which the deploy-id belongs to")
 }
 
 func inspect(cmd *cobra.Command, args []string) error {
@@ -18,8 +21,14 @@ func inspect(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
+	if flagAffiliation != "" {
+		DefaultApiClient.Affiliation = flagAffiliation
+	}
 	result, err := DefaultApiClient.GetApplyResult(args[0])
 	if err != nil {
+		if strings.HasSuffix(err.Error(), "not found") {
+			return errors.Errorf("could not find deploy-id %s for auroraconfig %s", args[0], DefaultApiClient.Affiliation)
+		}
 		return err
 	}
 

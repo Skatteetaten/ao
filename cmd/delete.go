@@ -3,13 +3,14 @@ package cmd
 import (
 	"fmt"
 
+	"io"
+	"sort"
+
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
-	"io"
-	"sort"
 )
 
 var forceFlag bool
@@ -51,7 +52,7 @@ func init() {
 
 func DeleteApplication(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	err := deleteFilesFor(fuzzy.APP_FILTER, args[0], DefaultApiClient, cmd.OutOrStdout())
@@ -64,7 +65,7 @@ func DeleteApplication(cmd *cobra.Command, args []string) error {
 
 func DeleteEnvironment(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	err := deleteFilesFor(fuzzy.ENV_FILTER, args[0], DefaultApiClient, cmd.OutOrStdout())
@@ -77,7 +78,7 @@ func DeleteEnvironment(cmd *cobra.Command, args []string) error {
 
 func DeleteFile(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	fileNames, err := DefaultApiClient.GetFileNames()

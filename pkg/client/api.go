@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/config"
-	"io/ioutil"
-	"net/http"
 )
 
 const BooberApiVersion = "/v1"
@@ -64,10 +65,15 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 		return nil, err
 	}
 
+	logrus.WithFields(logrus.Fields{
+		"status": res.StatusCode,
+		"url":    url,
+	}).Debug("Raw response: ", string(body))
+
 	var fields logrus.Fields
 	err = json.Unmarshal(body, &fields)
 	if err != nil {
-		return nil, errors.Wrap(err, "field unmarshal")
+		logrus.Debug("Response is not JSON", string(body))
 	}
 
 	if res.StatusCode > 399 {

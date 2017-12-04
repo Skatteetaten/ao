@@ -3,14 +3,15 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
-	"sort"
-	"strings"
 )
 
 var (
@@ -71,7 +72,7 @@ func init() {
 func deploy(cmd *cobra.Command, args []string) error {
 
 	if len(args) > 2 || len(args) < 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	search := args[0]

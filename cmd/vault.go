@@ -6,15 +6,16 @@ import (
 	"strings"
 
 	"encoding/json"
+	"io/ioutil"
+	"os"
+	"path"
+	"sort"
+
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/editor"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
-	"io/ioutil"
-	"os"
-	"path"
-	"sort"
 )
 
 var (
@@ -108,7 +109,7 @@ func init() {
 
 func AddSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	vault, err := DefaultApiClient.GetVault(args[0])
@@ -132,7 +133,7 @@ func AddSecret(cmd *cobra.Command, args []string) error {
 
 func RenameSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	split := strings.Split(args[0], "/")
@@ -171,7 +172,7 @@ func RenameSecret(cmd *cobra.Command, args []string) error {
 
 func RenameVault(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	vault, err := DefaultApiClient.GetVault(args[1])
@@ -202,7 +203,7 @@ func RenameVault(cmd *cobra.Command, args []string) error {
 
 func CreateVault(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	v, _ := DefaultApiClient.GetVault(args[0])
@@ -242,7 +243,7 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 
 func EditSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	split := strings.Split(args[0], "/")
@@ -283,7 +284,7 @@ func EditSecret(cmd *cobra.Command, args []string) error {
 
 func DeleteSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	split := strings.Split(args[0], "/")
@@ -316,7 +317,7 @@ func DeleteSecret(cmd *cobra.Command, args []string) error {
 
 func DeleteVault(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	err := DefaultApiClient.DeleteVault(args[0])
@@ -336,7 +337,7 @@ func DeleteVault(cmd *cobra.Command, args []string) error {
 
 func ListVaults(cmd *cobra.Command, args []string) error {
 	if len(args) > 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	vaults, err := DefaultApiClient.GetVaults()
@@ -375,7 +376,7 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 
 func VaultPermissions(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	if flagRemoveGroup == "" && flagAddGroup == "" {

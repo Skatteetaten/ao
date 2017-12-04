@@ -3,9 +3,10 @@ package cmd
 import (
 	"fmt"
 
+	"os"
+
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var flagSaveAsUser string
@@ -29,9 +30,9 @@ func Save(cmd *cobra.Command, args []string) error {
 
 	if _, err := versioncontrol.Save(url, DefaultApiClient); err != nil {
 		return err
-	} else {
-		fmt.Println("Save success")
 	}
+
+	fmt.Println("Save success")
 
 	return nil
 }

@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
 )
@@ -16,12 +17,12 @@ var versionCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(versionCmd)
 
-	versionCmd.Flags().BoolVarP(&flagJson, "json", "", false, "output version as json")
+	versionCmd.Flags().BoolVarP(&flagJSON, "json", "", false, "output version as json")
 }
 
 func Version(cmd *cobra.Command, args []string) error {
 
-	if !flagJson {
+	if !flagJSON {
 		fmt.Println("AO version " + config.Version)
 		fmt.Println("Build time " + config.BuildStamp)
 		return nil
@@ -30,9 +31,9 @@ func Version(cmd *cobra.Command, args []string) error {
 	data, err := json.MarshalIndent(config.DefaultAOVersion, "", "  ")
 	if err != nil {
 		return err
-	} else {
-		fmt.Println(string(data))
 	}
+
+	fmt.Println(string(data))
 
 	return nil
 }

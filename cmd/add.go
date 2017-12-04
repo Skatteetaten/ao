@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 )
 
 const addExample = `  Given the following AuroraConfig:
@@ -40,7 +41,7 @@ func init() {
 
 func Add(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	fileName := args[0]
