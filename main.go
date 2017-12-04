@@ -11,7 +11,7 @@ const (
 	helpTemplate = `{{with (or .Long .Short)}}{{. | trimTrailingWhitespaces}}{{end}}
 
 Usage:
-  {{.CommandPath}} [command] [flags]{{if gt (len .Aliases) 0}}
+  {{.UseLine}}{{if gt (len .Aliases) 0}}
 
 Aliases:
   {{.NameAndAliases}}{{end}}{{if .HasExample}}
@@ -28,7 +28,7 @@ Remote AuroraConfig Commands:{{range .Commands}}{{if eq (index .Annotations "typ
 Local File Commands:{{range .Commands}}{{if eq (index .Annotations "type") "local"}}
   {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
 
-Commands:{{range .Commands}}{{if (and (eq (index .Annotations "type") "") (ne .Name "help"))}}
+Commands:{{range .Commands}}{{if (and (eq (index .Annotations "type") "") .IsAvailableCommand)}}
   {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
 
 Flags:

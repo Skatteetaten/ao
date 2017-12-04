@@ -5,7 +5,7 @@ def git
 def yarn
 def go
 
-def scriptVersion='go_versions'
+def scriptVersion='v3.6.1'
 fileLoader.withGit('https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git', scriptVersion) {
     go = fileLoader.load('go/go')
     git = fileLoader.load('git/git')

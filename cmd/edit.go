@@ -3,27 +3,27 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/skatteetaten/ao/cmd/common"
+	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/editor"
+	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/spf13/cobra"
 )
 
-const editLong = `The arguments to edit are fuzzy match, if there are multiple matches you are prompted to select
-one file to edit.`
+const editLong = `Edit a single file in the current AuroraConfig.`
 
-const exampleEdit = `Given the following AuroraConfig:
-  - about.json
-  - foobar.json
-  - bar.json
-  - foo/about.json
-  - foo/bar.json
-  - foo/foobar.json
+const exampleEdit = `  Given the following AuroraConfig:
+    - about.json
+    - foobar.json
+    - bar.json
+    - foo/about.json
+    - foo/bar.json
+    - foo/foobar.json
 
-Fuzzy matching
-  ao edit fo/ba == foo/bar.json and foo/foobar.json
+  # Exact matching: will open foo/bar.json in editor
+  ao edit foo/bar
 
-Exact matching
-  ao edit foo/bar == only foo/bar.json
+  # Fuzzy matching: will open foo/foobar.json in editor
+  ao edit fofoba
 `
 
 var editCmd = &cobra.Command{
@@ -41,7 +41,7 @@ func init() {
 
 func EditFile(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	fileNames, err := DefaultApiClient.GetFileNames()
@@ -49,11 +49,19 @@ func EditFile(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fileName, err := common.SelectOne(args, fileNames, true)
-	if err != nil {
-		return err
+	search := args[0]
+	if len(args) == 2 {
+		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
+	matches := fuzzy.FindMatches(search, fileNames, true)
+	if len(matches) == 0 {
+		return errors.Errorf("No matches for %s", search)
+	} else if len(matches) > 1 {
+		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+	}
+
+	fileName := matches[0]
 	file, err := DefaultApiClient.GetAuroraConfigFile(fileName)
 	if err != nil {
 		return err

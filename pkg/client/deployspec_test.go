@@ -21,7 +21,7 @@ func TestApiClient_GetAuroraDeploySpec(t *testing.T) {
 		defer ts.Close()
 
 		api := NewApiClient(ts.URL, "test", affiliation)
-		spec, err := api.GetAuroraDeploySpec("aotest", "redis")
+		spec, err := api.GetAuroraDeploySpec("aotest", "redis", true)
 		assert.NoError(t, err)
 
 		assert.Len(t, spec, 14)
@@ -45,7 +45,7 @@ func TestApiClient_GetAuroraDeploySpecFormatted(t *testing.T) {
 		defer ts.Close()
 
 		api := NewApiClient(ts.URL, "test", affiliation)
-		spec, err := api.GetAuroraDeploySpecFormatted("aotest", "redis")
+		spec, err := api.GetAuroraDeploySpecFormatted("aotest", "redis", true)
 		assert.NoError(t, err)
 
 		assert.Equal(t, string(expected), spec)

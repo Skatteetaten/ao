@@ -61,7 +61,8 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 	}
 	currentContent := originalContent
 
-	for {
+	var done bool
+	for !done {
 		previousContent := currentContent
 		contentToEdit := fmt.Sprintf(editPattern, name, editErrors, currentContent)
 		err = ioutil.WriteFile(tempFilePath, []byte(contentToEdit), 0700)
@@ -102,8 +103,7 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 		} else if err != nil {
 			return err
 		} else {
-			// Content has been saved successfully
-			break
+			done = true
 		}
 	}
 

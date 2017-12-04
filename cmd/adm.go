@@ -23,14 +23,13 @@ var getClusterCmd = &cobra.Command{
 
 var updateClustersCmd = &cobra.Command{
 	Use:   "update-clusters",
-	Short: "Will update clusters",
+	Short: "Will recreate clusters in config file",
 	RunE:  UpdateClusters,
 }
 
 var recreateConfigCmd = &cobra.Command{
 	Use:   "recreate-config",
-	Short: "adm recreate-config",
-	Long:  `The command will recreate the .ao.json file.`,
+	Short: `The command will recreate the .ao.json file.`,
 	RunE:  RecreateConfig,
 }
 

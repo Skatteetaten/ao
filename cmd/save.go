@@ -3,16 +3,17 @@ package cmd
 import (
 	"fmt"
 
+	"os"
+
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var flagSaveAsUser string
 
 var saveCmd = &cobra.Command{
 	Use:         "save",
-	Short:       "Save changed, new and deleted files for AuroraConfig",
+	Short:       "Validate and save local modifications in the current AuroraConfig",
 	Annotations: map[string]string{"type": "local"},
 	RunE:        Save,
 }
@@ -29,9 +30,9 @@ func Save(cmd *cobra.Command, args []string) error {
 
 	if _, err := versioncontrol.Save(url, DefaultApiClient); err != nil {
 		return err
-	} else {
-		fmt.Println("Save success")
 	}
+
+	fmt.Println("Save success")
 
 	return nil
 }

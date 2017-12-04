@@ -3,13 +3,14 @@ package cmd
 import (
 	"fmt"
 
+	"io"
+	"sort"
+
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
-	"io"
-	"sort"
 )
 
 var forceFlag bool
@@ -23,19 +24,19 @@ var (
 
 	deleteAppCmd = &cobra.Command{
 		Use:   "app <appname>",
-		Short: "Delete application",
+		Short: "Delete application files from current AuroraConfig, does not affect deployed applications",
 		RunE:  DeleteApplication,
 	}
 
 	deleteEnvCmd = &cobra.Command{
 		Use:   "env <envname>",
-		Short: "Delete environment",
+		Short: "Delete all files for a single environment from current AuroraConfig, does not affect deployed applications",
 		RunE:  DeleteEnvironment,
 	}
 
 	deleteFileCmd = &cobra.Command{
 		Use:   "file <filename>",
-		Short: "Delete file",
+		Short: "Delete a single file from current AuroraConfig",
 		RunE:  DeleteFile,
 	}
 )
@@ -46,12 +47,12 @@ func init() {
 	deleteCmd.AddCommand(deleteEnvCmd)
 	deleteCmd.AddCommand(deleteFileCmd)
 
-	deleteCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "ignore nonexistent files and arguments, never prompt")
+	deleteCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "no interactive prompt")
 }
 
 func DeleteApplication(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	err := deleteFilesFor(fuzzy.APP_FILTER, args[0], DefaultApiClient, cmd.OutOrStdout())
@@ -64,7 +65,7 @@ func DeleteApplication(cmd *cobra.Command, args []string) error {
 
 func DeleteEnvironment(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	err := deleteFilesFor(fuzzy.ENV_FILTER, args[0], DefaultApiClient, cmd.OutOrStdout())
@@ -77,38 +78,38 @@ func DeleteEnvironment(cmd *cobra.Command, args []string) error {
 
 func DeleteFile(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
-	var files []string
 	fileNames, err := DefaultApiClient.GetFileNames()
 	if err != nil {
 		return err
 	}
 
-	options := fuzzy.SearchForFile(args[0], fileNames)
-
-	if len(options) > 1 {
-		message := fmt.Sprintf("Matched %d files. Which file do you want?", len(options))
-		files = prompt.MultiSelect(message, options)
-	} else if len(options) == 1 {
-		files = []string{options[0]}
+	search := args[0]
+	if len(args) == 2 {
+		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	if len(files) == 0 {
-		return errors.New("No file to edit")
+	matches := fuzzy.FindMatches(search, fileNames, true)
+
+	var fileName string
+	if len(matches) > 1 {
+		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+	} else if len(matches) < 1 {
+		return errors.New("No file to delete")
+	} else {
+		fileName = matches[0]
 	}
 
-	header, rows := GetFilesTable(files)
-	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
-	message := fmt.Sprintf("Do you want to delete %d file(s)?", len(files))
-	shouldDelete := prompt.Confirm(message)
+	message := fmt.Sprintf("Do you want to delete %s?", fileName)
+	shouldDelete := prompt.Confirm(message, false)
 
 	if !shouldDelete {
 		return nil
 	}
 
-	err = deleteFiles(files, DefaultApiClient)
+	err = deleteFiles([]string{fileName}, DefaultApiClient)
 	if err != nil {
 		return err
 	}
@@ -146,7 +147,7 @@ func deleteFilesFor(mode fuzzy.FilterMode, search string, api *client.ApiClient,
 	header, rows := GetFilesTable(files)
 	DefaultTablePrinter(header, rows, out)
 	message := fmt.Sprintf("Do you want to delete %s?", search)
-	deleteAll := prompt.Confirm(message)
+	deleteAll := prompt.Confirm(message, false)
 
 	if !deleteAll {
 		return errors.New("Delete aborted")

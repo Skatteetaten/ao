@@ -2,12 +2,48 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/log"
 	"github.com/spf13/cobra"
-	"os"
+)
+
+const (
+	bashCompletionFunc = `__ao_parse()
+{
+    local ao_output out
+    if ao_output=$(ao $@ --no-headers 2>/dev/null); then
+        out=($(echo "${ao_output}" | awk '{print $1}'))
+        COMPREPLY=( $( compgen -W "${out[*]}" -- "$cur" ) )
+    fi
+}
+
+__custom_func() {
+    case ${last_command} in
+        ao_edit | ao_get_file | ao_delete_file | ao_set | ao_unset)
+            __ao_parse get files
+            return
+            ;;
+        ao_deploy | ao_get_spec)
+            __ao_parse get all --list
+            return
+            ;;
+        ao_vault_edit | ao_vault_delete-secret | ao_vault_rename-secret)
+            __ao_parse vault get --list
+            return
+            ;;
+        ao_vault_delete | ao_vault_rename | ao_vault_permissions)
+            __ao_parse vault get --only-vaults
+            return
+            ;;
+        *)
+            ;;
+    esac
+}
+`
 )
 
 const rootLong = `A command line interface for the Boober API.
@@ -30,18 +66,20 @@ var (
 )
 
 var RootCmd = &cobra.Command{
-	Use:               "ao",
-	Short:             "Aurora OpenShift CLI",
-	Long:              rootLong,
+	Use:   "ao",
+	Short: "Aurora OpenShift CLI",
+	Long:  rootLong,
+	// Cannot use custom bash completion until https://github.com/spf13/cobra/pull/520 has been merged
+	// BashCompletionFunction: bashCompletionFunc,
 	PersistentPreRunE: initialize,
 }
 
 func init() {
 	RootCmd.PersistentFlags().StringVarP(&pFlagLogLevel, "log", "l", "fatal", "Set log level. Valid log levels are [info, debug, warning, error, fatal]")
 	RootCmd.PersistentFlags().BoolVarP(&pFlagPrettyLog, "pretty", "p", false, "Pretty print json output for log")
-	RootCmd.PersistentFlags().StringVarP(&pFlagToken, "token", "t", "", "Boober authorization token")
-	RootCmd.PersistentFlags().BoolVarP(&pFlagNoHeader, "no-header", "", false, "Print tables without headers")
-	RootCmd.PersistentFlags().MarkHidden("no-header")
+	RootCmd.PersistentFlags().StringVarP(&pFlagToken, "token", "t", "", "OpenShift authorization token to use for remote commands, overrides login")
+	RootCmd.PersistentFlags().BoolVarP(&pFlagNoHeader, "no-headers", "", false, "Print tables without headers")
+	RootCmd.PersistentFlags().MarkHidden("no-headers")
 }
 
 func initialize(cmd *cobra.Command, args []string) error {

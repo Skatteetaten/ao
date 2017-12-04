@@ -98,7 +98,7 @@ func (ao *AOConfig) Update(noPrompt bool) error {
 
 	if !noPrompt {
 		message := fmt.Sprintf("Do you want update AO from version %s -> %s?", Version, serverVersion.Version)
-		update := prompt.Confirm(message)
+		update := prompt.Confirm(message, true)
 		if !update {
 			return errors.New("Update aborted")
 		}
@@ -118,7 +118,6 @@ func (ao *AOConfig) replaceAO(data []byte) error {
 		return err
 	}
 
-	// TODO: Write to tmp folder, then rename
 	releasePath := executablePath + "_" + "update"
 	err = ioutil.WriteFile(releasePath, data, 0755)
 	if err != nil {

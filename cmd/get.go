@@ -4,14 +4,19 @@ import (
 	"fmt"
 
 	"encoding/json"
-	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/cmd/common"
-	"github.com/spf13/cobra"
 	"sort"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/fuzzy"
+	"github.com/spf13/cobra"
 )
 
-var flagJson bool
+var (
+	flagJSON       bool
+	flagAsList     bool
+	flagNoDefaults bool
+)
 
 var (
 	getCmd = &cobra.Command{
@@ -62,8 +67,9 @@ func init() {
 	getCmd.AddCommand(getDeploymentsCmd)
 	getCmd.AddCommand(getSpecCmd)
 
-	// TODO: Default flag for AuroraDeploySpec
-	getSpecCmd.Flags().BoolVarP(&flagJson, "json", "", false, "print deploy spec as json")
+	getSpecCmd.Flags().BoolVarP(&flagNoDefaults, "no-defaults", "", false, "exclude default values from output")
+	getSpecCmd.Flags().BoolVarP(&flagJSON, "json", "", false, "print deploy spec as json")
+	getDeploymentsCmd.Flags().BoolVarP(&flagAsList, "list", "", false, "print ApplicationIds as a list")
 }
 
 func PrintAll(cmd *cobra.Command, args []string) error {
@@ -73,7 +79,17 @@ func PrintAll(cmd *cobra.Command, args []string) error {
 	}
 
 	deployments := fileNames.GetApplicationIds()
-	header, rows := GetApplicationIdTable(deployments)
+
+	var header string
+	var rows []string
+	if flagAsList {
+		sort.Strings(deployments)
+		header = "APPLICATIONID"
+		rows = deployments
+	} else {
+		header, rows = GetApplicationIdTable(deployments)
+	}
+
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 
 	return nil
@@ -113,22 +129,30 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 
 func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	if len(args) > 2 || len(args) < 1 {
-		return cmd.Help()
+		return cmd.Usage()
 	}
 
 	fileNames, err := DefaultApiClient.GetFileNames()
 	if err != nil {
 		return err
 	}
-	selected, err := common.SelectOne(args, fileNames.GetApplicationIds(), false)
-	if err != nil {
-		return err
+
+	search := args[0]
+	if len(args) == 2 {
+		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	split := strings.Split(selected, "/")
+	matches := fuzzy.FindMatches(search, fileNames.GetApplicationIds(), false)
+	if len(matches) == 0 {
+		return errors.Errorf("No matches for %s", search)
+	} else if len(matches) > 1 {
+		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+	}
 
-	if !flagJson {
-		spec, err := DefaultApiClient.GetAuroraDeploySpecFormatted(split[0], split[1])
+	split := strings.Split(matches[0], "/")
+
+	if !flagJSON {
+		spec, err := DefaultApiClient.GetAuroraDeploySpecFormatted(split[0], split[1], !flagNoDefaults)
 		if err != nil {
 			return err
 		}
@@ -136,7 +160,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	spec, err := DefaultApiClient.GetAuroraDeploySpec(split[0], split[1])
+	spec, err := DefaultApiClient.GetAuroraDeploySpec(split[0], split[1], !flagNoDefaults)
 	if err != nil {
 		return err
 	}
@@ -162,12 +186,19 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	selected, err := common.SelectOne(args, fileNames, true)
-	if err != nil {
-		return err
+	search := args[0]
+	if len(args) == 2 {
+		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	auroraConfigFile, err := DefaultApiClient.GetAuroraConfigFile(selected)
+	matches := fuzzy.FindMatches(search, fileNames, true)
+	if len(matches) == 0 {
+		return errors.Errorf("No matches for %s", search)
+	} else if len(matches) > 1 {
+		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+	}
+
+	auroraConfigFile, err := DefaultApiClient.GetAuroraConfigFile(matches[0])
 	if err != nil {
 		return err
 	}
