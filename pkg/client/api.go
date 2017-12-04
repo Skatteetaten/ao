@@ -65,15 +65,10 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 		return nil, err
 	}
 
-	logrus.WithFields(logrus.Fields{
-		"status": res.StatusCode,
-		"url":    url,
-	}).Debug("Raw response: ", string(body))
-
 	var fields logrus.Fields
 	err = json.Unmarshal(body, &fields)
 	if err != nil {
-		logrus.Debug("Response is not JSON", string(body))
+		logrus.Debug("Response is not JSON: ", string(body))
 	}
 
 	if res.StatusCode > 399 {
