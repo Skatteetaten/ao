@@ -5,10 +5,10 @@ import "strings"
 import "github.com/pkg/errors"
 
 var inspectCmd = &cobra.Command{
-	Use:    "inspect <deploy-id>",
-	Short:  "Inspect a given deploy id",
-	Hidden: true,
-	RunE:   inspect,
+	Use:         "inspect <deploy-id>",
+	Short:       "Inspect a given deploy id",
+	Annotations: map[string]string{"type": "remote"},
+	RunE:        inspect,
 }
 
 func init() {
