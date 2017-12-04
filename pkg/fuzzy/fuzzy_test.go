@@ -1,9 +1,10 @@
 package fuzzy
 
 import (
+	"testing"
+
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var fileNames = client.FileNames{
@@ -25,12 +26,12 @@ var fileNames = client.FileNames{
 
 func TestFilterFileNamesForDeploy(t *testing.T) {
 	var expected = []string{
-		"utv/boober",
-		"utv/console",
-		"utv-relay/boober",
+		"test-relay/boober",
 		"test/boober",
 		"test/console",
-		"test-relay/boober",
+		"utv-relay/boober",
+		"utv/boober",
+		"utv/console",
 	}
 
 	actual := fileNames.GetApplicationIds()
