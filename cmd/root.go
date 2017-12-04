@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/log"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 const (
@@ -68,8 +69,9 @@ var RootCmd = &cobra.Command{
 	Use:   "ao",
 	Short: "Aurora OpenShift CLI",
 	Long:  rootLong,
-	BashCompletionFunction: bashCompletionFunc,
-	PersistentPreRunE:      initialize,
+	// Cannot use custom bash completion until https://github.com/spf13/cobra/pull/520 has been merged
+	// BashCompletionFunction: bashCompletionFunc,
+	PersistentPreRunE: initialize,
 }
 
 func init() {
