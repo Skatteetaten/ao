@@ -3,10 +3,12 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"sort"
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/collections"
-	"net/http"
-	"strings"
 )
 
 var (
@@ -211,6 +213,7 @@ func (f FileNames) GetApplicationIds() []string {
 			filteredFiles = append(filteredFiles, strings.TrimSuffix(file, ".json"))
 		}
 	}
+	sort.Strings(filteredFiles)
 	return filteredFiles
 }
 
