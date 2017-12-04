@@ -32,16 +32,16 @@ var (
 	}
 
 	getAppsCmd = &cobra.Command{
-		Use:     "apps",
-		Short:   "Get all applications",
-		Aliases: []string{"app"},
+		Use:     "app [applications]",
+		Short:   "Get all applications or all envrionments for one or more applications",
+		Aliases: []string{"apps"},
 		RunE:    PrintApplications,
 	}
 
 	getEnvsCmd = &cobra.Command{
-		Use:     "envs",
-		Short:   "Get all environments",
-		Aliases: []string{"env"},
+		Use:     "env [envirionments]",
+		Short:   "Get all environments og all applications for one or more environments",
+		Aliases: []string{"envs"},
 		RunE:    PrintEnvironments,
 	}
 
@@ -105,6 +105,20 @@ func PrintApplications(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications available")
 	}
 
+	if len(args) > 0 {
+		var selected []string
+		for _, arg := range args {
+			matches := fuzzy.FindAllDeploysFor(fuzzy.APP_FILTER, arg, fileNames.GetApplicationIds())
+			if len(matches) == 0 {
+				cmd.Printf("No matches for %s\n", arg)
+			}
+			selected = append(selected, matches...)
+		}
+		header, rows := GetApplicationIdTable(selected)
+		DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+		return nil
+	}
+
 	applications := fileNames.GetApplications()
 	sort.Strings(applications)
 	DefaultTablePrinter("APPLICATIONS", applications, cmd.OutOrStdout())
@@ -119,6 +133,20 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 
 	if len(fileNames.GetEnvironments()) < 1 {
 		return errors.New("No environments available")
+	}
+
+	if len(args) > 0 {
+		var selected []string
+		for _, arg := range args {
+			matches := fuzzy.FindAllDeploysFor(fuzzy.ENV_FILTER, arg, fileNames.GetApplicationIds())
+			if len(matches) == 0 {
+				cmd.Printf("No matches for %s\n", arg)
+			}
+			selected = append(selected, matches...)
+		}
+		header, rows := GetApplicationIdTable(selected)
+		DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+		return nil
 	}
 
 	envrionments := fileNames.GetEnvironments()
