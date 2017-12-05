@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var flagShowAll bool
@@ -95,13 +96,12 @@ func UpdateClusters(cmd *cobra.Command, args []string) error {
 
 func RecreateConfig(cmd *cobra.Command, args []string) error {
 	conf := &config.DefaultAOConfig
-	conf.InitClusters()
-	conf.SelectApiCluster()
-
 	if flagCluster != "" {
 		conf.AvailableClusters = []string{flagCluster}
+		conf.PreferredAPIClusters = []string{flagCluster}
 	}
-
+	conf.InitClusters()
+	conf.SelectApiCluster()
 	return config.WriteConfig(*conf, ConfigLocation)
 }
 

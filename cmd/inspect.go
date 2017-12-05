@@ -27,7 +27,7 @@ func inspect(cmd *cobra.Command, args []string) error {
 	result, err := DefaultApiClient.GetApplyResult(args[0])
 	if err != nil {
 		if strings.HasSuffix(err.Error(), "not found") {
-			return errors.Errorf("could not find deploy-id %s for auroraconfig %s", args[0], DefaultApiClient.Affiliation)
+			return errors.Errorf("could not find deploy-id %s for AuroraConfig %s", args[0], DefaultApiClient.Affiliation)
 		}
 		return err
 	}

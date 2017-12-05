@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const unsetExample = `ao unset foo.json /pause
+const unsetExample = `  ao unset foo.json /pause
 
-ao unset test/foo.json /config/IMPORTANT_ENV`
+  ao unset test/foo.json /config/IMPORTANT_ENV`
 
 var unsetCmd = &cobra.Command{
 	Use:         "unset <file> <json-path>",

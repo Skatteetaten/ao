@@ -6,11 +6,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const setExample = `ao set foo.json /pause true
+const setExample = `  ao set foo.json /pause true
 
-ao set test/about.json /cluster utv
+  ao set test/about.json /cluster utv
 
-ao set test/foo.json /config/IMPORTANT_ENV 'Hello World'`
+  ao set test/foo.json /config/IMPORTANT_ENV 'Hello World'`
 
 var setCmd = &cobra.Command{
 	Use:         "set <file> <json-path> <value>",
