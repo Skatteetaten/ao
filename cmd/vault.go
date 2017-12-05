@@ -19,9 +19,7 @@ import (
 )
 
 var (
-	flagAddGroup    string
-	flagRemoveGroup string
-	flagOnlyVaults  bool
+	flagOnlyVaults bool
 
 	ErrEmptyGroups            = errors.New("Cannot find groups in permissions")
 	ErrNotValidSecretArgument = errors.New("not a valid argument, must be <vaultname/secret>")
@@ -47,7 +45,7 @@ var (
 	}
 
 	vaultEditCmd = &cobra.Command{
-		Use:   "edit <vaultname/secret>",
+		Use:   "edit-secret <vaultname/secret>",
 		Short: "Edit an existing secret",
 		RunE:  EditSecret,
 	}
@@ -65,15 +63,22 @@ var (
 	}
 
 	vaultGetCmd = &cobra.Command{
-		Use:   "get",
-		Short: "list all vaults",
-		RunE:  ListVaults,
+		Use:     "get",
+		Short:   "List all vaults",
+		Aliases: []string{"list"},
+		RunE:    ListVaults,
 	}
 
-	vaultPermissionsCmd = &cobra.Command{
-		Use:   "permissions <vaultname>",
-		Short: "Add or remove permissions on a vault",
-		RunE:  VaultPermissions,
+	vaultAddPermissionsCmd = &cobra.Command{
+		Use:   "add-permissions <vaultname> <groups>",
+		Short: "Add permissions on a vault",
+		RunE:  VaultAddPermissions,
+	}
+
+	vaultRemovePermissionsCmd = &cobra.Command{
+		Use:   "remove-permissions <vaultname> <groups>",
+		Short: "Remove permissions on a vault",
+		RunE:  VaultRemovePermissions,
 	}
 
 	vaultRenameCmd = &cobra.Command{
@@ -92,7 +97,8 @@ func init() {
 	RootCmd.AddCommand(vaultCmd)
 
 	vaultCmd.AddCommand(vaultAddSecretCmd)
-	vaultCmd.AddCommand(vaultPermissionsCmd)
+	vaultCmd.AddCommand(vaultAddPermissionsCmd)
+	vaultCmd.AddCommand(vaultRemovePermissionsCmd)
 	vaultCmd.AddCommand(vaultDeleteCmd)
 	vaultCmd.AddCommand(vaultDeleteSecretCmd)
 	vaultCmd.AddCommand(vaultGetCmd)
@@ -101,8 +107,6 @@ func init() {
 	vaultCmd.AddCommand(vaultRenameCmd)
 	vaultCmd.AddCommand(vaultRenameSecretCmd)
 
-	vaultPermissionsCmd.Flags().StringVarP(&flagAddGroup, "add-group", "", "", "Add a group permission to the vault")
-	vaultPermissionsCmd.Flags().StringVarP(&flagRemoveGroup, "remove-group", "", "", "Remove a group permission from the vault")
 	vaultGetCmd.Flags().BoolVarP(&flagAsList, "list", "", false, "print vault/secret as a list")
 	vaultGetCmd.Flags().BoolVarP(&flagOnlyVaults, "only-vaults", "", false, "print vaults as a list")
 }
@@ -216,20 +220,6 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 	err := collectSecrets(args[1], vault, true)
 	if err != nil {
 		return err
-	}
-
-	if flagRemoveGroup != "" {
-		err := vault.Permissions.DeleteGroup(flagRemoveGroup)
-		if err != nil {
-			return err
-		}
-	}
-
-	if flagAddGroup != "" {
-		err := vault.Permissions.AddGroup(flagAddGroup)
-		if err != nil {
-			return err
-		}
 	}
 
 	err = DefaultApiClient.SaveVault(*vault, false)
@@ -374,13 +364,9 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func VaultPermissions(cmd *cobra.Command, args []string) error {
+func VaultAddPermissions(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return cmd.Usage()
-	}
-
-	if flagRemoveGroup == "" && flagAddGroup == "" {
-		return errors.New("Please specify --add-group <group> or/and --remove-group <group>")
 	}
 
 	vault, err := DefaultApiClient.GetVault(args[0])
@@ -388,15 +374,34 @@ func VaultPermissions(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if flagRemoveGroup != "" {
-		err = vault.Permissions.DeleteGroup(flagRemoveGroup)
+	for _, group := range args[1:] {
+		err = vault.Permissions.AddGroup(group)
 		if err != nil {
 			return err
 		}
 	}
 
-	if flagAddGroup != "" {
-		err = vault.Permissions.AddGroup(flagAddGroup)
+	err = DefaultApiClient.SaveVault(*vault, true)
+	if err != nil {
+		return err
+	}
+
+	cmd.Printf("Vault %s saved\n", args[0])
+	return nil
+}
+
+func VaultRemovePermissions(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return cmd.Usage()
+	}
+
+	vault, err := DefaultApiClient.GetVault(args[0])
+	if err != nil {
+		return err
+	}
+
+	for _, group := range args[1:] {
+		err = vault.Permissions.DeleteGroup(group)
 		if err != nil {
 			return err
 		}
