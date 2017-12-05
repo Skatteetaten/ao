@@ -365,7 +365,7 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 }
 
 func VaultAddPermissions(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
+	if len(args) < 2 {
 		return cmd.Usage()
 	}
 
@@ -391,7 +391,7 @@ func VaultAddPermissions(cmd *cobra.Command, args []string) error {
 }
 
 func VaultRemovePermissions(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
+	if len(args) < 2 {
 		return cmd.Usage()
 	}
 
