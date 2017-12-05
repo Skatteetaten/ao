@@ -64,7 +64,7 @@ var (
 
 	vaultGetCmd = &cobra.Command{
 		Use:     "get",
-		Short:   "List all vaults",
+		Short:   "List all vaults with permissions",
 		Aliases: []string{"list"},
 		RunE:    ListVaults,
 	}
