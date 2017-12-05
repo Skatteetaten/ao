@@ -1,0 +1,44 @@
+html {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: -webkit-linear-gradient(to bottom, #155799, #159957);
+  background: linear-gradient(to bottom, #155799, #159957);
+}
+
+.logo {
+  color: #f3f3f3;
+}
+
+.btn {
+  width: 232px;
+  text-align: center;
+  color: #f0ecec;
+  background: #155799;
+  padding: 0 40px;
+  border-radius: 8px;
+  text-decoration: none;
+  box-shadow: 3px 4px 3px #454545;
+}
+
+.btn:hover {
+  background: #1064a3;
+}
+
+.btn:active {
+  background: #155799;
+}
+
+#version {
+  color: #f3f3f3;
+  margin-top: 8px;
+}

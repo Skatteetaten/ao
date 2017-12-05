@@ -1,0 +1,82 @@
+{
+  "count": 7,
+  "items": [
+    {
+      "admin": false,
+      "name": "utvmote",
+      "permissions": {
+        "groups": [
+          "UTV_App_dev"
+        ]
+      },
+      "secrets": [
+        "latest.properties"
+      ]
+    },
+    {
+      "admin": true,
+      "name": "secret",
+      "secrets": [
+        "foobar.prop",
+        "latest.properties",
+        "vdi"
+      ]
+    },
+    {
+      "admin": true,
+      "name": "boober",
+      "permissions": {
+        "groups": [
+          "APP_PaaS_utv",
+          "APP_PaaS_drift"
+        ]
+      },
+      "secrets": [
+        "latest.properties"
+      ]
+    },
+    {
+      "admin": true,
+      "name": "foo",
+      "permissions": {
+        "groups": [
+          "APP_PaaS_utv"
+        ]
+      },
+      "secrets": [
+        "latest.properties"
+      ]
+    },
+    {
+      "admin": true,
+      "name": "console",
+      "secrets": [
+        "aurora-token"
+      ]
+    },
+    {
+      "admin": true,
+      "name": "flotus",
+      "permissions": {
+        "groups": []
+      },
+      "secrets": [
+        "potus"
+      ]
+    },
+    {
+      "admin": false,
+      "name": "potus",
+      "permissions": {
+        "groups": [
+          "App_PaaS_UTV"
+        ]
+      },
+      "secrets": [
+        "potus.properties"
+      ]
+    }
+  ],
+  "message": "OK",
+  "success": true
+}

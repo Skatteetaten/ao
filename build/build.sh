@@ -53,7 +53,7 @@ export GOARCH="${ARCH}"
 
 PACKAGES=$(go list ./... | grep "ao/pkg\|ao$\|ao/cmd" | xargs echo)
 go install                                                         \
-    -ldflags "-X ${PKG}/pkg/versionutil.version=${VERSION} -X ${PKG}/pkg/versionutil.branch=${BRANCH} -X ${PKG}/pkg/versionutil.buildstamp=${BUILDSTAMP} -X ${PKG}/pkg/versionutil.githash=${GITHASH}" \
+    -ldflags "-X \"${PKG}/pkg/config.Version=${VERSION}\" -X \"${PKG}/pkg/config.Branch=${BRANCH}\" -X \"${PKG}/pkg/config.BuildStamp=${BUILDSTAMP}\" -X \"${PKG}/pkg/config.GitHash=${GITHASH}\"" \
     -gcflags='-B -l' \
     -pkgdir=${GOPATH}/pkg \
     ${PACKAGES}

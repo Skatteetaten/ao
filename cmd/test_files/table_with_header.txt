@@ -1,0 +1,7 @@
+FILES
+bar.json
+baz.json
+foo/bar.json
+foo/baz.json
+about.json
+foo/about.json

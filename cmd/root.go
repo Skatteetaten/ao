@@ -1,130 +1,154 @@
-// Copyright © 2016 Skatteetaten <utvpaas@skatteetaten.no>
-
 package cmd
 
 import (
 	"fmt"
 	"os"
-	"strings"
 
-	"github.com/skatteetaten/ao/pkg/cmdoptions"
-	"github.com/skatteetaten/ao/pkg/configuration"
-	"github.com/skatteetaten/ao/pkg/openshift"
-	"github.com/skatteetaten/ao/pkg/serverapi"
+	"github.com/sirupsen/logrus"
+	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/config"
+	"github.com/skatteetaten/ao/pkg/log"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/stromland/cobra-prompt"
 )
 
-const CallbackAnnotation = cobraprompt.CALLBACK_ANNOTATION
-
-// Cobra Flag variables
-var persistentOptions cmdoptions.CommonCommandOptions
-var overrideValues []string
-var localDryRun bool
-
-var aoConfigLocation string
-var aoConfig *openshift.OpenshiftConfig
-var config = &configuration.ConfigurationClass{
-	PersistentOptions: &persistentOptions,
+const (
+	bashCompletionFunc = `__ao_parse()
+{
+    local ao_output out
+    if ao_output=$(ao $@ --no-headers 2>/dev/null); then
+        out=($(echo "${ao_output}" | awk '{print $1}'))
+        COMPREPLY=( $( compgen -W "${out[*]}" -- "$cur" ) )
+    fi
 }
 
-//var cfgFile string
+__custom_func() {
+    case ${last_command} in
+        ao_edit | ao_get_file | ao_delete_file | ao_set | ao_unset)
+            __ao_parse get files
+            return
+            ;;
+        ao_deploy | ao_get_spec)
+            __ao_parse get all --list
+            return
+            ;;
+        ao_vault_edit | ao_vault_delete-secret | ao_vault_rename-secret)
+            __ao_parse vault get --list
+            return
+            ;;
+        ao_vault_delete | ao_vault_rename | ao_vault_permissions)
+            __ao_parse vault get --only-vaults
+            return
+            ;;
+        *)
+            ;;
+    esac
+}
+`
+)
 
-// RootCmd represents the base command when called without any subcommands
+const rootLong = `A command line interface for the Boober API.
+  * Deploy one or more ApplicationId (environment/application) to one or more clusters
+  * Manipulate AuroraConfig remotely
+  * Support modifying AuroraConfig locally
+  * Manipulate vaults and secrets`
+
+var (
+	pFlagLogLevel  string
+	pFlagPrettyLog bool
+	pFlagToken     string
+	pFlagNoHeader  bool
+
+	// DefaultApiClient will use APICluster from ao config as default values
+	// if persistent token and/or server api url is specified these will override default values
+	DefaultApiClient *client.ApiClient
+	AO               *config.AOConfig
+	ConfigLocation   string
+)
+
 var RootCmd = &cobra.Command{
 	Use:   "ao",
-	Short: "Aurora Openshift CLI",
-	Long: `A command line interface that interacts with the Boober API
-to enable the user to manipulate the Aurora Config for an affiliation, and to
- deploy one or more application.
-
-This application has two main parts.
-1. manage the AuroraConfig configuration via cli
-2. apply the aoc configuration to the clusters
-`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		commandsWithoutLogin := []string{"login", "logout", "version", "update", "help", "deploy", "adm"}
-
-		commands := strings.Split(cmd.CommandPath(), " ")
-		if len(commands) > 1 {
-			for _, command := range commandsWithoutLogin {
-				if commands[1] == command {
-					return
-				}
-			}
-		}
-
-		if valid := serverapi.ValidateLogin(config.OpenshiftConfig); !valid {
-			fmt.Println("Not logged in, please use ao login")
-			os.Exit(1)
-		}
-	},
-}
-
-// Execute adds all child commands to the root command sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
-
+	Short: "Aurora OpenShift CLI",
+	Long:  rootLong,
+	// Cannot use custom bash completion until https://github.com/spf13/cobra/pull/520 has been merged
+	// BashCompletionFunction: bashCompletionFunc,
+	PersistentPreRunE: initialize,
 }
 
 func init() {
-	config.Init()
-	cobra.OnInitialize(initConfigCobra)
-
-	//Verbose     bool
-	//Debug       bool
-	//DryRun      bool
-	//Localhost   bool
-	//ShowConfig  bool
-	//ShowObjects bool
-
-	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Verbose, "verbose",
-		"", false, "Log progress to standard out")
-
-	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Debug, "debug",
-		"", false, "Show debug information")
-	RootCmd.PersistentFlags().MarkHidden("debug")
-
-	//RootCmd.PersistentFlags().BoolVarP(&persistentOptions.DryRun, "dryrun",
-	//	"d", false,
-	//	"Do not perform a setup, just collect and print the configuration files")
-
-	RootCmd.PersistentFlags().BoolVarP(&persistentOptions.Localhost, "localhost",
-		"l", false, "Send setup to Boober on localhost")
-	RootCmd.PersistentFlags().MarkHidden("localhost")
-
-	RootCmd.PersistentFlags().StringVarP(&persistentOptions.ServerApi, "serverapi",
-		"", "", "Override default server API address")
-	//RootCmd.PersistentFlags().MarkHidden("serverurl")
-	RootCmd.PersistentFlags().StringVarP(&persistentOptions.Token, "token",
-		"", "", "Token to be used for serverapi connections")
-
-	//RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowConfig, "showconfig",
-	//	"", false, "Print merged config from Boober to standard out")
-
-	//RootCmd.PersistentFlags().BoolVarP(&persistentOptions.ShowObjects, "showobjects",
-	//	"", false, "Print object definitions from Boober to standard out")
-	// test
-
+	RootCmd.PersistentFlags().StringVarP(&pFlagLogLevel, "log", "l", "fatal", "Set log level. Valid log levels are [info, debug, warning, error, fatal]")
+	RootCmd.PersistentFlags().BoolVarP(&pFlagPrettyLog, "pretty", "p", false, "Pretty print json output for log")
+	RootCmd.PersistentFlags().StringVarP(&pFlagToken, "token", "t", "", "OpenShift authorization token to use for remote commands, overrides login")
+	RootCmd.PersistentFlags().BoolVarP(&pFlagNoHeader, "no-headers", "", false, "Print tables without headers")
+	RootCmd.PersistentFlags().MarkHidden("no-headers")
 }
 
-// initConfig reads in config file and ENV variables if set.
+func initialize(cmd *cobra.Command, args []string) error {
 
-func initConfigCobra() {
-	initConfig(false, "")
+	// Setting output for cmd.Print methods
+	cmd.SetOutput(os.Stdout)
+	// Errors will be printed from main
+	cmd.SilenceErrors = true
+	// Disable print usage when an error occurs
+	cmd.SilenceUsage = true
+
+	home, _ := os.LookupEnv("HOME")
+	ConfigLocation = home + "/.ao.json"
+
+	err := setLogging(pFlagLogLevel, pFlagPrettyLog)
+	if err != nil {
+		return err
+	}
+
+	aoConfig, err := config.LoadConfigFile(ConfigLocation)
+	if err != nil {
+		logrus.Error(err)
+	}
+
+	if aoConfig == nil {
+		logrus.Info("Creating new config")
+		aoConfig = &config.DefaultAOConfig
+		aoConfig.InitClusters()
+		aoConfig.SelectApiCluster()
+		err = config.WriteConfig(*aoConfig, ConfigLocation)
+		if err != nil {
+			return err
+		}
+	}
+
+	apiCluster := aoConfig.Clusters[aoConfig.APICluster]
+	if apiCluster == nil {
+		fmt.Printf("Api cluster %s is not available. Check config.\n", aoConfig.APICluster)
+		apiCluster = &config.Cluster{}
+	}
+
+	api := client.NewApiClient(apiCluster.BooberUrl, apiCluster.Token, aoConfig.Affiliation)
+
+	if aoConfig.Localhost {
+		// TODO: Move to config?
+		api.Host = "http://localhost:8080"
+	}
+
+	if pFlagToken != "" {
+		api.Token = pFlagToken
+	}
+
+	AO, DefaultApiClient = aoConfig, api
+
+	return nil
 }
 
-func initConfig(useOcConfig bool, loginCluster string) {
-	viper.SetConfigName(".ao")   // name of config file (without extension)
-	viper.AddConfigPath("$HOME") // adding home directory as first search path
-	viper.AutomaticEnv()         // read in environment variables that match
-	viper.BindEnv("HOME")
+func setLogging(level string, pretty bool) error {
+	logrus.SetOutput(os.Stdout)
 
-	aoConfigLocation = viper.GetString("HOME") + "/.ao.json"
-	aoConfig, _ = openshift.LoadOrInitiateConfigFile(aoConfigLocation, useOcConfig, loginCluster)
+	lvl, err := logrus.ParseLevel(level)
+	if err != nil {
+		return err
+	}
+	logrus.SetLevel(lvl)
+
+	if pretty {
+		logrus.SetFormatter(&log.PrettyFormatter{})
+	}
+
+	return nil
 }

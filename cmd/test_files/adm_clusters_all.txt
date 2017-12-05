@@ -1,0 +1,4 @@
+CLUSTER NAME   REACHABLE   LOGGED IN   API   URL
+utv            Yes                     Yes   https://utv:8443
+relay          Yes                           https://relay:8443
+test                                         https://test:8443

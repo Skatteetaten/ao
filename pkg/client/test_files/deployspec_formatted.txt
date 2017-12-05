@@ -1,0 +1,21 @@
+{
+  name:          "redis"                       // redis.json
+  namespace:     "paas-aotest"                 // generated
+  envName:       "aotest"                      // folderName
+  schemaVersion: "v1"                          // about.json
+  type:          "template"                    // redis.json
+  envFile:       "about-template.json"         // aotest/redis.json
+  affiliation:   "paas"                        // about.json
+  cluster:       "utv"                         // aotest/about-template.json
+  permissions: {
+    admin:       "APP_PaaS_drift APP_PaaS_utv" // about.json
+  }
+  splunkIndex:   "openshift-test"              // about.json
+  certificate:   true                          // about.json
+  route:         true                          // aotest/redis.json
+  parameters: {
+    APP_NAME:    "redis"                       // redis.json
+    AFFILIATION: "paas2"                       // aotest/about-template.json
+  }
+  template:      "redis"                       // redis.json
+}

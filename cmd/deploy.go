@@ -1,143 +1,253 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
-	"os"
+	"sort"
+	"strings"
 
-	"github.com/skatteetaten/ao/pkg/deploy"
+	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/config"
+	"github.com/skatteetaten/ao/pkg/fuzzy"
+	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
 )
 
-var appList []string
-var envList []string
-var overrideJson []string
-var deployAllFlag bool
-var forceDeployFlag bool
-var deployVersion string
-var deployAffiliation string
-var deployCluster string
-var deployApiClusterOnly bool
+var (
+	flagAffiliation string
+	flagOverrides   []string
+	flagNoPrompt    bool
+	flagVersion     string
+	flagCluster     string
+)
 
-// deployCmd represents the deploy command
+const deployLong = `Deploys applications from the current AuroraConfig.
+For use in CI environments use --no-prompt to disable interactivity.
+`
+
+const exampleDeploy = `  Given the following AuroraConfig:
+    - about.json
+    - foobar.json
+    - bar.json
+    - foo/about.json
+    - foo/bar.json
+    - foo/foobar.json
+
+  # Fuzzy matching: deploy foo/bar and foo/foobar
+  ao deploy fo/ba
+
+  # Exact matching: deploy foo/bar
+  ao deploy foo/bar
+
+  # Deploy an application with override for application file
+  ao deploy foo/bar -o 'foo/bar.json:{"pause": true}'
+`
+
 var deployCmd = &cobra.Command{
-	Use:   "deploy",
-	Short: "Deploy applications for the current affiliation",
-	Long: `Deploy applications for the current affiliation.
-
-A Deploy will compare the stored configuration with the running projects in OpenShift, and update the OpenShift
-environment to match the specifications in the stored configuration.
-
-If no changes is detected, no updates to OpenShift will be done (except for an update of the resourceVersion in the BuildConfig).
-
-Using the -e flag, it is possible to limit the deploy to the specified environment.
-Using the -a flag, it is possible to limit the deploy to the specified application.
-Both flags can be used to limit the deploy to a specific application in a specific environment.
-
-The --all flag will deploy all applications in all environements.
-
-In addition, the command accepts a mixed list of applications and environments on the command line.
-The names may be shortened; the command will search the current affiliation for unique matches.
-
-If you have 2 environments named superapp-test and superapp-prod, both containing the applications superapp and niceapp,
-then the command
-
-	ao deploy test
-
-will deploy superapp and niceapp in the superapp-test environment.
-
-The command
-
-	ao deploy nice pro
-
-will deploy niceapp in the superapp-prod environment.
-
-However, the command
-
-	ao deploy superapp
-
-will fail, because superapp match both an application and an environment.  Use the -a og -e flag to specify.
-
-It is also possible to specify the env and app in the form app/env, so the command
-
-	ao deploy app-test/nic
-
-will deploy niceapp in the superapp-test environment.
-
-If the command will result in multiple deploys, a confirmation dialog will be shown, listing the result of the command.
-The list will contain all the affected applications and environments.  Please note that the two columns are not correlated.
-The --force flag will override this, and execute the deploy without confirmation.
-
-`,
-	Aliases: []string{"setup"},
-	Annotations: map[string]string{
-		CallbackAnnotation: "GetDeployments",
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		deploy := deploy.DeployClass{
-			Configuration: config,
-		}
-
-		output, err := deploy.ExecuteDeploy(args, overrideJson, appList, envList, &persistentOptions, localDryRun, deployAllFlag, forceDeployFlag, deployVersion, deployAffiliation, deployCluster, deployApiClusterOnly)
-		if err != nil {
-			l := log.New(os.Stderr, "", 0)
-			l.Println(err.Error())
-			os.Exit(-1)
-		} else {
-			if output != "" {
-				fmt.Println(output)
-			}
-		}
-	},
+	Aliases:     []string{"setup", "apply"},
+	Use:         "deploy <applicationId>",
+	Short:       "Deploy one or more ApplicationId (environment/application) to one or more clusters",
+	Long:        deployLong,
+	Example:     exampleDeploy,
+	Annotations: map[string]string{"type": "actions"},
+	RunE:        deploy,
 }
 
 func init() {
 	RootCmd.AddCommand(deployCmd)
 
-	deployCmd.Flags().StringArrayVarP(&overrideJson, "file",
-		"o", overrideValues, "Override in the form [env/]file:{<json override>}")
+	deployCmd.Flags().StringVarP(&flagAffiliation, "affiliation", "", "", "Overrides the logged in affiliation")
+	deployCmd.Flags().MarkHidden("affiliation")
+	deployCmd.Flags().StringVarP(&flagAffiliation, "auroraconfig", "a", "", "Overrides the logged in AuroraConfig")
+	deployCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Limit deploy to given cluster name")
+	deployCmd.Flags().BoolVarP(&flagNoPrompt, "force", "f", false, "Suppress prompts")
+	deployCmd.Flags().MarkHidden("force")
+	deployCmd.Flags().BoolVarP(&flagNoPrompt, "no-prompt", "", false, "Suppress prompts")
 
-	deployCmd.Flags().BoolVarP(&localDryRun, "localdryrun",
-		"z", false, "Does not initiate API, just prints collected files")
-	deployCmd.Flags().MarkHidden("localdryrun")
+	deployCmd.Flags().StringArrayVarP(&flagOverrides, "overrides", "o", []string{}, "Override in the form '[env/]file:{<json override>}'")
+	deployCmd.Flags().StringVarP(&flagVersion, "version", "v", "", "Set the given version in AuroraConfig before deploy")
+}
 
-	deployCmd.Flags().StringArrayVarP(&appList, "app",
-		"a", nil, "Only deploy specified application")
+func deploy(cmd *cobra.Command, args []string) error {
 
-	deployCmd.Flags().StringArrayVarP(&envList, "env",
-		"e", nil, "Only deploy specified environment")
+	if len(args) > 2 || len(args) < 1 {
+		return cmd.Usage()
+	}
 
-	deployCmd.Flags().BoolVarP(&deployAllFlag, "all",
-		"", false, "Will deploy all applications in all affiliations in all clusters reachable")
+	search := args[0]
+	if len(args) == 2 {
+		search = fmt.Sprintf("%s/%s", args[0], args[1])
+	}
 
-	deployCmd.Flags().BoolVarP(&forceDeployFlag, "force",
-		"", false, "Supress prompts")
+	overrides, err := parseOverride(flagOverrides)
+	if err != nil {
+		return err
+	}
 
-	deployCmd.Flags().StringVarP(&deployVersion, "version",
-		"v", "", "Will update the version tag in the app of base configuration file prior to deploy, depending on which file contains the version tag.  If both files "+
-			"files contains the tag, the tag will be updated in the app configuration file.")
+	if flagAffiliation == "" {
+		flagAffiliation = AO.Affiliation
+	}
 
-	deployCmd.Flags().StringVarP(&deployAffiliation, "affiliation",
-		"", "", "Overrides the logged in affiliation")
+	api := DefaultApiClient
+	api.Affiliation = flagAffiliation
 
-	deployCmd.Flags().StringVarP(&deployCluster, "cluster", "c", "",
-		"Limit deploy to given clustername")
+	if flagCluster != "" {
+		c := AO.Clusters[flagCluster]
+		if c == nil {
+			return errors.New("No such cluster " + flagCluster)
+		}
 
-	deployCmd.Flags().BoolVarP(&deployApiClusterOnly, "api-cluster-only", "", false,
-		"Limit deploy to the API cluster")
+		api.Host = c.BooberUrl
+		api.Token = c.Token
+		if pFlagToken != "" {
+			api.Token = pFlagToken
+		}
+	}
 
+	files, err := api.GetFileNames()
+	if err != nil {
+		return err
+	}
+
+	possibleDeploys := files.GetApplicationIds()
+	applications := fuzzy.SearchForApplications(search, possibleDeploys)
+
+	if len(applications) == 0 {
+		return errors.New("No applications to deploy")
+	}
+
+	header, rows := GetApplicationIdTable(applications)
+	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+
+	shouldDeploy := true
+	if !flagNoPrompt {
+		defaultAnswer := len(applications) == 1
+		message := fmt.Sprintf("Do you want to deploy %d application(s)?", len(applications))
+		shouldDeploy = prompt.Confirm(message, defaultAnswer)
+	}
+
+	if !shouldDeploy {
+		return errors.New("No applications to deploy")
+	}
+
+	if flagVersion != "" {
+		if len(applications) > 1 {
+			return errors.New("Deploy with version does only support one application")
+		}
+		fileName := applications[0] + ".json"
+
+		err = Set(cmd, []string{fileName, "/version", flagVersion})
+		if err != nil {
+			return err
+		}
+	}
+
+	payload := client.NewDeployPayload(applications, overrides)
+
+	var result []*client.DeployResults
+	if AO.Localhost || flagCluster != "" {
+		res, err := api.Deploy(payload)
+		if err != nil {
+			return err
+		}
+		result = append(result, res)
+	} else {
+		result = deployToReachableClusters(flagAffiliation, pFlagToken, AO.Clusters, payload)
+	}
+
+	var results []client.DeployResult
+	for _, r := range result {
+		if !r.Success {
+			cmd.Println("deploy error:", r.Message)
+		}
+		results = append(results, r.Results...)
+	}
+
+	if len(results) == 0 {
+		return errors.New("No deploys were made")
+	}
+
+	sort.Slice(results, func(i, j int) bool {
+		return strings.Compare(results[i].ADS.Name, results[j].ADS.Name) < 1
+	})
+
+	header, rows = getDeployResultTable(results)
+	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+	return nil
+}
+
+func deployToReachableClusters(affiliation, token string, clusters map[string]*config.Cluster, payload *client.DeployPayload) []*client.DeployResults {
+
+	reachableClusters := 0
+	deployResult := make(chan *client.DeployResults)
+	deployErrors := make(chan error)
+	for _, c := range clusters {
+		if !c.Reachable {
+			continue
+		}
+		reachableClusters++
+
+		clusterToken := c.Token
+		if token != "" {
+			clusterToken = token
+		}
+
+		cli := client.NewApiClient(c.BooberUrl, clusterToken, affiliation)
+
+		go func() {
+			result, err := cli.Deploy(payload)
+			if err != nil {
+				deployErrors <- err
+			} else {
+				deployResult <- result
+			}
+		}()
+	}
+
+	var allResults []*client.DeployResults
+	for i := 0; i < reachableClusters; i++ {
+		select {
+		case err := <-deployErrors:
+			fmt.Println(err)
+		case result := <-deployResult:
+			allResults = append(allResults, result)
+		}
+	}
+
+	return allResults
+}
+
+func parseOverride(override []string) (map[string]json.RawMessage, error) {
+	returnMap := make(map[string]json.RawMessage)
+	for i := 0; i < len(override); i++ {
+		indexByte := strings.IndexByte(override[i], ':')
+		filename := override[i][:indexByte]
+		jsonOverride := override[i][indexByte+1:]
+
+		if !json.Valid([]byte(jsonOverride)) {
+			msg := fmt.Sprintf("%s is not a valid json", jsonOverride)
+			return nil, errors.New(msg)
+		}
+
+		returnMap[filename] = json.RawMessage(jsonOverride)
+	}
+	return returnMap, nil
+}
+
+func getDeployResultTable(deploys []client.DeployResult) (string, []string) {
+	var rows []string
+	for _, item := range deploys {
+		ads := item.ADS
+		pattern := "%s\t%s\t%s\t%s\t%s"
+		status := "\x1b[32mDeployed\x1b[0m"
+		if !item.Success {
+			status = "\x1b[31mFailed\x1b[0m"
+		}
+		result := fmt.Sprintf(pattern, status, ads.Name, ads.Namespace, ads.Cluster, item.DeployId)
+		rows = append(rows, result)
+	}
+
+	header := "\x1b[00mSTATUS\x1b[0m\tAPPLICATION\tENVIRONMENT\tCLUSTER\tDEPLOY_ID"
+	return header, rows
 }

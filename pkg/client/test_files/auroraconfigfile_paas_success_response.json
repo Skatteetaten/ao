@@ -1,0 +1,25 @@
+{
+  "success": true,
+  "message": "OK",
+  "items": [
+    {
+      "name": "about.json",
+      "contents": {
+        "schemaVersion": "v1",
+        "affiliation": "paas",
+        "type": "deploy",
+        "route": true,
+        "permissions": {
+          "admin": "APP_PaaS_drift APP_PaaS_utv"
+        },
+        "config": {
+          "foo": "bar"
+        }
+      },
+      "override": false,
+      "version": "202810b",
+      "configName": "about.json"
+    }
+  ],
+  "count": 1
+}

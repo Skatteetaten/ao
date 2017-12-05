@@ -3,182 +3,234 @@ package cmd
 import (
 	"fmt"
 
-	pkgGetCmd "github.com/skatteetaten/ao/pkg/getcmd"
+	"encoding/json"
+	"sort"
+	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/spf13/cobra"
 )
 
-var showSecretContent bool
+var (
+	flagJSON       bool
+	flagAsList     bool
+	flagNoDefaults bool
+)
 
-var getcmdObject = &pkgGetCmd.GetcmdClass{
-	Configuration: config,
-}
+var (
+	getCmd = &cobra.Command{
+		Use:         "get",
+		Short:       "Retrieves information from the AuroraConfig repository",
+		Annotations: map[string]string{"type": "remote"},
+	}
 
-var getCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Retrieves information from the AuroraConfig repository",
-	Long:  `Can be used to retrieve one file or all the files from the respository.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Usage()
-	},
-}
+	getDeploymentsCmd = &cobra.Command{
+		Use:   "all",
+		Short: "Get all applicationIds",
+		RunE:  PrintAll,
+	}
 
-var getDeploymentsCmd = &cobra.Command{
-	Use:     "deployment",
-	Short:   "get deployments",
-	Long:    `Lists the deployments defined in the Auroraconfig`,
-	Aliases: []string{"deployments", "dep", "deps", "all"},
-	Run: func(cmd *cobra.Command, args []string) {
+	getAppsCmd = &cobra.Command{
+		Use:     "app [applications]",
+		Short:   "Get all applications or all envrionments for one or more applications",
+		Aliases: []string{"apps"},
+		RunE:    PrintApplications,
+	}
 
-		var output string
-		var err error
+	getEnvsCmd = &cobra.Command{
+		Use:     "env [envirionments]",
+		Short:   "Get all environments og all applications for one or more environments",
+		Aliases: []string{"envs"},
+		RunE:    PrintEnvironments,
+	}
 
-		output, err = getcmdObject.Deployments("")
+	getSpecCmd = &cobra.Command{
+		Use:   "spec <applicationId>",
+		Short: "Get deploy spec for an application",
+		RunE:  PrintDeploySpec,
+	}
 
-		if err == nil {
-			fmt.Print(output)
-		} else {
-			fmt.Println(err)
-		}
-	},
-}
-
-var getAppsCmd = &cobra.Command{
-	Use:     "app",
-	Short:   "get app",
-	Long:    `Lists the apps defined in the Auroraconfig`,
-	Aliases: []string{"apps"},
-	Run: func(cmd *cobra.Command, args []string) {
-
-		var output string
-		var err error
-
-		if len(args) == 0 {
-			output, err = getcmdObject.Apps()
-		} else {
-			output, err = getcmdObject.Deployments(args[0])
-		}
-		if err == nil {
-			fmt.Print(output)
-		} else {
-			fmt.Println(err)
-		}
-	},
-}
-
-var getEnvsCmd = &cobra.Command{
-	Use:     "env",
-	Short:   "get env",
-	Long:    `Lists the envs defined in the Auroraconfig`,
-	Aliases: []string{"envs"},
-	Run: func(cmd *cobra.Command, args []string) {
-
-		var output string
-		var err error
-
-		output, err = getcmdObject.Envs()
-
-		if err == nil {
-			fmt.Print(output)
-		} else {
-			fmt.Println(err)
-		}
-	},
-}
-
-var getFileCmd = &cobra.Command{
-	Use:   "file [envname] <filename>",
-	Short: "Get file",
-	Long: `Prints the content of the file to standard output.
-Environmentnames and filenames can be abbrevated, and can be specified either as separate strings,
-or on a env/file basis.
-
-Given that a file called superapp-test/about.json exists in the repository, the command
-
-	ao get file test ab
-
-will print the file.
-
-If no argument is given, the command will list all the files in the repository.`,
-	Aliases: []string{"files"},
-	Annotations: map[string]string{
-		CallbackAnnotation: "GetFiles",
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-
-		var output string
-		var err error
-
-		if len(args) == 0 {
-			output, err = getcmdObject.Files()
-		} else {
-			output, err = getcmdObject.File(args)
-		}
-
-		if err == nil {
-			fmt.Print(output)
-		} else {
-			fmt.Println(err)
-		}
-	},
-}
-
-var getVaultCmd = &cobra.Command{
-	Use:   "vault [vaultname]",
-	Short: "Get vault",
-	Long: `If no argument is given, the command will list the vaults in the current affiliation, along with the
-numer of secrets in the vault.
-If a vaultname is specified, the command will list the secrets in the given vault.
-To access a secret, use the get secret command.`,
-	Aliases: []string{"vaults"},
-	Run: func(cmd *cobra.Command, args []string) {
-
-		var output string
-		var err error
-
-		if len(args) == 0 {
-			output, err = getcmdObject.Vaults(showSecretContent)
-		} else {
-			output, err = getcmdObject.Vault(args[0])
-		}
-
-		if err == nil {
-			fmt.Println(output)
-		} else {
-			fmt.Println(err)
-		}
-	},
-}
-
-var getSecretCmd = &cobra.Command{
-	Use:   "secret <vault> <secret>",
-	Short: "Get secret",
-	Long:  `The command will print the content of the secret to standard out.`,
-	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) != 2 {
-			fmt.Println(cmd.UseLine())
-			return
-		}
-
-		if output, err := getcmdObject.Secret(args[0], args[1]); err == nil {
-			fmt.Println(output)
-		} else {
-			fmt.Println(err)
-		}
-	},
-}
+	getFileCmd = &cobra.Command{
+		Use:     "file [environment/application]",
+		Short:   "Get all files when no arguments are given or one specific file",
+		Aliases: []string{"files"},
+		RunE:    PrintFile,
+	}
+)
 
 func init() {
 	RootCmd.AddCommand(getCmd)
 	getCmd.AddCommand(getFileCmd)
-	getCmd.AddCommand(getVaultCmd)
-	getCmd.AddCommand(getSecretCmd)
-
 	getCmd.AddCommand(getAppsCmd)
 	getCmd.AddCommand(getEnvsCmd)
 	getCmd.AddCommand(getDeploymentsCmd)
+	getCmd.AddCommand(getSpecCmd)
 
-	getVaultCmd.Flags().BoolVarP(&showSecretContent, "show-secret-content", "s", false,
-		"This flag will print the content of the secrets in the vaults")
+	getSpecCmd.Flags().BoolVarP(&flagNoDefaults, "no-defaults", "", false, "exclude default values from output")
+	getSpecCmd.Flags().BoolVarP(&flagJSON, "json", "", false, "print deploy spec as json")
+	getDeploymentsCmd.Flags().BoolVarP(&flagAsList, "list", "", false, "print ApplicationIds as a list")
+}
 
+func PrintAll(cmd *cobra.Command, args []string) error {
+	fileNames, err := DefaultApiClient.GetFileNames()
+	if err != nil {
+		return err
+	}
+
+	deployments := fileNames.GetApplicationIds()
+
+	var header string
+	var rows []string
+	if flagAsList {
+		sort.Strings(deployments)
+		header = "APPLICATIONID"
+		rows = deployments
+	} else {
+		header, rows = GetApplicationIdTable(deployments)
+	}
+
+	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+
+	return nil
+}
+
+func PrintApplications(cmd *cobra.Command, args []string) error {
+	fileNames, err := DefaultApiClient.GetFileNames()
+	if err != nil {
+		return err
+	}
+
+	if len(fileNames.GetApplications()) < 1 {
+		return errors.New("No applications available")
+	}
+
+	if len(args) > 0 {
+		var selected []string
+		for _, arg := range args {
+			matches := fuzzy.FindAllDeploysFor(fuzzy.APP_FILTER, arg, fileNames.GetApplicationIds())
+			if len(matches) == 0 {
+				cmd.Printf("No matches for %s\n", arg)
+			}
+			selected = append(selected, matches...)
+		}
+		header, rows := GetApplicationIdTable(selected)
+		DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+		return nil
+	}
+
+	applications := fileNames.GetApplications()
+	sort.Strings(applications)
+	DefaultTablePrinter("APPLICATIONS", applications, cmd.OutOrStdout())
+	return nil
+}
+
+func PrintEnvironments(cmd *cobra.Command, args []string) error {
+	fileNames, err := DefaultApiClient.GetFileNames()
+	if err != nil {
+		return err
+	}
+
+	if len(fileNames.GetEnvironments()) < 1 {
+		return errors.New("No environments available")
+	}
+
+	if len(args) > 0 {
+		var selected []string
+		for _, arg := range args {
+			matches := fuzzy.FindAllDeploysFor(fuzzy.ENV_FILTER, arg, fileNames.GetApplicationIds())
+			if len(matches) == 0 {
+				cmd.Printf("No matches for %s\n", arg)
+			}
+			selected = append(selected, matches...)
+		}
+		header, rows := GetApplicationIdTable(selected)
+		DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+		return nil
+	}
+
+	envrionments := fileNames.GetEnvironments()
+	sort.Strings(envrionments)
+	DefaultTablePrinter("ENVIRONMENTS", envrionments, cmd.OutOrStdout())
+	return nil
+}
+
+func PrintDeploySpec(cmd *cobra.Command, args []string) error {
+	if len(args) > 2 || len(args) < 1 {
+		return cmd.Usage()
+	}
+
+	fileNames, err := DefaultApiClient.GetFileNames()
+	if err != nil {
+		return err
+	}
+
+	search := args[0]
+	if len(args) == 2 {
+		search = fmt.Sprintf("%s/%s", args[0], args[1])
+	}
+
+	matches := fuzzy.FindMatches(search, fileNames.GetApplicationIds(), false)
+	if len(matches) == 0 {
+		return errors.Errorf("No matches for %s", search)
+	} else if len(matches) > 1 {
+		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+	}
+
+	split := strings.Split(matches[0], "/")
+
+	if !flagJSON {
+		spec, err := DefaultApiClient.GetAuroraDeploySpecFormatted(split[0], split[1], !flagNoDefaults)
+		if err != nil {
+			return err
+		}
+		cmd.Println(spec)
+		return nil
+	}
+
+	spec, err := DefaultApiClient.GetAuroraDeploySpec(split[0], split[1], !flagNoDefaults)
+	if err != nil {
+		return err
+	}
+
+	data, err := json.MarshalIndent(spec, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	cmd.Println(string(data))
+	return nil
+}
+
+func PrintFile(cmd *cobra.Command, args []string) error {
+	fileNames, err := DefaultApiClient.GetFileNames()
+	if err != nil {
+		return err
+	}
+
+	if len(args) < 1 {
+		header, rows := GetFilesTable(fileNames)
+		DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+		return nil
+	}
+
+	search := args[0]
+	if len(args) == 2 {
+		search = fmt.Sprintf("%s/%s", args[0], args[1])
+	}
+
+	matches := fuzzy.FindMatches(search, fileNames, true)
+	if len(matches) == 0 {
+		return errors.Errorf("No matches for %s", search)
+	} else if len(matches) > 1 {
+		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+	}
+
+	auroraConfigFile, err := DefaultApiClient.GetAuroraConfigFile(matches[0])
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(auroraConfigFile.ToPrettyJson())
+	return nil
 }
