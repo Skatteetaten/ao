@@ -365,32 +365,21 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 }
 
 func VaultAddPermissions(cmd *cobra.Command, args []string) error {
-	if len(args) < 2 {
-		return cmd.Usage()
-	}
-
-	vault, err := DefaultApiClient.GetVault(args[0])
-	if err != nil {
-		return err
-	}
-
-	for _, group := range args[1:] {
-		err = vault.Permissions.AddGroup(group)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = DefaultApiClient.SaveVault(*vault, true)
-	if err != nil {
-		return err
-	}
-
-	cmd.Printf("Vault %s saved\n", args[0])
-	return nil
+	return changeVaultPermissions(ADD, cmd, args)
 }
 
 func VaultRemovePermissions(cmd *cobra.Command, args []string) error {
+	return changeVaultPermissions(DELETE, cmd, args)
+}
+
+type permissionAction uint64
+
+const (
+	ADD    permissionAction = 0
+	DELETE permissionAction = 1
+)
+
+func changeVaultPermissions(action permissionAction, cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return cmd.Usage()
 	}
@@ -400,8 +389,19 @@ func VaultRemovePermissions(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	for _, group := range args[1:] {
-		err = vault.Permissions.DeleteGroup(group)
+	groups := args[1:]
+	for _, group := range groups {
+		switch action {
+		case ADD:
+			{
+				err = vault.Permissions.AddGroup(group)
+			}
+		case DELETE:
+			{
+				err = vault.Permissions.DeleteGroup(group)
+
+			}
+		}
 		if err != nil {
 			return err
 		}
@@ -412,7 +412,7 @@ func VaultRemovePermissions(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cmd.Printf("Vault %s saved\n", args[0])
+	cmd.Printf("Vault %s updated\n", args[0])
 	return nil
 }
 
