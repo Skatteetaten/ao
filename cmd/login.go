@@ -1,16 +1,18 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var (
-	flagUserName string
+	flagUserName  string
+	flagLocalhost bool
 )
 
 var loginCmd = &cobra.Command{
@@ -23,6 +25,8 @@ func init() {
 	RootCmd.AddCommand(loginCmd)
 	user, _ := os.LookupEnv("USER")
 	loginCmd.Flags().StringVarP(&flagUserName, "username", "u", user, "the username to log in with, standard is $USER")
+	loginCmd.Flags().BoolVarP(&flagLocalhost, "localhost", "", false, "set api to localhost")
+	loginCmd.Flags().MarkHidden("localhost")
 }
 
 func Login(cmd *cobra.Command, args []string) error {
@@ -30,9 +34,8 @@ func Login(cmd *cobra.Command, args []string) error {
 		return errors.New("Please specify AuroraConfig to log in to")
 	}
 
-	if args[0] != "" {
-		AO.Affiliation = args[0]
-	}
+	AO.Affiliation = args[0]
+	AO.Localhost = flagLocalhost
 
 	var password string
 	for _, c := range AO.Clusters {
