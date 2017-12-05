@@ -55,5 +55,7 @@ func Login(cmd *cobra.Command, args []string) error {
 		c.Token = token
 	}
 
+	AO.Update(false)
+
 	return config.WriteConfig(*AO, ConfigLocation)
 }
