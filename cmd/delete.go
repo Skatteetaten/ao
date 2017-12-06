@@ -146,11 +146,10 @@ func deleteFilesFor(mode fuzzy.FilterMode, search string, api *client.ApiClient,
 
 	header, rows := GetFilesTable(files)
 	DefaultTablePrinter(header, rows, out)
-	message := fmt.Sprintf("Do you want to delete %s?", search)
-	deleteAll := prompt.Confirm(message, false)
+	message := fmt.Sprintf("Do you want to delete %d files?", len(files))
 
-	if !deleteAll {
-		return errors.New("Delete aborted")
+	if shouldDelete := prompt.Confirm(message, false); !shouldDelete {
+		return nil
 	}
 
 	return deleteFiles(files, api)
