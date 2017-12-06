@@ -310,15 +310,15 @@ func DeleteVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	err := DefaultApiClient.DeleteVault(args[0])
-	if err != nil {
-		return err
-	}
-
 	message := fmt.Sprintf("Do you want to delete vault %s?", args[0])
 	shouldDelete := prompt.Confirm(message, false)
 	if !shouldDelete {
 		return nil
+	}
+
+	err := DefaultApiClient.DeleteVault(args[0])
+	if err != nil {
+		return err
 	}
 
 	cmd.Printf("Vault %s deleted\n", args[0])
