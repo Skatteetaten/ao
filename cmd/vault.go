@@ -91,6 +91,11 @@ var (
 		Short: "Rename a secret",
 		RunE:  RenameSecret,
 	}
+	vaultGetSecretCmd = &cobra.Command{
+		Use:   "get-secret <vaultname/secretname>",
+		Short: "Print the content of a secret to standard out",
+		RunE:  GetSecret,
+	}
 )
 
 func init() {
@@ -106,9 +111,33 @@ func init() {
 	vaultCmd.AddCommand(vaultEditCmd)
 	vaultCmd.AddCommand(vaultRenameCmd)
 	vaultCmd.AddCommand(vaultRenameSecretCmd)
+	vaultCmd.AddCommand(vaultGetSecretCmd)
 
 	vaultGetCmd.Flags().BoolVarP(&flagAsList, "list", "", false, "print vault/secret as a list")
 	vaultGetCmd.Flags().BoolVarP(&flagOnlyVaults, "only-vaults", "", false, "print vaults as a list")
+}
+
+func GetSecret(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return cmd.Usage()
+	}
+	split := strings.Split(args[0], "/")
+	if len(split) != 2 {
+		return ErrNotValidSecretArgument
+	}
+	vaultName, secretName := split[0], split[1]
+
+	vault, err := DefaultApiClient.GetVault(vaultName)
+	if err != nil {
+		return err
+	}
+
+	secret, err := vault.Secrets.GetSecret(secretName)
+	if err != nil {
+		return err
+	}
+	cmd.Printf("%s", secret)
+	return nil
 }
 
 func AddSecret(cmd *cobra.Command, args []string) error {
