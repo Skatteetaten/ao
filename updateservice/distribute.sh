@@ -86,8 +86,8 @@ fi
 #
 # Get filename and releaseinfo
 #
-filename=$($aorelease version -o filename)
-$aorelease version -o json >$tmpreleaseinfo
+filename=ao_v1.1.1
+$aorelease version  --json >$tmpreleaseinfo
 #
 # Copy files to temporary folder on OpenShift node
 #
