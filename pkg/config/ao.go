@@ -3,11 +3,14 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+
+	"path/filepath"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/prompt"
-	"io/ioutil"
-	"os"
 )
 
 type AOConfig struct {
@@ -118,13 +121,25 @@ func (ao *AOConfig) replaceAO(data []byte) error {
 		return err
 	}
 
-	releasePath := executablePath + "_" + "update"
+	var releasePath string
+	// First, we try to write the update to a file in the executable path
+	releasePath = executablePath + "_" + "update"
 	err = ioutil.WriteFile(releasePath, data, 0755)
 	if err != nil {
+		// Could not write to executable path, typically because binary is installed in /usr/bin or /usr/local/bin
+		// Try the OS Temp Dir
+		releasePath = filepath.Join(os.TempDir(), "ao_update")
+		err = ioutil.WriteFile(releasePath, data, 0755)
+		if err != nil {
+			return err
+		}
+	}
+	err = os.Rename(releasePath, executablePath)
+	if err != nil {
+		err = errors.New("Could not update AO because it is installed in a different file system than temp: " + err.Error())
 		return err
 	}
-
-	return os.Rename(releasePath, executablePath)
+	return nil
 }
 
 func (ao *AOConfig) getUpdateUrl() string {
