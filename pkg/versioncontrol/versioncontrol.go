@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"encoding/json"
+
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
 )
@@ -99,14 +100,21 @@ func Pull() (string, error) {
 }
 
 func getStatuses() ([]string, error) {
-	var statuses []string
-	if status, err := GitCommand("status", "-s"); err != nil {
-		return statuses, errors.Wrap(err, "Failed to get status from repo")
-	} else {
-		statuses = strings.Fields(status)
+	wd, _ := os.Getwd()
+	gitRoot, found := FindGitPath(wd)
+	if !found {
+		return nil, errors.New("Could not find git")
 	}
 
-	return statuses, nil
+	os.Chdir(gitRoot)
+	defer os.Chdir(wd)
+
+	status, err := GitCommand("status", "-s")
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to get status from repo")
+	}
+
+	return strings.Fields(status), nil
 }
 
 func Save(url string, api *client.ApiClient) (string, error) {
