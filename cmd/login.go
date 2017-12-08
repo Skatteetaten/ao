@@ -57,5 +57,22 @@ func Login(cmd *cobra.Command, args []string) error {
 
 	AO.Update(false)
 
+	acn, err := DefaultApiClient.GetAuroraConfigNames()
+	if err != nil {
+		return err
+	}
+
+	var found bool
+	for _, affiliation := range *acn {
+		if affiliation == AO.Affiliation {
+			found = true
+			break
+		}
+	}
+	if !found {
+		err := errors.New("Illegal affiliation: " + AO.Affiliation)
+		return err
+	}
+
 	return config.WriteConfig(*AO, ConfigLocation)
 }

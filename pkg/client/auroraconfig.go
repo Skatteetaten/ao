@@ -18,6 +18,8 @@ var (
 type (
 	FileNames []string
 
+	AuroraConfigNames []string
+
 	AuroraConfig struct {
 		Files    map[string]json.RawMessage `json:"files"`
 		Versions map[string]string          `json:"versions"`
@@ -82,6 +84,22 @@ func (api *ApiClient) GetAuroraConfig() (*AuroraConfig, error) {
 	}
 
 	return &ac, nil
+}
+
+func (api *ApiClient) GetAuroraConfigNames() (*AuroraConfigNames, error) {
+	endpoint := fmt.Sprintf("/auroraconfignames")
+
+	response, err := api.Do(http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var acn AuroraConfigNames
+	err = response.ParseItems(&acn)
+	if err != nil {
+		return nil, errors.Wrap(err, "aurora config names")
+	}
+	return &acn, nil
 }
 
 func (api *ApiClient) PutAuroraConfig(endpoint string, ac *AuroraConfig) (*ErrorResponse, error) {
