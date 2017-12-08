@@ -1,11 +1,12 @@
 package config
 
 import (
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func init() {
@@ -90,6 +91,7 @@ func TestAOConfig_InitClusters(t *testing.T) {
 
 	ao := DefaultAOConfig
 	ao.ClusterUrlPattern = "%s"
+	ao.BooberUrlPattern = "%s"
 	ao.AvailableClusters = []string{}
 	ao.PreferredAPIClusters = []string{}
 

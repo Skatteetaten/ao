@@ -3,12 +3,13 @@ package config
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 const authenticationUrlSuffix = "/oauth/authorize?client_id=openshift-challenging-client&response_type=token"
@@ -44,19 +45,19 @@ func (ao *AOConfig) InitClusters() {
 
 	for _, cluster := range ao.AvailableClusters {
 		name := cluster
-		clusterUrl := fmt.Sprintf(ao.ClusterUrlPattern, name)
+		booberURL := fmt.Sprintf(ao.BooberUrlPattern, name)
 		go func() {
 			reachable := false
-			resp, _ := client.Get(clusterUrl)
-			if resp != nil && resp.StatusCode == http.StatusOK {
+			resp, _ := client.Get(booberURL)
+			if resp != nil && resp.StatusCode < 500 {
 				reachable = true
 			}
-			logrus.WithField("reachable", reachable).Info(clusterUrl)
+			logrus.WithField("reachable", reachable).Info(booberURL)
 			ch <- &Cluster{
 				Name:      name,
-				Url:       clusterUrl,
+				Url:       fmt.Sprintf(ao.ClusterUrlPattern, name),
 				Reachable: reachable,
-				BooberUrl: fmt.Sprintf(ao.BooberUrlPattern, name),
+				BooberUrl: booberURL,
 			}
 		}()
 	}
