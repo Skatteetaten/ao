@@ -116,7 +116,7 @@ func TestAOConfig_InitClusters(t *testing.T) {
 			if reachable {
 				w.WriteHeader(http.StatusOK)
 			} else {
-				w.WriteHeader(http.StatusBadRequest)
+				w.WriteHeader(http.StatusInternalServerError)
 			}
 		}))
 		testServers = append(testServers, ts)
