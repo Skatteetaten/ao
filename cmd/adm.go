@@ -22,6 +22,12 @@ var getClusterCmd = &cobra.Command{
 	Run:     PrintClusters,
 }
 
+var getAffiliationCmd = &cobra.Command{
+	Use:     "affiliations",
+	Short:   "List defined affiliations",
+	Aliases: []string{"affiliation"},
+	Run:     PrintAffiliations,
+}
 var updateClustersCmd = &cobra.Command{
 	Use:   "update-clusters",
 	Short: "Will recreate clusters in config file",
@@ -50,6 +56,7 @@ To persist this across login sessions, please update your .bashrc file.`,
 func init() {
 	RootCmd.AddCommand(admCmd)
 	admCmd.AddCommand(getClusterCmd)
+	admCmd.AddCommand(getAffiliationCmd)
 	admCmd.AddCommand(completionCmd)
 	admCmd.AddCommand(recreateConfigCmd)
 	admCmd.AddCommand(updateClustersCmd)
@@ -86,6 +93,24 @@ func PrintClusters(cmd *cobra.Command, args []string) {
 
 	header := "\tCLUSTER NAME\tREACHABLE\tLOGGED IN\tAPI\tURL"
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+}
+
+func PrintAffiliations(cmd *cobra.Command, args []string) {
+	acn, err := DefaultApiClient.GetAuroraConfigNames()
+	if err != nil {
+		return
+	}
+
+	var mark string
+	for _, affiliation := range *acn {
+		if affiliation == AO.Affiliation {
+			mark = "*"
+		} else {
+			mark = " "
+		}
+		line := fmt.Sprintf("  %s %s", mark, affiliation)
+		cmd.Println(line)
+	}
 }
 
 func UpdateClusters(cmd *cobra.Command, args []string) error {
