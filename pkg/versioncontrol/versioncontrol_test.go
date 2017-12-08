@@ -85,7 +85,6 @@ func TestGetStatuses(t *testing.T) {
 				dirPath := path.Join(REPO_PATH, split[0])
 				os.MkdirAll(dirPath, 0755)
 			}
-			fmt.Println(filePath)
 			ioutil.WriteFile(filePath, []byte(v), 0644)
 		}
 
