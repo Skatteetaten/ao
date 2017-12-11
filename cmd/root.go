@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/client"
@@ -117,7 +118,9 @@ func initialize(cmd *cobra.Command, args []string) error {
 
 	apiCluster := aoConfig.Clusters[aoConfig.APICluster]
 	if apiCluster == nil {
-		fmt.Printf("Api cluster %s is not available. Check config.\n", aoConfig.APICluster)
+		if !strings.Contains(cmd.CommandPath(), "adm") {
+			fmt.Printf("Api cluster %s is not available. Check config.\n", aoConfig.APICluster)
+		}
 		apiCluster = &config.Cluster{}
 	}
 
