@@ -1,11 +1,12 @@
 package config
 
 import (
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const configTmpFile = "/tmp/ao_test.json"
@@ -70,6 +71,7 @@ func TestAOConfig_Update(t *testing.T) {
 	aoConfig := &AOConfig{
 		ClusterUrlPattern:       "%s",
 		UpdateUrlPattern:        "%s",
+		BooberUrlPattern:        "%s",
 		AvailableClusters:       []string{ts.URL},
 		AvailableUpdateClusters: []string{ts.URL},
 	}
