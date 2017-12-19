@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/skatteetaten/ao/pkg/client"
+
 	"encoding/json"
 	"sort"
 	"strings"
@@ -144,7 +146,8 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 			}
 			selected = append(selected, matches...)
 		}
-		header, rows := GetApplicationIdTable(selected)
+		specs := DefaultApiClient.GetAuroraDeploySpecs(selected)
+		header, rows := GetDeploySpecTable(specs)
 		DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 		return nil
 	}
@@ -153,6 +156,28 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 	sort.Strings(envrionments)
 	DefaultTablePrinter("ENVIRONMENTS", envrionments, cmd.OutOrStdout())
 	return nil
+}
+
+func GetDeploySpecTable(specs []client.AuroraDeploySpec) (string, []string) {
+	var rows []string
+	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tREPLICAS\tDEPLOY STRATEGY"
+	pattern := "%v\t%v\t%v\t%v\t%v\t%v"
+	sort.Slice(specs, func(i, j int) bool {
+		return strings.Compare(specs[i].Value("name").(string), specs[j].Value("name").(string)) != 1
+	})
+	for _, spec := range specs {
+		row := fmt.Sprintf(
+			pattern,
+			spec.Value("cluster"),
+			spec.Value("envName"),
+			spec.Value("name"),
+			spec.Value("version"),
+			spec.Value("replicas"),
+			spec.Value("deployStrategy/type"),
+		)
+		rows = append(rows, row)
+	}
+	return header, rows
 }
 
 func PrintDeploySpec(cmd *cobra.Command, args []string) error {
