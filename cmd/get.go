@@ -106,19 +106,8 @@ func PrintApplications(cmd *cobra.Command, args []string) error {
 	if len(fileNames.GetApplications()) < 1 {
 		return errors.New("No applications available")
 	}
-
 	if len(args) > 0 {
-		var selected []string
-		for _, arg := range args {
-			matches := fuzzy.FindAllDeploysFor(fuzzy.APP_FILTER, arg, fileNames.GetApplicationIds())
-			if len(matches) == 0 {
-				cmd.Printf("No matches for %s\n", arg)
-			}
-			selected = append(selected, matches...)
-		}
-		header, rows := GetApplicationIdTable(selected)
-		DefaultTablePrinter(header, rows, cmd.OutOrStdout())
-		return nil
+		return printMatches(args, fuzzy.APP_FILTER, cmd, fileNames)
 	}
 
 	applications := fileNames.GetApplications()
@@ -138,23 +127,27 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) > 0 {
-		var selected []string
-		for _, arg := range args {
-			matches := fuzzy.FindAllDeploysFor(fuzzy.ENV_FILTER, arg, fileNames.GetApplicationIds())
-			if len(matches) == 0 {
-				cmd.Printf("No matches for %s\n", arg)
-			}
-			selected = append(selected, matches...)
-		}
-		specs := DefaultApiClient.GetAuroraDeploySpecs(selected)
-		header, rows := GetDeploySpecTable(specs)
-		DefaultTablePrinter(header, rows, cmd.OutOrStdout())
-		return nil
+		return printMatches(args, fuzzy.ENV_FILTER, cmd, fileNames)
 	}
 
 	envrionments := fileNames.GetEnvironments()
 	sort.Strings(envrionments)
 	DefaultTablePrinter("ENVIRONMENTS", envrionments, cmd.OutOrStdout())
+	return nil
+}
+
+func printMatches(args []string, filter fuzzy.FilterMode, cmd *cobra.Command, fileNames client.FileNames) error {
+	var selected []string
+	for _, arg := range args {
+		matches := fuzzy.FindAllDeploysFor(filter, arg, fileNames.GetApplicationIds())
+		if len(matches) == 0 {
+			return errors.Errorf("No matches for %s", arg)
+		}
+		selected = append(selected, matches...)
+	}
+	specs := DefaultApiClient.GetAuroraDeploySpecs(selected)
+	header, rows := GetDeploySpecTable(specs)
+	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 	return nil
 }
 
