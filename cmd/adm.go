@@ -44,7 +44,7 @@ var recreateConfigCmd = &cobra.Command{
 }
 
 var updateHookCmd = &cobra.Command{
-	Use:   "update-hook",
+	Use:   "update-hook <auroraconfig>",
 	Short: `The command will recreate the .ao.json file.`,
 	RunE:  UpdatePreCommitHook,
 }
@@ -151,10 +151,14 @@ func BashCompletion(cmd *cobra.Command, args []string) error {
 }
 
 func UpdatePreCommitHook(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return cmd.Usage()
+	}
+
 	wd, _ := os.Getwd()
 	gitPath, found := versioncontrol.FindGitPath(wd)
 	if !found {
 		return errors.New("Could not find git")
 	}
-	return versioncontrol.CreatePreCommitHook(gitPath)
+	return versioncontrol.CreatePreCommitHook(gitPath, args[0])
 }
