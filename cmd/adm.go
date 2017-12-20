@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
+
+	"github.com/skatteetaten/ao/pkg/versioncontrol"
 
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
@@ -40,6 +43,12 @@ var recreateConfigCmd = &cobra.Command{
 	RunE:  RecreateConfig,
 }
 
+var updateHookCmd = &cobra.Command{
+	Use:   "update-hook",
+	Short: `The command will recreate the .ao.json file.`,
+	RunE:  UpdatePreCommitHook,
+}
+
 var completionCmd = &cobra.Command{
 	Use:   "completion",
 	Short: "Generates bash completion file",
@@ -60,6 +69,7 @@ func init() {
 	admCmd.AddCommand(completionCmd)
 	admCmd.AddCommand(recreateConfigCmd)
 	admCmd.AddCommand(updateClustersCmd)
+	admCmd.AddCommand(updateHookCmd)
 
 	getClusterCmd.Flags().BoolVarP(&flagShowAll, "all", "a", false, "Show all clusters, not just the reachable ones")
 	recreateConfigCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Recreate config with one cluster")
@@ -138,4 +148,13 @@ func BashCompletion(cmd *cobra.Command, args []string) error {
 	wd, _ := os.Getwd()
 	fmt.Println("Bash completion file created at", wd+"/ao.sh")
 	return nil
+}
+
+func UpdatePreCommitHook(cmd *cobra.Command, args []string) error {
+	wd, _ := os.Getwd()
+	gitPath, found := versioncontrol.FindGitPath(wd)
+	if !found {
+		return errors.New("Could not find git")
+	}
+	return versioncontrol.CreatePreCommitHook(gitPath)
 }

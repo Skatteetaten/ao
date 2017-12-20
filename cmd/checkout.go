@@ -3,11 +3,12 @@ package cmd
 import (
 	"fmt"
 
+	_ "go/token"
+	"os"
+
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
-	_ "go/token"
-	"os"
 )
 
 // TODO: Change affiliation to auroraconfig, flags
@@ -57,6 +58,10 @@ func Checkout(cmd *cobra.Command, args []string) error {
 		return err
 	} else {
 		fmt.Print(output)
+	}
+
+	if err = versioncontrol.CreatePreCommitHook(path); err != nil {
+		return err
 	}
 
 	fmt.Println("Checkout success")
