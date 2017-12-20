@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
@@ -16,12 +17,17 @@ var validateCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(validateCmd)
+	validateCmd.Flags().StringVarP(&flagAffiliation, "auroraconfig", "a", "", "AuroraConfig to validate")
 }
 
 func Validate(cmd *cobra.Command, args []string) error {
 	ac, err := versioncontrol.CollectFiles()
 	if err != nil {
 		return err
+	}
+
+	if flagAffiliation != "" {
+		DefaultApiClient.Affiliation = flagAffiliation
 	}
 
 	res, err := DefaultApiClient.ValidateAuroraConfig(ac)
