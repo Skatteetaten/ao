@@ -55,6 +55,20 @@ func GitCommand(args ...string) (string, error) {
 	return message, nil
 }
 
+func CreatePreCommitHook(gitPath string) error {
+	const preCommitHookScript = `#!/bin/bash
+exec ao validate -a $(basename -s .git $(git config --get remote.origin.url))
+`
+
+	gitHookFile := fmt.Sprintf("%s/.git/hooks/pre-commit", gitPath)
+	err := ioutil.WriteFile(gitHookFile, []byte(preCommitHookScript), 0755)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func GetGitUrl(affiliation, user string, api *client.ApiClient) string {
 	clientConfig, err := api.GetClientConfig()
 	if err != nil {
