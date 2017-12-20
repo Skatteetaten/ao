@@ -35,7 +35,6 @@ func init() {
 }
 
 func Checkout(cmd *cobra.Command, args []string) error {
-
 	affiliation := AO.Affiliation
 	if flagCheckoutAffiliation != "" {
 		affiliation = flagCheckoutAffiliation
@@ -47,20 +46,21 @@ func Checkout(cmd *cobra.Command, args []string) error {
 		path = flagCheckoutPath
 	}
 
-	url := versioncontrol.GetGitUrl(affiliation, flagCheckoutUser, DefaultApiClient)
+	clientConfig, err := DefaultApiClient.GetClientConfig()
+	if err != nil {
+		return err
+	}
+	url := versioncontrol.GetGitUrl(affiliation, flagCheckoutUser, clientConfig.GitUrlPattern)
 
 	logrus.Debug(url)
 	fmt.Printf("Cloning AuroraConfig %s\n", affiliation)
 	fmt.Printf("From: %s\n\n", url)
 
-	output, err := versioncontrol.Checkout(url, path)
-	if err != nil {
+	if err := versioncontrol.Checkout(url, path); err != nil {
 		return err
-	} else {
-		fmt.Print(output)
 	}
 
-	if err = versioncontrol.CreatePreCommitHook(path); err != nil {
+	if err := versioncontrol.CreatePreCommitHook(path, affiliation); err != nil {
 		return err
 	}
 

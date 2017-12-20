@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/skatteetaten/ao/pkg/client"
+
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
@@ -21,7 +23,7 @@ func init() {
 }
 
 func Validate(cmd *cobra.Command, args []string) error {
-	ac, err := versioncontrol.CollectFiles()
+	files, err := versioncontrol.CollectFilesInRepo()
 	if err != nil {
 		return err
 	}
@@ -30,6 +32,10 @@ func Validate(cmd *cobra.Command, args []string) error {
 		DefaultApiClient.Affiliation = flagAffiliation
 	}
 
+	ac := &client.AuroraConfig{
+		Files:    files,
+		Versions: make(map[string]string),
+	}
 	res, err := DefaultApiClient.ValidateAuroraConfig(ac)
 	if err != nil {
 		return err
