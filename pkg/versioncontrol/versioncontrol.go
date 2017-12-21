@@ -60,13 +60,11 @@ func CollectJSONFilesInRepo(gitRoot string) (map[string]json.RawMessage, error) 
 	return files, filepath.Walk(gitRoot, func(path string, info os.FileInfo, err error) error {
 
 		fileName := strings.TrimPrefix(path, gitRoot+"/")
-
 		if strings.HasPrefix(fileName, ".") || !strings.HasSuffix(fileName, ".json") {
 			return nil
 		}
 
 		file, err := ioutil.ReadFile(gitRoot + "/" + fileName)
-
 		if err != nil {
 			return errors.Wrap(err, "Could not read file "+fileName)
 		}
