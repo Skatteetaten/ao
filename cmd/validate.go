@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/skatteetaten/ao/pkg/client"
 
@@ -23,7 +24,13 @@ func init() {
 }
 
 func Validate(cmd *cobra.Command, args []string) error {
-	files, err := versioncontrol.CollectFilesInRepo()
+	wd, _ := os.Getwd()
+	gitRoot, err := versioncontrol.FindGitPath(wd)
+	if err != nil {
+		return err
+	}
+
+	files, err := versioncontrol.CollectJSONFilesInRepo(gitRoot)
 	if err != nil {
 		return err
 	}
