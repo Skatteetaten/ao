@@ -39,50 +39,44 @@ func GetGitUrl(affiliation, user, gitUrlPattern string) string {
 	return fmt.Sprintf(newPattern, affiliation)
 }
 
-func FindGitPath(path string) (string, bool) {
+func FindGitPath(path string) (string, error) {
 	current := fmt.Sprintf("%s/.git", path)
 	if _, err := os.Stat(current); err == nil {
-		return path, true
+		return path, nil
 	}
 
 	paths := strings.Split(path, "/")
 	length := len(paths)
 	if length == 1 {
-		return "", false
+		return "", errors.New("Not a git repository")
 	}
 
 	next := strings.Join(paths[:length-1], "/")
 	return FindGitPath(next)
 }
 
-func CollectFilesInRepo() (map[string]json.RawMessage, error) {
-	wd, _ := os.Getwd()
-	gitRoot, found := FindGitPath(wd)
-	if !found {
-		return nil, errors.New("Could not find git")
-	}
-
+func CollectJSONFilesInRepo(gitRoot string) (map[string]json.RawMessage, error) {
 	files := make(map[string]json.RawMessage)
 	return files, filepath.Walk(gitRoot, func(path string, info os.FileInfo, err error) error {
 
-		filename := strings.TrimPrefix(path, gitRoot+"/")
+		fileName := strings.TrimPrefix(path, gitRoot+"/")
 
-		if strings.HasPrefix(filename, ".") || !strings.HasSuffix(filename, ".json") {
+		if strings.HasPrefix(fileName, ".") || !strings.HasSuffix(fileName, ".json") {
 			return nil
 		}
 
-		file, err := ioutil.ReadFile(gitRoot + "/" + filename)
+		file, err := ioutil.ReadFile(gitRoot + "/" + fileName)
 
 		if err != nil {
-			return errors.Wrap(err, "Could not read file "+filename)
+			return errors.Wrap(err, "Could not read file "+fileName)
 		}
 
 		if !json.Valid(file) {
-			err = errors.New("Illegal JSON in file " + filename)
+			err = errors.New("Illegal JSON in file " + fileName)
 			return err
 		}
 
-		files[filename] = file
+		files[fileName] = file
 		return nil
 	})
 }

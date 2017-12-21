@@ -2,14 +2,9 @@ package versioncontrol
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
-	"path"
-	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 var testFiles = map[string]string{
@@ -33,6 +28,7 @@ var testFiles = map[string]string{
 }
 
 const REPO_PATH = "/tmp/ao/testRepo"
+const GIT_URL_FORMAT = "https://%s@git.aurora.skead.no/scm/ac/%s.git"
 
 func repoSetup(gitRemoteUrl string) {
 	// Clear old test files
@@ -48,15 +44,6 @@ func repoSetup(gitRemoteUrl string) {
 	}
 }
 
-func TestValidateRepo(t *testing.T) {
-	gitRemoteUrl := fmt.Sprintf(GIT_URL_FORMAT, "user", "aurora")
-	repoSetup(gitRemoteUrl)
-
-	if err := ValidateRepo(gitRemoteUrl); err != nil {
-		t.Error(err)
-	}
-}
-
 func TestFindGitPath(t *testing.T) {
 	gitRemoteUrl := fmt.Sprintf(GIT_URL_FORMAT, "user", "aurora")
 	repoSetup(gitRemoteUrl)
@@ -67,50 +54,8 @@ func TestFindGitPath(t *testing.T) {
 	os.Chdir(test)
 
 	wd, _ := os.Getwd()
-	path, found := FindGitPath(wd)
-	if !found || path != REPO_PATH {
+	path, err := FindGitPath(wd)
+	if err != nil || path != REPO_PATH {
 		t.Error("Expected git repo to be found")
 	}
-}
-
-func TestGetStatuses(t *testing.T) {
-	t.Run("Should get statuses from the root of the repository to prevent deletng the wrong files", func(t *testing.T) {
-		gitRemoteURL := fmt.Sprintf("file:///tmp/boobergit/%s", "aurora")
-		repoSetup(gitRemoteURL)
-
-		// Add test files to repository
-		for f, v := range testFiles {
-			filePath := path.Join(REPO_PATH, f)
-			if split := strings.Split(f, "/"); len(split) == 2 {
-				dirPath := path.Join(REPO_PATH, split[0])
-				os.MkdirAll(dirPath, 0755)
-			}
-			ioutil.WriteFile(filePath, []byte(v), 0644)
-		}
-
-		// Commit test files
-		if err := exec.Command("git", "add", "--all").Run(); err != nil {
-			t.Fatal(err)
-		}
-		if err := exec.Command("git", "commit", "-m", "init").Run(); err != nil {
-			t.Fatal(err)
-		}
-
-		// Remove test file
-		fileToRemove := "test/reference.json"
-		os.Remove(path.Join(REPO_PATH, fileToRemove))
-
-		// Change dir to where test file has been removed from
-		testDir := path.Join(REPO_PATH, "test")
-		os.Chdir(testDir)
-
-		// Get statuses from repository
-		statuses, err := getStatuses()
-		if err != nil {
-			t.Error(err)
-		}
-
-		assert.Equal(t, "D", statuses[0])
-		assert.Equal(t, fileToRemove, statuses[1])
-	})
 }

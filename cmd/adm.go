@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -156,9 +155,9 @@ func UpdatePreCommitHook(cmd *cobra.Command, args []string) error {
 	}
 
 	wd, _ := os.Getwd()
-	gitPath, found := versioncontrol.FindGitPath(wd)
-	if !found {
-		return errors.New("Could not find git")
+	gitPath, err := versioncontrol.FindGitPath(wd)
+	if err != nil {
+		return err
 	}
 	return versioncontrol.CreatePreCommitHook(gitPath, args[0])
 }
