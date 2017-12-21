@@ -18,10 +18,10 @@ func Checkout(url string, outputPath string) error {
 	return cmd.Run()
 }
 
-func CreatePreCommitHook(gitPath, auroraConfig string) error {
-	preCommitHookScript := "#!/bin/bash\nexec ao validate -a " + auroraConfig
-	gitHookFile := fmt.Sprintf("%s/.git/hooks/pre-commit", gitPath)
-	err := ioutil.WriteFile(gitHookFile, []byte(preCommitHookScript), 0755)
+func CreateGitValidateHook(gitPath, hookType, auroraConfig string) error {
+	hookScript := "#!/bin/bash\nexec ao validate -a " + auroraConfig
+	gitHookFile := fmt.Sprintf("%s/.git/hooks/%s", gitPath, hookType)
+	err := ioutil.WriteFile(gitHookFile, []byte(hookScript), 0755)
 	if err != nil {
 		return err
 	}

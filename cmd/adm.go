@@ -44,8 +44,8 @@ var recreateConfigCmd = &cobra.Command{
 
 var updateHookCmd = &cobra.Command{
 	Use:   "update-hook <auroraconfig>",
-	Short: `The command will recreate the .ao.json file.`,
-	RunE:  UpdatePreCommitHook,
+	Short: `Update or create git hook to validate AuroraConfig.`,
+	RunE:  UpdateGitHook,
 }
 
 var completionCmd = &cobra.Command{
@@ -72,6 +72,7 @@ func init() {
 
 	getClusterCmd.Flags().BoolVarP(&flagShowAll, "all", "a", false, "Show all clusters, not just the reachable ones")
 	recreateConfigCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Recreate config with one cluster")
+	updateHookCmd.Flags().StringVarP(&flagGitHookType, "git-hook", "g", "pre-push", "Change git hook to validate AuroraConfig")
 }
 
 func PrintClusters(cmd *cobra.Command, args []string) {
@@ -149,7 +150,7 @@ func BashCompletion(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func UpdatePreCommitHook(cmd *cobra.Command, args []string) error {
+func UpdateGitHook(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return cmd.Usage()
 	}
@@ -159,5 +160,5 @@ func UpdatePreCommitHook(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return versioncontrol.CreatePreCommitHook(gitPath, args[0])
+	return versioncontrol.CreateGitValidateHook(gitPath, flagGitHookType, args[0])
 }
