@@ -25,8 +25,10 @@ Yb,_,dP       `8b, `Y8b,,__,,d8P'
  
  ```
  ao login my-project
- ao import my-project-folder
- ao edit my-test-env/my-app.json
+ ao checkout my-project
+ cd my-project
+ vi my-test-env/my-app.json
+ ao save
  ao deploy  my-app  my-test-env
  ```
  
