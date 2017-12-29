@@ -13,12 +13,15 @@ The token is obtained by using the OpenShift API. It is also possible to use a t
 by the oc command ("oc whoami -t") if you paste it into the ao config file or use the --token or -t flag available on all commands.
 
 ### Connect to Boober
-By default, aoc will scan for OpenShift clusters with Boober instances using the naming 
+AO uses the configuration file _.aoc.json_ in the users home folder to find connection configuration.  If the file does not exist, AO will create it.  
+By default, ao will scan for OpenShift clusters with Boober instances using the naming 
 conventions adopted by the Tax Authority.  The **login** command will call the OpenShift 
 API on each reachable cluster to obtain a token.  The cluster information and tokens are 
- stored in a configuration file in the users home directory called _.aoc.json_.  
+ stored in the configuration file.  
 
-Commands that manipulate the Boober repository will only call the apiCluster.  The deploy command
+Commands that manipulate the Boober repository will only call the apiCluster.  The current API cluster is stored in the configuration file.  The command ao adm clusters will display the configuration.
+
+The deploy command
 will however call all the reachable clusters, and Boober will deploy the applications that
 is targeted to its specific cluster.
 
