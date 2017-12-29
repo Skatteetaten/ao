@@ -1,13 +1,13 @@
 **_Work In Progress_**
 # What is AO
-A command line interface for the Boober API.
+AO is a command line interface for the Boober API.  It is used to
   * Deploy one or more ApplicationId (environment/application) to one or more clusters
   * Manipulate AuroraConfig remotely
   * Support modifying AuroraConfig locally
   * Manipulate vaults and secrets
 
 # General
-AOC works by connecting to the Boober API.  Authentication is handled by sending an 
+AO works by connecting to the Boober API.  Authentication is handled by sending an 
 OpenShift token in the HTTP header.
 The token is obtained by using the OpenShift API. It is also possible to use a token obtained
 by the oc command ("oc whoami -t") if you paste it into the ao config file or use the --token or -t flag available on all commands.
@@ -19,13 +19,18 @@ conventions adopted by the Tax Authority.  The **login** command will call the O
 API on each reachable cluster to obtain a token.  The cluster information and tokens are 
  stored in the configuration file.  
 
+If you run Boober outside of the Tax Authority you will have to edit the configuration file to supply your own cluster definitions.
+
 Commands that manipulate the Boober repository will only call the apiCluster.  The current API cluster is stored in the configuration file.  The command ao adm clusters will display the configuration.
 
 The deploy command
 will however call all the reachable clusters, and Boober will deploy the applications that
 is targeted to its specific cluster.
 
-It is possible to override the url by using the hidden --localhost flag on the login command.  Using this flag will connect to a boober instance running on the local machine.  AO will use the token from the current active connection in the configuration file.
+It is possible to override the url by using the hidden --localhost flag on the login command.  Using this flag will connect to a boober instance running on the local machine.  AO will use the token from the current active connection in the configuration file.  This is useful when doing development work on Boober, or trying to run Boober against a cluster with no Boober installed.
+
+# Concepts
+The AuroraConfig concepts are documented in the Boober project.  
 
 # Commands
 The AO commands are grouped into a number of categories:
