@@ -1,9 +1,16 @@
 **_Work In Progress_**
+# What is AO
+A command line interface for the Boober API.
+  * Deploy one or more ApplicationId (environment/application) to one or more clusters
+  * Manipulate AuroraConfig remotely
+  * Support modifying AuroraConfig locally
+  * Manipulate vaults and secrets
+
 # General
 AOC works by connecting to the Boober API.  Authentication is handled by sending an 
 OpenShift token in the HTTP header.
 The token is obtained by using the OpenShift API. It is also possible to use a token obtained
-by the oc command ("oc whoami -t").
+by the oc command ("oc whoami -t") if you paste it into the ao config file or use the --token or -t flag available on all commands.
 
 ### Connect to Boober
 By default, aoc will scan for OpenShift clusters with Boober instances using the naming 
@@ -11,64 +18,28 @@ conventions adopted by the Tax Authority.  The **login** command will call the O
 API on each reachable cluster to obtain a token.  The cluster information and tokens are 
  stored in a configuration file in the users home directory called _.aoc.json_.  
 
-**Example config file:**
- 
-````
-{
-  "apiCluster": "utv",
-  "affiliation": "sat",
-  "clusters": [
-    {
-      "name": "prod",
-      "url": "https://prod-master.paas.skead.no:8443",
-      "token": "",
-      "reachable": false
-    },
-    {
-      "name": "utv",
-      "url": "https://utv-master.paas.skead.no:8443",
-      "token": "gaK5_e06oYh0zor2ZCPDMTluwdE0GJcevvOZu_N2hcI",
-      "reachable": true
-    }
-  ]
-}
-
-````
 Commands that manipulate the Boober repository will only call the apiCluster.  The deploy command
 will however call all the reachable clusters, and Boober will deploy the applications that
 is targeted to its specific cluster.
 
-It is possible to override the url by using either the -l or --localhost flag, or by using 
-the --serverapi argument.
+It is possible to override the url by using the hidden --localhost flag on the login command.  Using this flag will connect to a boober instance running on the local machine.  AO will use the token from the current active connection in the configuration file.
 
 # Commands
-The AOC commands are shaped after the pattern of the OC commands.
+The AO commands are grouped into a number of categories:
+- OpenShift Action Commands: Deploys one or more applicatons
+- Remote AuroraConfig Commands: Manipulate the AuroraConfig referenced by the last login command
+- Local File Commands: Facilitate working with an AuroraConfig as local files
+- Commands: Configuration, login and update
  
 All the commands have a --help option to explain the usage and the parameters.
 
 ### Common options
 All commands have a few common options:
 ````
-      --serverapi string   Override default server API address
-      --token string       Token to be used for serverapi connections
-  -v, --verbose            Log progress to standard out
+  -h, --help           help for ao
+  -l, --log string     Set log level. Valid log levels are [info, debug, warning, error, fatal] (default "fatal")
+  -p, --pretty         Pretty print json output for log
+  -t, --token string   OpenShift authorization token to use for remote commands, overrides login
 ````
-In addition, there are 
 
-## Available commands
 
-````
-  create      Creates a vault or a secret in a vault
-  delete      Delete a resource
-  deploy      Deploy applications in the current affiliation
-  edit        Edit a single configuration file or a secret in a vault
-  export      Exports auroraconf, vaults or secrets to one or more files
-  get         Retrieves information from the repository
-  import      Imports a set of configuration files to the central store.
-  login       Login to openshift clusters
-  logout      Logout of all connected clusters
-  ping        Checks for open connectivity from all nodes in the cluster to a specific ip address and port. 
-  update      Check for available updates for the aoc client, and downloads the update if available.
-  version     Shows the version of the aoc client
-
-````
