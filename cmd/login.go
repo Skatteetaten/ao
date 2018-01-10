@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	flagUserName  string
-	flagLocalhost bool
+	flagUserName   string
+	flagLocalhost  bool
+	flagApiCluster string
 )
 
 var loginCmd = &cobra.Command{
@@ -27,6 +28,7 @@ func init() {
 	loginCmd.Flags().StringVarP(&flagUserName, "username", "u", user, "the username to log in with, standard is $USER")
 	loginCmd.Flags().BoolVarP(&flagLocalhost, "localhost", "", false, "set api to localhost")
 	loginCmd.Flags().MarkHidden("localhost")
+	loginCmd.Flags().StringVarP(&flagApiCluster, "apicluster", "", "", "Select specified API cluster")
 }
 
 func Login(cmd *cobra.Command, args []string) error {
