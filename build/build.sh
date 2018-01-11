@@ -41,10 +41,14 @@ if [ -z "${BRANCH}" ]; then
     echo "BRANCH must be set"
     exit 1
 fi
-
+if [ -z "${OS}" ]; then
+    echo "OS must be set"
+    exit 1
+fi
 
 export CGO_ENABLED=0
 export GOARCH="${ARCH}"
+export GOOS="${OS}"
 
 #
 # We have a lot of dependencies. If we use ./... we need to import the whole world.
@@ -57,4 +61,9 @@ go install                                                         \
     -gcflags='-B -l' \
     -pkgdir=${GOPATH}/pkg \
     ${PACKAGES}
+if [ "${OS}" == "darwin" ]; then
+    cp .go/bin/darwin_amd64/ao bin/darwin_amd64/ao
+else
+    cp .go/bin/ao bin/amd64/ao
+fi
 
