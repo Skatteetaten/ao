@@ -34,7 +34,9 @@ GOPATH := $(shell pwd)/.go
 
 GOSRC := $(shell pwd)/.go/src
 
-GOBIN := $(shell pwd)/bin/$(ARCH)
+# GOBIN := $(shell pwd)/bin/$(ARCH)
+# GOBIN-LINUX := $(shell pwd)/bin/linux-$(ARCH)
+# GOBIN-DARWIN := $(shell pwd)/bin/darwin-$(ARCH)
 
 VERSION := $(shell git describe --tags --always --dirty)
 
@@ -54,16 +56,35 @@ deps:
 	@glide install
 
 
-build: build-dirs bin-file
+build: build-dirs bin-file-linux bin-file-darwin
 
-bin-file:
-	@echo "Building with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
+bin-file-linux:
+	@echo "Building for Linux with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
 	@/bin/sh -c "                                                          \
 	        cd .go/src/$(PKG);                                             \
 	        GOPATH=$(GOPATH)                                               \
 	        GOSRC=$(GOSRC)                                                 \
-	        GOBIN=$(GOBIN)                                                 \
+			OS=linux													   \
 	        ARCH=$(ARCH)                                                   \
+			OS=linux                                                       \
+	        PKG=$(PKG)                                                     \
+	        VERSION=$(VERSION)                                             \
+	        BRANCH=$(BRANCH)                                               \
+	        BUILDSTAMP=$(BUILDSTAMP)                                       \
+	        GITHASH=$(GITHASH)                                             \
+	        ./build/build.sh                                               \
+	    "
+
+
+bin-file-darwin:
+	@echo "Building for Darwin with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
+	@/bin/sh -c "                                                          \
+	        cd .go/src/$(PKG);                                             \
+	        GOPATH=$(GOPATH)                                               \
+	        GOSRC=$(GOSRC)                                                 \
+			OS=darwin													   \
+	        ARCH=$(ARCH)                                                   \
+			OS=darwin                                                      \
 	        PKG=$(PKG)                                                     \
 	        VERSION=$(VERSION)                                             \
 	        BRANCH=$(BRANCH)                                               \
@@ -82,8 +103,9 @@ test: build-dirs
 	    "
 
 build-dirs: .go/src/$(PKG)
-	@mkdir -p bin/$(ARCH)
-	@mkdir -p .go/pkg .go/bin .go/std/$(ARCH)
+	@mkdir -p bin/amd64
+	@mkdir -p bin/darwin_amd64
+	@mkdir -p .go/pkg .go/bin .go/std/linux-$(ARCH) .go/std/darwin_$(ARCH)
 
 .go/src/$(PKG):
 	@mkdir -p .go/src/$(PKG)
