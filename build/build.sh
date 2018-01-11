@@ -63,6 +63,8 @@ go install                                                         \
     ${PACKAGES}
 if [ "${OS}" == "darwin" ]; then
     cp .go/bin/darwin_amd64/ao bin/darwin_amd64/ao
+elif [ "${OS}" == "windows" ]; then
+    cp .go/bin/windows_amd64/ao.exe bin/windows_amd64/ao.exe
 else
     cp .go/bin/ao bin/amd64/ao
 fi
