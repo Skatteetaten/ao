@@ -28,6 +28,8 @@ node {
         sh 'mkdir ./website/public/assets/darwin'
         sh './bin/amd64/ao version --json > ./website/public/assets/version.json'
         sh 'cp ./bin/amd64/ao ./website/public/assets'
+        sh 'ls .bin/darwin_amd64'
+        sh 'ls .website/public/assets'
         sh 'cp ./bin/darwin_amd64/ao ./website/public/assetts/darwin'
     }
 
