@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"runtime"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -26,8 +27,10 @@ var (
 )
 
 const (
-	aoDownloadPath       = "/assets/ao"
-	aoCurrentVersionPath = "/assets/version.json"
+	aoDownloadPath        = "/assets/ao"
+	aoDownloadPathMacOs   = "/assets/macos/ao"
+	aoDownloadPathWindows = "/assets/windows/ao"
+	aoCurrentVersionPath  = "/assets/version.json"
 )
 
 type AOVersion struct {
@@ -62,7 +65,15 @@ func GetCurrentVersionFromServer(url string) (*AOVersion, error) {
 }
 
 func GetNewAOClient(url string) ([]byte, error) {
-	return fetchFromUpdateServer(url, aoDownloadPath, "application/octet-stream")
+	var downloadPath string
+	downloadPath = aoDownloadPath
+	if runtime.GOOS == "darwin" {
+		downloadPath = aoDownloadPathMacOs
+	}
+	if runtime.GOOS == "windows" {
+		downloadPath = aoDownloadPathWindows
+	}
+	return fetchFromUpdateServer(url, downloadPath, "application/octet-stream")
 }
 
 func fetchFromUpdateServer(url, endpoint, contentType string) ([]byte, error) {
