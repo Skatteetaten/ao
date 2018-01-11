@@ -27,6 +27,7 @@ node {
         sh 'mkdir ./website/public/assets'
         sh './bin/amd64/ao version --json > ./website/public/assets/version.json'
         sh 'cp ./bin/amd64/ao ./website/public/assets'
+        sh 'cp ./bin/darwin_amd64/ao ./website/public/assetts/darwin_ao'
     }
 
     String version = git.getTagFromCommit()
