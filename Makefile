@@ -56,7 +56,7 @@ deps:
 	@glide install
 
 
-build: build-dirs bin-file-linux bin-file-darwin
+build: build-dirs bin-file-linux bin-file-darwin bin-file-windows
 
 bin-file-linux:
 	@echo "Building for Linux with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
@@ -66,7 +66,6 @@ bin-file-linux:
 	        GOSRC=$(GOSRC)                                                 \
 			OS=linux													   \
 	        ARCH=$(ARCH)                                                   \
-			OS=linux                                                       \
 	        PKG=$(PKG)                                                     \
 	        VERSION=$(VERSION)                                             \
 	        BRANCH=$(BRANCH)                                               \
@@ -84,7 +83,22 @@ bin-file-darwin:
 	        GOSRC=$(GOSRC)                                                 \
 			OS=darwin													   \
 	        ARCH=$(ARCH)                                                   \
-			OS=darwin                                                      \
+	        PKG=$(PKG)                                                     \
+	        VERSION=$(VERSION)                                             \
+	        BRANCH=$(BRANCH)                                               \
+	        BUILDSTAMP=$(BUILDSTAMP)                                       \
+	        GITHASH=$(GITHASH)                                             \
+	        ./build/build.sh                                               \
+	    "
+
+bin-file-windows:
+	@echo "Building for Windows with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
+	@/bin/sh -c "                                                          \
+	        cd .go/src/$(PKG);                                             \
+	        GOPATH=$(GOPATH)                                               \
+	        GOSRC=$(GOSRC)                                                 \
+			OS=windows													   \
+	        ARCH=$(ARCH)                                                   \
 	        PKG=$(PKG)                                                     \
 	        VERSION=$(VERSION)                                             \
 	        BRANCH=$(BRANCH)                                               \
@@ -105,7 +119,8 @@ test: build-dirs
 build-dirs: .go/src/$(PKG)
 	@mkdir -p bin/amd64
 	@mkdir -p bin/darwin_amd64
-	@mkdir -p .go/pkg .go/bin .go/std/linux-$(ARCH) .go/std/darwin_$(ARCH)
+	@mkdir -p bin/windows_amd64
+	@mkdir -p .go/pkg .go/bin .go/std/linux-$(ARCH) .go/std/darwin_$(ARCH) .go/std/windows_$(ARCH)
 
 .go/src/$(PKG):
 	@mkdir -p .go/src/$(PKG)
