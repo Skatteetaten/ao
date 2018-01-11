@@ -24,11 +24,10 @@ node {
     }
 
     stage('Copy ao to assets') {
-        sh 'mkdir -p ./website/public/assets/darwin'
+        sh 'mkdir -p ./website/public/assets/macos'
         sh './.go/bin/ao version --json > ./website/public/assets/version.json'
         sh 'cp ./.go/bin/ao ./website/public/assets'
-        sh 'ls ./.go/bin'
-        sh 'cp ./.go/bin/darwin_amd64/ao ./website/public/assetts/darwin'
+        sh 'cp ./.go/bin/darwin_amd64/ao ./website/public/assets/macos'
     }
 
     String version = git.getTagFromCommit()
