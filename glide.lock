@@ -1,5 +1,5 @@
-hash: 2f5d5ccd370cb0139bff04a11f6d86f9c4470f0e32cf7ba2d110dd709457b80d
-updated: 2017-11-16T10:19:19.825723486+01:00
+hash: dd3092489534006cc1f40251e42b07783bb89ddddbef4506c129c0c9b3b22fc3
+updated: 2018-01-11T13:52:22.840697157+01:00
 imports:
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
@@ -9,6 +9,8 @@ imports:
   version: 6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c
 - name: github.com/mgutz/ansi
   version: 9520e82c474b0a04dd04f8a40959027271bab992
+- name: github.com/mitchellh/go-homedir
+  version: b8bc1bf767474819792c23f32d8286a45736f1c6
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/renstrom/fuzzysearch
@@ -16,7 +18,7 @@ imports:
   subpackages:
   - fuzzy
 - name: github.com/sirupsen/logrus
-  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
+  version: d682213848ed68c0a260ca37d6dd5ace8423f5ba
 - name: github.com/spf13/cobra
   version: 3c0b56b677e04926dfa835a1b3f11cd4f62f076e
 - name: github.com/spf13/pflag

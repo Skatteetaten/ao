@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
@@ -92,10 +94,15 @@ func initialize(cmd *cobra.Command, args []string) error {
 	// Disable print usage when an error occurs
 	cmd.SilenceUsage = true
 
-	home, _ := os.LookupEnv("HOME")
-	ConfigLocation = home + "/.ao.json"
+	//home, _ := os.LookupEnv("HOME")
+	home, err := homedir.Dir()
+	if err != nil {
+		return err
+	}
+	//ConfigLocation = home + "/.ao.json"
+	ConfigLocation = filepath.Join(home, ".ao.json")
 
-	err := setLogging(pFlagLogLevel, pFlagPrettyLog)
+	err = setLogging(pFlagLogLevel, pFlagPrettyLog)
 	if err != nil {
 		return err
 	}
