@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"runtime"
 
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
@@ -25,6 +26,7 @@ func Version(cmd *cobra.Command, args []string) error {
 	if !flagJSON {
 		fmt.Println("AO version " + config.Version)
 		fmt.Println("Build time " + config.BuildStamp)
+		fmt.Println("OS: " + runtime.GOOS)
 		return nil
 	}
 
