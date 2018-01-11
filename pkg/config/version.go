@@ -2,10 +2,12 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // The version variables will be set during build time, see build/build.sh
@@ -36,6 +38,10 @@ type AOVersion struct {
 }
 
 func (v *AOVersion) IsNewVersion() bool {
+	// No new version if current version is dirty
+	if strings.Contains(Version, "-dirty") {
+		return false
+	}
 	// TODO: Should do better check then this
 	return v.Version != Version
 }
