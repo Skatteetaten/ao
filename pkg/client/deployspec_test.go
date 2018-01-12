@@ -1,11 +1,14 @@
 package client
 
 import (
-	"github.com/stretchr/testify/assert"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestApiClient_GetAuroraDeploySpec(t *testing.T) {
@@ -21,10 +24,10 @@ func TestApiClient_GetAuroraDeploySpec(t *testing.T) {
 		defer ts.Close()
 
 		api := NewApiClient(ts.URL, "test", affiliation)
-		spec, err := api.GetAuroraDeploySpec("aotest", "redis", true)
+		spec, err := api.GetAuroraDeploySpec([]string{"aotest/redis"}, true)
 		assert.NoError(t, err)
 
-		assert.Len(t, spec, 14)
+		assert.Len(t, spec, 1)
 	})
 }
 
@@ -50,4 +53,79 @@ func TestApiClient_GetAuroraDeploySpecFormatted(t *testing.T) {
 
 		assert.Equal(t, string(expected), spec)
 	})
+}
+
+func Test_buildDeploySpecQueries(t *testing.T) {
+	var applications []string
+	for i := 0; i < 200; i++ {
+		app := fmt.Sprintf("test/reference-application%d", i)
+		applications = append(applications, app)
+	}
+
+	tests := []struct {
+		name         string
+		applications []string
+		defaults     bool
+		want         int
+	}{
+		{
+			name:         "Should create multiple requests when url contains more than 3500 char",
+			applications: applications,
+			defaults:     true,
+			want:         3,
+		},
+		{
+			name:         "Should create multiple requests without defaults when url contains more than 3500 char",
+			applications: applications,
+			defaults:     false,
+			want:         3,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := buildDeploySpecQueries(tt.applications, tt.defaults); !reflect.DeepEqual(len(got), tt.want) {
+				t.Errorf("buildDeploySpecQueries() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAuroraDeploySpec_Value(t *testing.T) {
+	tests := []struct {
+		name        string
+		a           AuroraDeploySpec
+		jsonPointer string
+		want        interface{}
+	}{
+		{
+			name: "Should get version from AuroraDeploySpec",
+			a: AuroraDeploySpec{
+				"version": map[string]interface{}{
+					"value": "3",
+				},
+			},
+			jsonPointer: "/version",
+			want:        "3",
+		},
+		{
+			name: "Should get version from AuroraDeploySpec",
+			a: AuroraDeploySpec{
+				"permissions": map[string]interface{}{
+					"admin": map[string]interface{}{
+						"value": "TEST_group",
+					},
+				},
+			},
+			jsonPointer: "/permissions/admin",
+			want:        "TEST_group",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.a.Value(tt.jsonPointer); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("AuroraDeploySpec.Value() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
