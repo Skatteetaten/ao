@@ -117,7 +117,11 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications to deploy")
 	}
 
-	header, rows := GetApplicationIdTable(applications)
+	deploySpecs, err := api.GetAuroraDeploySpec(applications, true)
+	if err != nil {
+		return err
+	}
+	header, rows := GetDeploySpecTable(deploySpecs)
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 
 	shouldDeploy := true

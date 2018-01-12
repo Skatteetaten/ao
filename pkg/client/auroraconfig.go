@@ -132,7 +132,7 @@ func (api *ApiClient) ValidateAuroraConfig(ac *AuroraConfig) (*ErrorResponse, er
 }
 
 func (api *ApiClient) GetAuroraConfigFile(fileName string) (*AuroraConfigFile, error) {
-	endpoint := fmt.Sprintf("/auroraconfigfile/%s/%s", api.Affiliation, fileName)
+	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, fileName)
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
 	if err != nil {
@@ -242,7 +242,9 @@ func (f FileNames) GetApplications() []string {
 			unique.Add(strings.TrimSuffix(file, ".json"))
 		}
 	}
-	return unique.All()
+	filteredFiles := unique.All()
+	sort.Strings(filteredFiles)
+	return filteredFiles
 }
 
 func (f FileNames) GetEnvironments() []string {
@@ -253,7 +255,9 @@ func (f FileNames) GetEnvironments() []string {
 			unique.Add(split[0])
 		}
 	}
-	return unique.All()
+	filteredFiles := unique.All()
+	sort.Strings(filteredFiles)
+	return filteredFiles
 }
 
 func (op JsonPatchOp) Validate() error {

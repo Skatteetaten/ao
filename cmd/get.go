@@ -107,11 +107,10 @@ func PrintApplications(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications available")
 	}
 	if len(args) > 0 {
-		return printMatches(args, fuzzy.APP_FILTER, cmd, fileNames)
+		return PrintDeploySpecTable(args, fuzzy.APP_FILTER, cmd, fileNames)
 	}
 
 	applications := fileNames.GetApplications()
-	sort.Strings(applications)
 	DefaultTablePrinter("APPLICATIONS", applications, cmd.OutOrStdout())
 	return nil
 }
@@ -127,16 +126,15 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) > 0 {
-		return printMatches(args, fuzzy.ENV_FILTER, cmd, fileNames)
+		return PrintDeploySpecTable(args, fuzzy.ENV_FILTER, cmd, fileNames)
 	}
 
 	envrionments := fileNames.GetEnvironments()
-	sort.Strings(envrionments)
 	DefaultTablePrinter("ENVIRONMENTS", envrionments, cmd.OutOrStdout())
 	return nil
 }
 
-func printMatches(args []string, filter fuzzy.FilterMode, cmd *cobra.Command, fileNames client.FileNames) error {
+func PrintDeploySpecTable(args []string, filter fuzzy.FilterMode, cmd *cobra.Command, fileNames client.FileNames) error {
 	var selected []string
 	for _, arg := range args {
 		matches := fuzzy.FindAllDeploysFor(filter, arg, fileNames.GetApplicationIds())
@@ -145,7 +143,10 @@ func printMatches(args []string, filter fuzzy.FilterMode, cmd *cobra.Command, fi
 		}
 		selected = append(selected, matches...)
 	}
-	specs := DefaultApiClient.GetAuroraDeploySpecs(selected)
+	specs, err := DefaultApiClient.GetAuroraDeploySpec(selected, true)
+	if err != nil {
+		return err
+	}
 	header, rows := GetDeploySpecTable(specs)
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 	return nil
@@ -153,8 +154,8 @@ func printMatches(args []string, filter fuzzy.FilterMode, cmd *cobra.Command, fi
 
 func GetDeploySpecTable(specs []client.AuroraDeploySpec) (string, []string) {
 	var rows []string
-	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tREPLICAS\tDEPLOY STRATEGY"
-	pattern := "%v\t%v\t%v\t%v\t%v\t%v"
+	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tREPLICAS\tTYPE\tDEPLOY STRATEGY"
+	pattern := "%v\t%v\t%v\t%v\t%v\t%v\t%v"
 	sort.Slice(specs, func(i, j int) bool {
 		return strings.Compare(specs[i].Value("name").(string), specs[j].Value("name").(string)) != 1
 	})
@@ -166,6 +167,7 @@ func GetDeploySpecTable(specs []client.AuroraDeploySpec) (string, []string) {
 			spec.Value("name"),
 			spec.Value("version"),
 			spec.Value("replicas"),
+			spec.Value("type"),
 			spec.Value("deployStrategy/type"),
 		)
 		rows = append(rows, row)
@@ -206,7 +208,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	spec, err := DefaultApiClient.GetAuroraDeploySpec(split[0], split[1], !flagNoDefaults)
+	spec, err := DefaultApiClient.GetAuroraDeploySpec(matches, !flagNoDefaults)
 	if err != nil {
 		return err
 	}
