@@ -7,9 +7,6 @@
     }
   },
   "web": {
-    "nodejs": {
-      "main": "api/index.js"
-    },
     "static": "public"
   }
 }
