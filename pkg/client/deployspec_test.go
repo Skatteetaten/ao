@@ -109,7 +109,7 @@ func TestAuroraDeploySpec_Value(t *testing.T) {
 			want:        "3",
 		},
 		{
-			name: "Should get version from AuroraDeploySpec",
+			name: "Should get admin permissions from AuroraDeploySpec",
 			a: AuroraDeploySpec{
 				"permissions": map[string]interface{}{
 					"admin": map[string]interface{}{
