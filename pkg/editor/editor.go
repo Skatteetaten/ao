@@ -5,12 +5,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -43,11 +45,14 @@ func NewEditor(saveFunc OnSaveFunc) *Editor {
 
 func (e Editor) Edit(content string, name string, isJson bool) error {
 
+	fmt.Println("DEBUG: createing Temp File")
 	tempFilePath, err := createTempFile()
 	if err != nil {
 		return err
 	}
+	fmt.Println("DEBUG: Temp File Created")
 	defer func() {
+		fmt.Println("DEBUG: In defer prior to remove temp file")
 		err := os.Remove(tempFilePath)
 		if err != nil {
 			logrus.Fatal("WARNING: Unable to delete temp file ", tempFilePath)
@@ -112,8 +117,13 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 
 func openEditor(filename string) error {
 	var editor = os.Getenv("EDITOR")
+	fmt.Println("DEBUG: Start openEditor")
 	if editor == "" {
-		editor = "vim"
+		if runtime.GOOS == "windows" {
+			editor = "notepad"
+		} else {
+			editor = "vim"
+		}
 	}
 
 	editorParts := strings.Split(editor, " ")
@@ -121,6 +131,7 @@ func openEditor(filename string) error {
 
 	path, err := exec.LookPath(editorPath)
 	if err != nil {
+		fmt.Println("DEBUG: Error looking up editor")
 		return errors.New("ERROR: Editor \"" + editorPath + "\" specified in environment variable $EDITOR is not a valid program")
 	}
 
@@ -139,6 +150,7 @@ func openEditor(filename string) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("DEBUG: After Editor start")
 	return cmd.Wait()
 }
 
