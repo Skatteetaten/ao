@@ -10,7 +10,7 @@ AO is a command line interface for the Boober API.  It is used to
 AO works by connecting to the Boober API.  Authentication is handled by sending an OpenShift token in the HTTP header.  The token is obtained by using the OpenShift API.  It is also possible to use a token obtained by the oc command ("oc whoami -t") if you paste it into the ao config file or use the --token or -t flag available on all commands.
 
 ### Connect to Boober
-AO uses the configuration file _.aoc.json_ in the users home folder to find connection configuration.  If the file does not exist, AO will create it.  
+AO uses the configuration file _.ao.json_ in the users home folder to find connection configuration.  If the file does not exist, AO will create it.  
 
 By default, ao will scan for OpenShift clusters with Boober instances using the naming conventions adopted by the Tax Authority.  The **login** command will call the OpenShift API on each reachable cluster to obtain a token.  The cluster information and tokens are stored in the configuration file.  
 
@@ -34,8 +34,11 @@ Vaults can only be manipulated remotely using the vault command.
 The DEPLOY command will deploy all or parts of an AuroraConfig to OpenShift.  It is possible to limit the deploy to a single application or a single environment.
 
 # Access control
-By default, every authenticated OpenShift user has access to every AuroraConfig in the Boober repository running on the OpenShift Cluster.  To restrict this access, it is possible to add a .permissions file to a folder.  The file must be a valid json file containing a list of OpenShift groups:
+By default, every authenticated OpenShift user has access to every AuroraConfig in the Boober repository running on the OpenShift Cluster.  
 
+To restrict this access, it is possible to add a .permissions file to a folder.  The file must be a valid json file containing a list of OpenShift groups:
+
+It is possible to restrict access to vaults and secrets, use the vault add-permissions command.  This will create a hidden .permissions file in the vault repository.
 
 ````
 {
@@ -43,7 +46,7 @@ By default, every authenticated OpenShift user has access to every AuroraConfig 
 }
 ````
 
-To restrict access to vaults and secrets, use the vault add-permissions command.
+
 
 
 # Commands
