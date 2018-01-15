@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"encoding/json"
@@ -273,19 +274,28 @@ func compareGitLog(compare string) error {
 	return nil
 }
 
+func getSeparator() string {
+	if runtime.GOOS == "windows" {
+		return "\\"
+	}
+	return "/"
+}
+
 func FindGitPath(path string) (string, bool) {
-	current := fmt.Sprintf("%s/.git", path)
+	separator := getSeparator()
+
+	current := fmt.Sprintf("%s"+separator+".git", path)
 	if _, err := os.Stat(current); err == nil {
 		return path, true
 	}
 
-	paths := strings.Split(path, "/")
+	paths := strings.Split(path, separator)
 	length := len(paths)
 	if length == 1 {
 		return "", false
 	}
 
-	next := strings.Join(paths[:length-1], "/")
+	next := strings.Join(paths[:length-1], separator)
 	return FindGitPath(next)
 }
 
@@ -298,14 +308,14 @@ func addFilesToAuroraConfig(ac *client.AuroraConfig) error {
 	}
 
 	return filepath.Walk(gitRoot, func(path string, info os.FileInfo, err error) error {
-
-		filename := strings.TrimPrefix(path, gitRoot+"/")
+		separator := getSeparator()
+		filename := strings.TrimPrefix(path, gitRoot+separator)
 
 		if strings.Contains(filename, ".git") || strings.Contains(filename, ".secret") || info.IsDir() {
 			return nil
 		}
 
-		file, err := ioutil.ReadFile(gitRoot + "/" + filename)
+		file, err := ioutil.ReadFile(gitRoot + separator + filename)
 
 		if err != nil {
 			return errors.Wrap(err, "Could not read file "+filename)
