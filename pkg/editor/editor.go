@@ -11,8 +11,10 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/andybalholm/crlf"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/text/transform"
 )
 
 const (
@@ -67,6 +69,9 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 	for !done {
 		previousContent := currentContent
 		contentToEdit := fmt.Sprintf(editPattern, name, editErrors, currentContent)
+		if runtime.GOOS == "windows" {
+			contentToEdit, _, err = transform.String(crlf.ToCRLF{}, contentToEdit)
+		}
 		err = ioutil.WriteFile(tempFilePath, []byte(contentToEdit), 0700)
 		if err != nil {
 			return err
