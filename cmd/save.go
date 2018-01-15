@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"runtime"
 
 	"os"
 
@@ -19,10 +20,12 @@ var saveCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(saveCmd)
+	if runtime.GOOS != "windows" {
+		RootCmd.AddCommand(saveCmd)
 
-	user, _ := os.LookupEnv("USER")
-	saveCmd.Flags().StringVarP(&flagSaveAsUser, "user", "u", user, "Save AuroraConfig as user")
+		user, _ := os.LookupEnv("USER")
+		saveCmd.Flags().StringVarP(&flagSaveAsUser, "user", "u", user, "Save AuroraConfig as user")
+	}
 }
 
 func Save(cmd *cobra.Command, args []string) error {
