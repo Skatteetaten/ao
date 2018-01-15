@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"runtime"
+
+	_ "go/token"
+	"os"
 
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
-	_ "go/token"
-	"os"
 )
 
 // TODO: Change affiliation to auroraconfig, flags
@@ -25,12 +27,14 @@ var checkoutCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(checkoutCmd)
+	if runtime.GOOS != "windows" {
+		RootCmd.AddCommand(checkoutCmd)
 
-	user, _ := os.LookupEnv("USER")
-	checkoutCmd.Flags().StringVarP(&flagCheckoutAffiliation, "auroraconfig", "a", "", "AuroraConfig to clone")
-	checkoutCmd.Flags().StringVarP(&flagCheckoutPath, "path", "", "", "Checkout repo to path")
-	checkoutCmd.Flags().StringVarP(&flagCheckoutUser, "user", "u", user, "Checkout repo as user")
+		user, _ := os.LookupEnv("USER")
+		checkoutCmd.Flags().StringVarP(&flagCheckoutAffiliation, "auroraconfig", "a", "", "AuroraConfig to clone")
+		checkoutCmd.Flags().StringVarP(&flagCheckoutPath, "path", "", "", "Checkout repo to path")
+		checkoutCmd.Flags().StringVarP(&flagCheckoutUser, "user", "u", user, "Checkout repo as user")
+	}
 }
 
 func Checkout(cmd *cobra.Command, args []string) error {

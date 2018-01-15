@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"runtime"
+
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
 )
@@ -13,7 +15,9 @@ var pullCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(pullCmd)
+	if runtime.GOOS != "windows" {
+		RootCmd.AddCommand(pullCmd)
+	}
 }
 
 func Pull(cmd *cobra.Command, args []string) error {

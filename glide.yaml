@@ -10,3 +10,4 @@ import:
 - package: github.com/stretchr/testify
   version: v1.1.4
 - package: github.com/mitchellh/go-homedir
+- package: github.com/andybalholm/crlf

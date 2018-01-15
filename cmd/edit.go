@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/editor"
 	"github.com/skatteetaten/ao/pkg/fuzzy"

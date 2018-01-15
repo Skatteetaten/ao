@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 
 	"path/filepath"
 
@@ -100,10 +101,15 @@ func (ao *AOConfig) Update(noPrompt bool) error {
 	}
 
 	if !noPrompt {
-		message := fmt.Sprintf("Do you want update AO from version %s -> %s?", Version, serverVersion.Version)
-		update := prompt.Confirm(message, true)
-		if !update {
-			return errors.New("Update aborted")
+		if runtime.GOOS == "windows" {
+			message := fmt.Sprintf("New version of AO is available (%s) - please download from %s", serverVersion.Version, url)
+			fmt.Println(message)
+		} else {
+			message := fmt.Sprintf("Do you want update AO from version %s -> %s?", Version, serverVersion.Version)
+			update := prompt.Confirm(message, true)
+			if !update {
+				return errors.New("Update aborted")
+			}
 		}
 	}
 

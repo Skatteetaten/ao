@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"runtime"
+
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +15,9 @@ var updateCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(updateCmd)
+	if runtime.GOOS != "windows" {
+		RootCmd.AddCommand(updateCmd)
+	}
 }
 
 func Update(cmd *cobra.Command, args []string) error {

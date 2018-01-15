@@ -29,7 +29,7 @@ var (
 const (
 	aoDownloadPath        = "/assets/ao"
 	aoDownloadPathMacOs   = "/assets/macos/ao"
-	aoDownloadPathWindows = "/assets/windows/ao"
+	aoDownloadPathWindows = "/assets/windows/ao.exe"
 	aoCurrentVersionPath  = "/assets/version.json"
 )
 

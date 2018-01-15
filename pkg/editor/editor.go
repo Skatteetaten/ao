@@ -5,12 +5,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
+
+	"github.com/andybalholm/crlf"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/text/transform"
 )
 
 const (
@@ -50,7 +54,7 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 	defer func() {
 		err := os.Remove(tempFilePath)
 		if err != nil {
-			logrus.Fatal("WARNING: Unable to delete temp file ", tempFilePath)
+			logrus.Fatal("WARNING: Unable to delete temp file: "+err.Error()+": ", tempFilePath)
 		}
 	}()
 
@@ -65,6 +69,9 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 	for !done {
 		previousContent := currentContent
 		contentToEdit := fmt.Sprintf(editPattern, name, editErrors, currentContent)
+		if runtime.GOOS == "windows" {
+			contentToEdit, _, err = transform.String(crlf.ToCRLF{}, contentToEdit)
+		}
 		err = ioutil.WriteFile(tempFilePath, []byte(contentToEdit), 0700)
 		if err != nil {
 			return err
@@ -113,7 +120,11 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 func openEditor(filename string) error {
 	var editor = os.Getenv("EDITOR")
 	if editor == "" {
-		editor = "vim"
+		if runtime.GOOS == "windows" {
+			editor = "notepad"
+		} else {
+			editor = "vim"
+		}
 	}
 
 	editorParts := strings.Split(editor, " ")
@@ -149,6 +160,11 @@ func createTempFile() (string, error) {
 	if err != nil {
 		return "", errors.New("Unable to create temporary file: " + err.Error())
 	}
+	err = tmpFile.Close()
+	if err != nil {
+		return "", errors.New("Unable to close temp file: " + err.Error())
+	}
+
 	return tmpFile.Name(), nil
 }
 

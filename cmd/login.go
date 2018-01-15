@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"os"
+	"os/user"
+	"runtime"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -24,8 +27,23 @@ var loginCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(loginCmd)
-	user, _ := os.LookupEnv("USER")
-	loginCmd.Flags().StringVarP(&flagUserName, "username", "u", user, "the username to log in with, standard is $USER")
+	var username string
+	if runtime.GOOS == "windows" {
+		user, err := user.Current()
+		if err != nil {
+			logrus.Fatal("Unable to get current User info: " + err.Error())
+		}
+		if strings.Contains(user.Username, "\\") {
+			parts := strings.Split(user.Username, "\\")
+			if len(parts) > 0 {
+				username = parts[1]
+			}
+		}
+	} else {
+		username, _ = os.LookupEnv("USER")
+	}
+
+	loginCmd.Flags().StringVarP(&flagUserName, "username", "u", username, "the username to log in with, standard is current user")
 	loginCmd.Flags().BoolVarP(&flagLocalhost, "localhost", "", false, "set api to localhost")
 	loginCmd.Flags().MarkHidden("localhost")
 	loginCmd.Flags().StringVarP(&flagApiCluster, "apicluster", "", "", "select specified API cluster")
