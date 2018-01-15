@@ -45,17 +45,14 @@ func NewEditor(saveFunc OnSaveFunc) *Editor {
 
 func (e Editor) Edit(content string, name string, isJson bool) error {
 
-	fmt.Println("DEBUG: createing Temp File")
 	tempFilePath, err := createTempFile()
 	if err != nil {
 		return err
 	}
-	fmt.Println("DEBUG: Temp File Created")
 	defer func() {
-		fmt.Println("DEBUG: In defer prior to remove temp file")
 		err := os.Remove(tempFilePath)
 		if err != nil {
-			logrus.Fatal("WARNING: Unable to delete temp file ", tempFilePath)
+			logrus.Fatal("WARNING: Unable to delete temp file: "+err.Error()+": ", tempFilePath)
 		}
 	}()
 
@@ -117,7 +114,6 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 
 func openEditor(filename string) error {
 	var editor = os.Getenv("EDITOR")
-	fmt.Println("DEBUG: Start openEditor")
 	if editor == "" {
 		if runtime.GOOS == "windows" {
 			editor = "notepad"
@@ -131,7 +127,6 @@ func openEditor(filename string) error {
 
 	path, err := exec.LookPath(editorPath)
 	if err != nil {
-		fmt.Println("DEBUG: Error looking up editor")
 		return errors.New("ERROR: Editor \"" + editorPath + "\" specified in environment variable $EDITOR is not a valid program")
 	}
 
@@ -150,7 +145,6 @@ func openEditor(filename string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("DEBUG: After Editor start")
 	return cmd.Wait()
 }
 
@@ -161,6 +155,11 @@ func createTempFile() (string, error) {
 	if err != nil {
 		return "", errors.New("Unable to create temporary file: " + err.Error())
 	}
+	err = tmpFile.Close()
+	if err != nil {
+		return "", errors.New("Unable to close temp file: " + err.Error())
+	}
+
 	return tmpFile.Name(), nil
 }
 
