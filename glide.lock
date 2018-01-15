@@ -1,5 +1,5 @@
 hash: 82f69e9ca56b1fcf9040b4be8fbf22e21b29e1a5f5ac101e5632bb5ce217c7cf
-updated: 2018-01-15T10:09:59.7184023+01:00
+updated: 2018-01-15T10:29:09.18678658+01:00
 imports:
 - name: github.com/andybalholm/crlf
   version: 670099aa064ff74d1d109d04f02fe3a5b2e5030f
@@ -38,6 +38,10 @@ imports:
   subpackages:
   - unix
   - windows
+- name: golang.org/x/text
+  version: e19ae1496984b1c655b8044a65c0300a3c878dd3
+  subpackages:
+  - transform
 - name: gopkg.in/AlecAivazis/survey.v1
   version: 0aa8b6a162b391fe2d95648b7677d1d6ac2090a6
   subpackages:
