@@ -49,7 +49,9 @@ glide install
 make
  
  ```
- 
+
+Windows and macOS versions are built on Linux.  To develop and test
+on windows, use the go install command instead of make. 
  
  # Dependencies?
  
