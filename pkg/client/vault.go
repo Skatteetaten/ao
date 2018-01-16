@@ -10,19 +10,18 @@ import (
 )
 
 type (
-	Secrets     map[string]string
-	Permissions []string
+	Secrets map[string]string
 
 	AuroraVaultInfo struct {
-		Name        string      `json:"name"`
-		Permissions Permissions `json:"permissions"`
-		Secrets     Secrets     `json:"secrets"`
-		HasAccess   bool        `json:"hasAccess"`
+		Name        string   `json:"name"`
+		Permissions []string `json:"permissions"`
+		Secrets     Secrets  `json:"secrets"`
+		HasAccess   bool     `json:"hasAccess"`
 	}
 
 	AuroraSecretVault struct {
 		Name        string            `json:"name"`
-		Permissions Permissions       `json:"permissions"`
+		Permissions []string          `json:"permissions"`
 		Secrets     Secrets           `json:"secrets"`
 		Versions    map[string]string `json:"versions"`
 	}
@@ -147,29 +146,4 @@ func (s Secrets) AddSecret(name, content string) {
 
 func (s Secrets) RemoveSecret(name string) {
 	delete(s, name)
-}
-
-func (p Permissions) AddGroup(group string) error {
-	for _, g := range p {
-		if g == group {
-			return errors.Errorf("Group %s already exists", group)
-		}
-	}
-	p = append(p, group)
-
-	return nil
-}
-
-func (p Permissions) DeleteGroup(group string) error {
-	for i, g := range p {
-		if g == group {
-			p = append(p[:i], p[i+1:]...)
-			return nil
-		}
-	}
-	return errors.Errorf("Did not find group %s", group)
-}
-
-func (p Permissions) GetGroups() []string {
-	return p
 }

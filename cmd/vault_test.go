@@ -1,12 +1,13 @@
 package cmd
 
 import (
-	"github.com/skatteetaten/ao/pkg/client"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"path"
 	"testing"
+
+	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -38,7 +39,7 @@ func Test_collectSecrets(t *testing.T) {
 		secret, err := vault.Secrets.GetSecret(secretFile)
 		assert.NoError(t, err)
 		assert.Equal(t, "FOO=BAR\nBAZ=FOOBAR", secret)
-		assert.Equal(t, []string{"test_group"}, vault.Permissions.GetGroups())
+		assert.Equal(t, []string{"test_group"}, vault.Permissions)
 	})
 }
 

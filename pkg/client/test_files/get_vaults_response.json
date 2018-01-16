@@ -2,79 +2,69 @@
   "count": 7,
   "items": [
     {
-      "admin": false,
+      "hasAccess": false,
       "name": "utvmote",
-      "permissions": {
-        "groups": [
+      "permissions": [
           "UTV_App_dev"
-        ]
-      },
-      "secrets": [
-        "latest.properties"
-      ]
+      ],
+      "secrets": {
+        "latest.properties": ""
+      }
     },
     {
-      "admin": true,
+      "hasAccess": true,
       "name": "secret",
-      "secrets": [
-        "foobar.prop",
-        "latest.properties",
-        "vdi"
-      ]
+      "secrets": {
+        "foobar.prop": "",
+        "latest.properties": "",
+        "vdi": ""
+      }
     },
     {
-      "admin": true,
+      "hasAccess": true,
       "name": "boober",
-      "permissions": {
-        "groups": [
+      "permissions": [
           "APP_PaaS_utv",
           "APP_PaaS_drift"
-        ]
-      },
-      "secrets": [
-        "latest.properties"
-      ]
+      ],
+      "secrets": {
+        "latest.properties": ""
+      }
     },
     {
-      "admin": true,
+      "hasAccess": true,
       "name": "foo",
-      "permissions": {
-        "groups": [
+      "permissions": [
           "APP_PaaS_utv"
-        ]
-      },
-      "secrets": [
-        "latest.properties"
-      ]
+      ],
+      "secrets": {
+        "latest.properties": ""
+      }
     },
     {
-      "admin": true,
+      "hasAccess": true,
       "name": "console",
-      "secrets": [
-        "aurora-token"
-      ]
+      "secrets": {
+        "aurora-token": ""
+      }
     },
     {
-      "admin": true,
+      "hasAccess": true,
       "name": "flotus",
-      "permissions": {
-        "groups": []
-      },
-      "secrets": [
-        "potus"
-      ]
+      "permissions": [],
+      "secrets": {
+        "potus": ""
+      }
     },
     {
-      "admin": false,
+      "hasAccess": false,
       "name": "potus",
-      "permissions": {
-        "groups": [
+      "permissions": [
           "App_PaaS_UTV"
-        ]
-      },
-      "secrets": [
-        "potus.properties"
-      ]
+      ],
+      "secrets": {
+        "potus.properties": ""
+      }
     }
   ],
   "message": "OK",

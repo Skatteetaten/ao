@@ -423,12 +423,22 @@ func changeVaultPermissions(action permissionAction, cmd *cobra.Command, args []
 		switch action {
 		case ADD:
 			{
-				err = vault.Permissions.AddGroup(group)
+				for _, g := range vault.Permissions {
+					if g == group {
+						return errors.Errorf("Group %s already exists", group)
+					}
+				}
+				vault.Permissions = append(vault.Permissions, group)
 			}
 		case DELETE:
 			{
-				err = vault.Permissions.DeleteGroup(group)
-
+				for i, g := range vault.Permissions {
+					if g == group {
+						vault.Permissions = append(vault.Permissions[:i], vault.Permissions[i+1:]...)
+						return nil
+					}
+				}
+				return errors.Errorf("Did not find group %s", group)
 			}
 		}
 		if err != nil {
@@ -504,16 +514,18 @@ func readPermissionFile(path string) ([]string, error) {
 		return nil, err
 	}
 
-	var permissions []string
+	permissions := struct {
+		Groups []string `json:"groups"`
+	}{}
 	err = json.Unmarshal(data, &permissions)
 	if err != nil {
 		return nil, err
 	}
-	if permissions == nil {
+	if permissions.Groups == nil {
 		return nil, ErrEmptyGroups
 	}
 
-	return permissions, nil
+	return permissions.Groups, nil
 }
 
 func getVaultTable(vaults []*client.AuroraVaultInfo) (string, []string) {
@@ -525,7 +537,7 @@ func getVaultTable(vaults []*client.AuroraVaultInfo) (string, []string) {
 	var rows []string
 	for _, vault := range vaults {
 		name := vault.Name
-		permissions := vault.Permissions.GetGroups()
+		permissions := vault.Permissions
 
 		for secretName := range vault.Secrets {
 			line := fmt.Sprintf("%s\t%s\t%s\t%v", name, permissions, secretName, vault.HasAccess)

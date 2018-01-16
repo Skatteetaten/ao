@@ -227,6 +227,6 @@ func TestAuroraConfigFile_ToPrettyJson(t *testing.T) {
 		Contents: `{"type":"development"}`,
 	}
 
-	expected := "\"{\\\"type\\\":\\\"development\\\"}\""
+	expected := "{\n  \"type\": \"development\"\n}"
 	assert.Equal(t, expected, acf.ToPrettyJson())
 }

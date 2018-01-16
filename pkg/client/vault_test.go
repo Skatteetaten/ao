@@ -1,10 +1,11 @@
 package client
 
 import (
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestApiClient_GetVaults(t *testing.T) {
@@ -117,25 +118,5 @@ func TestSecrets(t *testing.T) {
 
 	secrets.RemoveSecret("latest.properties2")
 	_, err = secrets.GetSecret("latest.properties2")
-	assert.Error(t, err)
-}
-
-func TestPermissions(t *testing.T) {
-	permissions := Permissions{
-		"groups": []string{"devops"},
-	}
-
-	assert.Equal(t, []string{"devops"}, permissions.GetGroups())
-
-	err := permissions.AddGroup("test-group")
-	assert.NoError(t, err)
-
-	err = permissions.AddGroup("test-group")
-	assert.Error(t, err)
-
-	err = permissions.DeleteGroup("test-group")
-	assert.NoError(t, err)
-
-	err = permissions.DeleteGroup("test-group")
 	assert.Error(t, err)
 }
