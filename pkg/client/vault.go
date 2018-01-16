@@ -4,19 +4,20 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 type (
 	Secrets     map[string]string
-	Permissions map[string][]string
+	Permissions []string
 
 	AuroraVaultInfo struct {
 		Name        string      `json:"name"`
 		Permissions Permissions `json:"permissions"`
-		Secrets     []string    `json:"secrets"`
-		Admin       bool        `json:"admin"`
+		Secrets     Secrets     `json:"secrets"`
+		HasAccess   bool        `json:"hasAccess"`
 	}
 
 	AuroraSecretVault struct {
@@ -29,10 +30,9 @@ type (
 
 func NewAuroraSecretVault(name string) *AuroraSecretVault {
 	return &AuroraSecretVault{
-		Name:        name,
-		Permissions: make(Permissions),
-		Secrets:     make(Secrets),
-		Versions:    make(map[string]string),
+		Name:     name,
+		Secrets:  make(Secrets),
+		Versions: make(map[string]string),
 	}
 }
 
@@ -150,22 +150,20 @@ func (s Secrets) RemoveSecret(name string) {
 }
 
 func (p Permissions) AddGroup(group string) error {
-	groups := p["groups"]
-	for _, g := range groups {
+	for _, g := range p {
 		if g == group {
 			return errors.Errorf("Group %s already exists", group)
 		}
 	}
-	p["groups"] = append(groups, group)
+	p = append(p, group)
 
 	return nil
 }
 
 func (p Permissions) DeleteGroup(group string) error {
-	groups := p["groups"]
-	for i, g := range groups {
+	for i, g := range p {
 		if g == group {
-			p["groups"] = append(groups[:i], groups[i+1:]...)
+			p = append(p[:i], p[i+1:]...)
 			return nil
 		}
 	}
@@ -173,5 +171,5 @@ func (p Permissions) DeleteGroup(group string) error {
 }
 
 func (p Permissions) GetGroups() []string {
-	return p["groups"]
+	return p
 }

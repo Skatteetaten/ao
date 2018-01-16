@@ -196,7 +196,12 @@ func (api *ApiClient) PutAuroraConfigFile(file *AuroraConfigFile) (*ErrorRespons
 
 func (f *AuroraConfigFile) ToPrettyJson() string {
 
-	data, err := json.MarshalIndent(f.Contents, "", "  ")
+	var out map[string]interface{}
+	err := json.Unmarshal([]byte(f.Contents), &out)
+	if err != nil {
+		return ""
+	}
+	data, err := json.MarshalIndent(out, "", "  ")
 	if err != nil {
 		return ""
 	}

@@ -369,8 +369,8 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 	if flagAsList {
 		header = "VAULT/SECRET"
 		for _, vault := range vaults {
-			for _, secret := range vault.Secrets {
-				name := vault.Name + "/" + secret
+			for secretName := range vault.Secrets {
+				name := vault.Name + "/" + secretName
 				rows = append(rows, name)
 			}
 		}
@@ -476,7 +476,7 @@ func collectSecrets(filePath string, vault *client.AuroraSecretVault, includePer
 			if err != nil {
 				return err
 			}
-			vault.Permissions["groups"] = groups
+			vault.Permissions = groups
 		} else {
 			secret, err := readSecretFile(currentFilePath)
 			if err != nil {
@@ -504,19 +504,16 @@ func readPermissionFile(path string) ([]string, error) {
 		return nil, err
 	}
 
-	permissions := struct {
-		Groups []string `json:"groups"`
-	}{}
-
+	var permissions []string
 	err = json.Unmarshal(data, &permissions)
 	if err != nil {
 		return nil, err
 	}
-	if permissions.Groups == nil {
+	if permissions == nil {
 		return nil, ErrEmptyGroups
 	}
 
-	return permissions.Groups, nil
+	return permissions, nil
 }
 
 func getVaultTable(vaults []*client.AuroraVaultInfo) (string, []string) {
@@ -530,8 +527,8 @@ func getVaultTable(vaults []*client.AuroraVaultInfo) (string, []string) {
 		name := vault.Name
 		permissions := vault.Permissions.GetGroups()
 
-		for _, secret := range vault.Secrets {
-			line := fmt.Sprintf("%s\t%s\t%s\t%v", name, permissions, secret, vault.Admin)
+		for secretName := range vault.Secrets {
+			line := fmt.Sprintf("%s\t%s\t%s\t%v", name, permissions, secretName, vault.HasAccess)
 			rows = append(rows, line)
 			name = " "
 		}
