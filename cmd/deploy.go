@@ -121,7 +121,17 @@ func deploy(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	header, rows := GetDeploySpecTable(deploySpecs)
+	var filterDeploymentSpecs []client.AuroraDeploySpec
+	if flagCluster != "" {
+		for _, spec := range deploySpecs {
+			if spec.Value("/cluster").(string) == flagCluster {
+				filterDeploymentSpecs = append(filterDeploymentSpecs, spec)
+			}
+		}
+	} else {
+		filterDeploymentSpecs = deploySpecs
+	}
+	header, rows := GetDeploySpecTable(filterDeploymentSpecs)
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 
 	shouldDeploy := true
