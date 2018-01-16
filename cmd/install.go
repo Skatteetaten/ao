@@ -1,3 +1,5 @@
+// +build windows
+
 package cmd
 
 import (
@@ -9,10 +11,11 @@ import (
 	"runtime"
 	"strings"
 
+	"golang.org/x/sys/windows/registry"
+
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"golang.org/x/sys/windows/registry"
 )
 
 var installCmd = &cobra.Command{
