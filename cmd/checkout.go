@@ -3,11 +3,11 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/sirupsen/logrus"
-	"github.com/skatteetaten/ao/pkg/versioncontrol"
-	"github.com/spf13/cobra"
 	_ "go/token"
 	"os"
+
+	"github.com/skatteetaten/ao/pkg/versioncontrol"
+	"github.com/spf13/cobra"
 )
 
 // TODO: Change affiliation to auroraconfig, flags
@@ -15,6 +15,7 @@ var (
 	flagCheckoutAffiliation string
 	flagCheckoutPath        string
 	flagCheckoutUser        string
+	flagGitHookType         string
 )
 
 var checkoutCmd = &cobra.Command{
@@ -31,10 +32,10 @@ func init() {
 	checkoutCmd.Flags().StringVarP(&flagCheckoutAffiliation, "auroraconfig", "a", "", "AuroraConfig to clone")
 	checkoutCmd.Flags().StringVarP(&flagCheckoutPath, "path", "", "", "Checkout repo to path")
 	checkoutCmd.Flags().StringVarP(&flagCheckoutUser, "user", "u", user, "Checkout repo as user")
+	checkoutCmd.Flags().StringVarP(&flagGitHookType, "git-hook", "g", "pre-push", "Change git hook to validate AuroraConfig")
 }
 
 func Checkout(cmd *cobra.Command, args []string) error {
-
 	affiliation := AO.Affiliation
 	if flagCheckoutAffiliation != "" {
 		affiliation = flagCheckoutAffiliation
@@ -46,17 +47,21 @@ func Checkout(cmd *cobra.Command, args []string) error {
 		path = flagCheckoutPath
 	}
 
-	url := versioncontrol.GetGitUrl(affiliation, flagCheckoutUser, DefaultApiClient)
+	clientConfig, err := DefaultApiClient.GetClientConfig()
+	if err != nil {
+		return err
+	}
+	url := versioncontrol.GetGitUrl(affiliation, flagCheckoutUser, clientConfig.GitUrlPattern)
 
-	logrus.Debug(url)
 	fmt.Printf("Cloning AuroraConfig %s\n", affiliation)
 	fmt.Printf("From: %s\n\n", url)
 
-	output, err := versioncontrol.Checkout(url, path)
-	if err != nil {
+	if err := versioncontrol.Checkout(url, path); err != nil {
 		return err
-	} else {
-		fmt.Print(output)
+	}
+
+	if err := versioncontrol.CreateGitValidateHook(path, flagGitHookType, affiliation); err != nil {
+		return err
 	}
 
 	fmt.Println("Checkout success")

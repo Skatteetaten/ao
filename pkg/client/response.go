@@ -3,8 +3,9 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 type (
@@ -98,8 +99,11 @@ func (e *ErrorResponse) String() string {
 	}
 
 	messages := e.GetAllErrors()
-	for _, message := range messages {
-		status += fmt.Sprintf("%s", message)
+	for i, message := range messages {
+		status += message
+		if i != len(messages)-1 {
+			status += "\n\n"
+		}
 	}
 
 	return status
