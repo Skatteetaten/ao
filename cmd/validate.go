@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/skatteetaten/ao/pkg/client"
-
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
@@ -30,19 +28,15 @@ func Validate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	files, err := versioncontrol.CollectJSONFilesInRepo(gitRoot)
-	if err != nil {
-		return err
-	}
-
 	if flagAffiliation != "" {
 		DefaultApiClient.Affiliation = flagAffiliation
 	}
 
-	ac := &client.AuroraConfig{
-		Files:    files,
-		Versions: make(map[string]string),
+	ac, err := versioncontrol.CollectJSONFilesInRepo(DefaultApiClient.Affiliation, gitRoot)
+	if err != nil {
+		return err
 	}
+
 	res, err := DefaultApiClient.ValidateAuroraConfig(ac)
 	if err != nil {
 		return err

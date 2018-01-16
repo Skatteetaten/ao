@@ -1,12 +1,10 @@
 package versioncontrol
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -107,7 +105,7 @@ func TestGetGitUrl(t *testing.T) {
 
 func TestCollectJSONFilesInRepo(t *testing.T) {
 	repoSetup("")
-	expectedCollectedFiles := make(map[string]json.RawMessage)
+	// Write test files to test repo
 	for name, text := range testFiles {
 		split := strings.Split(name, "/")
 		if len(split) == 2 {
@@ -117,31 +115,30 @@ func TestCollectJSONFilesInRepo(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		expectedCollectedFiles[name] = json.RawMessage(text)
 	}
 
 	tests := []struct {
 		name    string
 		gitRoot string
-		want    map[string]json.RawMessage
+		want    int
 		wantErr bool
 	}{
 		{
 			name:    "Should collect all JSON files from folder successfully",
 			gitRoot: REPO_PATH,
-			want:    expectedCollectedFiles,
+			want:    4,
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := CollectJSONFilesInRepo(tt.gitRoot)
+			got, err := CollectJSONFilesInRepo("aurora", tt.gitRoot)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CollectJSONFilesInRepo() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CollectJSONFilesInRepo() = %v, want %v", got, tt.want)
+			if len(got.Files) != tt.want {
+				t.Errorf("CollectJSONFilesInRepo() = %v, want %v", len(got.Files), tt.want)
 			}
 		})
 	}

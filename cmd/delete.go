@@ -155,25 +155,25 @@ func deleteFilesFor(mode fuzzy.FilterMode, search string, api *client.ApiClient,
 	return deleteFiles(files, api)
 }
 
+// TODO: This should be api feature
 func deleteFiles(files []string, api *client.ApiClient) error {
 
-	ac, err := api.GetAuroraConfig()
-	if err != nil {
-		return err
-	}
+	// ac, err := api.GetAuroraConfig()
+	// if err != nil {
+	// 	return err
+	// }
 
-	for _, file := range files {
-		delete(ac.Files, file)
-	}
+	// for _, file := range files {
+	// 	delete(ac.Files, file)
+	// }
 
-	res, err := api.SaveAuroraConfig(ac)
-	if err != nil {
-		return err
-	}
-
-	if res != nil {
-		return errors.New(res.String())
-	}
+	// res, err := api.SaveAuroraConfig(ac)
+	// if err != nil {
+	// 	return err
+	// }
+	// if res != nil {
+	// 	return errors.New(res.String())
+	// }
 
 	return nil
 }

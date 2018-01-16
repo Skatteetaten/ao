@@ -2,8 +2,9 @@ package client
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var failedResponseText = `{
@@ -63,12 +64,11 @@ var responseText = `{
 	"success": true,
 	"message": "OK",
 	"items": [{
-		"files": {
-			"about.json": "{}"
-		},
-		"versions": {
-			"about.json": "tewt"
-		}
+		"name": "aurora",
+		"files": [{
+			"name": "about.json",
+			"contents": "{}"
+		}]
 	}],
 	"count": 1
 	}`
@@ -105,8 +105,8 @@ func TestResponse_ParseItems(t *testing.T) {
 	assert.Equal(t, 1, len(acs))
 
 	for _, ac := range acs {
-		_, found := ac.Files["about.json"]
-		assert.Equal(t, true, found)
+		assert.Len(t, ac.Files, 1)
+		assert.Equal(t, "about.json", ac.Files[0].Name)
 	}
 }
 
@@ -125,13 +125,7 @@ func TestResponse_ParseFirstItem(t *testing.T) {
 	}
 
 	assert.Equal(t, 1, len(ac.Files))
-	assert.Equal(t, 1, len(ac.Versions))
-
-	_, found := ac.Files["about.json"]
-	assert.Equal(t, true, found)
-
-	version, _ := ac.Versions["about.json"]
-	assert.Equal(t, "tewt", version)
+	assert.Equal(t, "about.json", ac.Files[0].Name)
 }
 
 func TestResponse_ToErrorResponse(t *testing.T) {

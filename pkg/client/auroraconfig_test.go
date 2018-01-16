@@ -3,24 +3,18 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func AuroraConfigSuccessResponseHandler(t *testing.T, responseFile string) http.HandlerFunc {
 	return func(writer http.ResponseWriter, req *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusOK)
-
 		assert.Contains(t, req.URL.Path, affiliation)
-
-		if strings.Contains(req.URL.Path, "auroraconfigfile") {
-			assert.Contains(t, req.URL.Path, ".json")
-		}
-
 		data := ReadTestFile(responseFile)
 		writer.Write(data)
 	}
@@ -49,8 +43,7 @@ func TestApi_GetAuroraConfig(t *testing.T) {
 		ac, errResponse := api.GetAuroraConfig()
 
 		assert.Empty(t, errResponse)
-		assert.Len(t, ac.Files, 13)
-		assert.Len(t, ac.Versions, 13)
+		assert.Len(t, ac.Files, 4)
 	})
 }
 
@@ -83,14 +76,7 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-
 		errResponse, err := api.ValidateAuroraConfig(&ac)
-
-		assert.NoError(t, err)
-		assert.Empty(t, errResponse)
-
-		errResponse, err = api.SaveAuroraConfig(&ac)
-
 		assert.NoError(t, err)
 		assert.Empty(t, errResponse)
 	})
@@ -118,11 +104,6 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 		assert.NotEmpty(t, errResponse)
 		// We get two errors from server
 		// IllegalFieldErrors are grouped by file name, hence length 1
-		assert.Len(t, errResponse.IllegalFieldErrors, 1)
-
-		errResponse, err = api.SaveAuroraConfig(&ac)
-		assert.NoError(t, err)
-		assert.NotEmpty(t, errResponse)
 		assert.Len(t, errResponse.IllegalFieldErrors, 1)
 	})
 }
@@ -243,13 +224,9 @@ func TestFileNames_Filter(t *testing.T) {
 func TestAuroraConfigFile_ToPrettyJson(t *testing.T) {
 	acf := &AuroraConfigFile{
 		Name:     "about.json",
-		Version:  "aaabb",
-		Override: false,
-		Contents: json.RawMessage(`{"type":"development"}`),
+		Contents: `{"type":"development"}`,
 	}
 
-	expected := `{
-  "type": "development"
-}`
+	expected := "\"{\\\"type\\\":\\\"development\\\"}\""
 	assert.Equal(t, expected, acf.ToPrettyJson())
 }

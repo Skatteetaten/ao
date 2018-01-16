@@ -2,91 +2,27 @@
   "success": true,
   "message": "OK",
   "items": [
-    {
-      "files": {
-        "about.json": {
-          "schemaVersion": "v1",
-          "affiliation": "paas",
-          "type": "deploy",
-          "route": true,
-          "permissions": {
-            "admin": "APP_PaaS_utv"
-          },
-          "config": {
-            "foo": "bar"
-          }
-        },
-        "boober-bjarte/about.json": {
-          "cluster": "localhost",
-          "secretVault": "utv"
-        },
-        "boober-bjarte/reference.json": {},
-        "boober-bugfix/about.json": {
-          "cluster": "localhost"
-        },
-        "boober-bugfix/reference.json": {},
-        "boober-test/about.json": {
-          "cluster": "localhost",
-          "secretVault": "test",
-          "type": "development"
-        },
-        "boober-test/reference-web.json": {},
-        "boober-test/reference.json": {},
-        "boober-utv/about.json": {
-          "cluster": "localhost",
-          "secretVault": "utv",
-          "type": "development"
-        },
-        "boober-utv/reference-web.json": {},
-        "boober-utv/reference.json": {},
-        "reference-web.json": {
-          "name": "reference-web",
-          "applicationPlatform": "web",
-          "deployStrategy": {
-            "type": "rolling"
-          },
-          "groupId": "no.skatteetaten.aurora",
-          "artifactId": "openshift-referanse-react",
-          "version": "snapshot_test-SNAPSHOT",
-          "route": true,
-          "config": {
-            "foo2": "baz"
-          }
-        },
-        "reference.json": {
-          "name": "this-is-a-really-long-name-forreference",
-          "applicationPlatform": "java",
-          "deployStrategy": {
-            "type": "rolling"
-          },
-          "certificate": true,
-          "groupId": "no.skatteetaten.aurora.openshift",
-          "artifactId": "openshift-reference-springboot-server",
-          "version": "1",
-          "database": {
-            "referanseapp": "auto"
-          },
-          "config": {
-            "foo2": "baz"
-          }
-        }
-      },
-      "versions": {
-        "about.json": null,
-        "boober-bjarte/about.json": null,
-        "boober-bjarte/reference.json": null,
-        "boober-bugfix/about.json": null,
-        "boober-bugfix/reference.json": null,
-        "boober-test/about.json": null,
-        "boober-test/reference-web.json": null,
-        "boober-test/reference.json": null,
-        "boober-utv/about.json": null,
-        "boober-utv/reference-web.json": null,
-        "boober-utv/reference.json": null,
-        "reference-web.json": null,
-        "reference.json": null
+      {
+          "name": "paas",
+          "files": [
+              {
+                  "name": "mokey/mokey.json",
+                  "contents": "{}"
+              },
+              {
+                  "name": "mokey/about.json",
+                  "contents": "{\"cluster\":\"utv\",\"type\":\"development\"}"
+              },
+              {
+                  "name": "mokey.json",
+                  "contents": "{\"name\":\"mokey\",\"groupId\":\"no.skatteetaten.aurora\",\"artifactId\":\"mokey\",\"version\":\"development-SNAPSHOT\",\"replicas\":1,\"route\":{\"mokey\":{\"annotations\":{\"haproxy.router.openshift.io|timeout\":\"300s\"}}},\"resources\":{\"memory\":{\"min\":\"1Gi\",\"max\":\"1Gi\"},\"cpu\":{\"min\":\"1400m\",\"max\":\"2000m\"}},\"debug\":true,\"config\":{\"SERVER_CONTEXT_PATH\":\"/\"},\"baseImage\":{\"name\":\"flange\"},\"serviceAccount\":\"mokey\"}"
+              },
+              {
+                  "name": "about.json",
+                  "contents": "{\"schemaVersion\":\"v1\",\"affiliation\":\"paas\",\"splunkIndex\":\"openshift-test\",\"certificate\":true,\"permissions\":{\"admin\":\"APP_PaaS_drift APP_PaaS_utv\"}}"
+              }
+          ]
       }
-    }
   ],
   "count": 1
 }

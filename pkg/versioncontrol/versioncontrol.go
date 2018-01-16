@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/skatteetaten/ao/pkg/client"
+
 	"encoding/json"
 
 	"github.com/pkg/errors"
@@ -55,9 +57,11 @@ func FindGitPath(path string) (string, error) {
 	return FindGitPath(next)
 }
 
-func CollectJSONFilesInRepo(gitRoot string) (map[string]json.RawMessage, error) {
-	files := make(map[string]json.RawMessage)
-	return files, filepath.Walk(gitRoot, func(path string, info os.FileInfo, err error) error {
+func CollectJSONFilesInRepo(affiliation, gitRoot string) (*client.AuroraConfig, error) {
+	ac := &client.AuroraConfig{
+		Name: affiliation,
+	}
+	return ac, filepath.Walk(gitRoot, func(path string, info os.FileInfo, err error) error {
 
 		fileName := strings.TrimPrefix(path, gitRoot+"/")
 		if strings.HasPrefix(fileName, ".") || !strings.HasSuffix(fileName, ".json") {
@@ -74,7 +78,10 @@ func CollectJSONFilesInRepo(gitRoot string) (map[string]json.RawMessage, error) 
 			return err
 		}
 
-		files[fileName] = file
+		ac.Files = append(ac.Files, client.AuroraConfigFile{
+			Name:     fileName,
+			Contents: string(file),
+		})
 		return nil
 	})
 }

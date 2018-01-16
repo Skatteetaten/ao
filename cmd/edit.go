@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/editor"
 	"github.com/skatteetaten/ao/pkg/fuzzy"
@@ -68,7 +68,7 @@ func EditFile(cmd *cobra.Command, args []string) error {
 	}
 
 	fileEditor := editor.NewEditor(func(modified string) ([]string, error) {
-		file.Contents = json.RawMessage(modified)
+		file.Contents = modified
 		res, err := DefaultApiClient.PutAuroraConfigFile(file)
 		if err != nil {
 			return nil, err
