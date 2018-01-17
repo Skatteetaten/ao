@@ -172,9 +172,6 @@ func deploy(cmd *cobra.Command, args []string) error {
 
 	var results []client.DeployResult
 	for _, r := range result {
-		if !r.Success {
-			cmd.Println("deploy error:", r.Message)
-		}
 		results = append(results, r.Results...)
 	}
 

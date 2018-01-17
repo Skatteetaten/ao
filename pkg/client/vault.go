@@ -12,6 +12,7 @@ import (
 type (
 	Secrets map[string]string
 
+	// TODO: rename to response
 	AuroraVaultInfo struct {
 		Name        string   `json:"name"`
 		Permissions []string `json:"permissions"`
@@ -19,6 +20,7 @@ type (
 		HasAccess   bool     `json:"hasAccess"`
 	}
 
+	// TODO: rename to request
 	AuroraSecretVault struct {
 		Name        string   `json:"name"`
 		Permissions []string `json:"permissions"`
@@ -28,8 +30,9 @@ type (
 
 func NewAuroraSecretVault(name string) *AuroraSecretVault {
 	return &AuroraSecretVault{
-		Name:    name,
-		Secrets: make(Secrets),
+		Name:        name,
+		Secrets:     make(Secrets),
+		Permissions: []string{},
 	}
 }
 
