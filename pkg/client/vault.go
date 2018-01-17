@@ -20,18 +20,16 @@ type (
 	}
 
 	AuroraSecretVault struct {
-		Name        string            `json:"name"`
-		Permissions []string          `json:"permissions"`
-		Secrets     Secrets           `json:"secrets"`
-		Versions    map[string]string `json:"versions"`
+		Name        string   `json:"name"`
+		Permissions []string `json:"permissions"`
+		Secrets     Secrets  `json:"secrets"`
 	}
 )
 
 func NewAuroraSecretVault(name string) *AuroraSecretVault {
 	return &AuroraSecretVault{
-		Name:     name,
-		Secrets:  make(Secrets),
-		Versions: make(map[string]string),
+		Name:    name,
+		Secrets: make(Secrets),
 	}
 }
 
@@ -83,18 +81,10 @@ func (api *ApiClient) DeleteVault(vaultName string) error {
 	return nil
 }
 
-func (api *ApiClient) SaveVault(vault AuroraSecretVault, validate bool) error {
+func (api *ApiClient) SaveVault(vault AuroraSecretVault) error {
 	endpoint := fmt.Sprintf("/vault/%s", api.Affiliation)
 
-	payload := struct {
-		Vault            AuroraSecretVault `json:"vault"`
-		ValidateVersions bool              `json:"validateVersions"`
-	}{
-		Vault:            vault,
-		ValidateVersions: validate,
-	}
-
-	data, err := json.Marshal(payload)
+	data, err := json.Marshal(vault)
 	if err != nil {
 		return err
 	}

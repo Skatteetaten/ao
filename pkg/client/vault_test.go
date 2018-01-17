@@ -45,7 +45,6 @@ func TestApiClient_GetVault(t *testing.T) {
 		assert.NoError(t, err)
 
 		assert.Equal(t, "console", vault.Name)
-		assert.Equal(t, "8b4868a", vault.Versions["foo"])
 		assert.Len(t, vault.Secrets, 1)
 	})
 }
@@ -79,7 +78,7 @@ func TestApiClient_SaveVault(t *testing.T) {
 		defer ts.Close()
 
 		api := NewApiClient(ts.URL, "test", affiliation)
-		err := api.SaveVault(*vault, false)
+		err := api.SaveVault(*vault)
 		assert.NoError(t, err)
 	})
 }
