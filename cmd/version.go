@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"runtime"
 
 	"github.com/skatteetaten/ao/pkg/config"
@@ -27,6 +28,10 @@ func Version(cmd *cobra.Command, args []string) error {
 		fmt.Println("AO version " + config.Version)
 		fmt.Println("Build time " + config.BuildStamp)
 		fmt.Println("OS: " + runtime.GOOS)
+		executable, err := os.Executable()
+		if err == nil {
+			fmt.Println("Executable: " + executable)
+		}
 		return nil
 	}
 
