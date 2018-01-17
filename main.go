@@ -2,9 +2,14 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"runtime"
+	"strings"
+
+	"github.com/skatteetaten/ao/pkg/config"
+
 	"github.com/skatteetaten/ao/cmd"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 const (
@@ -39,6 +44,16 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 )
 
 func main() {
+	if runtime.GOOS == "windows" {
+		if len(os.Args) == 1 {
+			if strings.Contains(os.Args[0], "\\") {
+				// We presume we have been called from a double click since
+				// there are no arguments and the executable contains a catalog name.
+				config.Install("", false)
+				os.Exit(0)
+			}
+		}
+	}
 	cmd.RootCmd.SetHelpTemplate(helpTemplate)
 
 	if err := cmd.RootCmd.Execute(); err != nil {
