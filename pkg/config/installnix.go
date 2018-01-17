@@ -2,6 +2,6 @@
 
 package config
 
-func install() error {
+func Install(installdir string, , cli bool) error {
 	return nil
 }
