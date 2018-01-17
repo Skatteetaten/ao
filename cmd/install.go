@@ -30,7 +30,7 @@ is contained in the users PATH; if not, the PATH will be updated
 and a message written prompting the user to log out and in again
 to make the PATH change take effect.`,
 	RunE: Install,
-}  
+}
 
 var installdir string
 
