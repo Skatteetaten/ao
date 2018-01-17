@@ -41,8 +41,9 @@ var (
 	}
 )
 
+// TODO: Disabled for now
 func init() {
-	RootCmd.AddCommand(deleteCmd)
+	// RootCmd.AddCommand(deleteCmd)
 	deleteCmd.AddCommand(deleteAppCmd)
 	deleteCmd.AddCommand(deleteEnvCmd)
 	deleteCmd.AddCommand(deleteFileCmd)
