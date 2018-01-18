@@ -104,6 +104,7 @@ func (ao *AOConfig) Update(noPrompt bool) error {
 		if runtime.GOOS == "windows" {
 			message := fmt.Sprintf("New version of AO is available (%s) - please download from %s", serverVersion.Version, url)
 			fmt.Println(message)
+			return nil
 		} else {
 			message := fmt.Sprintf("Do you want update AO from version %s -> %s?", Version, serverVersion.Version)
 			update := prompt.Confirm(message, true)
@@ -118,7 +119,13 @@ func (ao *AOConfig) Update(noPrompt bool) error {
 		return err
 	}
 
-	return ao.replaceAO(data)
+	err = ao.replaceAO(data)
+	if err != nil {
+		return err
+	}
+
+	os.Exit(0)
+	return nil
 }
 
 func (ao *AOConfig) replaceAO(data []byte) error {

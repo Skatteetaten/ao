@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"os/user"
 	"runtime"
@@ -12,6 +13,8 @@ import (
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
 )
+
+const supportedApiVersion = 1
 
 var (
 	flagUserName   string
@@ -95,6 +98,27 @@ func Login(cmd *cobra.Command, args []string) error {
 	}
 
 	if !supressAffiliationCheck {
+		clientConfig, err := DefaultApiClient.GetClientConfig()
+		if err != nil {
+			fmt.Println("DEBUG: Err in getting client config: " + err.Error())
+			return err
+		}
+		apiVersion := clientConfig.ApiVersion
+		if apiVersion == 0 {
+			apiVersion = 1
+		}
+		if apiVersion != supportedApiVersion {
+			var grade string
+			if apiVersion < supportedApiVersion {
+				grade = "downgrade"
+			} else {
+				grade = "upgrade"
+			}
+			message := fmt.Sprintf("This version of AO does not support Boober with api version %v, you need to %v.", apiVersion, grade)
+
+			return errors.New(message)
+		}
+
 		var found bool
 		for _, affiliation := range *acn {
 			if affiliation == AO.Affiliation {
