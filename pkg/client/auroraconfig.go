@@ -115,31 +115,33 @@ func (api *ApiClient) ValidateAuroraConfig(ac *AuroraConfig) (*ErrorResponse, er
 	return api.PutAuroraConfig(endpoint, ac)
 }
 
-func (api *ApiClient) GetAuroraConfigFile(fileName string) (*AuroraConfigFile, error) {
+func (api *ApiClient) GetAuroraConfigFile(fileName string) (*AuroraConfigFile, string, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, fileName)
 
-	response, err := api.Do(http.MethodGet, endpoint, nil)
-	if err != nil {
-		return nil, err
+	bundle, err := api.DoWithHeader(http.MethodGet, endpoint, nil, nil)
+	if err != nil || bundle == nil {
+		return nil, "", err
 	}
 
-	if !response.Success {
-		return nil, errors.New("Failed getting file " + fileName)
+	if !bundle.BooberResponse.Success {
+		return nil, "", errors.New("Failed getting file " + fileName)
 	}
 
 	var file AuroraConfigFile
-	err = response.ParseFirstItem(&file)
+	err = bundle.BooberResponse.ParseFirstItem(&file)
 	if err != nil {
-		return nil, errors.Wrap(err, "aurora config file")
+		return nil, "", errors.Wrap(err, "aurora config file")
 	}
 
-	return &file, nil
+	eTag := bundle.HttpResponse.Header.Get("ETag")
+
+	return &file, eTag, nil
 }
 
 func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatchOp) (*ErrorResponse, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/%s/", api.Affiliation, fileName)
 
-	_, err := api.GetAuroraConfigFile(fileName)
+	_, _, err := api.GetAuroraConfigFile(fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +172,7 @@ func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatch
 	return nil, nil
 }
 
-func (api *ApiClient) PutAuroraConfigFile(file *AuroraConfigFile) (*ErrorResponse, error) {
+func (api *ApiClient) PutAuroraConfigFile(file *AuroraConfigFile, eTag string) (*ErrorResponse, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, file.Name)
 
 	payload := auroraConfigFilePayload{
@@ -182,13 +184,17 @@ func (api *ApiClient) PutAuroraConfigFile(file *AuroraConfigFile) (*ErrorRespons
 		return nil, err
 	}
 
-	response, err := api.Do(http.MethodPut, endpoint, data)
-	if err != nil {
+	header := map[string]string{
+		"If-Match": eTag,
+	}
+
+	bundle, err := api.DoWithHeader(http.MethodPut, endpoint, header, data)
+	if err != nil || bundle == nil {
 		return nil, err
 	}
 
-	if !response.Success {
-		return response.ToErrorResponse()
+	if !bundle.BooberResponse.Success {
+		return bundle.BooberResponse.ToErrorResponse()
 	}
 
 	return nil, nil

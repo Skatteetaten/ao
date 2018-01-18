@@ -88,7 +88,7 @@ func TestApiClient_Do(t *testing.T) {
 
 	t.Run("Should send payload and retrieve response correctly", func(t *testing.T) {
 		ac := AuroraConfig{}
-		response := Response{
+		response := BooberResponse{
 			Items: json.RawMessage(`[]`),
 		}
 

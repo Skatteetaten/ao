@@ -14,6 +14,11 @@ import (
 
 const BooberApiVersion = "/v1"
 
+type ResponseBundle struct {
+	BooberResponse *BooberResponse
+	HttpResponse   *http.Response
+}
+
 type ApiClient struct {
 	Host        string
 	Token       string
@@ -28,7 +33,15 @@ func NewApiClient(host, token, affiliation string) *ApiClient {
 	}
 }
 
-func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Response, error) {
+func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*BooberResponse, error) {
+	bundle, err := api.DoWithHeader(method, endpoint, nil, payload)
+	if bundle == nil {
+		return nil, err
+	}
+	return bundle.BooberResponse, nil
+}
+
+func (api *ApiClient) DoWithHeader(method string, endpoint string, header map[string]string, payload []byte) (*ResponseBundle, error) {
 
 	url := api.Host + BooberApiVersion + endpoint
 	logrus.WithFields(logrus.Fields{
@@ -52,6 +65,10 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+api.Token)
+
+	for key, value := range header {
+		req.Header.Set(key, value)
+	}
 
 	client := http.DefaultClient
 	res, err := client.Do(req)
@@ -84,11 +101,13 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 		return nil, handleInternalServerError(body, url)
 	case http.StatusServiceUnavailable:
 		return nil, errors.Errorf("Service unavailable %s", api.Host)
+	case http.StatusPreconditionFailed:
+		return nil, errors.Errorf("File has changed since edit")
 	}
 
-	var response Response
+	var booberRes BooberResponse
 	if len(body) > 0 {
-		err = json.Unmarshal(body, &response)
+		err = json.Unmarshal(body, &booberRes)
 		if err != nil {
 			return nil, errors.Wrap(err, "response unmarshal")
 		}
@@ -97,14 +116,17 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Respo
 	logrus.WithFields(logrus.Fields{
 		"status":  res.StatusCode,
 		"url":     url,
-		"success": response.Success,
-		"message": response.Message,
-		"count":   response.Count,
+		"success": booberRes.Success,
+		"message": booberRes.Message,
+		"count":   booberRes.Count,
 	}).Info("Response")
 
 	logrus.WithFields(fields).Debug("ResponseBody")
 
-	return &response, nil
+	return &ResponseBundle{
+		BooberResponse: &booberRes,
+		HttpResponse:   res,
+	}, nil
 }
 
 func handleInternalServerError(body []byte, url string) error {

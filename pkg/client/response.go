@@ -9,7 +9,7 @@ import (
 )
 
 type (
-	Response struct {
+	BooberResponse struct {
 		Success bool            `json:"success"`
 		Message string          `json:"message"`
 		Items   json.RawMessage `json:"items"`
@@ -46,7 +46,7 @@ type (
 	}
 )
 
-func (res *Response) ParseItems(data interface{}) error {
+func (res *BooberResponse) ParseItems(data interface{}) error {
 	if !res.Success {
 		return errors.New(res.Message)
 	}
@@ -54,7 +54,7 @@ func (res *Response) ParseItems(data interface{}) error {
 	return json.Unmarshal(res.Items, data)
 }
 
-func (res *Response) ParseFirstItem(data interface{}) error {
+func (res *BooberResponse) ParseFirstItem(data interface{}) error {
 	var items []json.RawMessage
 	err := res.ParseItems(&items)
 	if err != nil {
@@ -68,7 +68,7 @@ func (res *Response) ParseFirstItem(data interface{}) error {
 	return json.Unmarshal(items[0], data)
 }
 
-func (res *Response) ToErrorResponse() (*ErrorResponse, error) {
+func (res *BooberResponse) ToErrorResponse() (*ErrorResponse, error) {
 	var rei []responseErrorItem
 	err := json.Unmarshal(res.Items, &rei)
 	if err != nil {

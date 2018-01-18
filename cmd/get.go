@@ -246,7 +246,7 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
 	}
 
-	auroraConfigFile, err := DefaultApiClient.GetAuroraConfigFile(matches[0])
+	auroraConfigFile, _, err := DefaultApiClient.GetAuroraConfigFile(matches[0])
 	if err != nil {
 		return err
 	}
