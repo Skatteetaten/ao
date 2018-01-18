@@ -100,7 +100,6 @@ func Login(cmd *cobra.Command, args []string) error {
 	if !supressAffiliationCheck {
 		clientConfig, err := DefaultApiClient.GetClientConfig()
 		if err != nil {
-			fmt.Println("DEBUG: Err in getting client config: " + err.Error())
 			return err
 		}
 		apiVersion := clientConfig.ApiVersion
