@@ -94,7 +94,7 @@ func TestApiClient_UpdateSecretFile(t *testing.T) {
 		defer ts.Close()
 
 		api := NewApiClient(ts.URL, "test", affiliation)
-		err := api.UpdateSecretFile("console", "latest.properties", []byte("Rk9PPVRFU1QK"))
+		err := api.UpdateSecretFile("console", "latest.properties", "", []byte("Rk9PPVRFU1QK"))
 		assert.NoError(t, err)
 	})
 }
