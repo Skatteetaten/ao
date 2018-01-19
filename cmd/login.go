@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Change this for new releases of the Boober API
 const supportedApiVersion = 1
 
 var (
