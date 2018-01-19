@@ -99,11 +99,11 @@ func Login(cmd *cobra.Command, args []string) error {
 	}
 
 	if !supressAffiliationCheck {
+		var apiVersion int
 		clientConfig, err := DefaultApiClient.GetClientConfig()
-		if err != nil {
-			return err
+		if err == nil {
+			apiVersion = clientConfig.ApiVersion
 		}
-		apiVersion := clientConfig.ApiVersion
 		if apiVersion == 0 {
 			apiVersion = 1
 		}
