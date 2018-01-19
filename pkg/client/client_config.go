@@ -1,13 +1,15 @@
 package client
 
 import (
-	"github.com/pkg/errors"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 type (
 	ClientConfig struct {
 		GitUrlPattern string `json:"gitUrlPattern"`
+		ApiVersion    int    `json:"apiVersion"`
 	}
 )
 
