@@ -14,7 +14,7 @@ type (
 )
 
 func (api *ApiClient) GetClientConfig() (*ClientConfig, error) {
-	endpoint := "/clientconfig/"
+	endpoint := "/clientconfig"
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
 	if err != nil {
