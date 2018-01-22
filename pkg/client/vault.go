@@ -4,35 +4,39 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 type (
-	Secrets     map[string]string
-	Permissions map[string][]string
+	Secrets map[string]string
 
+	// TODO: rename to response
 	AuroraVaultInfo struct {
-		Name        string      `json:"name"`
-		Permissions Permissions `json:"permissions"`
-		Secrets     []string    `json:"secrets"`
-		Admin       bool        `json:"admin"`
+		Name        string   `json:"name"`
+		Permissions []string `json:"permissions"`
+		Secrets     Secrets  `json:"secrets"`
+		HasAccess   bool     `json:"hasAccess"`
 	}
 
+	// TODO: rename to request
 	AuroraSecretVault struct {
-		Name        string            `json:"name"`
-		Permissions Permissions       `json:"permissions"`
-		Secrets     Secrets           `json:"secrets"`
-		Versions    map[string]string `json:"versions"`
+		Name        string   `json:"name"`
+		Permissions []string `json:"permissions"`
+		Secrets     Secrets  `json:"secrets"`
+	}
+
+	VaultFileResource struct {
+		Contents string `json:"contents"`
 	}
 )
 
 func NewAuroraSecretVault(name string) *AuroraSecretVault {
 	return &AuroraSecretVault{
 		Name:        name,
-		Permissions: make(Permissions),
 		Secrets:     make(Secrets),
-		Versions:    make(map[string]string),
+		Permissions: []string{},
 	}
 }
 
@@ -84,18 +88,10 @@ func (api *ApiClient) DeleteVault(vaultName string) error {
 	return nil
 }
 
-func (api *ApiClient) SaveVault(vault AuroraSecretVault, validate bool) error {
+func (api *ApiClient) SaveVault(vault AuroraSecretVault) error {
 	endpoint := fmt.Sprintf("/vault/%s", api.Affiliation)
 
-	payload := struct {
-		Vault            AuroraSecretVault `json:"vault"`
-		ValidateVersions bool              `json:"validateVersions"`
-	}{
-		Vault:            vault,
-		ValidateVersions: validate,
-	}
-
-	data, err := json.Marshal(payload)
+	data, err := json.Marshal(vault)
 	if err != nil {
 		return err
 	}
@@ -112,16 +108,59 @@ func (api *ApiClient) SaveVault(vault AuroraSecretVault, validate bool) error {
 	return nil
 }
 
-func (api *ApiClient) UpdateSecretFile(vault, secret string, content []byte) error {
-	endpoint := fmt.Sprintf("/vault/%s/%s/secret/%s", api.Affiliation, vault, secret)
+func (api *ApiClient) GetSecretFile(vault, secret string) (string, string, error) {
+	endpoint := fmt.Sprintf("/vault/%s/%s/%s", api.Affiliation, vault, secret)
 
-	response, err := api.Do(http.MethodPut, endpoint, content)
+	bundle, err := api.DoWithHeader(http.MethodGet, endpoint, nil, nil)
+	if err != nil || bundle == nil {
+		return "", "", err
+	}
+
+	if !bundle.BooberResponse.Success {
+		return "", "", errors.New(bundle.BooberResponse.Message)
+	}
+
+	var vaultFile VaultFileResource
+	err = bundle.BooberResponse.ParseFirstItem(&vaultFile)
+	if err != nil {
+		return "", "", nil
+	}
+
+	data, err := base64.StdEncoding.DecodeString(vaultFile.Contents)
+	if err != nil {
+		return "", "", err
+	}
+
+	eTag := bundle.HttpResponse.Header.Get("ETag")
+
+	return string(data), eTag, nil
+}
+
+func (api *ApiClient) UpdateSecretFile(vault, secret, eTag string, content []byte) error {
+	endpoint := fmt.Sprintf("/vault/%s/%s/%s", api.Affiliation, vault, secret)
+
+	encoded := base64.StdEncoding.EncodeToString(content)
+
+	header := map[string]string{
+		"If-Match": eTag,
+	}
+
+	vaultFile := VaultFileResource{
+		Contents: encoded,
+	}
+
+	data, err := json.Marshal(vaultFile)
 	if err != nil {
 		return err
 	}
 
-	if !response.Success {
-		return errors.New(response.Message)
+	bundle, err := api.DoWithHeader(http.MethodPut, endpoint, header, data)
+	if err != nil || bundle == nil {
+		return err
+	}
+
+	if !bundle.BooberResponse.Success {
+		return errors.New(bundle.BooberResponse.Message)
 	}
 
 	return nil
@@ -147,31 +186,4 @@ func (s Secrets) AddSecret(name, content string) {
 
 func (s Secrets) RemoveSecret(name string) {
 	delete(s, name)
-}
-
-func (p Permissions) AddGroup(group string) error {
-	groups := p["groups"]
-	for _, g := range groups {
-		if g == group {
-			return errors.Errorf("Group %s already exists", group)
-		}
-	}
-	p["groups"] = append(groups, group)
-
-	return nil
-}
-
-func (p Permissions) DeleteGroup(group string) error {
-	groups := p["groups"]
-	for i, g := range groups {
-		if g == group {
-			p["groups"] = append(groups[:i], groups[i+1:]...)
-			return nil
-		}
-	}
-	return errors.Errorf("Did not find group %s", group)
-}
-
-func (p Permissions) GetGroups() []string {
-	return p["groups"]
 }

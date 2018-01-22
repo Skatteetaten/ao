@@ -117,7 +117,21 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications to deploy")
 	}
 
-	header, rows := GetApplicationIdTable(applications)
+	deploySpecs, err := api.GetAuroraDeploySpec(applications, true)
+	if err != nil {
+		return err
+	}
+	var filterDeploymentSpecs []client.AuroraDeploySpec
+	if flagCluster != "" {
+		for _, spec := range deploySpecs {
+			if spec.Value("/cluster").(string) == flagCluster {
+				filterDeploymentSpecs = append(filterDeploymentSpecs, spec)
+			}
+		}
+	} else {
+		filterDeploymentSpecs = deploySpecs
+	}
+	header, rows := GetDeploySpecTable(filterDeploymentSpecs)
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 
 	shouldDeploy := true
@@ -158,9 +172,6 @@ func deploy(cmd *cobra.Command, args []string) error {
 
 	var results []client.DeployResult
 	for _, r := range result {
-		if !r.Success {
-			cmd.Println("deploy error:", r.Message)
-		}
 		results = append(results, r.Results...)
 	}
 

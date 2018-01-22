@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/skatteetaten/ao/pkg/versioncontrol"
+
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
 )
@@ -40,6 +42,12 @@ var recreateConfigCmd = &cobra.Command{
 	RunE:  RecreateConfig,
 }
 
+var updateHookCmd = &cobra.Command{
+	Use:   "update-hook <auroraconfig>",
+	Short: `Update or create git hook to validate AuroraConfig.`,
+	RunE:  UpdateGitHook,
+}
+
 var completionCmd = &cobra.Command{
 	Use:   "completion",
 	Short: "Generates bash completion file",
@@ -60,9 +68,11 @@ func init() {
 	admCmd.AddCommand(completionCmd)
 	admCmd.AddCommand(recreateConfigCmd)
 	admCmd.AddCommand(updateClustersCmd)
+	admCmd.AddCommand(updateHookCmd)
 
 	getClusterCmd.Flags().BoolVarP(&flagShowAll, "all", "a", false, "Show all clusters, not just the reachable ones")
 	recreateConfigCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Recreate config with one cluster")
+	updateHookCmd.Flags().StringVarP(&flagGitHookType, "git-hook", "g", "pre-push", "Change git hook to validate AuroraConfig")
 }
 
 func PrintClusters(cmd *cobra.Command, args []string) {
@@ -138,4 +148,17 @@ func BashCompletion(cmd *cobra.Command, args []string) error {
 	wd, _ := os.Getwd()
 	fmt.Println("Bash completion file created at", wd+"/ao.sh")
 	return nil
+}
+
+func UpdateGitHook(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return cmd.Usage()
+	}
+
+	wd, _ := os.Getwd()
+	gitPath, err := versioncontrol.FindGitPath(wd)
+	if err != nil {
+		return err
+	}
+	return versioncontrol.CreateGitValidateHook(gitPath, flagGitHookType, args[0])
 }

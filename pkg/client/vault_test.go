@@ -1,10 +1,11 @@
 package client
 
 import (
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestApiClient_GetVaults(t *testing.T) {
@@ -44,7 +45,6 @@ func TestApiClient_GetVault(t *testing.T) {
 		assert.NoError(t, err)
 
 		assert.Equal(t, "console", vault.Name)
-		assert.Equal(t, "8b4868a", vault.Versions["foo"])
 		assert.Len(t, vault.Secrets, 1)
 	})
 }
@@ -78,7 +78,7 @@ func TestApiClient_SaveVault(t *testing.T) {
 		defer ts.Close()
 
 		api := NewApiClient(ts.URL, "test", affiliation)
-		err := api.SaveVault(*vault, false)
+		err := api.SaveVault(*vault)
 		assert.NoError(t, err)
 	})
 }
@@ -94,7 +94,7 @@ func TestApiClient_UpdateSecretFile(t *testing.T) {
 		defer ts.Close()
 
 		api := NewApiClient(ts.URL, "test", affiliation)
-		err := api.UpdateSecretFile("console", "latest.properties", []byte("Rk9PPVRFU1QK"))
+		err := api.UpdateSecretFile("console", "latest.properties", "", []byte("Rk9PPVRFU1QK"))
 		assert.NoError(t, err)
 	})
 }
@@ -117,25 +117,5 @@ func TestSecrets(t *testing.T) {
 
 	secrets.RemoveSecret("latest.properties2")
 	_, err = secrets.GetSecret("latest.properties2")
-	assert.Error(t, err)
-}
-
-func TestPermissions(t *testing.T) {
-	permissions := Permissions{
-		"groups": []string{"devops"},
-	}
-
-	assert.Equal(t, []string{"devops"}, permissions.GetGroups())
-
-	err := permissions.AddGroup("test-group")
-	assert.NoError(t, err)
-
-	err = permissions.AddGroup("test-group")
-	assert.Error(t, err)
-
-	err = permissions.DeleteGroup("test-group")
-	assert.NoError(t, err)
-
-	err = permissions.DeleteGroup("test-group")
 	assert.Error(t, err)
 }

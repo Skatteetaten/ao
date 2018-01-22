@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/user"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -15,7 +16,7 @@ import (
 )
 
 // Change this for new releases of the Boober API
-const supportedApiVersion = 1
+const supportedApiVersion = 2
 
 var (
 	flagUserName   string
@@ -101,12 +102,14 @@ func Login(cmd *cobra.Command, args []string) error {
 	if !supressAffiliationCheck {
 		var apiVersion int
 		clientConfig, err := DefaultApiClient.GetClientConfig()
-		if err == nil {
-			apiVersion = clientConfig.ApiVersion
+		if err != nil {
+			return err
 		}
-		if apiVersion == 0 {
-			apiVersion = 1
+		apiVersion, err = strconv.Atoi(clientConfig.ApiVersion)
+		if err != nil {
+			return errors.Wrap(err, "Expected apiVersion to be an int")
 		}
+
 		if apiVersion != supportedApiVersion {
 			var grade string
 			if apiVersion < supportedApiVersion {

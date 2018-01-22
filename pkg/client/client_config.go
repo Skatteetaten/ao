@@ -9,7 +9,7 @@ import (
 type (
 	ClientConfig struct {
 		GitUrlPattern string `json:"gitUrlPattern"`
-		ApiVersion    int    `json:"apiVersion"`
+		ApiVersion    string `json:"apiVersion"`
 	}
 )
 
