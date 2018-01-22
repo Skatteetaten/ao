@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/skatteetaten/ao/pkg/client"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -70,18 +72,10 @@ func Add(cmd *cobra.Command, args []string) error {
 		return errors.Errorf("%s contains illegal json format\n", filePath)
 	}
 
-	ac, err := DefaultApiClient.GetAuroraConfig()
-	if err != nil {
-		return err
-	}
-
-	if _, ok := ac.Files[fileName]; ok {
-		return errors.Errorf("File %s already exists\n", fileName)
-	}
-
-	ac.Files[fileName] = data
-
-	res, err := DefaultApiClient.SaveAuroraConfig(ac)
+	res, err := DefaultApiClient.PutAuroraConfigFile(&client.AuroraConfigFile{
+		Name:     fileName,
+		Contents: string(data),
+	}, "")
 	if err != nil {
 		return err
 	}

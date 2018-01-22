@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/skatteetaten/ao/pkg/client"
+
 	"encoding/json"
 	"sort"
 	"strings"
@@ -104,23 +106,11 @@ func PrintApplications(cmd *cobra.Command, args []string) error {
 	if len(fileNames.GetApplications()) < 1 {
 		return errors.New("No applications available")
 	}
-
 	if len(args) > 0 {
-		var selected []string
-		for _, arg := range args {
-			matches := fuzzy.FindAllDeploysFor(fuzzy.APP_FILTER, arg, fileNames.GetApplicationIds())
-			if len(matches) == 0 {
-				cmd.Printf("No matches for %s\n", arg)
-			}
-			selected = append(selected, matches...)
-		}
-		header, rows := GetApplicationIdTable(selected)
-		DefaultTablePrinter(header, rows, cmd.OutOrStdout())
-		return nil
+		return PrintDeploySpecTable(args, fuzzy.APP_FILTER, cmd, fileNames)
 	}
 
 	applications := fileNames.GetApplications()
-	sort.Strings(applications)
 	DefaultTablePrinter("APPLICATIONS", applications, cmd.OutOrStdout())
 	return nil
 }
@@ -136,23 +126,53 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) > 0 {
-		var selected []string
-		for _, arg := range args {
-			matches := fuzzy.FindAllDeploysFor(fuzzy.ENV_FILTER, arg, fileNames.GetApplicationIds())
-			if len(matches) == 0 {
-				cmd.Printf("No matches for %s\n", arg)
-			}
-			selected = append(selected, matches...)
-		}
-		header, rows := GetApplicationIdTable(selected)
-		DefaultTablePrinter(header, rows, cmd.OutOrStdout())
-		return nil
+		return PrintDeploySpecTable(args, fuzzy.ENV_FILTER, cmd, fileNames)
 	}
 
 	envrionments := fileNames.GetEnvironments()
-	sort.Strings(envrionments)
 	DefaultTablePrinter("ENVIRONMENTS", envrionments, cmd.OutOrStdout())
 	return nil
+}
+
+func PrintDeploySpecTable(args []string, filter fuzzy.FilterMode, cmd *cobra.Command, fileNames client.FileNames) error {
+	var selected []string
+	for _, arg := range args {
+		matches := fuzzy.FindAllDeploysFor(filter, arg, fileNames.GetApplicationIds())
+		if len(matches) == 0 {
+			return errors.Errorf("No matches for %s", arg)
+		}
+		selected = append(selected, matches...)
+	}
+	specs, err := DefaultApiClient.GetAuroraDeploySpec(selected, true)
+	if err != nil {
+		return err
+	}
+	header, rows := GetDeploySpecTable(specs)
+	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+	return nil
+}
+
+func GetDeploySpecTable(specs []client.AuroraDeploySpec) (string, []string) {
+	var rows []string
+	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tREPLICAS\tTYPE\tDEPLOY STRATEGY"
+	pattern := "%v\t%v\t%v\t%v\t%v\t%v\t%v"
+	sort.Slice(specs, func(i, j int) bool {
+		return strings.Compare(specs[i].Value("name").(string), specs[j].Value("name").(string)) != 1
+	})
+	for _, spec := range specs {
+		row := fmt.Sprintf(
+			pattern,
+			spec.Value("cluster"),
+			spec.Value("envName"),
+			spec.Value("name"),
+			spec.Value("version"),
+			spec.Value("replicas"),
+			spec.Value("type"),
+			spec.Value("deployStrategy/type"),
+		)
+		rows = append(rows, row)
+	}
+	return header, rows
 }
 
 func PrintDeploySpec(cmd *cobra.Command, args []string) error {
@@ -188,7 +208,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	spec, err := DefaultApiClient.GetAuroraDeploySpec(split[0], split[1], !flagNoDefaults)
+	spec, err := DefaultApiClient.GetAuroraDeploySpec(matches, !flagNoDefaults)
 	if err != nil {
 		return err
 	}
@@ -226,7 +246,7 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
 	}
 
-	auroraConfigFile, err := DefaultApiClient.GetAuroraConfigFile(matches[0])
+	auroraConfigFile, _, err := DefaultApiClient.GetAuroraConfigFile(matches[0])
 	if err != nil {
 		return err
 	}
