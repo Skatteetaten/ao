@@ -28,13 +28,11 @@ Yb,_,dP       `8b, `Y8b,,__,,d8P'
       <em>Linux</em>
     </h1>
   </a>
-  <br>
-  <a href="/assets/darwin/ao" class="btn" download>
+  <a href="/assets/macos/ao" class="btn" download>
     <h1>
       <em>macOS</em>
     </h1>
   </a>
-  <br>
   <a href="/assets/windows/ao.exe" class="btn" download>
     <h1>
       <em>Windows</em>
@@ -43,18 +41,18 @@ Yb,_,dP       `8b, `Y8b,,__,,d8P'
   <em id="version"></em>
   <script>
     function showVersion(body) {
-        var version = body.branch;
-        var matches = body.version.match(/v([0-9])./);
-        if (matches !== null && matches.length > 0) {
-          version = body.version.replace('v', '');
-        }
-        document.getElementById('version').innerHTML = 'Version: ' + version;
+      var version = body.branch;
+      var matches = body.version.match(/v([0-9])./);
+      if (matches !== null && matches.length > 0) {
+        version = body.version.replace('v', '');
+      }
+      document.getElementById('version').innerHTML = 'Version: ' + version;
     }
 
     fetch('/assets/version.json').then(function (res) {
       res.json().then(showVersion);
     });
   </script>
-  </body>
-  
-  </html>
+</body>
+
+</html>
