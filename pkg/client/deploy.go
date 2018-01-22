@@ -23,9 +23,11 @@ type (
 	DeployResult struct {
 		DeployId string `json:"deployId"`
 		ADS      struct {
-			Name      string `json:"name"`
-			Namespace string `json:"namespace"`
-			Cluster   string `json:"cluster"`
+			Name        string `json:"name"`
+			Environment struct {
+				Namespace string `json:"namespace"`
+			} `json:"environment"`
+			Cluster string `json:"cluster"`
 		} `json:"auroraDeploymentSpec"`
 		Success bool `json:"success"`
 	}
