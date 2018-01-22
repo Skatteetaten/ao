@@ -75,7 +75,7 @@ var responseText = `{
 
 func TestResponse_ParseItemsWithErrors(t *testing.T) {
 
-	var response Response
+	var response BooberResponse
 	err := json.Unmarshal([]byte(failedResponseText), &response)
 	if err != nil {
 		t.Error(err)
@@ -90,7 +90,7 @@ func TestResponse_ParseItemsWithErrors(t *testing.T) {
 
 func TestResponse_ParseItems(t *testing.T) {
 
-	var response Response
+	var response BooberResponse
 	err := json.Unmarshal([]byte(responseText), &response)
 	if err != nil {
 		t.Error(err)
@@ -112,7 +112,7 @@ func TestResponse_ParseItems(t *testing.T) {
 
 func TestResponse_ParseFirstItem(t *testing.T) {
 
-	var response Response
+	var response BooberResponse
 	err := json.Unmarshal([]byte(responseText), &response)
 	if err != nil {
 		t.Error(err)
@@ -130,7 +130,7 @@ func TestResponse_ParseFirstItem(t *testing.T) {
 
 func TestResponse_ToErrorResponse(t *testing.T) {
 
-	var response Response
+	var response BooberResponse
 	err := json.Unmarshal([]byte(failedResponseText), &response)
 	if err != nil {
 		t.Error(err)

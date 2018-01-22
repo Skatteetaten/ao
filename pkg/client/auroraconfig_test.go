@@ -115,7 +115,8 @@ func TestApiClient_GetAuroraConfigFile(t *testing.T) {
 		defer ts.Close()
 
 		api := NewApiClient(ts.URL, "", "paas")
-		file, err := api.GetAuroraConfigFile("about.json")
+		// TODO: Test ETag
+		file, _, err := api.GetAuroraConfigFile("about.json")
 		if err != nil {
 			t.Error("Should not get error when fetching AuroraConfigFile")
 			return
@@ -135,7 +136,8 @@ func TestApiClient_GetAuroraConfigFile(t *testing.T) {
 
 		api := NewApiClient(ts.URL, "", "")
 
-		file, err := api.GetAuroraConfigFile("about.json")
+		// TODO: Test ETag
+		file, _, err := api.GetAuroraConfigFile("about.json")
 		assert.Error(t, err)
 		assert.EqualError(t, err, "Failed getting file about.json")
 		assert.Empty(t, file)
@@ -146,7 +148,7 @@ func TestApiClient_PatchAuroraConfigFile(t *testing.T) {
 	t.Run("", func(t *testing.T) {
 		fileName := "test/foo.json"
 
-		res := &Response{
+		res := &BooberResponse{
 			Success: true,
 			Message: "OK",
 			Items:   json.RawMessage(`[{"name":"test/foo.json","contents":"{}","version":"abbcc"}]`),

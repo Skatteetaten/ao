@@ -75,7 +75,7 @@ func Add(cmd *cobra.Command, args []string) error {
 	res, err := DefaultApiClient.PutAuroraConfigFile(&client.AuroraConfigFile{
 		Name:     fileName,
 		Contents: string(data),
-	})
+	}, "")
 	if err != nil {
 		return err
 	}

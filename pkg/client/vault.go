@@ -26,6 +26,10 @@ type (
 		Permissions []string `json:"permissions"`
 		Secrets     Secrets  `json:"secrets"`
 	}
+
+	VaultFileResource struct {
+		Contents string `json:"contents"`
+	}
 )
 
 func NewAuroraSecretVault(name string) *AuroraSecretVault {
@@ -104,16 +108,59 @@ func (api *ApiClient) SaveVault(vault AuroraSecretVault) error {
 	return nil
 }
 
-func (api *ApiClient) UpdateSecretFile(vault, secret string, content []byte) error {
-	endpoint := fmt.Sprintf("/vault/%s/%s/secret/%s", api.Affiliation, vault, secret)
+func (api *ApiClient) GetSecretFile(vault, secret string) (string, string, error) {
+	endpoint := fmt.Sprintf("/vault/%s/%s/%s", api.Affiliation, vault, secret)
 
-	response, err := api.Do(http.MethodPut, endpoint, content)
+	bundle, err := api.DoWithHeader(http.MethodGet, endpoint, nil, nil)
+	if err != nil || bundle == nil {
+		return "", "", err
+	}
+
+	if !bundle.BooberResponse.Success {
+		return "", "", errors.New(bundle.BooberResponse.Message)
+	}
+
+	var vaultFile VaultFileResource
+	err = bundle.BooberResponse.ParseFirstItem(&vaultFile)
+	if err != nil {
+		return "", "", nil
+	}
+
+	data, err := base64.StdEncoding.DecodeString(vaultFile.Contents)
+	if err != nil {
+		return "", "", err
+	}
+
+	eTag := bundle.HttpResponse.Header.Get("ETag")
+
+	return string(data), eTag, nil
+}
+
+func (api *ApiClient) UpdateSecretFile(vault, secret, eTag string, content []byte) error {
+	endpoint := fmt.Sprintf("/vault/%s/%s/%s", api.Affiliation, vault, secret)
+
+	encoded := base64.StdEncoding.EncodeToString(content)
+
+	header := map[string]string{
+		"If-Match": eTag,
+	}
+
+	vaultFile := VaultFileResource{
+		Contents: encoded,
+	}
+
+	data, err := json.Marshal(vaultFile)
 	if err != nil {
 		return err
 	}
 
-	if !response.Success {
-		return errors.New(response.Message)
+	bundle, err := api.DoWithHeader(http.MethodPut, endpoint, header, data)
+	if err != nil || bundle == nil {
+		return err
+	}
+
+	if !bundle.BooberResponse.Success {
+		return errors.New(bundle.BooberResponse.Message)
 	}
 
 	return nil
