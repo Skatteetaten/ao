@@ -72,10 +72,10 @@ func Add(cmd *cobra.Command, args []string) error {
 		return errors.Errorf("%s contains illegal json format\n", filePath)
 	}
 
-	res, err := DefaultApiClient.PostAuroraConfigFile(&client.AuroraConfigFile{
+	res, err := DefaultApiClient.PutAuroraConfigFile(&client.AuroraConfigFile{
 		Name:     fileName,
 		Contents: string(data),
-	})
+	}, "")
 	if err != nil {
 		return err
 	}

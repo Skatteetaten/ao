@@ -172,29 +172,6 @@ func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatch
 	return nil, nil
 }
 
-func (api *ApiClient) PostAuroraConfigFile(file *AuroraConfigFile) (*ErrorResponse, error) {
-	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, file.Name)
-
-	payload := auroraConfigFilePayload{
-		Content: string(file.Contents),
-	}
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	response, err := api.Do(http.MethodPost, endpoint, data)
-	if err != nil {
-		return nil, err
-	}
-
-	if !response.Success {
-		return response.ToErrorResponse()
-	}
-
-	return nil, nil
-}
-
 func (api *ApiClient) PutAuroraConfigFile(file *AuroraConfigFile, eTag string) (*ErrorResponse, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, file.Name)
 
@@ -207,8 +184,11 @@ func (api *ApiClient) PutAuroraConfigFile(file *AuroraConfigFile, eTag string) (
 		return nil, err
 	}
 
-	header := map[string]string{
-		"If-Match": eTag,
+	var header map[string]string
+	if eTag != "" {
+		header = map[string]string{
+			"If-Match": eTag,
+		}
 	}
 
 	bundle, err := api.DoWithHeader(http.MethodPut, endpoint, header, data)
