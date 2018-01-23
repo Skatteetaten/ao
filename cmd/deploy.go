@@ -253,15 +253,15 @@ func getDeployResultTable(deploys []client.DeployResult) (string, []string) {
 			continue
 		}
 		ads := item.ADS
-		pattern := "%s\t%s\t%s\t%s\t%s\t%s"
+		pattern := "%s\t%s\t%s\t%s\t%s\t%s\t%s"
 		status := "\x1b[32mDeployed\x1b[0m"
 		if !item.Success {
 			status = "\x1b[31mFailed\x1b[0m"
 		}
-		result := fmt.Sprintf(pattern, status, ads.Name, ads.Environment.Namespace, ads.Cluster, item.DeployId, item.Reason)
+		result := fmt.Sprintf(pattern, status, ads.Cluster, ads.Name, ads.Environment.Namespace, ads.Deploy.Version, item.DeployId, item.Reason)
 		rows = append(rows, result)
 	}
 
-	header := "\x1b[00mSTATUS\x1b[0m\tAPPLICATION\tENVIRONMENT\tCLUSTER\tDEPLOY_ID\tMESSAGE"
+	header := "\x1b[00mSTATUS\x1b[0m\tCLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tDEPLOY_ID\tMESSAGE"
 	return header, rows
 }
