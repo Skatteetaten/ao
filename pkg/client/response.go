@@ -19,6 +19,7 @@ type (
 	ErrorResponse struct {
 		message            string
 		ContainsError      bool
+		GenericErrors      []string
 		IllegalFieldErrors []string
 		MissingFieldErrors []string
 		InvalidFieldErrors []string
@@ -38,11 +39,11 @@ type (
 	responseErrorItem struct {
 		Application string `json:"application"`
 		Environment string `json:"environment"`
-		Messages    []struct {
+		Details     []struct {
 			Type    string     `json:"type"`
 			Message string     `json:"message"`
 			Field   errorField `json:"field"`
-		} `json:"messages"`
+		} `json:"details"`
 	}
 )
 
@@ -115,7 +116,10 @@ func (e *ErrorResponse) SetMessage(m string) {
 }
 
 func (e *ErrorResponse) GetAllErrors() []string {
-	errorMessages := append(e.IllegalFieldErrors, e.InvalidFieldErrors...)
+	var errorMessages []string
+	errorMessages = append(errorMessages, e.GenericErrors...)
+	errorMessages = append(errorMessages, e.IllegalFieldErrors...)
+	errorMessages = append(errorMessages, e.InvalidFieldErrors...)
 	return append(errorMessages, e.MissingFieldErrors...)
 }
 
@@ -123,13 +127,15 @@ func (e *ErrorResponse) Contains(key string) bool {
 	return e.UniqueErrors[key]
 }
 
+// TODO: Refactor this mess
 func (e *ErrorResponse) FormatValidationError(res *responseErrorItem) {
-	// TODO: Structs?
 	illegalFieldFormat := `Filename:    %s
 Path:        %s
 Value:       %s
 Message:     %s`
-	missingFieldFormat := `Application: %s/%s
+
+	missingFieldFormat := `Environment: %s
+Application: %s
 Path:        %s (Missing)
 Message:     %s`
 
@@ -137,7 +143,11 @@ Message:     %s`
 Path:        %s
 Message:     %s`
 
-	for _, message := range res.Messages {
+	genericFormat := `Environment: %s
+Application: %s
+Message:     %s`
+
+	for _, message := range res.Details {
 		k := []string{
 			message.Field.Source.Name,
 			message.Field.Handler.Path,
@@ -183,6 +193,16 @@ Message:     %s`
 					message.Message,
 				)
 				e.MissingFieldErrors = append(e.MissingFieldErrors, missing)
+			}
+		case "GENERIC":
+			{
+				generic := fmt.Sprintf(genericFormat,
+					res.Environment,
+					res.Application,
+					message.Message,
+				)
+				e.GenericErrors = append(e.GenericErrors, generic)
+
 			}
 		}
 	}

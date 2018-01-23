@@ -5,7 +5,7 @@
     {
       "application": "reference-web",
       "environment": "boober-utv",
-      "messages": [
+      "details": [
         {
           "type": "ILLEGAL",
           "message": "Must be one of [deploy, development, localTemplate, template, build]",
@@ -31,7 +31,7 @@
     {
       "application": "reference",
       "environment": "boober-utv",
-      "messages": [
+      "details": [
         {
           "type": "ILLEGAL",
           "message": "Must be one of [deploy, development, localTemplate, template, build]",

@@ -13,7 +13,7 @@ var failedResponseText = `{
 	"items": [{
 		"application": "foo",
 		"environment": "bar",
-		"messages": [{
+		"details": [{
 			"type": "ILLEGAL",
 			"message": "baz is not a legal value",
 			"field": {
@@ -27,7 +27,7 @@ var failedResponseText = `{
 				  "override": false
 				},
 				"value": "baz"
-			}}, {
+		}}, {
 		  "type": "INVALID",
 		  "message": "/asdlkjf is not a valid config field pointer",
 		  "field": {
@@ -55,7 +55,10 @@ var failedResponseText = `{
 				  "override": false
 				},
 				"value": null
-		  }}]
+		}},{
+		  "type": "GENERIC",
+		  "message": "Vault random does not exists"
+		}]
 	}],
 	"count": 3
 }`
@@ -139,11 +142,12 @@ func TestResponse_ToErrorResponse(t *testing.T) {
 	errorResponse, err := response.ToErrorResponse()
 	assert.NoError(t, err)
 
+	assert.Len(t, errorResponse.GenericErrors, 1)
 	assert.Len(t, errorResponse.IllegalFieldErrors, 1)
 	assert.Len(t, errorResponse.InvalidFieldErrors, 1)
 	assert.Len(t, errorResponse.MissingFieldErrors, 1)
 
-	assert.Len(t, errorResponse.GetAllErrors(), 3)
+	assert.Len(t, errorResponse.GetAllErrors(), 4)
 }
 
 func TestErrorResponse_SetMessage(t *testing.T) {
