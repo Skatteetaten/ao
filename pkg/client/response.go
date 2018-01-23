@@ -143,8 +143,7 @@ Message:     %s`
 Field:       %s (Missing)
 Message:     %s`
 
-	invalidFieldFormat := `
-Application: %s/%s
+	invalidFieldFormat := `Application: %s/%s
 Filename:    %s
 Field:       %s
 Message:     %s`

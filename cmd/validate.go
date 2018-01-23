@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var flagFullValidation bool
+
 var validateCmd = &cobra.Command{
 	Use:         "validate",
 	Short:       "Validate local modifications in the current AuroraConfig",
@@ -19,6 +21,7 @@ var validateCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(validateCmd)
 	validateCmd.Flags().StringVarP(&flagAffiliation, "auroraconfig", "a", "", "AuroraConfig to validate")
+	validateCmd.Flags().BoolVarP(&flagFullValidation, "full", "f", false, "Validate resources")
 }
 
 func Validate(cmd *cobra.Command, args []string) error {
@@ -37,7 +40,7 @@ func Validate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	res, err := DefaultApiClient.ValidateAuroraConfig(ac)
+	res, err := DefaultApiClient.ValidateAuroraConfig(ac, flagFullValidation)
 	if err != nil {
 		return err
 	}

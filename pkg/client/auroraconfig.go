@@ -110,8 +110,12 @@ func (api *ApiClient) PutAuroraConfig(endpoint string, ac *AuroraConfig) (*Error
 	return nil, nil
 }
 
-func (api *ApiClient) ValidateAuroraConfig(ac *AuroraConfig) (*ErrorResponse, error) {
-	endpoint := fmt.Sprintf("/auroraconfig/%s/validate", api.Affiliation)
+func (api *ApiClient) ValidateAuroraConfig(ac *AuroraConfig, fullValidation bool) (*ErrorResponse, error) {
+	resourceValidation := "false"
+	if fullValidation {
+		resourceValidation = "true"
+	}
+	endpoint := fmt.Sprintf("/auroraconfig/%s/validate?resourceValidation=%s", api.Affiliation, resourceValidation)
 	return api.PutAuroraConfig(endpoint, ac)
 }
 

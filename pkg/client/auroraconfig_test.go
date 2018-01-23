@@ -76,7 +76,7 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		errResponse, err := api.ValidateAuroraConfig(&ac)
+		errResponse, err := api.ValidateAuroraConfig(&ac, false)
 		assert.NoError(t, err)
 		assert.Empty(t, errResponse)
 	})
@@ -94,7 +94,7 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 			t.Error(err)
 		}
 
-		errResponse, err := api.ValidateAuroraConfig(&ac)
+		errResponse, err := api.ValidateAuroraConfig(&ac, false)
 		if errResponse == nil {
 			fmt.Println(errResponse)
 			t.Error("Expected errResponse to not be nil")
