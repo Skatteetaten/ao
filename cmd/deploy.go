@@ -117,6 +117,18 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications to deploy")
 	}
 
+	if flagVersion != "" {
+		if len(applications) > 1 {
+			return errors.New("Deploy with version does only support one application")
+		}
+		fileName := applications[0] + ".json"
+
+		err = Set(cmd, []string{fileName, "/version", flagVersion})
+		if err != nil {
+			return err
+		}
+	}
+
 	deploySpecs, err := api.GetAuroraDeploySpec(applications, true)
 	if err != nil {
 		return err
@@ -143,18 +155,6 @@ func deploy(cmd *cobra.Command, args []string) error {
 
 	if !shouldDeploy {
 		return errors.New("No applications to deploy")
-	}
-
-	if flagVersion != "" {
-		if len(applications) > 1 {
-			return errors.New("Deploy with version does only support one application")
-		}
-		fileName := applications[0] + ".json"
-
-		err = Set(cmd, []string{fileName, "/version", flagVersion})
-		if err != nil {
-			return err
-		}
 	}
 
 	payload := client.NewDeployPayload(applications, overrides)
@@ -249,16 +249,19 @@ func parseOverride(override []string) (map[string]json.RawMessage, error) {
 func getDeployResultTable(deploys []client.DeployResult) (string, []string) {
 	var rows []string
 	for _, item := range deploys {
+		if item.Ignored {
+			continue
+		}
 		ads := item.ADS
-		pattern := "%s\t%s\t%s\t%s\t%s"
+		pattern := "%s\t%s\t%s\t%s\t%s\t%s"
 		status := "\x1b[32mDeployed\x1b[0m"
 		if !item.Success {
 			status = "\x1b[31mFailed\x1b[0m"
 		}
-		result := fmt.Sprintf(pattern, status, ads.Name, ads.Environment.Namespace, ads.Cluster, item.DeployId)
+		result := fmt.Sprintf(pattern, status, ads.Name, ads.Environment.Namespace, ads.Cluster, item.DeployId, item.Reason)
 		rows = append(rows, result)
 	}
 
-	header := "\x1b[00mSTATUS\x1b[0m\tAPPLICATION\tENVIRONMENT\tCLUSTER\tDEPLOY_ID"
+	header := "\x1b[00mSTATUS\x1b[0m\tAPPLICATION\tENVIRONMENT\tCLUSTER\tDEPLOY_ID\tMESSAGE"
 	return header, rows
 }

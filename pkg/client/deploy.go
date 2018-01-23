@@ -29,7 +29,9 @@ type (
 			} `json:"environment"`
 			Cluster string `json:"cluster"`
 		} `json:"auroraDeploymentSpec"`
-		Success bool `json:"success"`
+		Success bool   `json:"success"`
+		Ignored bool   `json:"ignored"`
+		Reason  string `json:"reason"`
 	}
 
 	DeployPayload struct {
