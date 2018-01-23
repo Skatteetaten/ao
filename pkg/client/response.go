@@ -3,7 +3,6 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -23,7 +22,6 @@ type (
 		IllegalFieldErrors []string
 		MissingFieldErrors []string
 		InvalidFieldErrors []string
-		UniqueErrors       map[string]bool
 	}
 
 	errorField struct {
@@ -33,7 +31,8 @@ type (
 		Source struct {
 			Name string `json:"name"`
 		} `json:"source"`
-		Value interface{} `json:"value"`
+		Value          interface{} `json:"value"`
+		DefaultOrValue interface{} `json:"defaultOrValue"`
 	}
 
 	responseErrorItem struct {
@@ -46,6 +45,16 @@ type (
 		} `json:"details"`
 	}
 )
+
+func (e errorField) GetValue() string {
+	if e.Value != nil {
+		return fmt.Sprintf("%v", e.Value)
+	}
+	if e.DefaultOrValue != nil {
+		return fmt.Sprintf("%v", e.DefaultOrValue)
+	}
+	return ""
+}
 
 func (res *BooberResponse) ParseItems(data interface{}) error {
 	if !res.Success {
@@ -88,7 +97,6 @@ func NewErrorResponse(message string) *ErrorResponse {
 	return &ErrorResponse{
 		message:       message,
 		ContainsError: true,
-		UniqueErrors:  make(map[string]bool),
 	}
 }
 
@@ -123,52 +131,37 @@ func (e *ErrorResponse) GetAllErrors() []string {
 	return append(errorMessages, e.MissingFieldErrors...)
 }
 
-func (e *ErrorResponse) Contains(key string) bool {
-	return e.UniqueErrors[key]
-}
-
 // TODO: Refactor this mess
 func (e *ErrorResponse) FormatValidationError(res *responseErrorItem) {
-	illegalFieldFormat := `Filename:    %s
-Path:        %s
+	illegalFieldFormat := `Application: %s/%s
+Filename:    %s
+Field:       %s
 Value:       %s
 Message:     %s`
 
-	missingFieldFormat := `Environment: %s
-Application: %s
-Path:        %s (Missing)
+	missingFieldFormat := `Application: %s/%s
+Field:       %s (Missing)
 Message:     %s`
 
-	invalidFieldFormat := `Filename:    %s
-Path:        %s
+	invalidFieldFormat := `
+Application: %s/%s
+Filename:    %s
+Field:       %s
 Message:     %s`
 
-	genericFormat := `Environment: %s
-Application: %s
+	genericFormat := `Application: %s/%s
 Message:     %s`
 
 	for _, message := range res.Details {
-		k := []string{
-			message.Field.Source.Name,
-			message.Field.Handler.Path,
-		}
-		key := strings.Join(k, "|")
-
-		if e.Contains(key) {
-			continue
-		}
-
-		if message.Type != "MISSING" {
-			e.UniqueErrors[key] = true
-		}
-
 		switch message.Type {
 		case "ILLEGAL":
 			{
 				illegal := fmt.Sprintf(illegalFieldFormat,
+					res.Environment,
+					res.Application,
 					message.Field.Source.Name,
 					message.Field.Handler.Path,
-					message.Field.Value,
+					message.Field.GetValue(),
 					message.Message,
 				)
 				e.IllegalFieldErrors = append(e.IllegalFieldErrors, illegal)
@@ -177,6 +170,8 @@ Message:     %s`
 		case "INVALID":
 			{
 				invalid := fmt.Sprintf(invalidFieldFormat,
+					res.Environment,
+					res.Application,
 					message.Field.Source.Name,
 					message.Field.Handler.Path,
 					message.Message,

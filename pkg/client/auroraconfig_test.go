@@ -102,9 +102,7 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 		}
 		assert.NoError(t, err)
 		assert.NotEmpty(t, errResponse)
-		// We get two errors from server
-		// IllegalFieldErrors are grouped by file name, hence length 1
-		assert.Len(t, errResponse.IllegalFieldErrors, 1)
+		assert.Len(t, errResponse.IllegalFieldErrors, 2)
 	})
 }
 

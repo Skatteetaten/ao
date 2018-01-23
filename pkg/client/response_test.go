@@ -152,9 +152,7 @@ func TestResponse_ToErrorResponse(t *testing.T) {
 
 func TestErrorResponse_SetMessage(t *testing.T) {
 
-	errorResponse := &ErrorResponse{
-		UniqueErrors: make(map[string]bool),
-	}
+	errorResponse := &ErrorResponse{}
 
 	assert.Equal(t, false, errorResponse.ContainsError)
 	errorResponse.SetMessage("Failed")
