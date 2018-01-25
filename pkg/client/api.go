@@ -96,7 +96,7 @@ func (api *ApiClient) DoWithHeader(method string, endpoint string, header map[st
 	case http.StatusNotFound:
 		return nil, errors.Errorf("Resource %s not found", BooberApiVersion+endpoint)
 	case http.StatusForbidden:
-		return nil, errors.New("Token has expired. Please login: ao login <affiliation>")
+		return nil, errors.Errorf("Token has expired for (%s). Please login: ao login <affiliation>", api.Host)
 	case http.StatusInternalServerError:
 		return nil, handleInternalServerError(body, url)
 	case http.StatusServiceUnavailable:

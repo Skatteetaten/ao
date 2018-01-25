@@ -57,16 +57,16 @@ var deployCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(deployCmd)
 
-	deployCmd.Flags().StringVarP(&flagAffiliation, "affiliation", "", "", "Overrides the logged in affiliation")
-	deployCmd.Flags().MarkHidden("affiliation")
 	deployCmd.Flags().StringVarP(&flagAffiliation, "auroraconfig", "a", "", "Overrides the logged in AuroraConfig")
 	deployCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Limit deploy to given cluster name")
-	deployCmd.Flags().BoolVarP(&flagNoPrompt, "force", "f", false, "Suppress prompts")
-	deployCmd.Flags().MarkHidden("force")
 	deployCmd.Flags().BoolVarP(&flagNoPrompt, "no-prompt", "", false, "Suppress prompts")
-
 	deployCmd.Flags().StringArrayVarP(&flagOverrides, "overrides", "o", []string{}, "Override in the form '[env/]file:{<json override>}'")
 	deployCmd.Flags().StringVarP(&flagVersion, "version", "v", "", "Set the given version in AuroraConfig before deploy")
+
+	deployCmd.Flags().BoolVarP(&flagNoPrompt, "force", "f", false, "Suppress prompts")
+	deployCmd.Flags().MarkHidden("force")
+	deployCmd.Flags().StringVarP(&flagAffiliation, "affiliation", "", "", "Overrides the logged in affiliation")
+	deployCmd.Flags().MarkHidden("affiliation")
 }
 
 func deploy(cmd *cobra.Command, args []string) error {
@@ -96,6 +96,9 @@ func deploy(cmd *cobra.Command, args []string) error {
 		c := AO.Clusters[flagCluster]
 		if c == nil {
 			return errors.New("No such cluster " + flagCluster)
+		}
+		if !c.Reachable {
+			return errors.Errorf("%s cluster is not reachable", flagCluster)
 		}
 
 		api.Host = c.BooberUrl
