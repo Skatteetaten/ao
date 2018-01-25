@@ -261,7 +261,7 @@ func getDeployResultTable(deploys []client.DeployResult) (string, []string) {
 		if !item.Success {
 			status = "\x1b[31mFailed\x1b[0m"
 		}
-		result := fmt.Sprintf(pattern, status, ads.Cluster, ads.Name, ads.Environment.Namespace, ads.Deploy.Version, item.DeployId, item.Reason)
+		result := fmt.Sprintf(pattern, status, ads.Cluster, ads.Environment.Namespace, ads.Name, ads.Deploy.Version, item.DeployId, item.Reason)
 		rows = append(rows, result)
 	}
 
