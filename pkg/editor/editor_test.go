@@ -3,10 +3,11 @@ package editor
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"testing"
+
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestEditor_Edit(t *testing.T) {
@@ -24,8 +25,6 @@ func TestEditor_Edit(t *testing.T) {
 	}{
 		// Should not save because no changes
 		{"{}", "{}", "{}", "", "", errors.New(cancelMessage)},
-		// Should not save because illegal json first, then no changes
-		{"{}", `{bar}`, `{}`, "", invalidJson, errors.New(cancelMessage)},
 
 		// Should save, has legal changes
 		{"{}", `{"foo":"bar"}`, `{"foo":"bar"}`, `{"foo":"bar"}`, "", nil},
@@ -82,49 +81,10 @@ func TestEditor_Edit(t *testing.T) {
 			return nil
 		}
 
-		err := fileEditor.Edit(tc.Content, fileName, true)
+		err := fileEditor.Edit(tc.Content, fileName)
 		if err != nil {
 			assert.EqualError(t, err, tc.Err.Error())
 		}
-	}
-}
-
-func TestHasContentChanged(t *testing.T) {
-
-	testCases := []struct {
-		Original string
-		Edited   string
-		Expected bool
-	}{
-		{
-			Original: `{ "type": "development" }`,
-			// Whitespace
-			Edited:   `{     "type": "development"          }`,
-			Expected: false,
-		},
-		{
-			Original: `{ "type": "development" }`,
-			// Newline
-			Edited: `{     "type": "development"
-			}`,
-			Expected: false,
-		},
-		{
-			Original: `{ "type": "deploy" }`,
-			// Changed
-			Edited:   `{     "type": "development"          }`,
-			Expected: true,
-		},
-		{
-			Original: `{ "type": "deploy" }`,
-			// Illegal json
-			Edited:   `{type": "deploy"}`,
-			Expected: true,
-		},
-	}
-
-	for _, test := range testCases {
-		assert.Equal(t, test.Expected, hasContentChanged(test.Original, test.Edited))
 	}
 }
 
@@ -145,16 +105,4 @@ func TestStripComments(t *testing.T) {
 
 	noComments := stripComments(content)
 	assert.Equal(t, "{}", noComments)
-}
-
-func TestPrettyPrintJson(t *testing.T) {
-	expected := `{
-  "foo": "bar"
-}`
-
-	actual := prettyPrintJson(`{"foo": "bar"}`)
-	assert.Equal(t, expected, actual)
-
-	actual = prettyPrintJson("foo")
-	assert.Equal(t, "foo", actual)
 }

@@ -2,8 +2,6 @@ package editor
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -45,7 +43,7 @@ func NewEditor(saveFunc OnSaveFunc) *Editor {
 	}
 }
 
-func (e Editor) Edit(content string, name string, isJson bool) error {
+func (e Editor) Edit(content string, name string) error {
 
 	tempFilePath, err := createTempFile()
 	if err != nil {
@@ -60,9 +58,6 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 
 	var editErrors string
 	originalContent := content
-	if isJson {
-		originalContent = prettyPrintJson(content)
-	}
 	currentContent := originalContent
 
 	var done bool
@@ -90,18 +85,6 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 		currentContent = stripComments(string(fileContent))
 		if previousContent == currentContent {
 			return errors.New(cancelMessage)
-		}
-
-		if isJson {
-			originalHasChanges := hasContentChanged(originalContent, currentContent)
-			if !originalHasChanges {
-				return errors.New(cancelMessage)
-			}
-
-			if !json.Valid([]byte(currentContent)) {
-				editErrors = addErrorMessage([]string{invalidJson})
-				continue
-			}
 		}
 
 		validationErrors, err := e.OnSave(currentContent)
@@ -166,32 +149,6 @@ func createTempFile() (string, error) {
 	}
 
 	return tmpFile.Name(), nil
-}
-
-func prettyPrintJson(jsonString string) string {
-	var out bytes.Buffer
-	err := json.Indent(&out, []byte(jsonString), "", "  ")
-	if err != nil {
-		return jsonString
-	}
-	return out.String()
-}
-
-func hasContentChanged(original, edited string) bool {
-
-	orgBuffer := new(bytes.Buffer)
-	err := json.Compact(orgBuffer, []byte(original))
-	if err != nil {
-		return true
-	}
-
-	editBuffer := new(bytes.Buffer)
-	err = json.Compact(editBuffer, []byte(edited))
-	if err != nil {
-		return true
-	}
-
-	return orgBuffer.String() != editBuffer.String()
 }
 
 func stripComments(content string) string {
