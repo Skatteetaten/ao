@@ -1,10 +1,14 @@
 package fuzzy
 
 import (
-	"github.com/renstrom/fuzzysearch/fuzzy"
-	"github.com/skatteetaten/ao/pkg/collections"
+	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/skatteetaten/ao/pkg/client"
+
+	"github.com/renstrom/fuzzysearch/fuzzy"
+	"github.com/skatteetaten/ao/pkg/collections"
 )
 
 type FilterMode uint
@@ -15,17 +19,8 @@ const (
 )
 
 func FindMatches(search string, fileNames []string, withSuffix bool) []string {
-	var files []string
-	for _, file := range fileNames {
-		files = append(files, strings.TrimSuffix(file, ".json"))
-	}
-
-	suffix := ""
-	if withSuffix {
-		suffix = ".json"
-	}
-
-	matches := fuzzy.RankFind(strings.TrimSuffix(search, ".json"), files)
+	files := client.FileNames(fileNames)
+	matches := fuzzy.RankFind(strings.TrimSuffix(search, filepath.Ext(search)), files.WithoutExtension())
 	sort.Sort(matches)
 
 	if len(matches) == 0 {
@@ -34,12 +29,20 @@ func FindMatches(search string, fileNames []string, withSuffix bool) []string {
 
 	firstMatch := matches[0]
 	if firstMatch.Distance == 0 || len(matches) == 1 {
-		return []string{firstMatch.Target + suffix}
+		fileName := firstMatch.Target
+		if withSuffix {
+			fileName, _ = files.Find(firstMatch.Target)
+		}
+		return []string{fileName}
 	}
 
-	var options []string
+	options := []string{}
 	for _, match := range matches {
-		options = append(options, match.Target+suffix)
+		fileName := match.Target
+		if withSuffix {
+			fileName, _ = files.Find(match.Target)
+		}
+		options = append(options, fileName)
 	}
 
 	return options
@@ -69,7 +72,7 @@ func SearchForApplications(search string, files []string) []string {
 	Search string must match either environment or application exact
 */
 func FindAllDeploysFor(mode FilterMode, search string, files []string) []string {
-	search = strings.TrimSuffix(search, ".json")
+	search = strings.TrimSuffix(search, filepath.Ext(search))
 	deploys := make(map[string]*collections.StringSet)
 
 	for _, file := range files {

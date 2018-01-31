@@ -10,8 +10,6 @@ import (
 
 	"github.com/skatteetaten/ao/pkg/client"
 
-	"encoding/json"
-
 	"github.com/pkg/errors"
 )
 
@@ -58,14 +56,16 @@ func FindGitPath(path string) (string, error) {
 	return FindGitPath(next)
 }
 
-func CollectJSONFilesInRepo(affiliation, gitRoot string) (*client.AuroraConfig, error) {
+func CollectAuroraConfigFilesInRepo(affiliation, gitRoot string) (*client.AuroraConfig, error) {
 	ac := &client.AuroraConfig{
 		Name: affiliation,
 	}
+
 	return ac, filepath.Walk(gitRoot, func(path string, info os.FileInfo, err error) error {
 
 		fileName := strings.TrimPrefix(path, gitRoot+string(filepath.Separator))
-		if strings.HasPrefix(fileName, ".") || !strings.HasSuffix(fileName, ".json") {
+
+		if !HasOneOfExtension(fileName, []string{".json", ".yaml"}) {
 			return nil
 		}
 
@@ -74,15 +74,19 @@ func CollectJSONFilesInRepo(affiliation, gitRoot string) (*client.AuroraConfig, 
 			return errors.Wrap(err, "Could not read file "+fileName)
 		}
 
-		if !json.Valid(file) {
-			err = errors.New("Illegal JSON in file " + fileName)
-			return err
-		}
-
 		ac.Files = append(ac.Files, client.AuroraConfigFile{
 			Name:     fileName,
 			Contents: string(file),
 		})
 		return nil
 	})
+}
+
+func HasOneOfExtension(text string, items []string) bool {
+	for _, item := range items {
+		if ok := strings.HasSuffix(text, item); ok {
+			return true
+		}
+	}
+	return false
 }

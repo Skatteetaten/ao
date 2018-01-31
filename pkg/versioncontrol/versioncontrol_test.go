@@ -132,7 +132,7 @@ func TestCollectJSONFilesInRepo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := CollectJSONFilesInRepo("aurora", tt.gitRoot)
+			got, err := CollectAuroraConfigFilesInRepo("aurora", tt.gitRoot)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CollectJSONFilesInRepo() error = %v, wantErr %v", err, tt.wantErr)
 				return

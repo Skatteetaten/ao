@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"strings"
-
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/spf13/cobra"
@@ -31,19 +29,25 @@ func Set(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	fileName := args[0]
-	if !strings.HasSuffix(fileName, ".json") {
-		fileName += ".json"
+	fileNames, err := DefaultApiClient.GetFileNames()
+	if err != nil {
+		return err
 	}
-	path, value := args[1], args[2]
 
+	name := args[0]
+	fileName, err := fileNames.Find(name)
+	if err != nil {
+		return err
+	}
+
+	path, value := args[1], args[2]
 	op := client.JsonPatchOp{
 		OP:    "add",
 		Path:  path,
 		Value: value,
 	}
 
-	err := op.Validate()
+	err = op.Validate()
 	if err != nil {
 		return err
 	}
