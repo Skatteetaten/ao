@@ -2,8 +2,6 @@ package editor
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -21,10 +19,10 @@ const (
 	invalidJson   = "Invalid JSON format"
 	cancelMessage = "Edit cancelled, no changes made."
 
-	editPattern = `# Name: %s
-# Please edit the object below. Lines beginning with a '#' will be ignored,
-# and an empty file will abort the edit. If an error occurs while saving this file will be
-# reopened with the relevant failures.
+	editPattern = `## Name: %s
+## Please edit the object below. Lines beginning with '##' will be ignored,
+## and an empty file will abort the edit. If an error occurs while saving this file will be
+## reopened with the relevant failures.
 %s%s
 `
 )
@@ -45,7 +43,7 @@ func NewEditor(saveFunc OnSaveFunc) *Editor {
 	}
 }
 
-func (e Editor) Edit(content string, name string, isJson bool) error {
+func (e Editor) Edit(content string, name string) error {
 
 	tempFilePath, err := createTempFile()
 	if err != nil {
@@ -60,9 +58,6 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 
 	var editErrors string
 	originalContent := content
-	if isJson {
-		originalContent = prettyPrintJson(content)
-	}
 	currentContent := originalContent
 
 	var done bool
@@ -90,18 +85,6 @@ func (e Editor) Edit(content string, name string, isJson bool) error {
 		currentContent = stripComments(string(fileContent))
 		if previousContent == currentContent {
 			return errors.New(cancelMessage)
-		}
-
-		if isJson {
-			originalHasChanges := hasContentChanged(originalContent, currentContent)
-			if !originalHasChanges {
-				return errors.New(cancelMessage)
-			}
-
-			if !json.Valid([]byte(currentContent)) {
-				editErrors = addErrorMessage([]string{invalidJson})
-				continue
-			}
 		}
 
 		validationErrors, err := e.OnSave(currentContent)
@@ -168,32 +151,6 @@ func createTempFile() (string, error) {
 	return tmpFile.Name(), nil
 }
 
-func prettyPrintJson(jsonString string) string {
-	var out bytes.Buffer
-	err := json.Indent(&out, []byte(jsonString), "", "  ")
-	if err != nil {
-		return jsonString
-	}
-	return out.String()
-}
-
-func hasContentChanged(original, edited string) bool {
-
-	orgBuffer := new(bytes.Buffer)
-	err := json.Compact(orgBuffer, []byte(original))
-	if err != nil {
-		return true
-	}
-
-	editBuffer := new(bytes.Buffer)
-	err = json.Compact(editBuffer, []byte(edited))
-	if err != nil {
-		return true
-	}
-
-	return orgBuffer.String() != editBuffer.String()
-}
-
 func stripComments(content string) string {
 	scanner := bufio.NewScanner(strings.NewReader(content))
 	var newline = ""
@@ -201,7 +158,7 @@ func stripComments(content string) string {
 	for scanner.Scan() {
 		line := scanner.Text()
 		trimmedLine := strings.TrimSpace(line)
-		if !strings.HasPrefix(trimmedLine, "#") {
+		if !strings.HasPrefix(trimmedLine, "##") {
 			actualContent += newline + line
 			newline = "\n"
 		}
@@ -211,12 +168,12 @@ func stripComments(content string) string {
 }
 
 func addErrorMessage(messages []string) string {
-	comments := "#\n# ERROR:\n"
+	comments := "##\n## ERROR:\n"
 	for _, message := range messages {
 		for _, line := range strings.Split(message, "\n") {
-			comments += fmt.Sprintf("# %s\n", line)
+			comments += fmt.Sprintf("## %s\n", line)
 		}
 	}
 
-	return comments + "#\n"
+	return comments + "##\n"
 }

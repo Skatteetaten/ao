@@ -285,7 +285,7 @@ func EditSecret(cmd *cobra.Command, args []string) error {
 		return nil, nil
 	})
 
-	err = secretEditor.Edit(contentToEdit, args[0], false)
+	err = secretEditor.Edit(contentToEdit, args[0])
 	if err != nil {
 		return err
 	}

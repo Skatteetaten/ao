@@ -124,7 +124,10 @@ func deploy(cmd *cobra.Command, args []string) error {
 		if len(applications) > 1 {
 			return errors.New("Deploy with version does only support one application")
 		}
-		fileName := applications[0] + ".json"
+		fileName, err := files.Find(applications[0])
+		if err != nil {
+			return err
+		}
 
 		err = Set(cmd, []string{fileName, "/version", flagVersion})
 		if err != nil {

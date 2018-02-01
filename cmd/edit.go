@@ -79,7 +79,7 @@ func EditFile(cmd *cobra.Command, args []string) error {
 		return nil, nil
 	})
 
-	err = fileEditor.Edit(string(file.Contents), file.Name, true)
+	err = fileEditor.Edit(string(file.Contents), file.Name)
 	if err != nil {
 		return err
 	}

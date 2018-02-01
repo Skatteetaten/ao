@@ -35,7 +35,7 @@ func Validate(cmd *cobra.Command, args []string) error {
 		DefaultApiClient.Affiliation = flagAffiliation
 	}
 
-	ac, err := versioncontrol.CollectJSONFilesInRepo(DefaultApiClient.Affiliation, gitRoot)
+	ac, err := versioncontrol.CollectAuroraConfigFilesInRepo(DefaultApiClient.Affiliation, gitRoot)
 	if err != nil {
 		return err
 	}

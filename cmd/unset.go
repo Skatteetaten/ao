@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"strings"
-
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/spf13/cobra"
@@ -29,18 +27,24 @@ func Unset(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	fileName := args[0]
-	if !strings.HasSuffix(fileName, ".json") {
-		fileName += ".json"
+	fileNames, err := DefaultApiClient.GetFileNames()
+	if err != nil {
+		return err
 	}
-	path := args[1]
 
+	name := args[0]
+	fileName, err := fileNames.Find(name)
+	if err != nil {
+		return err
+	}
+
+	path := args[1]
 	op := client.JsonPatchOp{
 		OP:   "remove",
 		Path: path,
 	}
 
-	err := op.Validate()
+	err = op.Validate()
 	if err != nil {
 		return err
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -143,7 +144,7 @@ func (api *ApiClient) GetAuroraConfigFile(fileName string) (*AuroraConfigFile, s
 }
 
 func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatchOp) (*ErrorResponse, error) {
-	endpoint := fmt.Sprintf("/auroraconfig/%s/%s/", api.Affiliation, fileName)
+	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, fileName)
 
 	_, _, err := api.GetAuroraConfigFile(fileName)
 	if err != nil {
@@ -224,9 +225,9 @@ func (f *AuroraConfigFile) ToPrettyJson() string {
 
 func (f FileNames) GetApplicationIds() []string {
 	var filteredFiles []string
-	for _, file := range f {
+	for _, file := range f.WithoutExtension() {
 		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
-			filteredFiles = append(filteredFiles, strings.TrimSuffix(file, ".json"))
+			filteredFiles = append(filteredFiles, file)
 		}
 	}
 	sort.Strings(filteredFiles)
@@ -235,9 +236,9 @@ func (f FileNames) GetApplicationIds() []string {
 
 func (f FileNames) GetApplications() []string {
 	unique := collections.NewStringSet()
-	for _, file := range f {
+	for _, file := range f.WithoutExtension() {
 		if !strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
-			unique.Add(strings.TrimSuffix(file, ".json"))
+			unique.Add(file)
 		}
 	}
 	filteredFiles := unique.All()
@@ -256,6 +257,24 @@ func (f FileNames) GetEnvironments() []string {
 	filteredFiles := unique.All()
 	sort.Strings(filteredFiles)
 	return filteredFiles
+}
+
+func (f FileNames) WithoutExtension() []string {
+	var withoutExt []string
+	for _, file := range f {
+		withoutExt = append(withoutExt, strings.TrimSuffix(file, filepath.Ext(file)))
+	}
+	return withoutExt
+}
+
+func (f FileNames) Find(name string) (string, error) {
+	for _, fileName := range f {
+		fileNameWithoutExtension := strings.TrimSuffix(fileName, filepath.Ext(fileName))
+		if name == fileName || name == fileNameWithoutExtension {
+			return fileName, nil
+		}
+	}
+	return "", errors.Errorf("could not find %s in AuroraConfig", name)
 }
 
 func (op JsonPatchOp) Validate() error {

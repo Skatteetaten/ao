@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
-	"strings"
 
 	"github.com/skatteetaten/ao/pkg/client"
 
@@ -27,9 +25,7 @@ const addExample = `  Given the following AuroraConfig:
   ao add about.json ./about.json
 
   # adds prod/about to AuroraConfig
-  ao add prod/about ~/files/about.json
-
-  '.json' can be omitted from name, will be added if missing`
+  ao add prod/about ~/files/about.json`
 
 var addCmd = &cobra.Command{
 	Use:         "add <name> <file>",
@@ -48,12 +44,7 @@ func Add(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	fileName := args[0]
-	if !strings.HasSuffix(fileName, ".json") {
-		fileName += ".json"
-	}
-
-	filePath := args[1]
+	fileName, filePath := args[0], args[1]
 	file, err := os.Stat(filePath)
 	if err != nil {
 		return err
@@ -66,10 +57,6 @@ func Add(cmd *cobra.Command, args []string) error {
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return err
-	}
-
-	if !json.Valid(data) {
-		return errors.Errorf("%s contains illegal json format\n", filePath)
 	}
 
 	res, err := DefaultApiClient.PutAuroraConfigFile(&client.AuroraConfigFile{
