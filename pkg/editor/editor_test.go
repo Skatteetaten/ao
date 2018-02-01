@@ -92,7 +92,7 @@ func TestAddComments(t *testing.T) {
 
 	messages := []string{"FATAL ERROR"}
 
-	expected := "#\n# ERROR:\n# FATAL ERROR\n#\n"
+	expected := "##\n## ERROR:\n## FATAL ERROR\n##\n"
 	errs := addErrorMessage(messages)
 
 	assert.Equal(t, expected, errs)
@@ -100,7 +100,7 @@ func TestAddComments(t *testing.T) {
 
 func TestStripComments(t *testing.T) {
 
-	content := `# Name: foo.json
+	content := `## Name: foo.json
 {}`
 
 	noComments := stripComments(content)

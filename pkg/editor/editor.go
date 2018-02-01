@@ -19,10 +19,10 @@ const (
 	invalidJson   = "Invalid JSON format"
 	cancelMessage = "Edit cancelled, no changes made."
 
-	editPattern = `# Name: %s
-# Please edit the object below. Lines beginning with a '#' will be ignored,
-# and an empty file will abort the edit. If an error occurs while saving this file will be
-# reopened with the relevant failures.
+	editPattern = `## Name: %s
+## Please edit the object below. Lines beginning with '##' will be ignored,
+## and an empty file will abort the edit. If an error occurs while saving this file will be
+## reopened with the relevant failures.
 %s%s
 `
 )
@@ -158,7 +158,7 @@ func stripComments(content string) string {
 	for scanner.Scan() {
 		line := scanner.Text()
 		trimmedLine := strings.TrimSpace(line)
-		if !strings.HasPrefix(trimmedLine, "#") {
+		if !strings.HasPrefix(trimmedLine, "##") {
 			actualContent += newline + line
 			newline = "\n"
 		}
@@ -168,12 +168,12 @@ func stripComments(content string) string {
 }
 
 func addErrorMessage(messages []string) string {
-	comments := "#\n# ERROR:\n"
+	comments := "##\n## ERROR:\n"
 	for _, message := range messages {
 		for _, line := range strings.Split(message, "\n") {
-			comments += fmt.Sprintf("# %s\n", line)
+			comments += fmt.Sprintf("## %s\n", line)
 		}
 	}
 
-	return comments + "#\n"
+	return comments + "##\n"
 }
