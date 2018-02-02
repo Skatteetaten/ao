@@ -251,6 +251,6 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Println(auroraConfigFile.ToPrettyJson())
+	fmt.Println(auroraConfigFile.Contents)
 	return nil
 }
