@@ -235,8 +235,8 @@ func deployToReachableClusters(affiliation, token string, clusters map[string]*c
 	return allResults
 }
 
-func parseOverride(override []string) (map[string]json.RawMessage, error) {
-	returnMap := make(map[string]json.RawMessage)
+func parseOverride(override []string) (map[string]string, error) {
+	returnMap := make(map[string]string)
 	for i := 0; i < len(override); i++ {
 		indexByte := strings.IndexByte(override[i], ':')
 		filename := override[i][:indexByte]
@@ -247,7 +247,7 @@ func parseOverride(override []string) (map[string]json.RawMessage, error) {
 			return nil, errors.New(msg)
 		}
 
-		returnMap[filename] = json.RawMessage(jsonOverride)
+		returnMap[filename] = jsonOverride
 	}
 	return returnMap, nil
 }

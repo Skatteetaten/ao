@@ -38,13 +38,13 @@ type (
 	}
 
 	DeployPayload struct {
-		ApplicationIds []applicationId            `json:"applicationIds"`
-		Overrides      map[string]json.RawMessage `json:"overrides"`
-		Deploy         bool                       `json:"deploy"`
+		ApplicationIds []applicationId   `json:"applicationIds"`
+		Overrides      map[string]string `json:"overrides"`
+		Deploy         bool              `json:"deploy"`
 	}
 )
 
-func NewDeployPayload(applications []string, overrides map[string]json.RawMessage) *DeployPayload {
+func NewDeployPayload(applications []string, overrides map[string]string) *DeployPayload {
 	applicationIds := createApplicationIds(applications)
 	return &DeployPayload{
 		ApplicationIds: applicationIds,
