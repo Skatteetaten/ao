@@ -35,7 +35,7 @@ var (
 
 	getAppsCmd = &cobra.Command{
 		Use:     "app [applications]",
-		Short:   "Get all applications or all envrionments for one or more applications",
+		Short:   "Get all applications or all environments for one or more applications",
 		Aliases: []string{"apps"},
 		RunE:    PrintApplications,
 	}
