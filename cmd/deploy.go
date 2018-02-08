@@ -190,6 +190,10 @@ func deploy(cmd *cobra.Command, args []string) error {
 	})
 
 	header, rows = getDeployResultTable(results)
+	if len(rows) == 0 {
+		return nil
+	}
+
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 	return nil
 }
