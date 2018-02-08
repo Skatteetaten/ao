@@ -12,7 +12,11 @@ import (
 	"github.com/skatteetaten/ao/pkg/config"
 )
 
-const BooberApiVersion = "/v1"
+const (
+	BooberApiVersion    = "/v1"
+	ErrAccessDenied     = "Access Denied"
+	ErrfTokenHasExpired = "Token has expired for (%s). Please login: ao login <affiliation>"
+)
 
 type ResponseBundle struct {
 	BooberResponse *BooberResponse
@@ -96,7 +100,7 @@ func (api *ApiClient) DoWithHeader(method string, endpoint string, header map[st
 	case http.StatusNotFound:
 		return nil, errors.Errorf("Resource %s not found", BooberApiVersion+endpoint)
 	case http.StatusForbidden:
-		return nil, errors.Errorf("Token has expired for (%s). Please login: ao login <affiliation>", api.Host)
+		return nil, handleForbiddenError(body, api.Host)
 	case http.StatusInternalServerError:
 		return nil, handleInternalServerError(body, url)
 	case http.StatusServiceUnavailable:
@@ -140,4 +144,20 @@ func handleInternalServerError(body []byte, url string) error {
 	}
 
 	return errors.Errorf("Unexpected error from %s\nMessage: %s\nException: %s", url, internalError.Message, internalError.Exception)
+}
+
+func handleForbiddenError(body []byte, host string) error {
+	forbiddenError := struct {
+		Message string `json:"message"`
+	}{}
+	err := json.Unmarshal(body, &forbiddenError)
+	if err != nil {
+		return err
+	}
+
+	if forbiddenError.Message == ErrAccessDenied {
+		return errors.Errorf(ErrfTokenHasExpired, host)
+	}
+
+	return errors.Errorf("Forbidden: %s", forbiddenError.Message)
 }
