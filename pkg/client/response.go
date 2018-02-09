@@ -25,14 +25,9 @@ type (
 	}
 
 	errorField struct {
-		Handler struct {
-			Path string `json:"path"`
-		} `json:"handler"`
-		Source struct {
-			Name string `json:"name"`
-		} `json:"source"`
-		Value          interface{} `json:"value"`
-		DefaultOrValue interface{} `json:"defaultOrValue"`
+		Path     string      `json:"path"`
+		FileName string      `json:"fileName"`
+		Value    interface{} `json:"value"`
 	}
 
 	responseErrorItem struct {
@@ -49,9 +44,6 @@ type (
 func (e errorField) GetValue() string {
 	if e.Value != nil {
 		return fmt.Sprintf("%v", e.Value)
-	}
-	if e.DefaultOrValue != nil {
-		return fmt.Sprintf("%v", e.DefaultOrValue)
 	}
 	return ""
 }
@@ -158,8 +150,8 @@ Message:     %s`
 				illegal := fmt.Sprintf(illegalFieldFormat,
 					res.Environment,
 					res.Application,
-					message.Field.Source.Name,
-					message.Field.Handler.Path,
+					message.Field.FileName,
+					message.Field.Path,
 					message.Field.GetValue(),
 					message.Message,
 				)
@@ -171,8 +163,8 @@ Message:     %s`
 				invalid := fmt.Sprintf(invalidFieldFormat,
 					res.Environment,
 					res.Application,
-					message.Field.Source.Name,
-					message.Field.Handler.Path,
+					message.Field.FileName,
+					message.Field.Path,
 					message.Message,
 				)
 				e.InvalidFieldErrors = append(e.InvalidFieldErrors, invalid)
@@ -183,7 +175,7 @@ Message:     %s`
 				missing := fmt.Sprintf(missingFieldFormat,
 					res.Environment,
 					res.Application,
-					message.Field.Handler.Path,
+					message.Field.Path,
 					message.Message,
 				)
 				e.MissingFieldErrors = append(e.MissingFieldErrors, missing)
