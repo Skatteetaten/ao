@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/pkg/errors"
+
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -147,4 +149,40 @@ func TestApiClient_Do(t *testing.T) {
 			ts.Close()
 		}
 	})
+}
+
+func Test_handleForbiddenError(t *testing.T) {
+	type args struct {
+		body []byte
+		host string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr error
+	}{
+		{
+			name: "Should return token has expired error",
+			args: args{
+				body: []byte(`{"message":"Access Denied"}`),
+				host: "localhost",
+			},
+			wantErr: errors.Errorf(ErrfTokenHasExpired, "localhost"),
+		},
+		{
+			name: "Should return user has no permission error",
+			args: args{
+				body: []byte(`{"message":"You (user) do not have required permissions ([admin]) to operate on this vault (top-secret)."}`),
+				host: "localhost",
+			},
+			wantErr: errors.New("Forbidden: You (user) do not have required permissions ([admin]) to operate on this vault (top-secret)."),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := handleForbiddenError(tt.args.body, tt.args.host); err.Error() != tt.wantErr.Error() {
+				t.Errorf("handleForbiddenError() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }
