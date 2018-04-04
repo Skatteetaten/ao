@@ -2,7 +2,6 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -76,9 +75,8 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		errResponse, err := api.ValidateAuroraConfig(&ac, false)
+		err = api.ValidateAuroraConfig(&ac, false)
 		assert.NoError(t, err)
-		assert.Empty(t, errResponse)
 	})
 
 	t.Run("Validation and save should fail when deploy type is illegal", func(t *testing.T) {
@@ -94,15 +92,8 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 			t.Error(err)
 		}
 
-		errResponse, err := api.ValidateAuroraConfig(&ac, false)
-		if errResponse == nil {
-			fmt.Println(errResponse)
-			t.Error("Expected errResponse to not be nil")
-			return
-		}
-		assert.NoError(t, err)
-		assert.NotEmpty(t, errResponse)
-		assert.Len(t, errResponse.IllegalFieldErrors, 2)
+		err = api.ValidateAuroraConfig(&ac, false)
+		assert.Error(t, err)
 	})
 }
 
@@ -177,12 +168,8 @@ func TestApiClient_PatchAuroraConfigFile(t *testing.T) {
 			Value: "develop-SNAPSHOT",
 		}
 
-		errRes, err := api.PatchAuroraConfigFile(fileName, op)
-		if err != nil {
-			t.Error(err)
-		}
-
-		assert.Empty(t, errRes)
+		err = api.PatchAuroraConfigFile(fileName, op)
+		assert.NoError(t, err)
 	})
 }
 

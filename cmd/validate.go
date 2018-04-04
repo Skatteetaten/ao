@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
 )
@@ -40,13 +39,10 @@ func Validate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	res, err := DefaultApiClient.ValidateAuroraConfig(ac, flagFullValidation)
-	if err != nil {
+	if err := DefaultApiClient.ValidateAuroraConfig(ac, flagFullValidation); err != nil {
 		return err
 	}
-	if res != nil {
-		return errors.New(res.String())
-	}
+
 	fmt.Println("OK")
 
 	return nil

@@ -139,7 +139,7 @@ func TestResponse_ToErrorResponse(t *testing.T) {
 		t.Error(err)
 	}
 
-	errorResponse, err := response.ToErrorResponse()
+	errorResponse, err := response.toErrorResponse()
 	assert.NoError(t, err)
 
 	assert.Len(t, errorResponse.GenericErrors, 1)
@@ -147,16 +147,5 @@ func TestResponse_ToErrorResponse(t *testing.T) {
 	assert.Len(t, errorResponse.InvalidFieldErrors, 1)
 	assert.Len(t, errorResponse.MissingFieldErrors, 1)
 
-	assert.Len(t, errorResponse.GetAllErrors(), 4)
-}
-
-func TestErrorResponse_SetMessage(t *testing.T) {
-
-	errorResponse := &ErrorResponse{}
-
-	assert.Equal(t, false, errorResponse.ContainsError)
-	errorResponse.SetMessage("Failed")
-	assert.Equal(t, true, errorResponse.ContainsError)
-	assert.Equal(t, "Failed\n", errorResponse.String())
-
+	assert.Len(t, errorResponse.getAllErrors(), 4)
 }

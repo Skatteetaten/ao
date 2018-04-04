@@ -37,7 +37,7 @@ func TestEditor_Edit(t *testing.T) {
 	for _, tc := range cases {
 		currentContent := fmt.Sprintf(editPattern, fileName, "", tc.Content)
 
-		fileEditor.OnSave = func(modifiedContent string) ([]string, error) {
+		fileEditor.OnSave = func(modifiedContent string) error {
 
 			js := make(map[string]string)
 			err := json.Unmarshal([]byte(modifiedContent), &js)
@@ -47,12 +47,12 @@ func TestEditor_Edit(t *testing.T) {
 
 			foo := js["foo"]
 			if foo == "shouldFail" {
-				return []string{shouldFailError}, nil
+				return errors.New(shouldFailError)
 			}
 
 			assert.Equal(t, tc.ExpectedModified, modifiedContent)
 
-			return nil, nil
+			return nil
 		}
 
 		cycle := 0
@@ -65,7 +65,7 @@ func TestEditor_Edit(t *testing.T) {
 
 			assert.Equal(t, currentContent, string(data))
 
-			messages := addErrorMessage([]string{tc.Errors})
+			messages := addErrorMessage(tc.Errors)
 			edit := tc.Edit1
 			if cycle == 1 {
 				edit = tc.Edit2
@@ -90,7 +90,7 @@ func TestEditor_Edit(t *testing.T) {
 
 func TestAddComments(t *testing.T) {
 
-	messages := []string{"FATAL ERROR"}
+	messages := "FATAL ERROR"
 
 	expected := "##\n## ERROR:\n## FATAL ERROR\n##\n"
 	errs := addErrorMessage(messages)
