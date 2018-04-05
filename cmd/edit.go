@@ -67,16 +67,9 @@ func EditFile(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fileEditor := editor.NewEditor(func(modified string) ([]string, error) {
+	fileEditor := editor.NewEditor(func(modified string) error {
 		file.Contents = modified
-		res, err := DefaultApiClient.PutAuroraConfigFile(file, eTag)
-		if err != nil {
-			return nil, err
-		}
-		if res != nil {
-			return res.GetAllErrors(), nil
-		}
-		return nil, nil
+		return DefaultApiClient.PutAuroraConfigFile(file, eTag)
 	})
 
 	err = fileEditor.Edit(string(file.Contents), file.Name)

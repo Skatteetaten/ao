@@ -41,7 +41,7 @@ type (
 	}
 )
 
-func (e errorField) GetValue() string {
+func (e errorField) getValue() string {
 	if e.Value != nil {
 		return fmt.Sprintf("%v", e.Value)
 	}
@@ -70,26 +70,15 @@ func (res *BooberResponse) ParseFirstItem(data interface{}) error {
 	return json.Unmarshal(items[0], data)
 }
 
-func (res *BooberResponse) ToErrorResponse() (*ErrorResponse, error) {
-	var rei []responseErrorItem
-	err := json.Unmarshal(res.Items, &rei)
+func (res *BooberResponse) Error() error {
+	errRes, err := res.toErrorResponse()
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	errorResponse := NewErrorResponse(res.Message)
-	for _, re := range rei {
-		errorResponse.FormatValidationError(&re)
+	if errRes != nil {
+		return errors.New(errRes.String())
 	}
-
-	return errorResponse, nil
-}
-
-func NewErrorResponse(message string) *ErrorResponse {
-	return &ErrorResponse{
-		message:       message,
-		ContainsError: true,
-	}
+	return nil
 }
 
 func (e *ErrorResponse) String() string {
@@ -99,7 +88,7 @@ func (e *ErrorResponse) String() string {
 		status += fmt.Sprintf("%s\n", e.message)
 	}
 
-	messages := e.GetAllErrors()
+	messages := e.getAllErrors()
 	for i, message := range messages {
 		status += message
 		if i != len(messages)-1 {
@@ -110,12 +99,26 @@ func (e *ErrorResponse) String() string {
 	return status
 }
 
-func (e *ErrorResponse) SetMessage(m string) {
-	e.message = m
-	e.ContainsError = true
+func (res *BooberResponse) toErrorResponse() (*ErrorResponse, error) {
+	var rei []responseErrorItem
+	err := json.Unmarshal(res.Items, &rei)
+	if err != nil {
+		return nil, err
+	}
+
+	errorResponse := &ErrorResponse{
+		message:       res.Message,
+		ContainsError: true,
+	}
+
+	for _, re := range rei {
+		errorResponse.formatValidationError(&re)
+	}
+
+	return errorResponse, nil
 }
 
-func (e *ErrorResponse) GetAllErrors() []string {
+func (e *ErrorResponse) getAllErrors() []string {
 	var errorMessages []string
 	errorMessages = append(errorMessages, e.GenericErrors...)
 	errorMessages = append(errorMessages, e.IllegalFieldErrors...)
@@ -124,7 +127,7 @@ func (e *ErrorResponse) GetAllErrors() []string {
 }
 
 // TODO: Refactor this mess
-func (e *ErrorResponse) FormatValidationError(res *responseErrorItem) {
+func (e *ErrorResponse) formatValidationError(res *responseErrorItem) {
 	illegalFieldFormat := `Application: %s/%s
 Filename:    %s
 Field:       %s
@@ -152,7 +155,7 @@ Message:     %s`
 					res.Application,
 					message.Field.FileName,
 					message.Field.Path,
-					message.Field.GetValue(),
+					message.Field.getValue(),
 					message.Message,
 				)
 				e.IllegalFieldErrors = append(e.IllegalFieldErrors, illegal)

@@ -28,7 +28,7 @@ const (
 )
 
 type (
-	OnSaveFunc func(modifiedContent string) ([]string, error)
+	OnSaveFunc func(modifiedContent string) error
 
 	Editor struct {
 		OpenEditor func(string) error
@@ -87,11 +87,9 @@ func (e Editor) Edit(content string, name string) error {
 			return errors.New(cancelMessage)
 		}
 
-		validationErrors, err := e.OnSave(currentContent)
-		if validationErrors != nil {
-			editErrors = addErrorMessage(validationErrors)
-		} else if err != nil {
-			return err
+		err = e.OnSave(currentContent)
+		if err != nil {
+			editErrors = addErrorMessage(err.Error())
 		} else {
 			done = true
 		}
@@ -167,12 +165,10 @@ func stripComments(content string) string {
 	return actualContent
 }
 
-func addErrorMessage(messages []string) string {
+func addErrorMessage(errorMessage string) string {
 	comments := "##\n## ERROR:\n"
-	for _, message := range messages {
-		for _, line := range strings.Split(message, "\n") {
-			comments += fmt.Sprintf("## %s\n", line)
-		}
+	for _, line := range strings.Split(errorMessage, "\n") {
+		comments += fmt.Sprintf("## %s\n", line)
 	}
 
 	return comments + "##\n"

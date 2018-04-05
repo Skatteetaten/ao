@@ -59,15 +59,12 @@ func Add(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	res, err := DefaultApiClient.PutAuroraConfigFile(&client.AuroraConfigFile{
+	err = DefaultApiClient.PutAuroraConfigFile(&client.AuroraConfigFile{
 		Name:     fileName,
 		Contents: string(data),
 	}, "")
 	if err != nil {
 		return err
-	}
-	if res != nil {
-		return errors.New(res.String())
 	}
 
 	cmd.Printf("%s has been added\n", fileName)

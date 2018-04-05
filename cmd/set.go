@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/spf13/cobra"
 )
@@ -47,18 +46,12 @@ func Set(cmd *cobra.Command, args []string) error {
 		Value: value,
 	}
 
-	err = op.Validate()
-	if err != nil {
+	if err = op.Validate(); err != nil {
 		return err
 	}
 
-	res, err := DefaultApiClient.PatchAuroraConfigFile(fileName, op)
-	if err != nil {
+	if err = DefaultApiClient.PatchAuroraConfigFile(fileName, op); err != nil {
 		return err
-	}
-
-	if res != nil {
-		return errors.New(res.String())
 	}
 
 	cmd.Printf("%s has been updated with %s %s\n", fileName, path, value)

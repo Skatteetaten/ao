@@ -276,13 +276,8 @@ func EditSecret(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	secretEditor := editor.NewEditor(func(modifiedContent string) ([]string, error) {
-		err := DefaultApiClient.UpdateSecretFile(vaultName, secretName, eTag, []byte(modifiedContent))
-		if err != nil {
-			return []string{err.Error()}, nil
-		}
-
-		return nil, nil
+	secretEditor := editor.NewEditor(func(modifiedContent string) error {
+		return DefaultApiClient.UpdateSecretFile(vaultName, secretName, eTag, []byte(modifiedContent))
 	})
 
 	err = secretEditor.Edit(contentToEdit, args[0])
