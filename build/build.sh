@@ -55,6 +55,9 @@ export GOOS="${OS}"
 # So for now, we filter on our own dependencies
 #
 
+# Need to unset GOBIN to support cross-compiled binaries
+unset GOBIN
+
 PACKAGES=$(go list ./... | grep "ao/pkg\|ao$\|ao/cmd" | xargs echo)
 go install                                                         \
     -ldflags "-X \"${PKG}/pkg/config.Version=${VERSION}\" -X \"${PKG}/pkg/config.Branch=${BRANCH}\" -X \"${PKG}/pkg/config.BuildStamp=${BUILDSTAMP}\" -X \"${PKG}/pkg/config.GitHash=${GITHASH}\"" \
