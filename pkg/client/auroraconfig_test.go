@@ -123,12 +123,12 @@ func TestApiClient_GetAuroraConfigFile(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClient(ts.URL, "", "")
+		api := NewApiClient(ts.URL, "", "paas")
 
 		// TODO: Test ETag
 		file, _, err := api.GetAuroraConfigFile("about.json")
 		assert.Error(t, err)
-		assert.EqualError(t, err, "Failed getting file about.json")
+		assert.EqualError(t, err, "Resource /v1/auroraconfig/paas/about.json not found")
 		assert.Empty(t, file)
 	})
 }
