@@ -97,11 +97,6 @@ func (api *ApiClient) DoWithHeader(method string, endpoint string, header map[st
 	}
 
 	switch res.StatusCode {
-	case http.StatusBadRequest:
-		if message, ok := fields["message"].(string); ok {
-			return nil, errors.New(message)
-		}
-		fallthrough
 	case http.StatusNotFound:
 		return nil, errors.Errorf("Resource %s not found", BooberApiVersion+endpoint)
 	case http.StatusForbidden:
