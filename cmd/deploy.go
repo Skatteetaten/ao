@@ -92,7 +92,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 	api := DefaultApiClient
 	api.Affiliation = flagAffiliation
 
-	if flagCluster != "" {
+	if flagCluster != "" && !AO.Localhost {
 		c := AO.Clusters[flagCluster]
 		if c == nil {
 			return errors.New("No such cluster " + flagCluster)
@@ -139,23 +139,29 @@ func deploy(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	var filterDeploymentSpecs []client.AuroraDeploySpec
+	var filteredDeploymentSpecs []client.AuroraDeploySpec
 	if flagCluster != "" {
 		for _, spec := range deploySpecs {
 			if spec.Value("/cluster").(string) == flagCluster {
-				filterDeploymentSpecs = append(filterDeploymentSpecs, spec)
+				filteredDeploymentSpecs = append(filteredDeploymentSpecs, spec)
 			}
 		}
 	} else {
-		filterDeploymentSpecs = deploySpecs
+		filteredDeploymentSpecs = deploySpecs
 	}
-	header, rows := GetDeploySpecTable(filterDeploymentSpecs)
+	header, rows := GetDeploySpecTable(filteredDeploymentSpecs)
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+
+	var filteredApplications []string
+	for _, spec := range filteredDeploymentSpecs {
+		appID := spec.Value("applicationId").(string)
+		filteredApplications = append(filteredApplications, appID)
+	}
 
 	shouldDeploy := true
 	if !flagNoPrompt {
-		defaultAnswer := len(applications) == 1
-		message := fmt.Sprintf("Do you want to deploy %d application(s)?", len(applications))
+		defaultAnswer := len(filteredApplications) == 1
+		message := fmt.Sprintf("Do you want to deploy %d application(s)?", len(filteredApplications))
 		shouldDeploy = prompt.Confirm(message, defaultAnswer)
 	}
 
@@ -163,7 +169,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications to deploy")
 	}
 
-	payload := client.NewDeployPayload(applications, overrides)
+	payload := client.NewDeployPayload(filteredApplications, overrides)
 
 	var result []*client.DeployResults
 	if AO.Localhost || flagCluster != "" {
