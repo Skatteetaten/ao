@@ -179,7 +179,10 @@ func deploy(cmd *cobra.Command, args []string) error {
 		}
 		result = append(result, res)
 	} else {
-		result = deployToReachableClusters(flagAffiliation, pFlagToken, AO.Clusters, payload)
+		result, err = deployToReachableClusters(flagAffiliation, pFlagToken, AO.Clusters, payload)
+		if err != nil {
+			return err
+		}
 	}
 
 	var results []client.DeployResult
@@ -201,10 +204,16 @@ func deploy(cmd *cobra.Command, args []string) error {
 	}
 
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+	for _, deploy := range results {
+		if !deploy.Success {
+			return errors.New("One or more deploys failed")
+		}
+	}
+
 	return nil
 }
 
-func deployToReachableClusters(affiliation, token string, clusters map[string]*config.Cluster, payload *client.DeployPayload) []*client.DeployResults {
+func deployToReachableClusters(affiliation, token string, clusters map[string]*config.Cluster, payload *client.DeployPayload) ([]*client.DeployResults, error) {
 
 	reachableClusters := 0
 	deployResult := make(chan *client.DeployResults)
@@ -236,13 +245,13 @@ func deployToReachableClusters(affiliation, token string, clusters map[string]*c
 	for i := 0; i < reachableClusters; i++ {
 		select {
 		case err := <-deployErrors:
-			fmt.Println(err)
+			return nil, err
 		case result := <-deployResult:
 			allResults = append(allResults, result)
 		}
 	}
 
-	return allResults
+	return allResults, nil
 }
 
 func parseOverride(override []string) (map[string]string, error) {

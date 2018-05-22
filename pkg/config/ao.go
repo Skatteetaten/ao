@@ -124,7 +124,6 @@ func (ao *AOConfig) Update(noPrompt bool) error {
 		return err
 	}
 
-	os.Exit(0)
 	return nil
 }
 
