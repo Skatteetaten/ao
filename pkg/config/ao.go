@@ -15,6 +15,7 @@ import (
 )
 
 type AOConfig struct {
+	RefName     string              `json:"refName"`
 	APICluster  string              `json:"apiCluster"`
 	Affiliation string              `json:"affiliation"`
 	Localhost   bool                `json:"localhost"`
@@ -29,6 +30,7 @@ type AOConfig struct {
 }
 
 var DefaultAOConfig = AOConfig{
+	RefName:                 "master",
 	Clusters:                make(map[string]*Cluster),
 	AvailableClusters:       []string{"utv", "utv-relay", "test", "test-relay", "prod", "prod-relay", "qa"},
 	PreferredAPIClusters:    []string{"utv", "test"},

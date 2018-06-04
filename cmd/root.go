@@ -59,6 +59,7 @@ var (
 	pFlagLogLevel  string
 	pFlagPrettyLog bool
 	pFlagToken     string
+	pFlagRefName   string
 	pFlagNoHeader  bool
 
 	// DefaultApiClient will use APICluster from ao config as default values
@@ -81,6 +82,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&pFlagLogLevel, "log", "l", "fatal", "Set log level. Valid log levels are [info, debug, warning, error, fatal]")
 	RootCmd.PersistentFlags().BoolVarP(&pFlagPrettyLog, "pretty", "p", false, "Pretty print json output for log")
 	RootCmd.PersistentFlags().StringVarP(&pFlagToken, "token", "t", "", "OpenShift authorization token to use for remote commands, overrides login")
+	RootCmd.PersistentFlags().StringVarP(&pFlagRefName, "ref", "", "", "Set git ref name, does not affect vaults")
 	RootCmd.PersistentFlags().BoolVarP(&pFlagNoHeader, "no-headers", "", false, "Print tables without headers")
 	RootCmd.PersistentFlags().MarkHidden("no-headers")
 }
@@ -94,12 +96,10 @@ func initialize(cmd *cobra.Command, args []string) error {
 	// Disable print usage when an error occurs
 	cmd.SilenceUsage = true
 
-	//home, _ := os.LookupEnv("HOME")
 	home, err := homedir.Dir()
 	if err != nil {
 		return err
 	}
-	//ConfigLocation = home + "/.ao.json"
 	ConfigLocation = filepath.Join(home, ".ao.json")
 
 	err = setLogging(pFlagLogLevel, pFlagPrettyLog)
@@ -131,11 +131,20 @@ func initialize(cmd *cobra.Command, args []string) error {
 		apiCluster = &config.Cluster{}
 	}
 
-	api := client.NewApiClient(apiCluster.BooberUrl, apiCluster.Token, aoConfig.Affiliation)
+	api := &client.ApiClient{
+		Affiliation: aoConfig.Affiliation,
+		Host:        apiCluster.BooberUrl,
+		Token:       apiCluster.Token,
+		RefName:     aoConfig.RefName,
+	}
 
 	if aoConfig.Localhost {
 		// TODO: Move to config?
 		api.Host = "http://localhost:8080"
+	}
+
+	if pFlagRefName != "" {
+		api.RefName = pFlagRefName
 	}
 
 	if pFlagToken != "" {
@@ -143,6 +152,10 @@ func initialize(cmd *cobra.Command, args []string) error {
 	}
 
 	AO, DefaultApiClient = aoConfig, api
+
+	if api.RefName != "master" {
+		cmd.Printf("Current git ref [%s]\n", api.RefName)
+	}
 
 	return nil
 }

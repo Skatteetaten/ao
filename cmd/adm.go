@@ -48,6 +48,12 @@ var updateHookCmd = &cobra.Command{
 	RunE:  UpdateGitHook,
 }
 
+var updateRefCmd = &cobra.Command{
+	Use:   "update-ref <auroraconfig>",
+	Short: `Update git ref for your auroraconfig checkout.`,
+	RunE:  SetRefName,
+}
+
 var completionCmd = &cobra.Command{
 	Use:   "completion",
 	Short: "Generates bash completion file",
@@ -69,6 +75,7 @@ func init() {
 	admCmd.AddCommand(recreateConfigCmd)
 	admCmd.AddCommand(updateClustersCmd)
 	admCmd.AddCommand(updateHookCmd)
+	admCmd.AddCommand(updateRefCmd)
 
 	getClusterCmd.Flags().BoolVarP(&flagShowAll, "all", "a", false, "Show all clusters, not just the reachable ones")
 	recreateConfigCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Recreate config with one cluster")
@@ -121,6 +128,20 @@ func PrintAffiliations(cmd *cobra.Command, args []string) {
 		line := fmt.Sprintf("  %s %s", mark, affiliation)
 		cmd.Println(line)
 	}
+}
+
+func SetRefName(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return cmd.Usage()
+	}
+
+	AO.RefName = args[0]
+	if err := config.WriteConfig(*AO, ConfigLocation); err != nil {
+		return err
+	}
+
+	cmd.Printf("refName = %s\n", args[0])
+	return nil
 }
 
 func UpdateClusters(cmd *cobra.Command, args []string) error {
