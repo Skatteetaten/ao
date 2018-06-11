@@ -37,7 +37,7 @@ func TestApiClient_Do(t *testing.T) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 
-			assert.Len(t, req.Header, 5)
+			assert.Len(t, req.Header, 6)
 
 			agent := req.Header.Get("User-Agent")
 			assert.Equal(t, "Go-http-client/1.1 ao/", agent)
@@ -50,6 +50,9 @@ func TestApiClient_Do(t *testing.T) {
 
 			contentType := req.Header.Get("Content-Type")
 			assert.Equal(t, "application/json", contentType)
+
+			refName := req.Header.Get("Ref-Name")
+			assert.Equal(t, "master", refName)
 
 			assert.Equal(t, "/v1/hello", req.URL.Path)
 		}))

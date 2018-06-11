@@ -229,7 +229,12 @@ func deployToReachableClusters(affiliation, token string, clusters map[string]*c
 			clusterToken = token
 		}
 
-		cli := client.NewApiClient(c.BooberUrl, clusterToken, affiliation)
+		cli := &client.ApiClient{
+			Affiliation: affiliation,
+			Host:        c.BooberUrl,
+			Token:       clusterToken,
+			RefName:     DefaultApiClient.RefName,
+		}
 
 		go func() {
 			result, err := cli.Deploy(payload)

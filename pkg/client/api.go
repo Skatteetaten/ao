@@ -27,6 +27,7 @@ type ApiClient struct {
 	Host        string
 	Token       string
 	Affiliation string
+	RefName     string
 }
 
 func NewApiClient(host, token, affiliation string) *ApiClient {
@@ -34,6 +35,7 @@ func NewApiClient(host, token, affiliation string) *ApiClient {
 		Host:        host,
 		Token:       token,
 		Affiliation: affiliation,
+		RefName:     "master",
 	}
 }
 
@@ -69,6 +71,7 @@ func (api *ApiClient) DoWithHeader(method string, endpoint string, header map[st
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+api.Token)
+	req.Header.Set("Ref-Name", api.RefName)
 
 	for key, value := range header {
 		req.Header.Set(key, value)
