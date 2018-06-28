@@ -153,10 +153,6 @@ func initialize(cmd *cobra.Command, args []string) error {
 
 	AO, DefaultApiClient = aoConfig, api
 
-	if api.RefName != "master" {
-		cmd.Printf("Current git ref [%s]\n", api.RefName)
-	}
-
 	return nil
 }
 
