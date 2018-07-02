@@ -45,13 +45,13 @@ const exampleDeploy = `  Given the following AuroraConfig:
   ao deploy foo/bar
 
   # Deploy an application with override for application file
-	ao deploy foo/bar -o 'foo/bar.json:{"pause": true}'
+  ao deploy foo/bar -o 'foo/bar.json:{"pause": true}'
 	
-	# Exclude application (regexp)
-	ao deploy foo -e .*/bar
+  # Exclude application(s) from foo environment (regexp)
+  ao deploy foo -e .*/bar -e .*/baz
 
-	# Exclude environment (regexp)
-	ao deploy bar -e ref/.*
+  # Exclude environment(s) when deploying an application across environments (regexp)
+  ao deploy bar -e ref/.*
 `
 
 var deployCmd = &cobra.Command{
