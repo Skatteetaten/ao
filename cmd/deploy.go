@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -20,6 +21,7 @@ var (
 	flagNoPrompt    bool
 	flagVersion     string
 	flagCluster     string
+	flagExcludes    []string
 )
 
 const deployLong = `Deploys applications from the current AuroraConfig.
@@ -32,7 +34,9 @@ const exampleDeploy = `  Given the following AuroraConfig:
     - bar.json
     - foo/about.json
     - foo/bar.json
-    - foo/foobar.json
+		- foo/foobar.json
+		- ref/about.json
+    - ref/bar.json
 
   # Fuzzy matching: deploy foo/bar and foo/foobar
   ao deploy fo/ba
@@ -42,6 +46,12 @@ const exampleDeploy = `  Given the following AuroraConfig:
 
   # Deploy an application with override for application file
   ao deploy foo/bar -o 'foo/bar.json:{"pause": true}'
+	
+  # Exclude application(s) from foo environment (regexp)
+  ao deploy foo -e .*/bar -e .*/baz
+
+  # Exclude environment(s) when deploying an application across environments (regexp)
+  ao deploy bar -e ref/.*
 `
 
 var deployCmd = &cobra.Command{
@@ -61,6 +71,7 @@ func init() {
 	deployCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Limit deploy to given cluster name")
 	deployCmd.Flags().BoolVarP(&flagNoPrompt, "no-prompt", "", false, "Suppress prompts")
 	deployCmd.Flags().StringArrayVarP(&flagOverrides, "overrides", "o", []string{}, "Override in the form '[env/]file:{<json override>}'")
+	deployCmd.Flags().StringArrayVarP(&flagExcludes, "exclude", "e", []string{}, "Select applications or environments to exclude from deploy")
 	deployCmd.Flags().StringVarP(&flagVersion, "version", "v", "", "Set the given version in AuroraConfig before deploy")
 
 	deployCmd.Flags().BoolVarP(&flagNoPrompt, "force", "f", false, "Suppress prompts")
@@ -115,6 +126,11 @@ func deploy(cmd *cobra.Command, args []string) error {
 
 	possibleDeploys := files.GetApplicationIds()
 	applications := fuzzy.SearchForApplications(search, possibleDeploys)
+
+	applications, err = filterExcludes(flagExcludes, applications)
+	if err != nil {
+		return err
+	}
 
 	if len(applications) == 0 {
 		return errors.New("No applications to deploy")
@@ -211,6 +227,28 @@ func deploy(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func filterExcludes(expressions, applications []string) ([]string, error) {
+
+	apps := make([]string, len(applications))
+	copy(apps, applications)
+	for _, expr := range expressions {
+		r, err := regexp.Compile(expr)
+		if err != nil {
+			return nil, err
+		}
+		tmp := apps[:0]
+		for _, app := range apps {
+			match := r.MatchString(app)
+			if !match {
+				tmp = append(tmp, app)
+			}
+		}
+		apps = tmp
+	}
+
+	return apps, nil
 }
 
 func deployToReachableClusters(affiliation, token string, clusters map[string]*config.Cluster, payload *client.DeployPayload) ([]*client.DeployResults, error) {
