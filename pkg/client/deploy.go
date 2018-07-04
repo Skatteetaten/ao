@@ -73,6 +73,16 @@ func (api *ApiClient) Deploy(deployPayload *DeployPayload) (*DeployResults, erro
 		return nil, err
 	}
 
+	if !response.Success {
+		for _, deploy := range deploys.Results {
+			// Hack-ish solution since validation errors and deploy errors have
+			// different payload. TODO: Fix error response from Boober.
+			if deploy.ADS.Name == "" {
+				return nil, response.Error()
+			}
+		}
+	}
+
 	deploys.Message = response.Message
 	if response.Success {
 		deploys.Success = true
