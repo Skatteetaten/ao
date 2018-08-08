@@ -32,7 +32,7 @@ type AOConfig struct {
 var DefaultAOConfig = AOConfig{
 	RefName:                 "master",
 	Clusters:                make(map[string]*Cluster),
-	AvailableClusters:       []string{"utv", "utv-relay", "test", "test-relay", "prod", "prod-relay", "qa"},
+	AvailableClusters:       []string{"utv", "utv-relay", "test", "test-relay", "prod", "prod-relay"},
 	PreferredAPIClusters:    []string{"utv", "test"},
 	AvailableUpdateClusters: []string{"utv", "test"},
 	ClusterUrlPattern:       "https://%s-master.paas.skead.no:8443",
