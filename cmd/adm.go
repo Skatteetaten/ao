@@ -11,6 +11,7 @@ import (
 )
 
 var flagShowAll bool
+var flagAddCluster []string
 
 var admCmd = &cobra.Command{
 	Use:   "adm",
@@ -79,6 +80,7 @@ func init() {
 
 	getClusterCmd.Flags().BoolVarP(&flagShowAll, "all", "a", false, "Show all clusters, not just the reachable ones")
 	recreateConfigCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Recreate config with one cluster")
+	recreateConfigCmd.Flags().StringArrayVarP(&flagAddCluster, "add-cluster", "a", []string{}, "Add cluster to available clusters")
 	updateHookCmd.Flags().StringVarP(&flagGitHookType, "git-hook", "g", "pre-push", "Change git hook to validate AuroraConfig")
 }
 
@@ -155,7 +157,10 @@ func RecreateConfig(cmd *cobra.Command, args []string) error {
 	if flagCluster != "" {
 		conf.AvailableClusters = []string{flagCluster}
 		conf.PreferredAPIClusters = []string{flagCluster}
+	} else if len(flagAddCluster) > 0 {
+		conf.AvailableClusters = append(conf.AvailableClusters, flagAddCluster...)
 	}
+
 	conf.InitClusters()
 	conf.SelectApiCluster()
 	return config.WriteConfig(*conf, ConfigLocation)
