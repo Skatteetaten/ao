@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/mitchellh/go-homedir"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
@@ -123,10 +123,17 @@ func initialize(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	commandsWithoutAffiliation := []string{"version", "login", "logout", "adm", "update"}
+	if containsNone(cmd.CommandPath(), commandsWithoutAffiliation) {
+		if aoConfig.Affiliation == "" {
+			return errors.New("no affiliations is set, please log in")
+		}
+	}
+
 	apiCluster := aoConfig.Clusters[aoConfig.APICluster]
 	if apiCluster == nil {
 		if !strings.Contains(cmd.CommandPath(), "adm") {
-			fmt.Printf("Api cluster %s is not available. Check config.\n", aoConfig.APICluster)
+			return errors.Errorf("api cluster %s is not available. Check config", aoConfig.APICluster)
 		}
 		apiCluster = &config.Cluster{}
 	}
@@ -154,6 +161,16 @@ func initialize(cmd *cobra.Command, args []string) error {
 	AO, DefaultApiClient = aoConfig, api
 
 	return nil
+}
+
+func containsNone(value string, list []string) bool {
+	none := true
+	for _, v := range list {
+		if strings.Contains(value, v) {
+			none = false
+		}
+	}
+	return none
 }
 
 func setLogging(level string, pretty bool) error {
