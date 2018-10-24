@@ -123,9 +123,9 @@ func initialize(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	commandsWithoutAffiliation := []string{"version", "login", "logout", "adm", "update"}
-	if containsNone(cmd.CommandPath(), commandsWithoutAffiliation) {
-		if aoConfig.Affiliation == "" {
+	if flagAffiliation == "" && flagCheckoutAffiliation == "" {
+		commandsWithoutAffiliation := []string{"version", "login", "logout", "adm", "update"}
+		if containsNone(cmd.CommandPath(), commandsWithoutAffiliation) && aoConfig.Affiliation == "" {
 			return errors.New("no affiliations is set, please log in")
 		}
 	}
