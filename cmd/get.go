@@ -152,7 +152,7 @@ func PrintDeploySpecTable(args []string, filter fuzzy.FilterMode, cmd *cobra.Com
 	return nil
 }
 
-func GetDeploySpecTable(specs []client.AuroraDeploySpec) (string, []string) {
+func GetDeploySpecTable(specs []client.DeploySpec) (string, []string) {
 	var rows []string
 	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tREPLICAS\tTYPE\tDEPLOY STRATEGY"
 	pattern := "%v\t%v\t%v\t%v\t%v\t%v\t%v"

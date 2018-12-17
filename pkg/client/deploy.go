@@ -8,6 +8,12 @@ import (
 	"strings"
 )
 
+type DeployClient interface {
+	Doer
+	Deploy(deployPayload *DeployPayload) (*DeployResults, error)
+	GetApplyResult(deployId string) (string, error)
+}
+
 type (
 	applicationId struct {
 		Environment string `json:"environment"`
