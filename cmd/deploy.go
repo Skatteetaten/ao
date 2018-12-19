@@ -21,11 +21,11 @@ type deploymentUnitID struct {
 }
 
 type deploymentUnit struct {
-	id              *deploymentUnitID
-	applicationList []string
-	cluster         *config.Cluster
-	affiliation     string
-	overrideToken   string
+	id             *deploymentUnitID
+	deploySpecList []client.DeploySpec
+	cluster        *config.Cluster
+	auroraConfig   string
+	overrideToken  string
 }
 
 var (
@@ -83,13 +83,14 @@ func newDeploymentUnitID(clusterName, envName string) *deploymentUnitID {
 		envName:     envName,
 	}
 }
-func newDeploymentUnit(unitID *deploymentUnitID, applicationList []string, cluster *config.Cluster, affiliation string, overrideToken string) *deploymentUnit {
+
+func newDeploymentUnit(unitID *deploymentUnitID, deploySpecs []client.DeploySpec, cluster *config.Cluster, auroraConfig string, overrideToken string) *deploymentUnit {
 	return &deploymentUnit{
-		id:              unitID,
-		applicationList: applicationList,
-		cluster:         cluster,
-		affiliation:     affiliation,
-		overrideToken:   overrideToken,
+		id:             unitID,
+		deploySpecList: deploySpecs,
+		cluster:        cluster,
+		auroraConfig:   auroraConfig,
+		overrideToken:  overrideToken,
 	}
 }
 
@@ -125,12 +126,12 @@ func deploy(cmd *cobra.Command, args []string) error {
 		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	affiliation := AO.Affiliation
+	auroraConfig := AO.Affiliation
 	if flagAffiliation != "" {
-		affiliation = flagAffiliation
+		auroraConfig = flagAffiliation
 	}
 
-	apiClient, err := getAPIClient(affiliation, pFlagToken, flagCluster)
+	apiClient, err := getAPIClient(auroraConfig, pFlagToken, flagCluster)
 	if err != nil {
 		return err
 	}
@@ -156,7 +157,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications to deploy")
 	}
 
-	deploymentUnits := createDeploymentUnits(affiliation, pFlagToken, AO.Clusters, filteredDeploymentSpecs)
+	deploymentUnits := createDeploymentUnits(auroraConfig, pFlagToken, AO.Clusters, filteredDeploymentSpecs)
 
 	result, err := deployToReachableClusters(getDeployClient, deploymentUnits, overrideConfig)
 	if err != nil {
@@ -244,28 +245,6 @@ func getFilteredDeploymentSpecs(apiClient client.DeploySpecClient, applications 
 	return filteredDeploymentSpecs, nil
 }
 
-func createDeploymentUnits(affiliation, overrideToken string, clusters map[string]*config.Cluster, deploymentSpecs []client.DeploySpec) map[deploymentUnitID]*deploymentUnit {
-	unitsMap := make(map[deploymentUnitID]*deploymentUnit)
-
-	for _, spec := range deploymentSpecs {
-		appID := spec.Value("applicationId").(string)
-		clusterName := spec.Value("cluster").(string)
-		envName := spec.Value("envName").(string)
-
-		unitID := newDeploymentUnitID(clusterName, envName)
-
-		if _, exists := unitsMap[*unitID]; !exists {
-			cluster := clusters[clusterName]
-			unit := newDeploymentUnit(unitID, []string{}, cluster, affiliation, overrideToken)
-			unitsMap[*unitID] = unit
-		}
-
-		unitsMap[*unitID].applicationList = append(unitsMap[*unitID].applicationList, appID)
-	}
-
-	return unitsMap
-}
-
 func filterExcludes(expressions, applications []string) ([]string, error) {
 	apps := make([]string, len(applications))
 	copy(apps, applications)
@@ -287,39 +266,87 @@ func filterExcludes(expressions, applications []string) ([]string, error) {
 	return apps, nil
 }
 
+func createDeploymentUnits(auroraConfig, overrideToken string, clusters map[string]*config.Cluster, deploymentSpecs []client.DeploySpec) map[deploymentUnitID]*deploymentUnit {
+	unitsMap := make(map[deploymentUnitID]*deploymentUnit)
+
+	for _, spec := range deploymentSpecs {
+		clusterName := spec.Value("cluster").(string)
+		envName := spec.Value("envName").(string)
+
+		unitID := newDeploymentUnitID(clusterName, envName)
+
+		if _, exists := unitsMap[*unitID]; !exists {
+			cluster := clusters[clusterName]
+			unit := newDeploymentUnit(unitID, []client.DeploySpec{}, cluster, auroraConfig, overrideToken)
+			unitsMap[*unitID] = unit
+		}
+
+		unitsMap[*unitID].deploySpecList = append(unitsMap[*unitID].deploySpecList, spec)
+	}
+
+	return unitsMap
+}
+
 func deployToReachableClusters(getClient func(unit *deploymentUnit) client.DeployClient, deploymentUnits map[deploymentUnitID]*deploymentUnit, overrideConfig map[string]string) ([]*client.DeployResults, error) {
 	deployResult := make(chan *client.DeployResults)
-	deployErrors := make(chan error)
 
 	for _, unit := range deploymentUnits {
-		deployClient := getClient(unit)
-		go deployUnit(deployClient, unit, overrideConfig, deployResult, deployErrors)
+		go deployUnit(getClient(unit), unit, overrideConfig, deployResult)
 	}
 
 	var allResults []*client.DeployResults
 	for i := 0; i < len(deploymentUnits); i++ {
-		select {
-		case err := <-deployErrors:
-			return nil, err
-		case result := <-deployResult:
-			allResults = append(allResults, result)
-		}
+		allResults = append(allResults, <-deployResult)
 	}
 
 	return allResults, nil
 }
 
-func deployUnit(deployClient client.DeployClient, unit *deploymentUnit, overrideConfig map[string]string, deployResult chan<- *client.DeployResults, deployErrors chan<- error) {
+func deployUnit(deployClient client.DeployClient, unit *deploymentUnit, overrideConfig map[string]string, deployResults chan<- *client.DeployResults) {
 	if !unit.cluster.Reachable {
-		return // TODO
+		deployResults <- errorDeployResults("Cluster is not reachable", unit)
+		return
 	}
-	payload := client.NewDeployPayload(unit.applicationList, overrideConfig)
+
+	var applicationList []string
+	for _, spec := range unit.deploySpecList {
+		applicationList = append(applicationList, spec.Value("applicationId").(string))
+	}
+
+	payload := client.NewDeployPayload(applicationList, overrideConfig)
 
 	result, err := deployClient.Deploy(payload)
 	if err != nil {
-		deployErrors <- err
+		deployResults <- errorDeployResults(err.Error(), unit)
 	} else {
-		deployResult <- result
+		deployResults <- result
+	}
+}
+
+func errorDeployResults(reason string, unit *deploymentUnit) *client.DeployResults {
+	var applicationResults []client.DeployResult
+
+	for _, spec := range unit.deploySpecList {
+		affiliation := spec.Value("affiliation").(string)
+		applicationID := client.NewApplicationId(spec.Value("applicationId").(string))
+
+		result := new(client.DeployResult)
+		result.DeployId = "-"
+		result.Ignored = false
+		result.Success = false
+		result.Reason = reason
+		result.ADS.Cluster = unit.cluster.Name
+		result.ADS.Name = applicationID.Application
+		result.ADS.Deploy.Version = "-"
+		result.ADS.Environment.Namespace = affiliation + "-" + applicationID.Environment
+
+		applicationResults = append(applicationResults, *result)
+	}
+
+	return &client.DeployResults{
+		Message: reason,
+		Success: false,
+		Results: applicationResults,
 	}
 }
 
@@ -409,9 +436,9 @@ func getDeployResultTable(deploys []client.DeployResult) (string, []string) {
 	return header, rows
 }
 
-func getAPIClient(affiliation, overrideToken, overrideCluster string) (*client.ApiClient, error) {
+func getAPIClient(auroraConfig, overrideToken, overrideCluster string) (*client.ApiClient, error) {
 	api := DefaultApiClient
-	api.Affiliation = affiliation
+	api.Affiliation = auroraConfig
 
 	if overrideCluster != "" && !AO.Localhost {
 		c := AO.Clusters[overrideCluster]
@@ -433,13 +460,13 @@ func getDeployClient(unit *deploymentUnit) client.DeployClient {
 	var updateClient *client.ApiClient
 	if AO.Localhost {
 		updateClient = DefaultApiClient
-		updateClient.Affiliation = unit.affiliation
+		updateClient.Affiliation = unit.auroraConfig
 	} else {
 		token := unit.cluster.Token
 		if unit.overrideToken != "" {
 			token = unit.overrideToken
 		}
-		updateClient = client.NewApiClient(unit.cluster.BooberUrl, token, unit.affiliation)
+		updateClient = client.NewApiClient(unit.cluster.BooberUrl, token, unit.auroraConfig)
 	}
 
 	return updateClient

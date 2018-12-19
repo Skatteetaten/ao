@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/stretchr/testify/assert"
@@ -46,19 +47,19 @@ var fileNames = [...]string{
 }
 
 var testSpecs = [...]client.DeploySpec{
-	&MockDeploySpec{"applicationId": "dev/crm", "cluster": "east", "envName": "dev"},
-	&MockDeploySpec{"applicationId": "dev/erp", "cluster": "east", "envName": "dev"},
-	&MockDeploySpec{"applicationId": "dev/sap", "cluster": "east", "envName": "dev"},
-	&MockDeploySpec{"applicationId": "test-qa/crm", "cluster": "west", "envName": "test-qa"},
-	&MockDeploySpec{"applicationId": "test-qa/crmv2", "cluster": "west", "envName": "test-qa"},
-	&MockDeploySpec{"applicationId": "test-qa/booking", "cluster": "west", "envName": "test-qa"},
-	&MockDeploySpec{"applicationId": "test-qa/erp", "cluster": "west", "envName": "test-qa"},
-	&MockDeploySpec{"applicationId": "test-st/crm-1-GA", "cluster": "west", "envName": "test-st"},
-	&MockDeploySpec{"applicationId": "test-st/crm-2-GA", "cluster": "west", "envName": "test-st"},
-	&MockDeploySpec{"applicationId": "test-st/booking", "cluster": "west", "envName": "test-st"},
-	&MockDeploySpec{"applicationId": "test-st/erp", "cluster": "west", "envName": "test-st"},
-	&MockDeploySpec{"applicationId": "prod/crm", "cluster": "north", "envName": "prod"},
-	&MockDeploySpec{"applicationId": "prod/booking", "cluster": "north", "envName": "prod"},
+	&MockDeploySpec{"applicationId": "dev/crm", "cluster": "east", "envName": "dev", "affiliation": "sales"},
+	&MockDeploySpec{"applicationId": "dev/erp", "cluster": "east", "envName": "dev", "affiliation": "sales"},
+	&MockDeploySpec{"applicationId": "dev/sap", "cluster": "east", "envName": "dev", "affiliation": "sales"},
+	&MockDeploySpec{"applicationId": "test-qa/crm", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
+	&MockDeploySpec{"applicationId": "test-qa/crmv2", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
+	&MockDeploySpec{"applicationId": "test-qa/booking", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
+	&MockDeploySpec{"applicationId": "test-qa/erp", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
+	&MockDeploySpec{"applicationId": "test-st/crm-1-GA", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
+	&MockDeploySpec{"applicationId": "test-st/crm-2-GA", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
+	&MockDeploySpec{"applicationId": "test-st/booking", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
+	&MockDeploySpec{"applicationId": "test-st/erp", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
+	&MockDeploySpec{"applicationId": "prod/crm", "cluster": "north", "envName": "prod", "affiliation": "sales"},
+	&MockDeploySpec{"applicationId": "prod/booking", "cluster": "north", "envName": "prod", "affiliation": "sales"},
 }
 
 var testClusters = map[string]*config.Cluster{
@@ -110,31 +111,31 @@ func (api *AurorConfigClientMock) GetFileNames() (client.FileNames, error) {
 }
 
 func (api *AurorConfigClientMock) GetAuroraConfig() (*client.AuroraConfig, error) {
-	return nil, nil
+	return nil, errors.New("Not implemented")
 }
 
 func (api *AurorConfigClientMock) GetAuroraConfigNames() (*client.AuroraConfigNames, error) {
-	return nil, nil
+	return nil, errors.New("Not implemented")
 }
 
 func (api *AurorConfigClientMock) PutAuroraConfig(endpoint string, ac *client.AuroraConfig) error {
-	return nil
+	return errors.New("Not implemented")
 }
 
 func (api *AurorConfigClientMock) ValidateAuroraConfig(ac *client.AuroraConfig, fullValidation bool) error {
-	return nil
+	return errors.New("Not implemented")
 }
 
 func (api *AurorConfigClientMock) PatchAuroraConfigFile(fileName string, operation client.JsonPatchOp) error {
-	return nil
+	return errors.New("Not implemented")
 }
 
 func (api *AurorConfigClientMock) GetAuroraConfigFile(fileName string) (*client.AuroraConfigFile, string, error) {
-	return nil, "nil", nil
+	return nil, "", errors.New("Not implemented")
 }
 
 func (api *AurorConfigClientMock) PutAuroraConfigFile(file *client.AuroraConfigFile, eTag string) error {
-	return nil
+	return errors.New("Not implemented")
 }
 
 func (api *DeployClientMock) Deploy(deployPayload *client.DeployPayload) (*client.DeployResults, error) {
@@ -143,7 +144,7 @@ func (api *DeployClientMock) Deploy(deployPayload *client.DeployPayload) (*clien
 }
 
 func (api *DeployClientMock) GetApplyResult(deployId string) (string, error) {
-	return "", nil
+	return "", errors.New("Not implemented")
 }
 
 func (mds MockDeploySpec) Value(jsonPointer string) interface{} {
@@ -208,10 +209,10 @@ func Test_getFilteredDeploymentSpecsWithOverrideCluster(t *testing.T) {
 
 func Test_createDeploymentUnits(t *testing.T) {
 
-	affiliation := "sales"
+	auroraConfig := "jupiter"
 	overrideToken := ""
 
-	units := createDeploymentUnits(affiliation, overrideToken, testClusters, testSpecs[:])
+	units := createDeploymentUnits(auroraConfig, overrideToken, testClusters, testSpecs[:])
 
 	assert.Len(t, units, 4)
 	assert.Contains(t, units, *newDeploymentUnitID("east", "dev"))
@@ -221,21 +222,21 @@ func Test_createDeploymentUnits(t *testing.T) {
 
 	sampleUnit := units[*newDeploymentUnitID("west", "test-st")]
 
-	assert.Equal(t, affiliation, sampleUnit.affiliation)
+	assert.Equal(t, auroraConfig, sampleUnit.auroraConfig)
 	assert.Equal(t, "west", sampleUnit.cluster.Name)
 	assert.Equal(t, overrideToken, sampleUnit.overrideToken)
-	assert.Len(t, sampleUnit.applicationList, 4)
-	assert.Contains(t, sampleUnit.applicationList, "test-st/crm-1-GA")
-	assert.Contains(t, sampleUnit.applicationList, "test-st/crm-2-GA")
-	assert.Contains(t, sampleUnit.applicationList, "test-st/booking")
-	assert.Contains(t, sampleUnit.applicationList, "test-st/erp")
+	assert.Len(t, sampleUnit.deploySpecList, 4)
+	assert.IsType(t, sampleUnit.deploySpecList[0], &MockDeploySpec{})
+	assert.IsType(t, sampleUnit.deploySpecList[1], &MockDeploySpec{})
+	assert.IsType(t, sampleUnit.deploySpecList[2], &MockDeploySpec{})
+	assert.IsType(t, sampleUnit.deploySpecList[3], &MockDeploySpec{})
 }
 
 func Test_createDeploymentUnitsWithOverrideToken(t *testing.T) {
-	affiliation := "east"
+	auroraConfig := "jupiter"
 	overrideToken := "footoken"
 
-	units := createDeploymentUnits(affiliation, overrideToken, testClusters, testSpecs[:])
+	units := createDeploymentUnits(auroraConfig, overrideToken, testClusters, testSpecs[:])
 
 	sampleUnit := units[*newDeploymentUnitID("west", "test-st")]
 
@@ -243,7 +244,7 @@ func Test_createDeploymentUnitsWithOverrideToken(t *testing.T) {
 }
 
 func Test_deployToReachableClusters(t *testing.T) {
-	affiliation := "sales"
+	auroraConfig := "jupiter"
 	overrideToken := ""
 
 	deployClientMock := newDeployClientMock()
@@ -254,13 +255,13 @@ func Test_deployToReachableClusters(t *testing.T) {
 
 	deploymentUnits := map[deploymentUnitID]*deploymentUnit{
 		*newDeploymentUnitID("east", "dev"): newDeploymentUnit(newDeploymentUnitID("east", "dev"),
-			[]string{"dev/crm", "dev/erp", "dev/sap"}, newTestCluster("east", true), affiliation, overrideToken),
+			testSpecs[0:3], newTestCluster("east", true), auroraConfig, overrideToken),
 		*newDeploymentUnitID("west", "test-qa"): newDeploymentUnit(newDeploymentUnitID("west", "test"),
-			[]string{"test-qa/crm", "test-qa/crmv2", "test-qa/booking", "test-qa/erp"}, newTestCluster("west", true), affiliation, overrideToken),
+			testSpecs[3:7], newTestCluster("west", true), auroraConfig, overrideToken),
 		*newDeploymentUnitID("west", "test-st"): newDeploymentUnit(newDeploymentUnitID("west", "test"),
-			[]string{"test-st/crm-1-GA", "test-st/crm-2-GA", "test-st/booking", "test-st/erp"}, newTestCluster("west", true), affiliation, overrideToken),
+			testSpecs[7:11], newTestCluster("west", true), auroraConfig, overrideToken),
 		*newDeploymentUnitID("north", "prod"): newDeploymentUnit(newDeploymentUnitID("north", "prod"),
-			[]string{"prod/crm", "prod/booking"}, newTestCluster("north", true), affiliation, overrideToken),
+			testSpecs[11:13], newTestCluster("north", true), auroraConfig, overrideToken),
 	}
 
 	deployClientMock.On("Deploy", mock.Anything).Times(4)
@@ -271,4 +272,36 @@ func Test_deployToReachableClusters(t *testing.T) {
 	}
 
 	deployClientMock.AssertExpectations(t)
+}
+
+func Test_deployToUnreachableClusters(t *testing.T) {
+	auroraConfig := "jupiter"
+	overrideToken := ""
+
+	deployClientMock := newDeployClientMock()
+
+	getClient := func(unit *deploymentUnit) client.DeployClient {
+		return deployClientMock
+	}
+
+	deploymentUnits := map[deploymentUnitID]*deploymentUnit{
+		*newDeploymentUnitID("east", "dev"): newDeploymentUnit(newDeploymentUnitID("east", "dev"),
+			testSpecs[0:3], newTestCluster("east", false), auroraConfig, overrideToken),
+	}
+
+	results, err := deployToReachableClusters(getClient, deploymentUnits, map[string]string{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, results, 1)
+	assert.Len(t, results[0].Results, 3)
+	assert.Equal(t, results[0].Results[0].Success, false)
+	assert.Equal(t, results[0].Results[0].Reason, "Cluster is not reachable")
+
+	assert.Equal(t, results[0].Results[1].Success, false)
+	assert.Equal(t, results[0].Results[1].Reason, "Cluster is not reachable")
+
+	assert.Equal(t, results[0].Results[2].Success, false)
+	assert.Equal(t, results[0].Results[2].Reason, "Cluster is not reachable")
 }
