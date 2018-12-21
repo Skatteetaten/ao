@@ -160,13 +160,20 @@ func GetDeploySpecTable(specs []client.DeploySpec) (string, []string) {
 		return strings.Compare(specs[i].Value("name").(string), specs[j].Value("name").(string)) != 1
 	})
 	for _, spec := range specs {
+		var replicas string
+		if fmt.Sprint(spec.Value("pause")) == "true" {
+			replicas = "Paused"
+		} else {
+			replicas = fmt.Sprint(spec.Value("replicas"))
+		}
+
 		row := fmt.Sprintf(
 			pattern,
 			spec.Value("cluster"),
 			spec.Value("envName"),
 			spec.Value("name"),
 			spec.Value("version"),
-			spec.Value("replicas"),
+			replicas,
 			spec.Value("type"),
 			spec.Value("deployStrategy/type"),
 		)
