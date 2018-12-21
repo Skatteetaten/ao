@@ -153,11 +153,14 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	deploymentUnits, err := createDeploymentUnits(auroraConfig, pFlagToken, AO.Clusters, filteredDeploymentSpecs)
+	if err != nil {
+		return err
+	}
+
 	if !userConfirmation(filteredDeploymentSpecs, cmd.OutOrStdout()) {
 		return errors.New("No applications to deploy")
 	}
-
-	deploymentUnits := createDeploymentUnits(auroraConfig, pFlagToken, AO.Clusters, filteredDeploymentSpecs)
 
 	result, err := deployToReachableClusters(getDeployClient, deploymentUnits, overrideConfig)
 	if err != nil {
@@ -266,7 +269,7 @@ func filterExcludes(expressions, applications []string) ([]string, error) {
 	return apps, nil
 }
 
-func createDeploymentUnits(auroraConfig, overrideToken string, clusters map[string]*config.Cluster, deploymentSpecs []client.DeploySpec) map[deploymentUnitID]*deploymentUnit {
+func createDeploymentUnits(auroraConfig, overrideToken string, clusters map[string]*config.Cluster, deploymentSpecs []client.DeploySpec) (map[deploymentUnitID]*deploymentUnit, error) {
 	unitsMap := make(map[deploymentUnitID]*deploymentUnit)
 
 	for _, spec := range deploymentSpecs {
@@ -276,6 +279,9 @@ func createDeploymentUnits(auroraConfig, overrideToken string, clusters map[stri
 		unitID := newDeploymentUnitID(clusterName, envName)
 
 		if _, exists := unitsMap[*unitID]; !exists {
+			if _, exists := clusters[clusterName]; !exists {
+				return nil, errors.New(fmt.Sprintf("No such cluster %s", clusterName))
+			}
 			cluster := clusters[clusterName]
 			unit := newDeploymentUnit(unitID, []client.DeploySpec{}, cluster, auroraConfig, overrideToken)
 			unitsMap[*unitID] = unit
@@ -284,7 +290,7 @@ func createDeploymentUnits(auroraConfig, overrideToken string, clusters map[stri
 		unitsMap[*unitID].deploySpecList = append(unitsMap[*unitID].deploySpecList, spec)
 	}
 
-	return unitsMap
+	return unitsMap, nil
 }
 
 func deployToReachableClusters(getClient func(unit *deploymentUnit) client.DeployClient, deploymentUnits map[deploymentUnitID]*deploymentUnit, overrideConfig map[string]string) ([]*client.DeployResults, error) {
