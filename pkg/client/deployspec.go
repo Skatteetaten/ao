@@ -73,7 +73,8 @@ func (api *ApiClient) GetAuroraDeploySpec(applications []string, defaults bool) 
 		}
 	}
 
-	// TODO !!
+	// Must copy elements to array of interfaces.
+	// TODO: Find a way to avoid having to do this.
 	deploySpecs := make([]DeploySpec, len(allSpecs))
 	for i, spec := range allSpecs {
 		deploySpecs[i] = DeploySpec(spec)

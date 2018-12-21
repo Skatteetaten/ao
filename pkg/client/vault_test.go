@@ -20,7 +20,7 @@ func TestApiClient_GetVaults(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClient(ts.URL, "test", affiliation)
+		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
 		vaults, err := api.GetVaults()
 		assert.NoError(t, err)
 
@@ -40,7 +40,7 @@ func TestApiClient_GetVault(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClient(ts.URL, "test", affiliation)
+		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
 		vault, err := api.GetVault("console")
 		assert.NoError(t, err)
 
@@ -59,7 +59,7 @@ func TestApiClient_DeleteVault(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClient(ts.URL, "test", affiliation)
+		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
 		err := api.DeleteVault("console")
 		assert.NoError(t, err)
 	})
@@ -77,7 +77,7 @@ func TestApiClient_SaveVault(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClient(ts.URL, "test", affiliation)
+		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
 		err := api.SaveVault(*vault)
 		assert.NoError(t, err)
 	})
@@ -93,7 +93,7 @@ func TestApiClient_UpdateSecretFile(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClient(ts.URL, "test", affiliation)
+		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
 		err := api.UpdateSecretFile("console", "latest.properties", "", []byte("Rk9PPVRFU1QK"))
 		assert.NoError(t, err)
 	})

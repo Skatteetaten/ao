@@ -35,12 +35,16 @@ type ApiClient struct {
 	RefName     string
 }
 
-func NewApiClient(host, token, affiliation string) *ApiClient {
+func NewApiClientDefaultRef(host, token, affiliation string) *ApiClient {
+	return NewApiClient(host, token, affiliation, "master")
+}
+
+func NewApiClient(host, token, affiliation, refName string) *ApiClient {
 	return &ApiClient{
 		Host:        host,
 		Token:       token,
 		Affiliation: affiliation,
-		RefName:     "master",
+		RefName:     refName,
 	}
 }
 

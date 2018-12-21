@@ -33,7 +33,7 @@ func TestApiClient_Deploy(t *testing.T) {
 
 		applications := []string{"boober-utv/reference"}
 
-		api := NewApiClient(ts.URL, "test", affiliation)
+		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
 		deployPayload := NewDeployPayload(applications, make(map[string]string))
 		deploys, err := api.Deploy(deployPayload)
 

@@ -58,7 +58,7 @@ func TestApiClient_Do(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClient(ts.URL, "test", affiliation)
+		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
 		api.Do(http.MethodGet, "/hello", nil)
 	})
 
@@ -74,7 +74,7 @@ func TestApiClient_Do(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClient(ts.URL, "test", affiliation)
+		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
 		res, err := api.Do(http.MethodGet, "/", nil)
 
 		assert.NoError(t, err)
@@ -86,7 +86,7 @@ func TestApiClient_Do(t *testing.T) {
 	})
 
 	t.Run("Should fail when trying to connect to non existing host", func(t *testing.T) {
-		api := NewApiClient("http://notvalid:8080", "", "")
+		api := NewApiClientDefaultRef("http://notvalid:8080", "", "")
 		_, err := api.Do(http.MethodGet, "/", nil)
 		assert.Error(t, err)
 	})
@@ -114,7 +114,7 @@ func TestApiClient_Do(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClient(ts.URL, "", "")
+		api := NewApiClientDefaultRef(ts.URL, "", "")
 		_, err = api.Do(http.MethodPut, "/", payload)
 		assert.NoError(t, err)
 	})
@@ -142,7 +142,7 @@ func TestApiClient_Do(t *testing.T) {
 			}))
 			testServers = append(testServers, ts)
 
-			api := NewApiClient(ts.URL, "test", affiliation)
+			api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
 			_, err := api.Do(http.MethodGet, test.Path, nil)
 
 			assert.Error(t, err)

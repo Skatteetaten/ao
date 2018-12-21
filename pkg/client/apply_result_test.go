@@ -2,10 +2,11 @@ package client
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestApiClient_GetApplyResult(t *testing.T) {
@@ -26,7 +27,7 @@ func TestApiClient_GetApplyResult(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClient(ts.URL, "test", affiliation)
+		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
 		result, err := api.GetApplyResult(deployId)
 		if err != nil {
 			t.Fatal(err)

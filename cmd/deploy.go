@@ -457,17 +457,17 @@ func getAPIClient(auroraConfig, overrideToken, overrideCluster string) (*client.
 }
 
 func getDeployClient(unit *deploymentUnit) client.DeployClient {
-	var updateClient *client.ApiClient
+	var deployClient *client.ApiClient
 	if AO.Localhost {
-		updateClient = DefaultApiClient
-		updateClient.Affiliation = unit.auroraConfig
+		deployClient = DefaultApiClient
+		deployClient.Affiliation = unit.auroraConfig
 	} else {
 		token := unit.cluster.Token
 		if unit.overrideToken != "" {
 			token = unit.overrideToken
 		}
-		updateClient = client.NewApiClient(unit.cluster.BooberUrl, token, unit.auroraConfig)
+		deployClient = client.NewApiClient(unit.cluster.BooberUrl, token, unit.auroraConfig, AO.RefName)
 	}
 
-	return updateClient
+	return deployClient
 }
