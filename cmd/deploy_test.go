@@ -212,7 +212,11 @@ func Test_createDeploymentUnits(t *testing.T) {
 	auroraConfig := "jupiter"
 	overrideToken := ""
 
-	units := createDeploymentUnits(auroraConfig, overrideToken, testClusters, testSpecs[:])
+	units, err := createDeploymentUnits(auroraConfig, overrideToken, testClusters, testSpecs[:])
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	assert.Len(t, units, 4)
 	assert.Contains(t, units, *newDeploymentUnitID("east", "dev"))
@@ -236,7 +240,11 @@ func Test_createDeploymentUnitsWithOverrideToken(t *testing.T) {
 	auroraConfig := "jupiter"
 	overrideToken := "footoken"
 
-	units := createDeploymentUnits(auroraConfig, overrideToken, testClusters, testSpecs[:])
+	units, err := createDeploymentUnits(auroraConfig, overrideToken, testClusters, testSpecs[:])
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	sampleUnit := units[*newDeploymentUnitID("west", "test-st")]
 
