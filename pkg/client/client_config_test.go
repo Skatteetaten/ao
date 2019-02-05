@@ -1,10 +1,11 @@
 package client
 
 import (
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestApiClient_GetClientConfig(t *testing.T) {
@@ -19,7 +20,7 @@ func TestApiClient_GetClientConfig(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClient(ts.URL, "test", affiliation)
+		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
 		clientConfig, err := api.GetClientConfig()
 
 		assert.NoError(t, err)

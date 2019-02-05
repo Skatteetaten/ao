@@ -7,6 +7,16 @@ import (
 	"strings"
 )
 
+type DeploySpecClient interface {
+	Doer
+	GetAuroraDeploySpec(applications []string, defaults bool) ([]DeploySpec, error)
+	GetAuroraDeploySpecFormatted(environment, application string, defaults bool) (string, error)
+}
+
+type DeploySpec interface {
+	Value(jsonPointer string) interface{}
+}
+
 type AuroraDeploySpec map[string]interface{}
 
 func (a AuroraDeploySpec) Value(jsonPointer string) interface{} {
@@ -29,7 +39,7 @@ func (a AuroraDeploySpec) get(jsonPointer string) interface{} {
 	return "-"
 }
 
-func (api *ApiClient) GetAuroraDeploySpec(applications []string, defaults bool) ([]AuroraDeploySpec, error) {
+func (api *ApiClient) GetAuroraDeploySpec(applications []string, defaults bool) ([]DeploySpec, error) {
 	endpoint := fmt.Sprintf("/auroradeployspec/%s/?", api.Affiliation)
 	queries := buildDeploySpecQueries(applications, defaults)
 
@@ -63,7 +73,14 @@ func (api *ApiClient) GetAuroraDeploySpec(applications []string, defaults bool) 
 		}
 	}
 
-	return allSpecs, nil
+	// Must copy elements to array of interfaces.
+	// TODO: Find a way to avoid having to do this.
+	deploySpecs := make([]DeploySpec, len(allSpecs))
+	for i, spec := range allSpecs {
+		deploySpecs[i] = DeploySpec(spec)
+	}
+
+	return deploySpecs, nil
 }
 
 func buildDeploySpecQueries(applications []string, defaults bool) []string {

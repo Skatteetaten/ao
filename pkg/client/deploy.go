@@ -8,6 +8,12 @@ import (
 	"strings"
 )
 
+type DeployClient interface {
+	Doer
+	Deploy(deployPayload *DeployPayload) (*DeployResults, error)
+	GetApplyResult(deployId string) (string, error)
+}
+
 type (
 	applicationId struct {
 		Environment string `json:"environment"`
@@ -43,6 +49,14 @@ type (
 		Deploy         bool              `json:"deploy"`
 	}
 )
+
+func NewApplicationId(name string) *applicationId {
+	slice := strings.Split(name, "/")
+	return &applicationId{
+		Environment: slice[0],
+		Application: slice[1],
+	}
+}
 
 func NewDeployPayload(applications []string, overrides map[string]string) *DeployPayload {
 	applicationIds := createApplicationIds(applications)
@@ -94,11 +108,7 @@ func (api *ApiClient) Deploy(deployPayload *DeployPayload) (*DeployResults, erro
 func createApplicationIds(apps []string) []applicationId {
 	var applicationIds []applicationId
 	for _, app := range apps {
-		envApp := strings.Split(app, "/")
-		applicationIds = append(applicationIds, applicationId{
-			Environment: envApp[0],
-			Application: envApp[1],
-		})
+		applicationIds = append(applicationIds, *NewApplicationId(app))
 	}
 	return applicationIds
 }

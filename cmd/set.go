@@ -28,18 +28,30 @@ func Set(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	fileNames, err := DefaultApiClient.GetFileNames()
+	name, path, value := args[0], args[1], args[2]
+
+	fileName, err := SetValue(DefaultApiClient, name, path, value)
 	if err != nil {
 		return err
 	}
 
-	name := args[0]
+	cmd.Printf("%s has been updated with %s %s\n", fileName, path, value)
+
+	return nil
+}
+
+// SetValue updates single Aurora Config value
+func SetValue(apiClient client.AuroraConfigClient, name, path, value string) (string, error) {
+	fileNames, err := apiClient.GetFileNames()
+	if err != nil {
+		return "", err
+	}
+
 	fileName, err := fileNames.Find(name)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	path, value := args[1], args[2]
 	op := client.JsonPatchOp{
 		OP:    "add",
 		Path:  path,
@@ -47,14 +59,12 @@ func Set(cmd *cobra.Command, args []string) error {
 	}
 
 	if err = op.Validate(); err != nil {
-		return err
+		return "", err
 	}
 
 	if err = DefaultApiClient.PatchAuroraConfigFile(fileName, op); err != nil {
-		return err
+		return "", err
 	}
 
-	cmd.Printf("%s has been updated with %s %s\n", fileName, path, value)
-
-	return nil
+	return fileName, nil
 }

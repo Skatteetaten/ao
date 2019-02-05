@@ -18,6 +18,11 @@ const (
 	ErrfTokenHasExpired = "Token has expired for (%s). Please login: ao login <affiliation>"
 )
 
+type Doer interface {
+	Do(method string, endpoint string, payload []byte) (*BooberResponse, error)
+	DoWithHeader(method string, endpoint string, header map[string]string, payload []byte) (*ResponseBundle, error)
+}
+
 type ResponseBundle struct {
 	BooberResponse *BooberResponse
 	HttpResponse   *http.Response
@@ -30,12 +35,16 @@ type ApiClient struct {
 	RefName     string
 }
 
-func NewApiClient(host, token, affiliation string) *ApiClient {
+func NewApiClientDefaultRef(host, token, affiliation string) *ApiClient {
+	return NewApiClient(host, token, affiliation, "master")
+}
+
+func NewApiClient(host, token, affiliation, refName string) *ApiClient {
 	return &ApiClient{
 		Host:        host,
 		Token:       token,
 		Affiliation: affiliation,
-		RefName:     "master",
+		RefName:     refName,
 	}
 }
 

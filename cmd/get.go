@@ -152,7 +152,7 @@ func PrintDeploySpecTable(args []string, filter fuzzy.FilterMode, cmd *cobra.Com
 	return nil
 }
 
-func GetDeploySpecTable(specs []client.AuroraDeploySpec) (string, []string) {
+func GetDeploySpecTable(specs []client.DeploySpec) (string, []string) {
 	var rows []string
 	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tREPLICAS\tTYPE\tDEPLOY STRATEGY"
 	pattern := "%v\t%v\t%v\t%v\t%v\t%v\t%v"
@@ -160,13 +160,20 @@ func GetDeploySpecTable(specs []client.AuroraDeploySpec) (string, []string) {
 		return strings.Compare(specs[i].Value("name").(string), specs[j].Value("name").(string)) != 1
 	})
 	for _, spec := range specs {
+		var replicas string
+		if fmt.Sprint(spec.Value("pause")) == "true" {
+			replicas = "Paused"
+		} else {
+			replicas = fmt.Sprint(spec.Value("replicas"))
+		}
+
 		row := fmt.Sprintf(
 			pattern,
 			spec.Value("cluster"),
 			spec.Value("envName"),
 			spec.Value("name"),
 			spec.Value("version"),
-			spec.Value("replicas"),
+			replicas,
 			spec.Value("type"),
 			spec.Value("deployStrategy/type"),
 		)

@@ -12,6 +12,18 @@ import (
 	"github.com/skatteetaten/ao/pkg/collections"
 )
 
+type AuroraConfigClient interface {
+	Doer
+	GetFileNames() (FileNames, error)
+	GetAuroraConfig() (*AuroraConfig, error)
+	GetAuroraConfigNames() (*AuroraConfigNames, error)
+	PutAuroraConfig(endpoint string, ac *AuroraConfig) error
+	ValidateAuroraConfig(ac *AuroraConfig, fullValidation bool) error
+	PatchAuroraConfigFile(fileName string, operation JsonPatchOp) error
+	GetAuroraConfigFile(fileName string) (*AuroraConfigFile, string, error)
+	PutAuroraConfigFile(file *AuroraConfigFile, eTag string) error
+}
+
 var (
 	ErrJsonPathPrefix = errors.New("json path must start with /")
 )
