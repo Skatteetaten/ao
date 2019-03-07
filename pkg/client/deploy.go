@@ -59,6 +59,22 @@ func (spec DeploymentSpec) GetString(name string) string {
 	return spec.Get(name).(string)
 }
 
+func (spec DeploymentSpec) Cluster() string {
+	return spec.GetString("cluster")
+}
+
+func (spec DeploymentSpec) Environment() string {
+	return spec.GetString("envName")
+}
+
+func (spec DeploymentSpec) Name() string {
+	return spec.GetString("name")
+}
+
+func (spec DeploymentSpec) Version() string {
+	return spec.GetString("version")
+}
+
 func NewAuroraConfigFieldSource(value interface{}) AuroraConfigFieldSource {
 	return AuroraConfigFieldSource{
 		Value: value,
@@ -106,7 +122,7 @@ func (api *ApiClient) Deploy(deployPayload *DeployPayload) (*DeployResults, erro
 		for _, deploy := range deploys.Results {
 			// Hack-ish solution since validation errors and deploy errors have
 			// different payload. TODO: Fix error response from Boober.
-			if deploy.DeploymentSpec.GetString("name") == "" {
+			if deploy.DeploymentSpec.Name() == "" {
 				return nil, response.Error()
 			}
 		}

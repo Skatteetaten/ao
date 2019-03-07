@@ -405,9 +405,9 @@ func printDeployResult(result []*client.DeployResults, out io.Writer) error {
 	}
 
 	sort.Slice(results, func(i, j int) bool {
-		resultI := results[i].DeploymentSpec.GetString("name")
-		resultJ := results[j].DeploymentSpec.GetString("name")
-		return strings.Compare(resultI, resultJ) < 1
+		nameA := results[i].DeploymentSpec.Name()
+		nameB := results[j].DeploymentSpec.Name()
+		return strings.Compare(nameA, nameB) < 1
 	})
 
 	header, rows := getDeployResultTable(results)
@@ -431,16 +431,16 @@ func getDeployResultTable(deploys []client.DeployResult) (string, []string) {
 		if item.Ignored {
 			continue
 		}
-		cluster := item.DeploymentSpec.GetString("cluster")
-		envName := item.DeploymentSpec.GetString("envName")
-		name := item.DeploymentSpec.GetString("name")
-		version := item.DeploymentSpec.GetString("version")
+		cluster := item.DeploymentSpec.Cluster()
+		environment := item.DeploymentSpec.Environment()
+		name := item.DeploymentSpec.Name()
+		version := item.DeploymentSpec.Version()
 		pattern := "%s\t%s\t%s\t%s\t%s\t%s\t%s"
 		status := "\x1b[32mDeployed\x1b[0m"
 		if !item.Success {
 			status = "\x1b[31mFailed\x1b[0m"
 		}
-		result := fmt.Sprintf(pattern, status, cluster, envName, name, version, item.DeployId, item.Reason)
+		result := fmt.Sprintf(pattern, status, cluster, environment, name, version, item.DeployId, item.Reason)
 		rows = append(rows, result)
 	}
 
