@@ -21,7 +21,7 @@ func DefaultTablePrinter(header string, rows []string, out io.Writer) {
 	w.Flush()
 }
 
-func GetApplicationIdTable(deployments []string) (string, []string) {
+func GetApplicationDeploymentRefTable(deployments []string) (string, []string) {
 	var rows []string
 	last := ""
 	for _, app := range deployments {

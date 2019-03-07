@@ -29,7 +29,7 @@ var (
 
 	getDeploymentsCmd = &cobra.Command{
 		Use:   "all",
-		Short: "Get all applicationIds",
+		Short: "Get all applicationDeploymentRefs (environment/application)",
 		RunE:  PrintAll,
 	}
 
@@ -48,7 +48,7 @@ var (
 	}
 
 	getSpecCmd = &cobra.Command{
-		Use:   "spec <applicationId>",
+		Use:   "spec <applicationDeploymentRef>",
 		Short: "Get deploy spec for an application",
 		RunE:  PrintDeploySpec,
 	}
@@ -71,7 +71,7 @@ func init() {
 
 	getSpecCmd.Flags().BoolVarP(&flagNoDefaults, "no-defaults", "", false, "exclude default values from output")
 	getSpecCmd.Flags().BoolVarP(&flagJSON, "json", "", false, "print deploy spec as json")
-	getDeploymentsCmd.Flags().BoolVarP(&flagAsList, "list", "", false, "print ApplicationIds as a list")
+	getDeploymentsCmd.Flags().BoolVarP(&flagAsList, "list", "", false, "print ApplicationDeploymentRefs as a list")
 }
 
 func PrintAll(cmd *cobra.Command, args []string) error {
@@ -80,16 +80,16 @@ func PrintAll(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deployments := fileNames.GetApplicationIds()
+	deployments := fileNames.GetApplicationDeploymentRefs()
 
 	var header string
 	var rows []string
 	if flagAsList {
 		sort.Strings(deployments)
-		header = "APPLICATIONID"
+		header = "APPLICATIONDEPLOYMENTREF"
 		rows = deployments
 	} else {
-		header, rows = GetApplicationIdTable(deployments)
+		header, rows = GetApplicationDeploymentRefTable(deployments)
 	}
 
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
@@ -137,7 +137,7 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 func PrintDeploySpecTable(args []string, filter fuzzy.FilterMode, cmd *cobra.Command, fileNames client.FileNames) error {
 	var selected []string
 	for _, arg := range args {
-		matches := fuzzy.FindAllDeploysFor(filter, arg, fileNames.GetApplicationIds())
+		matches := fuzzy.FindAllDeploysFor(filter, arg, fileNames.GetApplicationDeploymentRefs())
 		if len(matches) == 0 {
 			return errors.Errorf("No matches for %s", arg)
 		}
@@ -197,7 +197,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	matches := fuzzy.FindMatches(search, fileNames.GetApplicationIds(), false)
+	matches := fuzzy.FindMatches(search, fileNames.GetApplicationDeploymentRefs(), false)
 	if len(matches) == 0 {
 		return errors.Errorf("No matches for %s", search)
 	} else if len(matches) > 1 {

@@ -15,10 +15,16 @@ type DeployClient interface {
 }
 
 type (
-	applicationId struct {
+	applicationDeploymentRef struct {
 		Environment string `json:"environment"`
 		Application string `json:"application"`
 	}
+
+	AuroraConfigFieldSource struct {
+		Value interface{} `json:"value"`
+	}
+
+	DeploymentSpec map[string]AuroraConfigFieldSource
 
 	DeployResults struct {
 		Message string
@@ -27,43 +33,52 @@ type (
 	}
 
 	DeployResult struct {
-		DeployId string `json:"deployId"`
-		ADS      struct {
-			Name    string `json:"name"`
-			Cluster string `json:"cluster"`
-			Deploy  struct {
-				Version string `json:"version"`
-			} `json:"deploy"`
-			Environment struct {
-				Namespace string `json:"namespace"`
-			} `json:"environment"`
-		} `json:"auroraDeploymentSpec"`
-		Success bool   `json:"success"`
-		Ignored bool   `json:"ignored"`
-		Reason  string `json:"reason"`
+		DeployId       string         `json:"deployId"`
+		DeploymentSpec DeploymentSpec `json:"deploymentSpec"`
+		Success        bool           `json:"success"`
+		Ignored        bool           `json:"ignored"`
+		Reason         string         `json:"reason"`
 	}
 
 	DeployPayload struct {
-		ApplicationIds []applicationId   `json:"applicationIds"`
-		Overrides      map[string]string `json:"overrides"`
-		Deploy         bool              `json:"deploy"`
+		ApplicationDeploymentRefs []applicationDeploymentRef `json:"applicationDeploymentRefs"`
+		Overrides                 map[string]string          `json:"overrides"`
+		Deploy                    bool                       `json:"deploy"`
 	}
 )
 
-func NewApplicationId(name string) *applicationId {
+func (spec DeploymentSpec) Get(name string) interface{} {
+	field, ok := spec[name]
+	if !ok {
+		return nil
+	}
+	return field.Value
+}
+
+func (spec DeploymentSpec) GetString(name string) string {
+	return spec.Get(name).(string)
+}
+
+func NewAuroraConfigFieldSource(value interface{}) AuroraConfigFieldSource {
+	return AuroraConfigFieldSource{
+		Value: value,
+	}
+}
+
+func NewApplicationDeploymentRef(name string) *applicationDeploymentRef {
 	slice := strings.Split(name, "/")
-	return &applicationId{
+	return &applicationDeploymentRef{
 		Environment: slice[0],
 		Application: slice[1],
 	}
 }
 
 func NewDeployPayload(applications []string, overrides map[string]string) *DeployPayload {
-	applicationIds := createApplicationIds(applications)
+	applicationDeploymentRefs := createApplicationDeploymentRefs(applications)
 	return &DeployPayload{
-		ApplicationIds: applicationIds,
-		Overrides:      overrides,
-		Deploy:         true,
+		ApplicationDeploymentRefs: applicationDeploymentRefs,
+		Overrides:                 overrides,
+		Deploy:                    true,
 	}
 }
 
@@ -91,7 +106,7 @@ func (api *ApiClient) Deploy(deployPayload *DeployPayload) (*DeployResults, erro
 		for _, deploy := range deploys.Results {
 			// Hack-ish solution since validation errors and deploy errors have
 			// different payload. TODO: Fix error response from Boober.
-			if deploy.ADS.Name == "" {
+			if deploy.DeploymentSpec.GetString("name") == "" {
 				return nil, response.Error()
 			}
 		}
@@ -105,10 +120,10 @@ func (api *ApiClient) Deploy(deployPayload *DeployPayload) (*DeployResults, erro
 	return &deploys, nil
 }
 
-func createApplicationIds(apps []string) []applicationId {
-	var applicationIds []applicationId
+func createApplicationDeploymentRefs(apps []string) []applicationDeploymentRef {
+	var applicationDeploymentRefs []applicationDeploymentRef
 	for _, app := range apps {
-		applicationIds = append(applicationIds, *NewApplicationId(app))
+		applicationDeploymentRefs = append(applicationDeploymentRefs, *NewApplicationDeploymentRef(app))
 	}
-	return applicationIds
+	return applicationDeploymentRefs
 }
