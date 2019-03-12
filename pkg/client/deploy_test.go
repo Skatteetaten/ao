@@ -15,7 +15,7 @@ func TestApiClient_Deploy(t *testing.T) {
 		fileName := "deploy_paas_success_response"
 		response := ReadTestFile(fileName)
 
-		expectedPayload := `{"applicationIds":[{"environment":"boober-utv","application":"reference"}],"overrides":{},"deploy":true}`
+		expectedPayload := `{"applicationDeploymentRefs":[{"environment":"boober-utv","application":"reference"}],"overrides":{},"deploy":true}`
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			w.WriteHeader(http.StatusOK)

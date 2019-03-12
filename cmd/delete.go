@@ -126,7 +126,7 @@ func deleteFilesFor(mode fuzzy.FilterMode, search string, api *client.ApiClient,
 		return err
 	}
 
-	matches := fuzzy.FindAllDeploysFor(mode, search, fileNames.GetApplicationIds())
+	matches := fuzzy.FindAllDeploysFor(mode, search, fileNames.GetApplicationDeploymentRefs())
 
 	if len(matches) == 0 {
 		return errors.New("No matches")

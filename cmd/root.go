@@ -50,7 +50,7 @@ __custom_func() {
 )
 
 const rootLong = `A command line interface for the Boober API.
-  * Deploy one or more ApplicationId (environment/application) to one or more clusters
+  * Deploy one or more ApplicationDeploymentRef (environment/application) to one or more clusters
   * Manipulate AuroraConfig remotely
   * Support modifying AuroraConfig locally
   * Manipulate vaults and secrets`

@@ -47,19 +47,19 @@ var fileNames = [...]string{
 }
 
 var testSpecs = [...]client.DeploySpec{
-	&MockDeploySpec{"applicationId": "dev/crm", "cluster": "east", "envName": "dev", "affiliation": "sales"},
-	&MockDeploySpec{"applicationId": "dev/erp", "cluster": "east", "envName": "dev", "affiliation": "sales"},
-	&MockDeploySpec{"applicationId": "dev/sap", "cluster": "east", "envName": "dev", "affiliation": "sales"},
-	&MockDeploySpec{"applicationId": "test-qa/crm", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
-	&MockDeploySpec{"applicationId": "test-qa/crmv2", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
-	&MockDeploySpec{"applicationId": "test-qa/booking", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
-	&MockDeploySpec{"applicationId": "test-qa/erp", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
-	&MockDeploySpec{"applicationId": "test-st/crm-1-GA", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
-	&MockDeploySpec{"applicationId": "test-st/crm-2-GA", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
-	&MockDeploySpec{"applicationId": "test-st/booking", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
-	&MockDeploySpec{"applicationId": "test-st/erp", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
-	&MockDeploySpec{"applicationId": "prod/crm", "cluster": "north", "envName": "prod", "affiliation": "sales"},
-	&MockDeploySpec{"applicationId": "prod/booking", "cluster": "north", "envName": "prod", "affiliation": "sales"},
+	&MockDeploySpec{"applicationDeploymentRef": "dev/crm", "cluster": "east", "envName": "dev", "affiliation": "sales"},
+	&MockDeploySpec{"applicationDeploymentRef": "dev/erp", "cluster": "east", "envName": "dev", "affiliation": "sales"},
+	&MockDeploySpec{"applicationDeploymentRef": "dev/sap", "cluster": "east", "envName": "dev", "affiliation": "sales"},
+	&MockDeploySpec{"applicationDeploymentRef": "test-qa/crm", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
+	&MockDeploySpec{"applicationDeploymentRef": "test-qa/crmv2", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
+	&MockDeploySpec{"applicationDeploymentRef": "test-qa/booking", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
+	&MockDeploySpec{"applicationDeploymentRef": "test-qa/erp", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
+	&MockDeploySpec{"applicationDeploymentRef": "test-st/crm-1-GA", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
+	&MockDeploySpec{"applicationDeploymentRef": "test-st/crm-2-GA", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
+	&MockDeploySpec{"applicationDeploymentRef": "test-st/booking", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
+	&MockDeploySpec{"applicationDeploymentRef": "test-st/erp", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
+	&MockDeploySpec{"applicationDeploymentRef": "prod/crm", "cluster": "north", "envName": "prod", "affiliation": "sales"},
+	&MockDeploySpec{"applicationDeploymentRef": "prod/booking", "cluster": "north", "envName": "prod", "affiliation": "sales"},
 }
 
 var testClusters = map[string]*config.Cluster{

@@ -69,8 +69,8 @@ const exampleDeploy = `  Given the following AuroraConfig:
 
 var deployCmd = &cobra.Command{
 	Aliases:     []string{"setup", "apply"},
-	Use:         "deploy <applicationId>",
-	Short:       "Deploy one or more ApplicationId (environment/application) to one or more clusters",
+	Use:         "deploy <applicationDeploymentRef>",
+	Short:       "Deploy one or more ApplicationDeploymentRef (environment/application) to one or more clusters",
 	Long:        deployLong,
 	Example:     exampleDeploy,
 	Annotations: map[string]string{"type": "actions"},
@@ -189,7 +189,7 @@ func getApplications(apiClient client.AuroraConfigClient, search, version string
 		return nil, err
 	}
 
-	possibleDeploys := files.GetApplicationIds()
+	possibleDeploys := files.GetApplicationDeploymentRefs()
 	applications := fuzzy.SearchForApplications(search, possibleDeploys)
 
 	applications, err = filterExcludes(excludes, applications)
@@ -316,7 +316,7 @@ func deployUnit(deployClient client.DeployClient, unit *deploymentUnit, override
 
 	var applicationList []string
 	for _, spec := range unit.deploySpecList {
-		applicationList = append(applicationList, spec.Value("applicationId").(string))
+		applicationList = append(applicationList, spec.Value("applicationDeploymentRef").(string))
 	}
 
 	payload := client.NewDeployPayload(applicationList, overrideConfig)
@@ -334,17 +334,18 @@ func errorDeployResults(reason string, unit *deploymentUnit) *client.DeployResul
 
 	for _, spec := range unit.deploySpecList {
 		affiliation := spec.Value("affiliation").(string)
-		applicationID := client.NewApplicationId(spec.Value("applicationId").(string))
+		applicationDeploymentRef := client.NewApplicationDeploymentRef(spec.Value("applicationDeploymentRef").(string))
 
 		result := new(client.DeployResult)
 		result.DeployId = "-"
 		result.Ignored = false
 		result.Success = false
 		result.Reason = reason
-		result.ADS.Cluster = unit.cluster.Name
-		result.ADS.Name = applicationID.Application
-		result.ADS.Deploy.Version = "-"
-		result.ADS.Environment.Namespace = affiliation + "-" + applicationID.Environment
+		result.DeploymentSpec = make(client.DeploymentSpec)
+		result.DeploymentSpec["cluster"] = client.NewAuroraConfigFieldSource(unit.cluster.Name)
+		result.DeploymentSpec["name"] = client.NewAuroraConfigFieldSource(applicationDeploymentRef.Application)
+		result.DeploymentSpec["version"] = client.NewAuroraConfigFieldSource("-")
+		result.DeploymentSpec["envName"] = client.NewAuroraConfigFieldSource(affiliation + "-" + applicationDeploymentRef.Environment)
 
 		applicationResults = append(applicationResults, *result)
 	}
@@ -379,8 +380,8 @@ func userConfirmation(filteredDeploymentSpecs []client.DeploySpec, out io.Writer
 
 	var filteredApplications []string
 	for _, spec := range filteredDeploymentSpecs {
-		appID := spec.Value("applicationId").(string)
-		filteredApplications = append(filteredApplications, appID)
+		applicationDeploymentRef := spec.Value("applicationDeploymentRef").(string)
+		filteredApplications = append(filteredApplications, applicationDeploymentRef)
 	}
 
 	shouldDeploy := true
@@ -404,7 +405,9 @@ func printDeployResult(result []*client.DeployResults, out io.Writer) error {
 	}
 
 	sort.Slice(results, func(i, j int) bool {
-		return strings.Compare(results[i].ADS.Name, results[j].ADS.Name) < 1
+		nameA := results[i].DeploymentSpec.Name()
+		nameB := results[j].DeploymentSpec.Name()
+		return strings.Compare(nameA, nameB) < 1
 	})
 
 	header, rows := getDeployResultTable(results)
@@ -428,13 +431,16 @@ func getDeployResultTable(deploys []client.DeployResult) (string, []string) {
 		if item.Ignored {
 			continue
 		}
-		ads := item.ADS
+		cluster := item.DeploymentSpec.Cluster()
+		environment := item.DeploymentSpec.Environment()
+		name := item.DeploymentSpec.Name()
+		version := item.DeploymentSpec.Version()
 		pattern := "%s\t%s\t%s\t%s\t%s\t%s\t%s"
 		status := "\x1b[32mDeployed\x1b[0m"
 		if !item.Success {
 			status = "\x1b[31mFailed\x1b[0m"
 		}
-		result := fmt.Sprintf(pattern, status, ads.Cluster, ads.Environment.Namespace, ads.Name, ads.Deploy.Version, item.DeployId, item.Reason)
+		result := fmt.Sprintf(pattern, status, cluster, environment, name, version, item.DeployId, item.Reason)
 		rows = append(rows, result)
 	}
 

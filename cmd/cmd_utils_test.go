@@ -47,9 +47,9 @@ func TestDefaultTablePrinter(t *testing.T) {
 	}
 }
 
-func TestGetApplicationIdTable(t *testing.T) {
+func TestGetApplicationDeploymentRefTable(t *testing.T) {
 
-	header, rows := GetApplicationIdTable(files.GetApplicationIds())
+	header, rows := GetApplicationDeploymentRefTable(files.GetApplicationDeploymentRefs())
 
 	assert.Equal(t, header, "ENVIRONMENT\tAPPLICATION")
 	assert.Len(t, rows, 2)

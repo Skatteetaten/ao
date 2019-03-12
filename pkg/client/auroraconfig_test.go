@@ -196,14 +196,14 @@ func TestJsonPatchOp_Validate(t *testing.T) {
 
 func TestFileNames_Filter(t *testing.T) {
 	fileNames := FileNames{"about.json", "boober.json", "test/about.json", "test/boober.json"}
-	deployments := fileNames.GetApplicationIds()
+	deploymentRefs := fileNames.GetApplicationDeploymentRefs()
 	environments := fileNames.GetEnvironments()
 	applications := fileNames.GetApplications()
 
-	assert.Len(t, deployments, 1)
+	assert.Len(t, deploymentRefs, 1)
 	assert.Len(t, environments, 1)
 	assert.Len(t, applications, 1)
-	assert.Equal(t, "test/boober", deployments[0])
+	assert.Equal(t, "test/boober", deploymentRefs[0])
 	assert.Equal(t, "test", environments[0])
 	assert.Equal(t, "boober", applications[0])
 }
