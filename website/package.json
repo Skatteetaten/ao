@@ -12,5 +12,8 @@
     "assets",
     "metadata",
     "public"
-  ]
+  ],
+  "devDependencies": {
+    "aurora-openshift": "0.0.12"
+  }
 }
