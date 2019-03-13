@@ -48,7 +48,9 @@ timestamps {
       }
 
       stage("Prepare") {
-        props.gav = npm.getGav(props)
+        dir('website') {
+          props.gav = npm.getGav(props)
+        }
         utilities.initProps(props, git)
 
         if (props.nodeVersion) {
