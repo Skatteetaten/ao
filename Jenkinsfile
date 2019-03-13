@@ -8,7 +8,7 @@ def overrides = [
     jiraFiksetIKomponentversjon: true,
     chatRoom: "#aos-notifications",
     sonarQube: false,
-    applicationType: "nodejs"
+    applicationType: "nodejs",
     versionStrategy: [
       [ branch: 'master', versionHint: '2' ]
     ]
