@@ -59,10 +59,6 @@ timestamps {
         }
         utilities.preActions(props)
 
-        utilities.preActions(props)
-        if (preCallback instanceof Closure) {
-          preCallback(props)
-        }
         if (props.gitBranchName) {
           if (props.isReleaseBuild) {
             if ('aurora-nexus' == props.deployTo && utilities.existInRepository(props.repositoryArtifactUrl)) {
