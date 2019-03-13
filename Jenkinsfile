@@ -91,6 +91,9 @@ timestamps {
       }
 
       dir('website') {
+        npm.run("cache verify")
+        npm.install(props.npmInstallSwitches)
+
         if ('aurora-nexus' == props.deployTo) {
           stage('Deploy to Nexus') {
             npm.deployToNexus(props.version)
