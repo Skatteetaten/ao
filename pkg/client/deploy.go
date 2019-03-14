@@ -56,7 +56,11 @@ func (spec DeploymentSpec) Get(name string) interface{} {
 }
 
 func (spec DeploymentSpec) GetString(name string) string {
-	return spec.Get(name).(string)
+	if value := spec.Get(name); value != nil {
+		return value.(string)
+	} else {
+		return ""
+	}
 }
 
 func (spec DeploymentSpec) Cluster() string {
