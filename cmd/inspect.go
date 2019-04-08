@@ -13,7 +13,7 @@ var inspectCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(inspectCmd)
-	inspectCmd.Flags().StringVarP(&flagAffiliation, "auroraconfig", "a", "", "set auroraconfigId to which the deploy-id belongs to")
+	inspectCmd.Flags().StringVarP(&flagAuroraConfig, "auroraconfig", "a", "", "set auroraconfigId to which the deploy-id belongs to")
 }
 
 func inspect(cmd *cobra.Command, args []string) error {
@@ -21,8 +21,8 @@ func inspect(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	if flagAffiliation != "" {
-		DefaultApiClient.Affiliation = flagAffiliation
+	if flagAuroraConfig != "" {
+		DefaultApiClient.Affiliation = flagAuroraConfig
 	}
 	result, err := DefaultApiClient.GetApplyResult(args[0])
 	if err != nil {

@@ -41,3 +41,34 @@ func TestApiClient_Deploy(t *testing.T) {
 		assert.Len(t, deploys.Results, 1)
 	})
 }
+
+func TestApiClient_Delete(t *testing.T) {
+
+	t.Run("Should successfully delete applications", func(t *testing.T) {
+		response := ReadTestFile("delete_paas_success_response")
+		expectedPayload := `{"applicationDeploymentRefs":[{"environment":"foo-dev","application":"bar"}]}`
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			defer req.Body.Close()
+			body, err := ioutil.ReadAll(req.Body)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			assert.JSONEq(t, expectedPayload, string(body))
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		applications := []string{"foo-dev/bar"}
+
+		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
+		deletePayload := NewDeletePayload(applications)
+		deletes, err := api.Delete(deletePayload)
+
+		assert.NoError(t, err)
+		assert.Len(t, deletes.Results, 1)
+	})
+}

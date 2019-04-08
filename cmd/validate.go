@@ -19,7 +19,7 @@ var validateCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(validateCmd)
-	validateCmd.Flags().StringVarP(&flagAffiliation, "auroraconfig", "a", "", "AuroraConfig to validate")
+	validateCmd.Flags().StringVarP(&flagAuroraConfig, "auroraconfig", "a", "", "AuroraConfig to validate")
 	validateCmd.Flags().BoolVarP(&flagFullValidation, "full", "f", false, "Validate resources")
 }
 
@@ -30,8 +30,8 @@ func Validate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if flagAffiliation != "" {
-		DefaultApiClient.Affiliation = flagAffiliation
+	if flagAuroraConfig != "" {
+		DefaultApiClient.Affiliation = flagAuroraConfig
 	}
 
 	ac, err := versioncontrol.CollectAuroraConfigFilesInRepo(DefaultApiClient.Affiliation, gitRoot)
