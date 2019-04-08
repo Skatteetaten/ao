@@ -4,8 +4,8 @@
   "items": [
     {
       "applicationDeploymentRef": {
-        "environment":"eriksen-utv",
-        "application":"whoami-bar"
+        "environment":"foo-dev",
+        "application":"bar"
       },
       "success":true,
       "reason":"Application was successfully deleted"
