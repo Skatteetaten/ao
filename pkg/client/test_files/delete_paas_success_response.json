@@ -3,9 +3,9 @@
   "message":"OK",
   "items": [
     {
-      "applicationDeploymentRef": {
-        "environment":"foo-dev",
-        "application":"bar"
+      "applicationRef": {
+        "namespace":"foo-dev",
+        "name":"bar"
       },
       "success":true,
       "reason":"Application was successfully deleted"

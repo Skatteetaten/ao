@@ -46,7 +46,7 @@ func TestApiClient_Delete(t *testing.T) {
 
 	t.Run("Should successfully delete applications", func(t *testing.T) {
 		response := ReadTestFile("delete_paas_success_response")
-		expectedPayload := `{"applicationDeploymentRefs":[{"environment":"foo-dev","application":"bar"}]}`
+		expectedPayload := `{"applicationRefs":[{"namespace":"foo-dev","name":"bar"}]}`
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			w.WriteHeader(http.StatusOK)
@@ -62,7 +62,7 @@ func TestApiClient_Delete(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		applications := []string{"foo-dev/bar"}
+		applications := []ApplicationRef{*NewApplicationRef("foo-dev", "bar")}
 
 		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
 		deletePayload := NewDeletePayload(applications)

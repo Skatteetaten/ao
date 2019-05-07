@@ -12,21 +12,17 @@ func Test_deployToReachableClusters(t *testing.T) {
 	auroraConfig := "jupiter"
 	overrideToken := ""
 
-	deployClientMock := newApplicationDeploymentClientMock()
+	deployClientMock := client.NewApplicationDeploymentClientMock()
 
-	getClient := func(partition *requestPartition) client.ApplicationDeploymentClient {
+	getClient := func(partition Partition) client.ApplicationDeploymentClient {
 		return deployClientMock
 	}
 
-	partitions := map[requestPartitionID]*requestPartition{
-		*newRequestPartitionID("east", "dev"): newRequestPartition(newRequestPartitionID("east", "dev"),
-			testSpecs[0:3], newTestCluster("east", true), auroraConfig, overrideToken),
-		*newRequestPartitionID("west", "test-qa"): newRequestPartition(newRequestPartitionID("west", "test"),
-			testSpecs[3:7], newTestCluster("west", true), auroraConfig, overrideToken),
-		*newRequestPartitionID("west", "test-st"): newRequestPartition(newRequestPartitionID("west", "test"),
-			testSpecs[7:11], newTestCluster("west", true), auroraConfig, overrideToken),
-		*newRequestPartitionID("north", "prod"): newRequestPartition(newRequestPartitionID("north", "prod"),
-			testSpecs[11:13], newTestCluster("north", true), auroraConfig, overrideToken),
+	partitions := []DeploySpecPartition{
+		*newDeploySpecPartition(testSpecs[0:3], *newTestCluster("east", true), auroraConfig, overrideToken),
+		*newDeploySpecPartition(testSpecs[3:7], *newTestCluster("west", true), auroraConfig, overrideToken),
+		*newDeploySpecPartition(testSpecs[7:11], *newTestCluster("west", true), auroraConfig, overrideToken),
+		*newDeploySpecPartition(testSpecs[11:13], *newTestCluster("north", true), auroraConfig, overrideToken),
 	}
 
 	deployClientMock.On("Deploy", mock.Anything).Times(4)
@@ -43,15 +39,14 @@ func Test_deployToUnreachableClusters(t *testing.T) {
 	auroraConfig := "jupiter"
 	overrideToken := ""
 
-	deployClientMock := newApplicationDeploymentClientMock()
+	deployClientMock := client.NewApplicationDeploymentClientMock()
 
-	getClient := func(partition *requestPartition) client.ApplicationDeploymentClient {
+	getClient := func(partition Partition) client.ApplicationDeploymentClient {
 		return deployClientMock
 	}
 
-	partitions := map[requestPartitionID]*requestPartition{
-		*newRequestPartitionID("east", "dev"): newRequestPartition(newRequestPartitionID("east", "dev"),
-			testSpecs[0:3], newTestCluster("east", false), auroraConfig, overrideToken),
+	partitions := []DeploySpecPartition{
+		*newDeploySpecPartition(testSpecs[0:3], *newTestCluster("east", false), auroraConfig, overrideToken),
 	}
 
 	results, err := deployToReachableClusters(getClient, partitions, map[string]string{})

@@ -8,7 +8,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/prompt"
+	"github.com/skatteetaten/ao/pkg/service"
 	"github.com/spf13/cobra"
 )
 
@@ -26,8 +28,17 @@ var (
 	}
 )
 
-type partitionDeleteResult struct {
-	partition     requestPartition
+type DeploymentPartition struct {
+	Partition
+	DeploymentInfos []DeploymentInfo
+}
+
+type deploymentPartitionID struct {
+	namespace, clusterName string
+}
+
+type partialDeleteResult struct {
+	partition     DeploymentPartition
 	deleteResults client.DeleteResults
 }
 
@@ -39,8 +50,19 @@ type deleteSummary struct {
 	reason  string
 }
 
-func newPartitionDeleteResult(partition requestPartition, deleteResults client.DeleteResults) *partitionDeleteResult {
-	return &partitionDeleteResult{
+func newDeploymentPartition(deploymentInfos []DeploymentInfo, cluster config.Cluster, auroraConfig string, overrideToken string) *DeploymentPartition {
+	return &DeploymentPartition{
+		DeploymentInfos: deploymentInfos,
+		Partition: Partition{
+			Cluster:          cluster,
+			AuroraConfigName: auroraConfig,
+			OverrideToken:    overrideToken,
+		},
+	}
+}
+
+func newPartialDeleteResults(partition DeploymentPartition, deleteResults client.DeleteResults) partialDeleteResult {
+	return partialDeleteResult{
 		partition:     partition,
 		deleteResults: deleteResults,
 	}
@@ -96,24 +118,31 @@ func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	applications, err := getApplications(apiClient, search, "", flagExcludes, cmd.OutOrStdout())
+	applications, err := service.GetApplications(apiClient, search, "", flagExcludes, cmd.OutOrStdout())
 	if err != nil {
 		return err
 	} else if len(applications) == 0 {
-		return errors.New("No applications to deploy")
+		return errors.New("No applications to delete")
 	}
 
-	filteredDeploymentSpecs, err := getFilteredDeploymentSpecs(apiClient, applications, flagCluster)
+	filteredDeploymentSpecs, err := service.GetFilteredDeploymentSpecs(apiClient, applications, flagCluster)
 	if err != nil {
 		return err
 	}
 
-	partitions, err := createRequestPartitions(auroraConfigName, pFlagToken, AO.Clusters, filteredDeploymentSpecs)
+	deployInfos, err := getDeployedApplications(filteredDeploymentSpecs, auroraConfigName, pFlagToken)
+	if err != nil {
+		return err
+	} else if len(deployInfos) == 0 {
+		return errors.New("No applications to delete")
+	}
+
+	partitions, err := createDeploymentPartitions(auroraConfigName, pFlagToken, AO.Clusters, deployInfos)
 	if err != nil {
 		return err
 	}
 
-	if !deleteConfirmation(flagNoPrompt, filteredDeploymentSpecs, cmd.OutOrStdout()) {
+	if !getDeleteConfirmation(flagNoPrompt, deployInfos, cmd.OutOrStdout()) {
 		return errors.New("No applications to delete")
 	}
 
@@ -128,7 +157,6 @@ func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
 }
 
 func validateDeleteParams() error {
-
 	if flagCluster != "" {
 		if _, exists := AO.Clusters[flagCluster]; !exists {
 			return errors.New(fmt.Sprintf("No such cluster %s", flagCluster))
@@ -138,8 +166,75 @@ func validateDeleteParams() error {
 	return nil
 }
 
-func deleteConfirmation(force bool, filteredDeploymentSpecs []client.DeploySpec, out io.Writer) bool {
-	header, rows := GetCompactDeploySpecTable(filteredDeploymentSpecs)
+func createDeploymentPartitions(auroraConfig, overrideToken string, clusters map[string]*config.Cluster, deployInfos []DeploymentInfo) ([]DeploymentPartition, error) {
+	partitionMap := make(map[deploymentPartitionID]*DeploymentPartition)
+
+	for _, info := range deployInfos {
+		clusterName := info.ClusterName
+		namespace := info.Namespace
+
+		partitionID := deploymentPartitionID{clusterName, namespace}
+
+		if _, exists := partitionMap[partitionID]; !exists {
+			if _, exists := clusters[clusterName]; !exists {
+				return nil, errors.New(fmt.Sprintf("No such cluster %s", clusterName))
+			}
+			cluster := clusters[clusterName]
+			partition := newDeploymentPartition([]DeploymentInfo{}, *cluster, auroraConfig, overrideToken)
+			partitionMap[partitionID] = partition
+		}
+
+		partitionMap[partitionID].DeploymentInfos = append(partitionMap[partitionID].DeploymentInfos, info)
+	}
+
+	partitions := make([]DeploymentPartition, len(partitionMap))
+
+	idx := 0
+	for _, partition := range partitionMap {
+		partitions[idx] = *partition
+		idx++
+	}
+
+	return partitions, nil
+}
+
+func deleteFromReachableClusters(getClient func(partition Partition) client.ApplicationDeploymentClient, partitions []DeploymentPartition) ([]partialDeleteResult, error) {
+	partitionResult := make(chan partialDeleteResult)
+
+	for _, partition := range partitions {
+		go performDelete(getClient(partition.Partition), partition, partitionResult)
+	}
+
+	var allResults []partialDeleteResult
+	for i := 0; i < len(partitions); i++ {
+		allResults = append(allResults, <-partitionResult)
+	}
+
+	return allResults, nil
+}
+
+func performDelete(deployClient client.ApplicationDeploymentClient, partition DeploymentPartition, partitionResult chan<- partialDeleteResult) {
+	if !partition.Cluster.Reachable {
+		partitionResult <- errorDeleteResults("Cluster is not reachable", partition)
+		return
+	}
+
+	var applicationRefs []client.ApplicationRef
+	for _, info := range partition.DeploymentInfos {
+		applicationRefs = append(applicationRefs, *client.NewApplicationRef(info.Namespace, info.Name))
+	}
+
+	results, err := deployClient.Delete(client.NewDeletePayload(applicationRefs))
+
+	if err != nil {
+		partitionResult <- errorDeleteResults(err.Error(), partition)
+	} else {
+		partitionResult <- newPartialDeleteResults(partition, *results)
+	}
+}
+
+func getDeleteConfirmation(force bool, deployInfos []DeploymentInfo, out io.Writer) bool {
+	header, rows := getDeployInfoTable(deployInfos)
 	DefaultTablePrinter(header, rows, out)
 
 	shouldDeploy := true
@@ -152,70 +247,54 @@ func deleteConfirmation(force bool, filteredDeploymentSpecs []client.DeploySpec,
 	return shouldDeploy
 }
 
-func deleteFromReachableClusters(getClient func(partition *requestPartition) client.ApplicationDeploymentClient, partitions map[requestPartitionID]*requestPartition) ([]*partitionDeleteResult, error) {
-	partitionResult := make(chan *partitionDeleteResult)
-
-	for _, partition := range partitions {
-		go performDelete(getClient(partition), *partition, partitionResult)
+func getDeployInfoTable(infos []DeploymentInfo) (string, []string) {
+	var rows []string
+	header := "CLUSTER\tNAMESPACE\tAPPLICATION"
+	pattern := "%v\t%v\t%v"
+	sort.Slice(infos, func(i, j int) bool {
+		return strings.Compare(infos[i].Name, infos[j].Name) != 1
+	})
+	for _, info := range infos {
+		row := fmt.Sprintf(
+			pattern,
+			info.ClusterName,
+			info.Namespace,
+			info.Name,
+		)
+		rows = append(rows, row)
 	}
-
-	var allResults []*partitionDeleteResult
-	for i := 0; i < len(partitions); i++ {
-		allResults = append(allResults, <-partitionResult)
-	}
-
-	return allResults, nil
+	return header, rows
 }
 
-func performDelete(deployClient client.ApplicationDeploymentClient, partition requestPartition, partitionResult chan<- *partitionDeleteResult) {
-	if !partition.cluster.Reachable {
-		partitionResult <- errorDeleteResults("Cluster is not reachable", partition)
-		return
-	}
+func errorDeleteResults(reason string, partition DeploymentPartition) partialDeleteResult {
+	var results []client.DeleteResult
 
-	var applicationList []string
-	for _, spec := range partition.deploySpecList {
-		applicationList = append(applicationList, spec.Value("applicationDeploymentRef").(string))
-	}
-
-	results, err := deployClient.Delete(client.NewDeletePayload(applicationList))
-
-	if err != nil {
-		partitionResult <- errorDeleteResults(err.Error(), partition)
-	} else {
-		partitionResult <- newPartitionDeleteResult(partition, *results)
-	}
-}
-
-func errorDeleteResults(reason string, partition requestPartition) *partitionDeleteResult {
-	var deleteResultList []client.DeleteResult
-
-	for _, spec := range partition.deploySpecList {
+	for _, info := range partition.DeploymentInfos {
 		result := new(client.DeleteResult)
 		result.Success = false
 		result.Reason = reason
-		result.ApplicationDeploymentRef = *client.NewApplicationDeploymentRef(spec.Value("applicationDeploymentRef").(string))
+		result.ApplicationRef = *client.NewApplicationRef(info.Namespace, info.Name)
 
-		deleteResultList = append(deleteResultList, *result)
+		results = append(results, *result)
 	}
 
 	deleteResults := &client.DeleteResults{
 		Message: reason,
 		Success: false,
-		Results: deleteResultList,
+		Results: results,
 	}
 
-	return newPartitionDeleteResult(partition, *deleteResults)
+	return newPartialDeleteResults(partition, *deleteResults)
 }
 
-func printDeleteResult(allResults []*partitionDeleteResult, out io.Writer) error {
+func printDeleteResult(allResults []partialDeleteResult, out io.Writer) error {
 	var printSummary []deleteSummary
 
 	for _, partitionResult := range allResults {
 		for _, deleteResult := range partitionResult.deleteResults.Results {
-			cluster := partitionResult.partition.cluster.Name
-			env := deleteResult.ApplicationDeploymentRef.Environment
-			name := deleteResult.ApplicationDeploymentRef.Application
+			cluster := partitionResult.partition.Cluster.Name
+			env := deleteResult.ApplicationRef.Namespace
+			name := deleteResult.ApplicationRef.Name
 			success := deleteResult.Success
 			reason := deleteResult.Reason
 
@@ -224,7 +303,7 @@ func printDeleteResult(allResults []*partitionDeleteResult, out io.Writer) error
 	}
 
 	if len(printSummary) == 0 {
-		return errors.New("No deploys were made")
+		return errors.New("No applications were deleted")
 	}
 
 	sort.Slice(printSummary, func(i, j int) bool {

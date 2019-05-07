@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/prompt"
+	"github.com/skatteetaten/ao/pkg/service"
 	"github.com/spf13/cobra"
 )
 
@@ -95,14 +96,14 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	applications, err := getApplications(apiClient, search, flagVersion, flagExcludes, cmd.OutOrStdout())
+	applications, err := service.GetApplications(apiClient, search, flagVersion, flagExcludes, cmd.OutOrStdout())
 	if err != nil {
 		return err
 	} else if len(applications) == 0 {
 		return errors.New("No applications to deploy")
 	}
 
-	filteredDeploymentSpecs, err := getFilteredDeploymentSpecs(apiClient, applications, flagCluster)
+	filteredDeploymentSpecs, err := service.GetFilteredDeploymentSpecs(apiClient, applications, flagCluster)
 	if err != nil {
 		return err
 	}
@@ -112,7 +113,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	partitions, err := createRequestPartitions(auroraConfigName, pFlagToken, AO.Clusters, filteredDeploymentSpecs)
+	partitions, err := createDeploySpecPartitions(auroraConfigName, pFlagToken, AO.Clusters, filteredDeploymentSpecs)
 	if err != nil {
 		return err
 	}
@@ -173,14 +174,14 @@ func deployConfirmation(force bool, filteredDeploymentSpecs []client.DeploySpec,
 	return shouldDeploy
 }
 
-func deployToReachableClusters(getClient func(partition *requestPartition) client.ApplicationDeploymentClient, partitions map[requestPartitionID]*requestPartition, overrideConfig map[string]string) ([]*client.DeployResults, error) {
-	deployResult := make(chan *client.DeployResults)
+func deployToReachableClusters(getClient func(partition Partition) client.ApplicationDeploymentClient, partitions []DeploySpecPartition, overrideConfig map[string]string) ([]client.DeployResults, error) {
+	deployResult := make(chan client.DeployResults)
 
 	for _, partition := range partitions {
-		go performDeploy(getClient(partition), partition, overrideConfig, deployResult)
+		go performDeploy(getClient(partition.Partition), partition, overrideConfig, deployResult)
 	}
 
-	var allResults []*client.DeployResults
+	var allResults []client.DeployResults
 	for i := 0; i < len(partitions); i++ {
 		allResults = append(allResults, <-deployResult)
 	}
@@ -188,14 +189,14 @@ func deployToReachableClusters(getClient func(partition *requestPartition) clien
 	return allResults, nil
 }
 
-func performDeploy(deployClient client.ApplicationDeploymentClient, partition *requestPartition, overrideConfig map[string]string, deployResults chan<- *client.DeployResults) {
-	if !partition.cluster.Reachable {
+func performDeploy(deployClient client.ApplicationDeploymentClient, partition DeploySpecPartition, overrideConfig map[string]string, deployResults chan<- client.DeployResults) {
+	if !partition.Cluster.Reachable {
 		deployResults <- errorDeployResults("Cluster is not reachable", partition)
 		return
 	}
 
 	var applicationList []string
-	for _, spec := range partition.deploySpecList {
+	for _, spec := range partition.DeploySpecs {
 		applicationList = append(applicationList, spec.Value("applicationDeploymentRef").(string))
 	}
 
@@ -205,14 +206,14 @@ func performDeploy(deployClient client.ApplicationDeploymentClient, partition *r
 	if err != nil {
 		deployResults <- errorDeployResults(err.Error(), partition)
 	} else {
-		deployResults <- result
+		deployResults <- *result
 	}
 }
 
-func errorDeployResults(reason string, partition *requestPartition) *client.DeployResults {
+func errorDeployResults(reason string, partition DeploySpecPartition) client.DeployResults {
 	var applicationResults []client.DeployResult
 
-	for _, spec := range partition.deploySpecList {
+	for _, spec := range partition.DeploySpecs {
 		affiliation := spec.Value("affiliation").(string)
 		applicationDeploymentRef := client.NewApplicationDeploymentRef(spec.Value("applicationDeploymentRef").(string))
 
@@ -222,7 +223,7 @@ func errorDeployResults(reason string, partition *requestPartition) *client.Depl
 		result.Success = false
 		result.Reason = reason
 		result.DeploymentSpec = make(client.DeploymentSpec)
-		result.DeploymentSpec["cluster"] = client.NewAuroraConfigFieldSource(partition.cluster.Name)
+		result.DeploymentSpec["cluster"] = client.NewAuroraConfigFieldSource(partition.Cluster.Name)
 		result.DeploymentSpec["name"] = client.NewAuroraConfigFieldSource(applicationDeploymentRef.Application)
 		result.DeploymentSpec["version"] = client.NewAuroraConfigFieldSource("-")
 		result.DeploymentSpec["envName"] = client.NewAuroraConfigFieldSource(affiliation + "-" + applicationDeploymentRef.Environment)
@@ -230,14 +231,14 @@ func errorDeployResults(reason string, partition *requestPartition) *client.Depl
 		applicationResults = append(applicationResults, *result)
 	}
 
-	return &client.DeployResults{
+	return client.DeployResults{
 		Message: reason,
 		Success: false,
 		Results: applicationResults,
 	}
 }
 
-func printDeployResult(result []*client.DeployResults, out io.Writer) error {
+func printDeployResult(result []client.DeployResults, out io.Writer) error {
 	var results []client.DeployResult
 	for _, r := range result {
 		results = append(results, r.Results...)

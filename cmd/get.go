@@ -182,25 +182,6 @@ func GetDeploySpecTable(specs []client.DeploySpec) (string, []string) {
 	return header, rows
 }
 
-func GetCompactDeploySpecTable(specs []client.DeploySpec) (string, []string) {
-	var rows []string
-	header := "CLUSTER\tENVIRONMENT\tAPPLICATION"
-	pattern := "%v\t%v\t%v"
-	sort.Slice(specs, func(i, j int) bool {
-		return strings.Compare(specs[i].Value("name").(string), specs[j].Value("name").(string)) != 1
-	})
-	for _, spec := range specs {
-		row := fmt.Sprintf(
-			pattern,
-			spec.Value("cluster"),
-			spec.Value("envName"),
-			spec.Value("name"),
-		)
-		rows = append(rows, row)
-	}
-	return header, rows
-}
-
 func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	if len(args) > 2 || len(args) < 1 {
 		return cmd.Usage()
