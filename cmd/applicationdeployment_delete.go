@@ -17,6 +17,7 @@ import (
 var (
 	applicationDeploymentCmd = &cobra.Command{
 		Use:         "applicationdeployment",
+		Aliases:     []string{"ad"},
 		Short:       "Delete Aurora resources",
 		Annotations: map[string]string{"type": "remote"},
 	}
@@ -59,7 +60,6 @@ func newPartialDeleteResults(partition DeploymentPartition, deleteResults client
 func init() {
 	RootCmd.AddCommand(applicationDeploymentCmd)
 	applicationDeploymentCmd.AddCommand(applicationDeploymentDeleteCmd)
-	applicationDeploymentDeleteCmd.Flags().StringVarP(&flagAuroraConfig, "auroraconfig", "a", "", "Overrides the logged in AuroraConfig")
 	applicationDeploymentDeleteCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Limit deletion to given cluster name")
 	applicationDeploymentDeleteCmd.Flags().BoolVarP(&flagNoPrompt, "no-prompt", "", false, "Suppress prompts")
 	applicationDeploymentDeleteCmd.Flags().StringArrayVarP(&flagExcludes, "exclude", "e", []string{}, "Select applications or environments to exclude from deletion")
