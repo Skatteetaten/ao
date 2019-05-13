@@ -17,29 +17,27 @@ func newPartialExistsResults(partition DeploySpecPartition, existsResults client
 	}
 }
 
-func getDeployedApplications(deploySpecs []client.DeploySpec, auroraConfigName, overrideToken string) ([]DeploymentInfo, error) {
+func getDeployedApplications(getClient func(partition Partition) client.ApplicationDeploymentClient, deploySpecs []client.DeploySpec, auroraConfigName, overrideToken string) ([]DeploymentInfo, error) {
 	partitions, err := createDeploySpecPartitions(auroraConfigName, overrideToken, AO.Clusters, deploySpecs)
 	if err != nil {
 		return nil, err
 	}
 
-	partialResults := make(chan partialExistsResult)
-
-	for _, partition := range partitions {
-		go performExists(getApplicationDeploymentClient(partition.Partition), partition, partialResults)
+	partialResults, err := checkExistence(getClient, partitions)
+	if err != nil {
+		return nil, err
 	}
 
 	var allResults []DeploymentInfo
 
-	for i := 0; i < len(partitions); i++ {
-		results := <-partialResults
-		if !results.existsResults.Success {
+	for _, partialResult := range partialResults {
+		if !partialResult.existsResults.Success {
 			return nil, errors.New("Failed to retrieve application deployment information from cluster")
 		}
 
-		for _, existsResult := range results.existsResults.Results {
+		for _, existsResult := range partialResult.existsResults.Results {
 			if existsResult.Exists {
-				info := newDeploymentInfo(existsResult.ApplicationRef.Namespace, existsResult.ApplicationRef.Name, results.partition.Cluster.Name)
+				info := newDeploymentInfo(existsResult.ApplicationRef.Namespace, existsResult.ApplicationRef.Name, partialResult.partition.Cluster.Name)
 				allResults = append(allResults, *info)
 			}
 		}
@@ -48,9 +46,31 @@ func getDeployedApplications(deploySpecs []client.DeploySpec, auroraConfigName, 
 	return allResults, nil
 }
 
-func performExists(deployClient client.ApplicationDeploymentClient, partition DeploySpecPartition, partialResult chan<- partialExistsResult) {
+func checkExistence(getClient func(partition Partition) client.ApplicationDeploymentClient, partitions []DeploySpecPartition) ([]partialExistsResult, error) {
+	partialResults := make(chan partialExistsResult)
+	existsErrors := make(chan error)
+
+	for _, partition := range partitions {
+		go performExists(getClient(partition.Partition), partition, partialResults, existsErrors)
+	}
+
+	var allResults []partialExistsResult
+
+	for i := 0; i < len(partitions); i++ {
+		select {
+		case err := <-existsErrors:
+			return nil, err
+		case result := <-partialResults:
+			allResults = append(allResults, result)
+		}
+	}
+
+	return allResults, nil
+}
+
+func performExists(deployClient client.ApplicationDeploymentClient, partition DeploySpecPartition, partialResult chan<- partialExistsResult, existsErrors chan<- error) {
 	if !partition.Cluster.Reachable {
-		partialResult <- errorExistsResults("Cluster is not reachable", partition)
+		existsErrors <- errors.New("Cluster is not reachable")
 		return
 	}
 
@@ -62,18 +82,8 @@ func performExists(deployClient client.ApplicationDeploymentClient, partition De
 	results, err := deployClient.Exists(client.NewExistsPayload(applicationList))
 
 	if err != nil {
-		partialResult <- errorExistsResults(err.Error(), partition)
+		existsErrors <- errors.Wrap(err, "Unable to determine wether applications exists on OpenShift or not")
 	} else {
 		partialResult <- newPartialExistsResults(partition, *results)
 	}
-}
-
-func errorExistsResults(reason string, partition DeploySpecPartition) partialExistsResult {
-	existsResults := &client.ExistsResults{
-		Message: reason,
-		Success: false,
-		Results: nil,
-	}
-
-	return newPartialExistsResults(partition, *existsResults)
 }

@@ -34,10 +34,6 @@ type DeploySpecPartition struct {
 	DeploySpecs []client.DeploySpec
 }
 
-type deploySpecPartitionID struct {
-	envName, clusterName string
-}
-
 func newDeploymentInfo(namespace, name, cluster string) *DeploymentInfo {
 	return &DeploymentInfo{
 		Namespace:   namespace,
@@ -58,6 +54,10 @@ func newDeploySpecPartition(deploySpecs []client.DeploySpec, cluster config.Clus
 }
 
 func createDeploySpecPartitions(auroraConfig, overrideToken string, clusters map[string]*config.Cluster, deploySpecs []client.DeploySpec) ([]DeploySpecPartition, error) {
+	type deploySpecPartitionID struct {
+		envName, clusterName string
+	}
+
 	partitionMap := make(map[deploySpecPartitionID]*DeploySpecPartition)
 
 	for _, spec := range deploySpecs {

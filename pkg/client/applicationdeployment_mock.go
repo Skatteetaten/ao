@@ -23,13 +23,27 @@ func (api *ApplicationDeploymentClientMock) Deploy(deployPayload *DeployPayload)
 // Delete default mock implementation
 func (api *ApplicationDeploymentClientMock) Delete(deletePayload *DeletePayload) (*DeleteResults, error) {
 	api.Called()
-	return &DeleteResults{Message: "Successful", Success: true, Results: []DeleteResult{}}, nil
+
+	results := make([]DeleteResult, len(deletePayload.ApplicationRefs))
+
+	for i, _ := range deletePayload.ApplicationRefs {
+		results[i] = DeleteResult{Success: true, Reason: "OK", ApplicationRef: ApplicationRef{}}
+	}
+
+	return &DeleteResults{Message: "Successful", Success: true, Results: results}, nil
 }
 
 // Exists default mock implementation
 func (api *ApplicationDeploymentClientMock) Exists(existsPayload *ExistsPayload) (*ExistsResults, error) {
 	api.Called()
-	return &ExistsResults{Message: "Successful", Success: true, Results: []ExistsResult{}}, nil
+
+	results := make([]ExistsResult, len(existsPayload.ApplicationDeploymentRefs))
+
+	for i, _ := range existsPayload.ApplicationDeploymentRefs {
+		results[i] = ExistsResult{Success: true, Message: "OK", Exists: true, ApplicationRef: ApplicationRef{}}
+	}
+
+	return &ExistsResults{Message: "Successful", Success: true, Results: results}, nil
 }
 
 // GetApplyResult default mock implementation

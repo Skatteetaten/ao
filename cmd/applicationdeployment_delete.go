@@ -33,21 +33,9 @@ type DeploymentPartition struct {
 	DeploymentInfos []DeploymentInfo
 }
 
-type deploymentPartitionID struct {
-	namespace, clusterName string
-}
-
 type partialDeleteResult struct {
 	partition     DeploymentPartition
 	deleteResults client.DeleteResults
-}
-
-type deleteSummary struct {
-	cluster string
-	env     string
-	name    string
-	success bool
-	reason  string
 }
 
 func newDeploymentPartition(deploymentInfos []DeploymentInfo, cluster config.Cluster, auroraConfig string, overrideToken string) *DeploymentPartition {
@@ -65,16 +53,6 @@ func newPartialDeleteResults(partition DeploymentPartition, deleteResults client
 	return partialDeleteResult{
 		partition:     partition,
 		deleteResults: deleteResults,
-	}
-}
-
-func newPrintDeleteResult(cluster, env, name, reason string, success bool) *deleteSummary {
-	return &deleteSummary{
-		cluster: cluster,
-		env:     env,
-		name:    name,
-		success: success,
-		reason:  reason,
 	}
 }
 
@@ -130,7 +108,7 @@ func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deployInfos, err := getDeployedApplications(filteredDeploymentSpecs, auroraConfigName, pFlagToken)
+	deployInfos, err := getDeployedApplications(getApplicationDeploymentClient, filteredDeploymentSpecs, auroraConfigName, pFlagToken)
 	if err != nil {
 		return err
 	} else if len(deployInfos) == 0 {
@@ -146,12 +124,18 @@ func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications to delete")
 	}
 
-	result, err := deleteFromReachableClusters(getApplicationDeploymentClient, partitions)
+	fullResults, err := deleteFromReachableClusters(getApplicationDeploymentClient, partitions)
 	if err != nil {
 		return err
 	}
 
-	printDeleteResult(result, cmd.OutOrStdout())
+	printFullResults(fullResults, cmd.OutOrStdout())
+
+	for _, result := range fullResults {
+		if !result.deleteResults.Success {
+			return errors.New("One or more delete operations failed")
+		}
+	}
 
 	return nil
 }
@@ -167,6 +151,10 @@ func validateDeleteParams() error {
 }
 
 func createDeploymentPartitions(auroraConfig, overrideToken string, clusters map[string]*config.Cluster, deployInfos []DeploymentInfo) ([]DeploymentPartition, error) {
+	type deploymentPartitionID struct {
+		namespace, clusterName string
+	}
+
 	partitionMap := make(map[deploymentPartitionID]*DeploymentPartition)
 
 	for _, info := range deployInfos {
@@ -215,7 +203,7 @@ func deleteFromReachableClusters(getClient func(partition Partition) client.Appl
 
 func performDelete(deployClient client.ApplicationDeploymentClient, partition DeploymentPartition, partitionResult chan<- partialDeleteResult) {
 	if !partition.Cluster.Reachable {
-		partitionResult <- errorDeleteResults("Cluster is not reachable", partition)
+		partitionResult <- getErrorDeleteResults("Cluster is not reachable", partition)
 		return
 	}
 
@@ -227,14 +215,86 @@ func performDelete(deployClient client.ApplicationDeploymentClient, partition De
 	results, err := deployClient.Delete(client.NewDeletePayload(applicationRefs))
 
 	if err != nil {
-		partitionResult <- errorDeleteResults(err.Error(), partition)
+		partitionResult <- getErrorDeleteResults(err.Error(), partition)
 	} else {
 		partitionResult <- newPartialDeleteResults(partition, *results)
 	}
 }
 
+func getErrorDeleteResults(reason string, partition DeploymentPartition) partialDeleteResult {
+	var results []client.DeleteResult
+
+	for _, info := range partition.DeploymentInfos {
+		result := client.DeleteResult{
+			Success:        false,
+			Reason:         reason,
+			ApplicationRef: *client.NewApplicationRef(info.Namespace, info.Name),
+		}
+
+		results = append(results, result)
+	}
+
+	deleteResults := client.DeleteResults{
+		Message: reason,
+		Success: false,
+		Results: results,
+	}
+
+	return newPartialDeleteResults(partition, deleteResults)
+}
+
+func printFullResults(allResults []partialDeleteResult, out io.Writer) {
+	header, rows := getDeleteResultTableContent(allResults)
+	DefaultTablePrinter(header, rows, out)
+}
+
+func getDeleteResultTableContent(allResults []partialDeleteResult) (string, []string) {
+	header := "\x1b[00mSTATUS\x1b[0m\tCLUSTER\tNAMESPACE\tAPPLICATION\tMESSAGE"
+
+	type viewItem struct {
+		cluster, namespace, name, reason string
+		success                          bool
+	}
+
+	var tableData []viewItem
+
+	for _, partitionResult := range allResults {
+		for _, deleteResult := range partitionResult.deleteResults.Results {
+			item := viewItem{
+				cluster:   partitionResult.partition.Cluster.Name,
+				namespace: deleteResult.ApplicationRef.Namespace,
+				name:      deleteResult.ApplicationRef.Name,
+				success:   deleteResult.Success,
+				reason:    deleteResult.Reason,
+			}
+
+			tableData = append(tableData, item)
+		}
+	}
+
+	sort.Slice(tableData, func(i, j int) bool {
+		nameA := tableData[i].name
+		nameB := tableData[j].name
+		return strings.Compare(nameA, nameB) < 1
+	})
+
+	rows := []string{}
+	pattern := "%s\t%s\t%s\t%s\t%s"
+
+	for _, item := range tableData {
+		status := "\x1b[32mDeleted\x1b[0m"
+		if !item.success {
+			status = "\x1b[31mFailed\x1b[0m"
+		}
+		result := fmt.Sprintf(pattern, status, item.cluster, item.namespace, item.name, item.reason)
+		rows = append(rows, result)
+	}
+
+	return header, rows
+}
+
 func getDeleteConfirmation(force bool, deployInfos []DeploymentInfo, out io.Writer) bool {
-	header, rows := getDeployInfoTable(deployInfos)
+	header, rows := getDeleteConfirmationTableContent(deployInfos)
 	DefaultTablePrinter(header, rows, out)
 
 	shouldDeploy := true
@@ -247,7 +307,7 @@ func getDeleteConfirmation(force bool, deployInfos []DeploymentInfo, out io.Writ
 	return shouldDeploy
 }
 
-func getDeployInfoTable(infos []DeploymentInfo) (string, []string) {
+func getDeleteConfirmationTableContent(infos []DeploymentInfo) (string, []string) {
 	var rows []string
 	header := "CLUSTER\tNAMESPACE\tAPPLICATION"
 	pattern := "%v\t%v\t%v"
@@ -263,82 +323,5 @@ func getDeployInfoTable(infos []DeploymentInfo) (string, []string) {
 		)
 		rows = append(rows, row)
 	}
-	return header, rows
-}
-
-func errorDeleteResults(reason string, partition DeploymentPartition) partialDeleteResult {
-	var results []client.DeleteResult
-
-	for _, info := range partition.DeploymentInfos {
-		result := new(client.DeleteResult)
-		result.Success = false
-		result.Reason = reason
-		result.ApplicationRef = *client.NewApplicationRef(info.Namespace, info.Name)
-
-		results = append(results, *result)
-	}
-
-	deleteResults := &client.DeleteResults{
-		Message: reason,
-		Success: false,
-		Results: results,
-	}
-
-	return newPartialDeleteResults(partition, *deleteResults)
-}
-
-func printDeleteResult(allResults []partialDeleteResult, out io.Writer) error {
-	var printSummary []deleteSummary
-
-	for _, partitionResult := range allResults {
-		for _, deleteResult := range partitionResult.deleteResults.Results {
-			cluster := partitionResult.partition.Cluster.Name
-			env := deleteResult.ApplicationRef.Namespace
-			name := deleteResult.ApplicationRef.Name
-			success := deleteResult.Success
-			reason := deleteResult.Reason
-
-			printSummary = append(printSummary, *newPrintDeleteResult(cluster, env, name, reason, success))
-		}
-	}
-
-	if len(printSummary) == 0 {
-		return errors.New("No applications were deleted")
-	}
-
-	sort.Slice(printSummary, func(i, j int) bool {
-		nameA := printSummary[i].name
-		nameB := printSummary[j].name
-		return strings.Compare(nameA, nameB) < 1
-	})
-
-	header, rows := getDeleteResultTableContent(printSummary)
-	if len(rows) == 0 {
-		return nil
-	}
-
-	DefaultTablePrinter(header, rows, out)
-	for _, delete := range printSummary {
-		if !delete.success {
-			return errors.New("One or more deploys failed")
-		}
-	}
-
-	return nil
-}
-
-func getDeleteResultTableContent(printSummary []deleteSummary) (string, []string) {
-	var rows []string
-	for _, item := range printSummary {
-		pattern := "%s\t%s\t%s\t%s\t%s"
-		status := "\x1b[32mDeleted\x1b[0m"
-		if !item.success {
-			status = "\x1b[31mFailed\x1b[0m"
-		}
-		result := fmt.Sprintf(pattern, status, item.cluster, item.env, item.name, item.reason)
-		rows = append(rows, result)
-	}
-
-	header := "\x1b[00mSTATUS\x1b[0m\tCLUSTER\tENVIRONMENT\tAPPLICATION\tMESSAGE"
 	return header, rows
 }
