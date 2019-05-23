@@ -197,7 +197,7 @@ func getApplications(apiClient client.AuroraConfigClient, search, version string
 		return nil, err
 	}
 
-	if version != "" {
+	if version != "" && len(applications) != 0 {
 		if len(applications) > 1 {
 			return nil, errors.New("Deploy with version does only support one application")
 		}
