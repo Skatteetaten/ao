@@ -56,8 +56,9 @@ func (spec DeploymentSpec) Get(name string) interface{} {
 }
 
 func (spec DeploymentSpec) GetString(name string) string {
+
 	if value := spec.Get(name); value != nil {
-		return value.(string)
+		return fmt.Sprintf("%v", value)
 	} else {
 		return ""
 	}
