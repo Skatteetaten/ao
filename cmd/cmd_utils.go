@@ -6,6 +6,9 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/client"
 )
 
 func DefaultTablePrinter(header string, rows []string, out io.Writer) {
@@ -54,4 +57,24 @@ func GetFilesTable(files []string) (string, []string) {
 	sort.Strings(single)
 	sort.Strings(envApp)
 	return "FILES", append(single, envApp...)
+}
+
+func getAPIClient(auroraConfig, overrideToken, overrideCluster string) (*client.ApiClient, error) {
+	api := DefaultApiClient
+	api.Affiliation = auroraConfig
+
+	if overrideCluster != "" && !AO.Localhost {
+		c := AO.Clusters[overrideCluster]
+		if !c.Reachable {
+			return nil, errors.Errorf("%s cluster is not reachable", overrideCluster)
+		}
+
+		api.Host = c.BooberUrl
+		api.Token = c.Token
+		if overrideToken != "" {
+			api.Token = overrideToken
+		}
+	}
+
+	return api, nil
 }
