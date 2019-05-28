@@ -18,7 +18,7 @@ var (
 	applicationDeploymentCmd = &cobra.Command{
 		Use:         "applicationdeployment",
 		Aliases:     []string{"ad"},
-		Short:       "Delete Aurora resources",
+		Short:       "Perform operations on an application deployment",
 		Annotations: map[string]string{"type": "actions"},
 	}
 
