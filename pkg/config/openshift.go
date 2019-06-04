@@ -49,13 +49,14 @@ func (ao *AOConfig) InitClusters() {
 		clusterURL := fmt.Sprintf(ao.ClusterUrlPattern, name)
 		go func() {
 			reachable := false
-			resp, _ := client.Get(booberURL)
-			if resp != nil && resp.StatusCode < 500 {
-				resp, _ := client.Get(clusterURL)
-				if resp != nil && resp.StatusCode < 500 {
+			resp, err := client.Get(booberURL)
+			if err == nil && resp != nil && resp.StatusCode < 500 {
+				resp, err = client.Get(clusterURL)
+				if err == nil && resp != nil && resp.StatusCode < 500 {
 					reachable = true
 				}
 			}
+
 			logrus.WithField("reachable", reachable).Info(booberURL)
 			ch <- &Cluster{
 				Name:      name,
