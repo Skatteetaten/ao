@@ -9,7 +9,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/client"
 )
 
-// Get application list
+// GetApplications returns list of applications
 func GetApplications(apiClient client.AuroraConfigClient, pattern, version string, excludes []string, out io.Writer) ([]string, error) {
 	filenames, err := apiClient.GetFileNames()
 	if err != nil {
@@ -52,7 +52,7 @@ func SetValue(apiClient client.AuroraConfigClient, name, path, value string) (st
 		return "", err
 	}
 
-	op := client.JsonPatchOp{
+	op := auroraconfig.JsonPatchOp{
 		OP:    "add",
 		Path:  path,
 		Value: value,

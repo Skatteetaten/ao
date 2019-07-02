@@ -71,7 +71,7 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 		api := NewApiClientDefaultRef(ts.URL, "", affiliation)
 
 		data := ReadTestFile("auroraconfig_paas_success_validation_request")
-		var ac AuroraConfig
+		var ac auroraconfig.AuroraConfig
 		err := json.Unmarshal(data, &ac)
 		if err != nil {
 			t.Error(err)
@@ -87,7 +87,7 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 
 		api := NewApiClientDefaultRef(ts.URL, "", affiliation)
 		data := ReadTestFile("auroraconfig_paas_fail_validation_request")
-		var ac AuroraConfig
+		var ac auroraconfig.AuroraConfig
 		err := json.Unmarshal(data, &ac)
 		if err != nil {
 			t.Error(err)
@@ -163,7 +163,7 @@ func TestApiClient_PatchAuroraConfigFile(t *testing.T) {
 
 		api := NewApiClientDefaultRef(ts.URL, "", affiliation)
 
-		op := JsonPatchOp{
+		op := auroraconfig.JsonPatchOp{
 			OP:    "add",
 			Path:  "/version",
 			Value: "develop-SNAPSHOT",
@@ -180,11 +180,11 @@ func TestJsonPatchOp_Validate(t *testing.T) {
 		Expected error
 	}{
 		{"/version", nil},
-		{"version", ErrJsonPathPrefix},
+		{"version", auroraconfig.ErrJsonPathPrefix},
 	}
 
 	for _, tc := range cases {
-		op := JsonPatchOp{
+		op := auroraconfig.JsonPatchOp{
 			Path: tc.JsonPath,
 		}
 
@@ -210,7 +210,7 @@ func TestFileNames_Filter(t *testing.T) {
 }
 
 func TestAuroraConfigFile_ToPrettyJson(t *testing.T) {
-	acf := &AuroraConfigFile{
+	acf := &auroraconfig.AuroraConfigFile{
 		Name:     "about.json",
 		Contents: `{"type":"development"}`,
 	}

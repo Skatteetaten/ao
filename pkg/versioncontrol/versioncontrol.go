@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 
 	"github.com/pkg/errors"
 )
@@ -56,8 +56,8 @@ func FindGitPath(path string) (string, error) {
 	return FindGitPath(next)
 }
 
-func CollectAuroraConfigFilesInRepo(affiliation, gitRoot string) (*client.AuroraConfig, error) {
-	ac := &client.AuroraConfig{
+func CollectAuroraConfigFilesInRepo(affiliation, gitRoot string) (*auroraconfig.AuroraConfig, error) {
+	ac := &auroraconfig.AuroraConfig{
 		Name: affiliation,
 	}
 
@@ -74,7 +74,7 @@ func CollectAuroraConfigFilesInRepo(affiliation, gitRoot string) (*client.Aurora
 			return errors.Wrap(err, "Could not read file "+fileName)
 		}
 
-		ac.Files = append(ac.Files, client.AuroraConfigFile{
+		ac.Files = append(ac.Files, auroraconfig.AuroraConfigFile{
 			Name:     fileName,
 			Contents: string(file),
 		})

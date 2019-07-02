@@ -1,7 +1,34 @@
 package auroraconfig
 
 import (
+	"encoding/json"
+	"errors"
 	"regexp"
+	"strings"
+)
+
+type (
+	AuroraConfigNames []string
+
+	AuroraConfig struct {
+		Name  string             `json:"name"`
+		Files []AuroraConfigFile `json:"files"`
+	}
+
+	AuroraConfigFile struct {
+		Name     string `json:"name"`
+		Contents string `json:"contents"`
+	}
+
+	JsonPatchOp struct {
+		OP    string      `json:"op"`
+		Path  string      `json:"path"`
+		Value interface{} `json:"value"`
+	}
+)
+
+var (
+	ErrJsonPathPrefix = errors.New("json path must start with /")
 )
 
 func GetApplicationRefs(filenames FileNames, pattern string, excludes []string) ([]string, error) {
@@ -14,6 +41,28 @@ func GetApplicationRefs(filenames FileNames, pattern string, excludes []string) 
 	}
 
 	return applications, nil
+}
+
+func (op JsonPatchOp) Validate() error {
+	if !strings.HasPrefix(op.Path, "/") {
+		return ErrJsonPathPrefix
+	}
+	return nil
+}
+
+func (f *AuroraConfigFile) ToPrettyJson() string {
+
+	var out map[string]interface{}
+	err := json.Unmarshal([]byte(f.Contents), &out)
+	if err != nil {
+		return ""
+	}
+	data, err := json.MarshalIndent(out, "", "  ")
+	if err != nil {
+		return ""
+	}
+
+	return string(data)
 }
 
 func filterExcludes(expressions, applications []string) ([]string, error) {

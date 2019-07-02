@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
@@ -13,38 +12,16 @@ import (
 type AuroraConfigClient interface {
 	Doer
 	GetFileNames() (auroraconfig.FileNames, error)
-	GetAuroraConfig() (*AuroraConfig, error)
-	GetAuroraConfigNames() (*AuroraConfigNames, error)
-	PutAuroraConfig(endpoint string, ac *AuroraConfig) error
-	ValidateAuroraConfig(ac *AuroraConfig, fullValidation bool) error
-	PatchAuroraConfigFile(fileName string, operation JsonPatchOp) error
-	GetAuroraConfigFile(fileName string) (*AuroraConfigFile, string, error)
-	PutAuroraConfigFile(file *AuroraConfigFile, eTag string) error
+	GetAuroraConfig() (*auroraconfig.AuroraConfig, error)
+	GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, error)
+	PutAuroraConfig(endpoint string, ac *auroraconfig.AuroraConfig) error
+	ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) error
+	PatchAuroraConfigFile(fileName string, operation auroraconfig.JsonPatchOp) error
+	GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error)
+	PutAuroraConfigFile(file *auroraconfig.AuroraConfigFile, eTag string) error
 }
 
-var (
-	ErrJsonPathPrefix = errors.New("json path must start with /")
-)
-
 type (
-	AuroraConfigNames []string
-
-	AuroraConfig struct {
-		Name  string             `json:"name"`
-		Files []AuroraConfigFile `json:"files"`
-	}
-
-	AuroraConfigFile struct {
-		Name     string `json:"name"`
-		Contents string `json:"contents"`
-	}
-
-	JsonPatchOp struct {
-		OP    string      `json:"op"`
-		Path  string      `json:"path"`
-		Value interface{} `json:"value"`
-	}
-
 	auroraConfigFilePayload struct {
 		Content string `json:"content"`
 	}
@@ -67,7 +44,7 @@ func (api *ApiClient) GetFileNames() (auroraconfig.FileNames, error) {
 	return fileNames, nil
 }
 
-func (api *ApiClient) GetAuroraConfig() (*AuroraConfig, error) {
+func (api *ApiClient) GetAuroraConfig() (*auroraconfig.AuroraConfig, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s", api.Affiliation)
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
@@ -75,7 +52,7 @@ func (api *ApiClient) GetAuroraConfig() (*AuroraConfig, error) {
 		return nil, err
 	}
 
-	var ac AuroraConfig
+	var ac auroraconfig.AuroraConfig
 	err = response.ParseFirstItem(&ac)
 	if err != nil {
 		return nil, errors.Wrap(err, "aurora config")
@@ -84,7 +61,7 @@ func (api *ApiClient) GetAuroraConfig() (*AuroraConfig, error) {
 	return &ac, nil
 }
 
-func (api *ApiClient) GetAuroraConfigNames() (*AuroraConfigNames, error) {
+func (api *ApiClient) GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, error) {
 	endpoint := fmt.Sprintf("/auroraconfignames")
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
@@ -92,7 +69,7 @@ func (api *ApiClient) GetAuroraConfigNames() (*AuroraConfigNames, error) {
 		return nil, err
 	}
 
-	var acn AuroraConfigNames
+	var acn auroraconfig.AuroraConfigNames
 	err = response.ParseItems(&acn)
 	if err != nil {
 		return nil, errors.Wrap(err, "aurora config names")
@@ -100,7 +77,7 @@ func (api *ApiClient) GetAuroraConfigNames() (*AuroraConfigNames, error) {
 	return &acn, nil
 }
 
-func (api *ApiClient) PutAuroraConfig(endpoint string, ac *AuroraConfig) error {
+func (api *ApiClient) PutAuroraConfig(endpoint string, ac *auroraconfig.AuroraConfig) error {
 
 	payload, err := json.Marshal(ac)
 	if err != nil {
@@ -119,7 +96,7 @@ func (api *ApiClient) PutAuroraConfig(endpoint string, ac *AuroraConfig) error {
 	return nil
 }
 
-func (api *ApiClient) ValidateAuroraConfig(ac *AuroraConfig, fullValidation bool) error {
+func (api *ApiClient) ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) error {
 	resourceValidation := "false"
 	if fullValidation {
 		resourceValidation = "true"
@@ -128,7 +105,7 @@ func (api *ApiClient) ValidateAuroraConfig(ac *AuroraConfig, fullValidation bool
 	return api.PutAuroraConfig(endpoint, ac)
 }
 
-func (api *ApiClient) GetAuroraConfigFile(fileName string) (*AuroraConfigFile, string, error) {
+func (api *ApiClient) GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, fileName)
 
 	bundle, err := api.DoWithHeader(http.MethodGet, endpoint, nil, nil)
@@ -140,7 +117,7 @@ func (api *ApiClient) GetAuroraConfigFile(fileName string) (*AuroraConfigFile, s
 		return nil, "", errors.New("Failed getting file " + fileName)
 	}
 
-	var file AuroraConfigFile
+	var file auroraconfig.AuroraConfigFile
 	err = bundle.BooberResponse.ParseFirstItem(&file)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "aurora config file")
@@ -151,7 +128,7 @@ func (api *ApiClient) GetAuroraConfigFile(fileName string) (*AuroraConfigFile, s
 	return &file, eTag, nil
 }
 
-func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatchOp) error {
+func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation auroraconfig.JsonPatchOp) error {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, fileName)
 
 	_, _, err := api.GetAuroraConfigFile(fileName)
@@ -159,7 +136,7 @@ func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatch
 		return err
 	}
 
-	op, err := json.Marshal([]JsonPatchOp{operation})
+	op, err := json.Marshal([]auroraconfig.JsonPatchOp{operation})
 	if err != nil {
 		return err
 	}
@@ -185,7 +162,7 @@ func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation JsonPatch
 	return nil
 }
 
-func (api *ApiClient) PutAuroraConfigFile(file *AuroraConfigFile, eTag string) error {
+func (api *ApiClient) PutAuroraConfigFile(file *auroraconfig.AuroraConfigFile, eTag string) error {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, file.Name)
 
 	payload := auroraConfigFilePayload{
@@ -213,27 +190,5 @@ func (api *ApiClient) PutAuroraConfigFile(file *AuroraConfigFile, eTag string) e
 		return bundle.BooberResponse.Error()
 	}
 
-	return nil
-}
-
-func (f *AuroraConfigFile) ToPrettyJson() string {
-
-	var out map[string]interface{}
-	err := json.Unmarshal([]byte(f.Contents), &out)
-	if err != nil {
-		return ""
-	}
-	data, err := json.MarshalIndent(out, "", "  ")
-	if err != nil {
-		return ""
-	}
-
-	return string(data)
-}
-
-func (op JsonPatchOp) Validate() error {
-	if !strings.HasPrefix(op.Path, "/") {
-		return ErrJsonPathPrefix
-	}
 	return nil
 }
