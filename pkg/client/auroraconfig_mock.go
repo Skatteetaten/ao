@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 )
 
 // AuroraConfigClientMock is a base mock type
@@ -11,12 +12,12 @@ type AuroraConfigClientMock struct {
 }
 
 // NewAuroraConfigClientMock returns a new AurorConfigClientMock
-func NewAuroraConfigClientMock(fileNames FileNames) *AuroraConfigClientMock {
+func NewAuroraConfigClientMock(fileNames auroraconfig.FileNames) *AuroraConfigClientMock {
 	return &AuroraConfigClientMock{files: fileNames}
 }
 
 // GetFileNames default mock implementation
-func (api *AuroraConfigClientMock) GetFileNames() (FileNames, error) {
+func (api *AuroraConfigClientMock) GetFileNames() (auroraconfig.FileNames, error) {
 	return api.files, nil
 }
 

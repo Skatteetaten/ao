@@ -134,7 +134,7 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *cobra.Command, fileNames client.FileNames) error {
+func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *cobra.Command, fileNames auroraconfig.FileNames) error {
 	var selected []string
 	for _, arg := range args {
 		matches := auroraconfig.FindAllDeploysFor(filter, arg, fileNames.GetApplicationDeploymentRefs())

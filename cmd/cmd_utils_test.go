@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"bytes"
-	"github.com/skatteetaten/ao/pkg/client"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"testing"
+
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/stretchr/testify/assert"
 )
 
-var files = client.FileNames{
+var files = auroraconfig.FileNames{
 	"bar.json",
 	"baz.json",
 	"foo/bar.json",

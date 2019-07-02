@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -195,7 +196,7 @@ func TestJsonPatchOp_Validate(t *testing.T) {
 }
 
 func TestFileNames_Filter(t *testing.T) {
-	fileNames := FileNames{"about.json", "boober.json", "test/about.json", "test/boober.json"}
+	fileNames := auroraconfig.FileNames{"about.json", "boober.json", "test/about.json", "test/boober.json"}
 	deploymentRefs := fileNames.GetApplicationDeploymentRefs()
 	environments := fileNames.GetEnvironments()
 	applications := fileNames.GetApplications()

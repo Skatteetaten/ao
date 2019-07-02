@@ -4,17 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/pkg/collections"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 )
 
 type AuroraConfigClient interface {
 	Doer
-	GetFileNames() (FileNames, error)
+	GetFileNames() (auroraconfig.FileNames, error)
 	GetAuroraConfig() (*AuroraConfig, error)
 	GetAuroraConfigNames() (*AuroraConfigNames, error)
 	PutAuroraConfig(endpoint string, ac *AuroraConfig) error
@@ -29,8 +27,6 @@ var (
 )
 
 type (
-	FileNames []string
-
 	AuroraConfigNames []string
 
 	AuroraConfig struct {
@@ -54,7 +50,7 @@ type (
 	}
 )
 
-func (api *ApiClient) GetFileNames() (FileNames, error) {
+func (api *ApiClient) GetFileNames() (auroraconfig.FileNames, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/filenames", api.Affiliation)
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
@@ -62,7 +58,7 @@ func (api *ApiClient) GetFileNames() (FileNames, error) {
 		return nil, err
 	}
 
-	var fileNames FileNames
+	var fileNames auroraconfig.FileNames
 	err = response.ParseItems(&fileNames)
 	if err != nil {
 		return nil, err
@@ -233,60 +229,6 @@ func (f *AuroraConfigFile) ToPrettyJson() string {
 	}
 
 	return string(data)
-}
-
-func (f FileNames) GetApplicationDeploymentRefs() []string {
-	var filteredFiles []string
-	for _, file := range f.WithoutExtension() {
-		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
-			filteredFiles = append(filteredFiles, file)
-		}
-	}
-	sort.Strings(filteredFiles)
-	return filteredFiles
-}
-
-func (f FileNames) GetApplications() []string {
-	unique := collections.NewStringSet()
-	for _, file := range f.WithoutExtension() {
-		if !strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
-			unique.Add(file)
-		}
-	}
-	filteredFiles := unique.All()
-	sort.Strings(filteredFiles)
-	return filteredFiles
-}
-
-func (f FileNames) GetEnvironments() []string {
-	unique := collections.NewStringSet()
-	for _, file := range f {
-		if strings.ContainsRune(file, '/') && !strings.Contains(file, "about") {
-			split := strings.Split(file, "/")
-			unique.Add(split[0])
-		}
-	}
-	filteredFiles := unique.All()
-	sort.Strings(filteredFiles)
-	return filteredFiles
-}
-
-func (f FileNames) WithoutExtension() []string {
-	var withoutExt []string
-	for _, file := range f {
-		withoutExt = append(withoutExt, strings.TrimSuffix(file, filepath.Ext(file)))
-	}
-	return withoutExt
-}
-
-func (f FileNames) Find(name string) (string, error) {
-	for _, fileName := range f {
-		fileNameWithoutExtension := strings.TrimSuffix(fileName, filepath.Ext(fileName))
-		if name == fileName || name == fileNameWithoutExtension {
-			return fileName, nil
-		}
-	}
-	return "", errors.Errorf("could not find %s in AuroraConfig", name)
 }
 
 func (op JsonPatchOp) Validate() error {
