@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/client"
 
 	"encoding/json"
@@ -10,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/spf13/cobra"
 )
 
@@ -107,7 +107,7 @@ func PrintApplications(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications available")
 	}
 	if len(args) > 0 {
-		return PrintDeploySpecTable(args, fuzzy.APP_FILTER, cmd, fileNames)
+		return PrintDeploySpecTable(args, auroraconfig.APP_FILTER, cmd, fileNames)
 	}
 
 	applications := fileNames.GetApplications()
@@ -126,7 +126,7 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) > 0 {
-		return PrintDeploySpecTable(args, fuzzy.ENV_FILTER, cmd, fileNames)
+		return PrintDeploySpecTable(args, auroraconfig.ENV_FILTER, cmd, fileNames)
 	}
 
 	envrionments := fileNames.GetEnvironments()
@@ -134,10 +134,10 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func PrintDeploySpecTable(args []string, filter fuzzy.FilterMode, cmd *cobra.Command, fileNames client.FileNames) error {
+func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *cobra.Command, fileNames client.FileNames) error {
 	var selected []string
 	for _, arg := range args {
-		matches := fuzzy.FindAllDeploysFor(filter, arg, fileNames.GetApplicationDeploymentRefs())
+		matches := auroraconfig.FindAllDeploysFor(filter, arg, fileNames.GetApplicationDeploymentRefs())
 		if len(matches) == 0 {
 			return errors.Errorf("No matches for %s", arg)
 		}
@@ -197,7 +197,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	matches := fuzzy.FindMatches(search, fileNames.GetApplicationDeploymentRefs(), false)
+	matches := auroraconfig.FindMatches(search, fileNames.GetApplicationDeploymentRefs(), false)
 	if len(matches) == 0 {
 		return errors.Errorf("No matches for %s", search)
 	} else if len(matches) > 1 {
@@ -246,7 +246,7 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	matches := fuzzy.FindMatches(search, fileNames, true)
+	matches := auroraconfig.FindMatches(search, fileNames, true)
 	if len(matches) == 0 {
 		return errors.Errorf("No matches for %s", search)
 	} else if len(matches) > 1 {

@@ -6,8 +6,8 @@ import (
 	"io"
 	"regexp"
 
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/client"
-	"github.com/skatteetaten/ao/pkg/fuzzy"
 )
 
 func GetApplications(apiClient client.AuroraConfigClient, search, version string, excludes []string, out io.Writer) ([]string, error) {
@@ -17,7 +17,7 @@ func GetApplications(apiClient client.AuroraConfigClient, search, version string
 	}
 
 	possibleDeploys := files.GetApplicationDeploymentRefs()
-	applications := fuzzy.SearchForApplications(search, possibleDeploys)
+	applications := auroraconfig.SearchForApplications(search, possibleDeploys)
 
 	applications, err = filterExcludes(excludes, applications)
 	if err != nil {
