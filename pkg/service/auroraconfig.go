@@ -4,22 +4,19 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"regexp"
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/client"
 )
 
-func GetApplications(apiClient client.AuroraConfigClient, search, version string, excludes []string, out io.Writer) ([]string, error) {
-	files, err := apiClient.GetFileNames()
+// Get application list
+func GetApplications(apiClient client.AuroraConfigClient, pattern, version string, excludes []string, out io.Writer) ([]string, error) {
+	filenames, err := apiClient.GetFileNames()
 	if err != nil {
 		return nil, err
 	}
 
-	possibleDeploys := files.GetApplicationDeploymentRefs()
-	applications := auroraconfig.SearchForApplications(search, possibleDeploys)
-
-	applications, err = filterExcludes(excludes, applications)
+	applications, err := auroraconfig.GetApplicationRefs(filenames, pattern, excludes)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +26,7 @@ func GetApplications(apiClient client.AuroraConfigClient, search, version string
 			return nil, errors.New("Deploy with version does only support one application")
 		}
 
-		fileName, err := files.Find(applications[0])
+		fileName, err := filenames.Find(applications[0])
 		if err != nil {
 			return nil, err
 		}
@@ -83,25 +80,4 @@ func updateVersion(apiClient client.AuroraConfigClient, version, fileName string
 	fmt.Fprintf(out, "%s has been updated with %s %s\n", fileName, path, value)
 
 	return nil
-}
-
-func filterExcludes(expressions, applications []string) ([]string, error) {
-	apps := make([]string, len(applications))
-	copy(apps, applications)
-	for _, expr := range expressions {
-		r, err := regexp.Compile(expr)
-		if err != nil {
-			return nil, err
-		}
-		tmp := apps[:0]
-		for _, app := range apps {
-			match := r.MatchString(app)
-			if !match {
-				tmp = append(tmp, app)
-			}
-		}
-		apps = tmp
-	}
-
-	return apps, nil
 }
