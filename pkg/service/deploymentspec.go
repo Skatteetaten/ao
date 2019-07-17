@@ -1,16 +1,19 @@
 package service
 
-import "github.com/skatteetaten/ao/pkg/client"
+import (
+	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
+)
 
-func GetFilteredDeploymentSpecs(apiClient client.DeploySpecClient, applications []string, overrideCluster string) ([]client.DeploySpec, error) {
+func GetFilteredDeploymentSpecs(apiClient client.DeploySpecClient, applications []string, overrideCluster string) ([]deploymentspec.DeploymentSpec, error) {
 	deploySpecs, err := apiClient.GetAuroraDeploySpec(applications, true)
 	if err != nil {
 		return nil, err
 	}
-	var filteredDeploymentSpecs []client.DeploySpec
+	var filteredDeploymentSpecs []deploymentspec.DeploymentSpec
 	if overrideCluster != "" {
 		for _, spec := range deploySpecs {
-			if spec.Value("/cluster").(string) == overrideCluster {
+			if spec.Cluster() == overrideCluster {
 				filteredDeploymentSpecs = append(filteredDeploymentSpecs, spec)
 			}
 		}

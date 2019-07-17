@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 )
 
 var (
@@ -31,7 +32,7 @@ type Partition struct {
 
 type DeploySpecPartition struct {
 	Partition
-	DeploySpecs []client.DeploySpec
+	DeploySpecs []deploymentspec.DeploymentSpec
 }
 
 func newDeploymentInfo(namespace, name, cluster string) *DeploymentInfo {
@@ -42,7 +43,7 @@ func newDeploymentInfo(namespace, name, cluster string) *DeploymentInfo {
 	}
 }
 
-func newDeploySpecPartition(deploySpecs []client.DeploySpec, cluster config.Cluster, auroraConfig string, overrideToken string) *DeploySpecPartition {
+func newDeploySpecPartition(deploySpecs []deploymentspec.DeploymentSpec, cluster config.Cluster, auroraConfig string, overrideToken string) *DeploySpecPartition {
 	return &DeploySpecPartition{
 		DeploySpecs: deploySpecs,
 		Partition: Partition{
@@ -53,7 +54,7 @@ func newDeploySpecPartition(deploySpecs []client.DeploySpec, cluster config.Clus
 	}
 }
 
-func createDeploySpecPartitions(auroraConfig, overrideToken string, clusters map[string]*config.Cluster, deploySpecs []client.DeploySpec) ([]DeploySpecPartition, error) {
+func createDeploySpecPartitions(auroraConfig, overrideToken string, clusters map[string]*config.Cluster, deploySpecs []deploymentspec.DeploymentSpec) ([]DeploySpecPartition, error) {
 	type deploySpecPartitionID struct {
 		envName, clusterName string
 	}
@@ -61,8 +62,8 @@ func createDeploySpecPartitions(auroraConfig, overrideToken string, clusters map
 	partitionMap := make(map[deploySpecPartitionID]*DeploySpecPartition)
 
 	for _, spec := range deploySpecs {
-		clusterName := spec.Value("cluster").(string)
-		envName := spec.Value("envName").(string)
+		clusterName := spec.Cluster()
+		envName := spec.Environment()
 
 		partitionID := deploySpecPartitionID{clusterName, envName}
 
@@ -71,7 +72,7 @@ func createDeploySpecPartitions(auroraConfig, overrideToken string, clusters map
 				return nil, errors.New(fmt.Sprintf("No such cluster %s", clusterName))
 			}
 			cluster := clusters[clusterName]
-			partition := newDeploySpecPartition([]client.DeploySpec{}, *cluster, auroraConfig, overrideToken)
+			partition := newDeploySpecPartition([]deploymentspec.DeploymentSpec{}, *cluster, auroraConfig, overrideToken)
 			partitionMap[partitionID] = partition
 		}
 
