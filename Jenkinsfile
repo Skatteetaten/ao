@@ -76,6 +76,11 @@ timestamps {
         go.buildGoWithJenkinsSh("Go 1.9")
       }
 
+      stage('Sonar') {
+        def sonarPath = tool 'Sonar 4'
+        sh "${sonarPath}/bin/sonar-scanner"
+      }
+
       stage('Copy ao to assets') {
         sh 'mkdir -p ./website/public/assets/macos'
         sh 'mkdir -p ./website/public/assets/windows'
