@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+	<testsuite tests="23" failures="0" time="0.012" name="github.com/skatteetaten/ao/cmd">
+		<properties>
+			<property name="go.version" value="go1.12.4"></property>
+		</properties>
+		<testcase classname="cmd" name="TestPrintClusters" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_createDeploySpecPartitions" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_createRequestPartitionsWithOverrideToken" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_createDeploymentPartitions" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_deleteFromReachableClusters" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_checkExistence" time="0.000"></testcase>
+		<testcase classname="cmd" name="TestDefaultTablePrinter" time="0.000"></testcase>
+		<testcase classname="cmd" name="TestGetApplicationDeploymentRefTable" time="0.000"></testcase>
+		<testcase classname="cmd" name="TestGetFileRows" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_deployToReachableClusters" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_deployToUnreachableClusters" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_collectSecrets" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_collectSecrets/should_add_secret_latest.properties_from_given_file_to_vault_&#39;test&#39;" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_collectSecrets/should_add_secret_and_permission_from_given_folder_to_vault_&#39;test&#39;" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_readPermissionFile" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_readPermissionFile/should_get_groups_from_.permissions_file" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_readPermissionFile/should_return_error_when_.permissions_has_no_groups" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_readPermissionFile/should_return_error_when_.permissions_is_illegal_file" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_handlePermissionAction" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_handlePermissionAction/Should_return_an_error_when_trying_to_add_an_group_that_already_exists" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_handlePermissionAction/Should_add_a_new_group_to_existingGroups" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_handlePermissionAction/Should_return_an_error_when_trying_to_delete_a_group_that_does_not_exist" time="0.000"></testcase>
+		<testcase classname="cmd" name="Test_handlePermissionAction/Should_delete_a_group_fom_existingGroups" time="0.000"></testcase>
+	</testsuite>
+	<testsuite tests="57" failures="0" time="0.081" name="github.com/skatteetaten/ao/pkg/client">
+		<properties>
+			<property name="go.version" value="go1.12.4"></property>
+		</properties>
+		<testcase classname="client" name="TestApiClient_Do" time="0.030"></testcase>
+		<testcase classname="client" name="TestApiClient_Do/Should_include_correct_headers_and_path" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_Do/Should_parse_success_Response_struct_correct" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_Do/Should_fail_when_trying_to_connect_to_non_existing_host" time="0.030"></testcase>
+		<testcase classname="client" name="TestApiClient_Do/Should_send_payload_and_retrieve_response_correctly" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_Do/Should_return_error_when_status_code_is_403,_404,_500,_503" time="0.000"></testcase>
+		<testcase classname="client" name="Test_handleForbiddenError" time="0.000"></testcase>
+		<testcase classname="client" name="Test_handleForbiddenError/Should_return_token_has_expired_error" time="0.000"></testcase>
+		<testcase classname="client" name="Test_handleForbiddenError/Should_return_user_has_no_permission_error" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_Deploy" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_Deploy/Should_successfully_deploy_applications" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_Delete" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_Delete/Should_successfully_delete_applications" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetApplyResult" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetApplyResult/Should_successfully_get_apply_result" time="0.000"></testcase>
+		<testcase classname="client" name="TestApi_GetAuroraConfig" time="0.000"></testcase>
+		<testcase classname="client" name="TestApi_GetAuroraConfig/Successfully_get_AuroraConfig" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetFileNames" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetFileNames/Should_get_all_filenames_in_AuroraConfig_for_a_given_affiliation" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_PutAuroraConfig" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_PutAuroraConfig/Successfully_validate_and_save_AuroraConfig" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_PutAuroraConfig/Validation_and_save_should_fail_when_deploy_type_is_illegal" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetAuroraConfigFile" time="0.010"></testcase>
+		<testcase classname="client" name="TestApiClient_GetAuroraConfigFile/Should_successfully_get_AuroraConfigFile" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetAuroraConfigFile/Should_return_error_message_when_AuroraConfigFile_return_success_false" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_PatchAuroraConfigFile" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_PatchAuroraConfigFile/#00" time="0.000"></testcase>
+		<testcase classname="client" name="TestJsonPatchOp_Validate" time="0.000"></testcase>
+		<testcase classname="client" name="TestFileNames_Filter" time="0.000"></testcase>
+		<testcase classname="client" name="TestAuroraConfigFile_ToPrettyJson" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetClientConfig" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetClientConfig/Should_successfully_get_client_config" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetAuroraDeploySpec" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetAuroraDeploySpec/Should_get_aurora_deploy_spec" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetAuroraDeploySpecFormatted" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetAuroraDeploySpecFormatted/Should_get_formatted_aurora_deploy_spec" time="0.000"></testcase>
+		<testcase classname="client" name="Test_buildDeploySpecQueries" time="0.020"></testcase>
+		<testcase classname="client" name="Test_buildDeploySpecQueries/Should_create_multiple_requests_when_url_contains_more_than_3500_char" time="0.010"></testcase>
+		<testcase classname="client" name="Test_buildDeploySpecQueries/Should_create_multiple_requests_without_defaults_when_url_contains_more_than_3500_char" time="0.020"></testcase>
+		<testcase classname="client" name="TestAuroraDeploySpec_Value" time="0.000"></testcase>
+		<testcase classname="client" name="TestAuroraDeploySpec_Value/Should_get_version_from_AuroraDeploySpec" time="0.000"></testcase>
+		<testcase classname="client" name="TestAuroraDeploySpec_Value/Should_get_admin_permissions_from_AuroraDeploySpec" time="0.000"></testcase>
+		<testcase classname="client" name="TestResponse_ParseItemsWithErrors" time="0.000"></testcase>
+		<testcase classname="client" name="TestResponse_ParseItems" time="0.000"></testcase>
+		<testcase classname="client" name="TestResponse_ParseFirstItem" time="0.000"></testcase>
+		<testcase classname="client" name="TestResponse_ToErrorResponse" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetVaults" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetVaults/Should_get_vaults" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetVault" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_GetVault/Should_get_console_vault" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_DeleteVault" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_DeleteVault/Should_delete_vault" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_SaveVault" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_SaveVault/Should_save_vault" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_UpdateSecretFile" time="0.000"></testcase>
+		<testcase classname="client" name="TestApiClient_UpdateSecretFile/Should_update_secret_file" time="0.000"></testcase>
+		<testcase classname="client" name="TestSecrets" time="0.000"></testcase>
+	</testsuite>
+	<testsuite tests="1" failures="0" time="0.003" name="github.com/skatteetaten/ao/pkg/collections">
+		<properties>
+			<property name="go.version" value="go1.12.4"></property>
+		</properties>
+		<testcase classname="collections" name="TestNewStringSet" time="0.000"></testcase>
+	</testsuite>
+	<testsuite tests="10" failures="0" time="0.063" name="github.com/skatteetaten/ao/pkg/config">
+		<properties>
+			<property name="go.version" value="go1.12.4"></property>
+		</properties>
+		<testcase classname="config" name="TestLoadConfigFile" time="0.000"></testcase>
+		<testcase classname="config" name="TestAOConfig_SelectApiCluster" time="0.000"></testcase>
+		<testcase classname="config" name="TestAOConfig_Update" time="0.000"></testcase>
+		<testcase classname="config" name="TestCluster_HasValidToken" time="0.000"></testcase>
+		<testcase classname="config" name="TestGetToken" time="0.000"></testcase>
+		<testcase classname="config" name="TestAOConfig_InitClusters" time="0.020"></testcase>
+		<testcase classname="config" name="TestGetCurrentVersionFromServer" time="0.000"></testcase>
+		<testcase classname="config" name="TestGetCurrentVersionFromServer/Should_check_for_new_version" time="0.000"></testcase>
+		<testcase classname="config" name="TestGetNewAOClient" time="0.000"></testcase>
+		<testcase classname="config" name="TestGetNewAOClient/Should_get_new_ao_version" time="0.000"></testcase>
+	</testsuite>
+	<testsuite tests="3" failures="0" time="0.021" name="github.com/skatteetaten/ao/pkg/editor">
+		<properties>
+			<property name="go.version" value="go1.12.4"></property>
+		</properties>
+		<testcase classname="editor" name="TestEditor_Edit" time="0.010"></testcase>
+		<testcase classname="editor" name="TestAddComments" time="0.000"></testcase>
+		<testcase classname="editor" name="TestStripComments" time="0.000"></testcase>
+	</testsuite>
+	<testsuite tests="5" failures="0" time="0.003" name="github.com/skatteetaten/ao/pkg/fuzzy">
+		<properties>
+			<property name="go.version" value="go1.12.4"></property>
+		</properties>
+		<testcase classname="fuzzy" name="TestFilterFileNamesForDeploy" time="0.000"></testcase>
+		<testcase classname="fuzzy" name="TestFindMatches" time="0.000"></testcase>
+		<testcase classname="fuzzy" name="TestFindFileToEdit" time="0.000"></testcase>
+		<testcase classname="fuzzy" name="TestFindApplicationsToDeploy" time="0.000"></testcase>
+		<testcase classname="fuzzy" name="TestFindAllFor" time="0.000"></testcase>
+	</testsuite>
+	<testsuite tests="1" failures="0" time="0.013" name="github.com/skatteetaten/ao/pkg/log">
+		<properties>
+			<property name="go.version" value="go1.12.4"></property>
+		</properties>
+		<testcase classname="log" name="TestPrettyFormatter_Format" time="0.000"></testcase>
+	</testsuite>
+	<testsuite tests="4" failures="0" time="0.002" name="github.com/skatteetaten/ao/pkg/service">
+		<properties>
+			<property name="go.version" value="go1.12.4"></property>
+		</properties>
+		<testcase classname="service" name="Test_getApplications" time="0.000"></testcase>
+		<testcase classname="service" name="Test_getApplicationsWithExclusions" time="0.000"></testcase>
+		<testcase classname="service" name="Test_getFilteredDeploymentSpecs" time="0.000"></testcase>
+		<testcase classname="service" name="Test_getFilteredDeploymentSpecsWithOverrideCluster" time="0.000"></testcase>
+	</testsuite>
+	<testsuite tests="8" failures="0" time="0.021" name="github.com/skatteetaten/ao/pkg/versioncontrol">
+		<properties>
+			<property name="go.version" value="go1.12.4"></property>
+		</properties>
+		<testcase classname="versioncontrol" name="TestFindGitPath" time="0.010"></testcase>
+		<testcase classname="versioncontrol" name="TestGetGitUrl" time="0.000"></testcase>
+		<testcase classname="versioncontrol" name="TestGetGitUrl/Should_get_git_url_for_BitBucket" time="0.000"></testcase>
+		<testcase classname="versioncontrol" name="TestGetGitUrl/Should_get_git_url_for_local" time="0.000"></testcase>
+		<testcase classname="versioncontrol" name="TestCollectJSONFilesInRepo" time="0.010"></testcase>
+		<testcase classname="versioncontrol" name="TestCollectJSONFilesInRepo/Should_collect_all_JSON_files_from_folder_successfully" time="0.000"></testcase>
+		<testcase classname="versioncontrol" name="TestCreateGitValidateHook" time="0.010"></testcase>
+		<testcase classname="versioncontrol" name="TestCreateGitValidateHook/Should_add_pre-push_hook_to_.git/hooks" time="0.000"></testcase>
+	</testsuite>
+</testsuites>

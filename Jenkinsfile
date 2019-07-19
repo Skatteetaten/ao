@@ -73,12 +73,12 @@ timestamps {
       }
 
       stage('Build, Test & coverage') {
-        go.buildGoWithJenkinsSh("Go 1.9")
+        go.buildGoWithJenkinsSh("Go 1.12")
       }
 
       stage('Sonar') {
         def sonarPath = tool 'Sonar 4'
-        sh "${sonarPath}/bin/sonar-scanner"
+        sh "${sonarPath}/bin/sonar-scanner -Dsonar.branch.name=${env.BRANCH_NAME}"
       }
 
       stage('Copy ao to assets') {
