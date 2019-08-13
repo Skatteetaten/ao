@@ -10,12 +10,17 @@ type DeploymentSpec map[string]interface{}
 
 // Get returns value of specified field.
 func (spec DeploymentSpec) Get(jsonPointer string) interface{} {
-	return spec.get(jsonPointer + "/value")
+	return spec.get(jsonPointer+"/value", "-")
 }
 
 // GetString returns string value of specified field.
 func (spec DeploymentSpec) GetString(name string) string {
 	return fmt.Sprintf("%v", spec.Get(name))
+}
+
+// GetBool returns true if parameter has boolean value true or string value "true" (case insensitive), otherwise false.
+func (spec DeploymentSpec) GetBool(name string) bool {
+	return strings.EqualFold(spec.GetString(name), "true")
 }
 
 // Cluster returns value of the cluster field.
@@ -38,8 +43,8 @@ func (spec DeploymentSpec) Version() string {
 	return spec.GetString("version")
 }
 
-// NewDeploymentSpec creates a minimal deployment spec.
-// The purpose of this method is to create placeholder deployment specs for testing and error handling.
+// NewDeploymentSpec creates a minimal deployment spec. The purpose of this
+// method is to create placeholder deployment specs for testing and error handling.
 func NewDeploymentSpec(name, env, cluster, version string) DeploymentSpec {
 	deploymentSpec := make(DeploymentSpec)
 	deploymentSpec["name"] = map[string]interface{}{"value": name}
@@ -50,7 +55,7 @@ func NewDeploymentSpec(name, env, cluster, version string) DeploymentSpec {
 	return deploymentSpec
 }
 
-func (spec DeploymentSpec) get(jsonPointer string) interface{} {
+func (spec DeploymentSpec) get(jsonPointer, defaultValue string) interface{} {
 	pointers := strings.Fields(strings.Replace(jsonPointer, "/", " ", -1))
 	current := spec
 	for i, pointer := range pointers {
@@ -60,8 +65,8 @@ func (spec DeploymentSpec) get(jsonPointer string) interface{} {
 		} else if ok && !isLast {
 			current = next.(map[string]interface{})
 		} else {
-			return "-"
+			return defaultValue
 		}
 	}
-	return "-"
+	return defaultValue
 }

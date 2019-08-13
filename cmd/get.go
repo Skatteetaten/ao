@@ -161,7 +161,7 @@ func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string
 	})
 	for _, spec := range specs {
 		var replicas string
-		if fmt.Sprint(spec.GetString("pause")) == "true" {
+		if spec.GetBool("pause") {
 			replicas = "Paused"
 		} else {
 			replicas = fmt.Sprint(spec.GetString("replicas"))

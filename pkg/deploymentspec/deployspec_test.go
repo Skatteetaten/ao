@@ -33,6 +33,31 @@ func Test_GetString(t *testing.T) {
 	assert.Equal(t, "200m", deploySpec.GetString("/resources/cpu/max"))
 }
 
+func Test_GetStringFromNull(t *testing.T) {
+	deploySpec := readTestFile(t)
+	assert.Equal(t, "-", deploySpec.GetString("/does/not/exist"))
+}
+
+func Test_GetStringFromNumber(t *testing.T) {
+	deploySpec := readTestFile(t)
+	assert.Equal(t, "8080", deploySpec.GetString("/readiness/port"))
+}
+
+func Test_GetStringFromBool(t *testing.T) {
+	deploySpec := readTestFile(t)
+	assert.Equal(t, "true", deploySpec.GetString("/prometheus"))
+}
+
+func Test_GetBool(t *testing.T) {
+	deploySpec := readTestFile(t)
+	assert.Equal(t, true, deploySpec.GetBool("/prometheus"))
+}
+
+func Test_GetBoolFromNull(t *testing.T) {
+	deploySpec := readTestFile(t)
+	assert.Equal(t, false, deploySpec.GetBool("/does/not/exist"))
+}
+
 func Test_CustomFunctions(t *testing.T) {
 	deploySpec := readTestFile(t)
 	assert.Equal(t, "east", deploySpec.Cluster())
@@ -51,4 +76,5 @@ func Test_NewDeploymentSpec(t *testing.T) {
 	assert.Equal(t, "dev", deploySpec.Environment())
 	assert.Equal(t, "east", deploySpec.Cluster())
 	assert.Equal(t, "1", deploySpec.Version())
+	assert.Equal(t, "-", deploySpec.GetString("/does/not/exist"))
 }
