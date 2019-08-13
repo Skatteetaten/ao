@@ -1,18 +1,20 @@
 package client
 
+import "github.com/skatteetaten/ao/pkg/deploymentspec"
+
 // DeploySpecClientMock is a base mock type
 type DeploySpecClientMock struct {
 	APIClientMock
-	deploySpecs []DeploySpec
+	deploySpecs []deploymentspec.DeploymentSpec
 }
 
 // NewDeploySpecClientMock creates a new DeploySpecClientMock
-func NewDeploySpecClientMock(deploySpecs []DeploySpec) *DeploySpecClientMock {
+func NewDeploySpecClientMock(deploySpecs []deploymentspec.DeploymentSpec) *DeploySpecClientMock {
 	return &DeploySpecClientMock{deploySpecs: deploySpecs}
 }
 
 // GetAuroraDeploySpec default mock implementation
-func (api *DeploySpecClientMock) GetAuroraDeploySpec(applications []string, defaults bool) ([]DeploySpec, error) {
+func (api *DeploySpecClientMock) GetAuroraDeploySpec(applications []string, defaults bool) ([]deploymentspec.DeploymentSpec, error) {
 	return api.deploySpecs, nil
 }
 

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 )
 
 type ApplicationDeploymentClient interface {
@@ -27,12 +29,6 @@ type (
 		Name      string `json:"name"`
 	}
 
-	AuroraConfigFieldSource struct {
-		Value interface{} `json:"value"`
-	}
-
-	DeploymentSpec map[string]AuroraConfigFieldSource
-
 	DeployResults struct {
 		Message string
 		Success bool
@@ -40,11 +36,11 @@ type (
 	}
 
 	DeployResult struct {
-		DeployId       string         `json:"deployId"`
-		DeploymentSpec DeploymentSpec `json:"deploymentSpec"`
-		Success        bool           `json:"success"`
-		Ignored        bool           `json:"ignored"`
-		Reason         string         `json:"reason"`
+		DeployId       string                        `json:"deployId"`
+		DeploymentSpec deploymentspec.DeploymentSpec `json:"deploymentSpec"`
+		Success        bool                          `json:"success"`
+		Ignored        bool                          `json:"ignored"`
+		Reason         string                        `json:"reason"`
 	}
 
 	DeployPayload struct {
@@ -86,45 +82,6 @@ type (
 		ApplicationDeploymentRefs []applicationDeploymentRef `json:"adr"`
 	}
 )
-
-func (spec DeploymentSpec) Get(name string) interface{} {
-	field, ok := spec[name]
-	if !ok {
-		return nil
-	}
-	return field.Value
-}
-
-func (spec DeploymentSpec) GetString(name string) string {
-
-	if value := spec.Get(name); value != nil {
-		return fmt.Sprintf("%v", value)
-	} else {
-		return ""
-	}
-}
-
-func (spec DeploymentSpec) Cluster() string {
-	return spec.GetString("cluster")
-}
-
-func (spec DeploymentSpec) Environment() string {
-	return spec.GetString("envName")
-}
-
-func (spec DeploymentSpec) Name() string {
-	return spec.GetString("name")
-}
-
-func (spec DeploymentSpec) Version() string {
-	return spec.GetString("version")
-}
-
-func NewAuroraConfigFieldSource(value interface{}) AuroraConfigFieldSource {
-	return AuroraConfigFieldSource{
-		Value: value,
-	}
-}
 
 func NewApplicationDeploymentRef(name string) *applicationDeploymentRef {
 	slice := strings.Split(name, "/")

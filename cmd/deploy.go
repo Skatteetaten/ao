@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/skatteetaten/ao/pkg/service"
 	"github.com/spf13/cobra"
@@ -160,7 +161,7 @@ func parseOverride(overrides []string) (map[string]string, error) {
 	return returnMap, nil
 }
 
-func getDeployConfirmation(force bool, filteredDeploymentSpecs []client.DeploySpec, out io.Writer) bool {
+func getDeployConfirmation(force bool, filteredDeploymentSpecs []deploymentspec.DeploymentSpec, out io.Writer) bool {
 	header, rows := GetDeploySpecTable(filteredDeploymentSpecs)
 	DefaultTablePrinter(header, rows, out)
 
@@ -197,7 +198,7 @@ func performDeploy(deployClient client.ApplicationDeploymentClient, partition De
 
 	var applicationList []string
 	for _, spec := range partition.DeploySpecs {
-		applicationList = append(applicationList, spec.Value("applicationDeploymentRef").(string))
+		applicationList = append(applicationList, spec.GetString("applicationDeploymentRef"))
 	}
 
 	payload := client.NewDeployPayload(applicationList, overrideConfig)
@@ -214,20 +215,20 @@ func errorDeployResults(reason string, partition DeploySpecPartition) client.Dep
 	var applicationResults []client.DeployResult
 
 	for _, spec := range partition.DeploySpecs {
-		affiliation := spec.Value("affiliation").(string)
-		applicationDeploymentRef := client.NewApplicationDeploymentRef(spec.Value("applicationDeploymentRef").(string))
+		affiliation := spec.GetString("affiliation")
+		applicationDeploymentRef := client.NewApplicationDeploymentRef(spec.GetString("applicationDeploymentRef"))
 
 		result := new(client.DeployResult)
 		result.DeployId = "-"
 		result.Ignored = false
 		result.Success = false
 		result.Reason = reason
-		result.DeploymentSpec = make(client.DeploymentSpec)
-		result.DeploymentSpec["cluster"] = client.NewAuroraConfigFieldSource(partition.Cluster.Name)
-		result.DeploymentSpec["name"] = client.NewAuroraConfigFieldSource(applicationDeploymentRef.Application)
-		result.DeploymentSpec["version"] = client.NewAuroraConfigFieldSource("-")
-		result.DeploymentSpec["envName"] = client.NewAuroraConfigFieldSource(affiliation + "-" + applicationDeploymentRef.Environment)
-
+		result.DeploymentSpec = deploymentspec.NewDeploymentSpec(
+			applicationDeploymentRef.Application,
+			affiliation+"-"+applicationDeploymentRef.Environment,
+			partition.Cluster.Name,
+			"-",
+		)
 		applicationResults = append(applicationResults, *result)
 	}
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
-	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 
 	"encoding/json"
 	"sort"
@@ -152,30 +152,30 @@ func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *co
 	return nil
 }
 
-func GetDeploySpecTable(specs []client.DeploySpec) (string, []string) {
+func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string) {
 	var rows []string
 	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tREPLICAS\tTYPE\tDEPLOY STRATEGY"
 	pattern := "%v\t%v\t%v\t%v\t%v\t%v\t%v"
 	sort.Slice(specs, func(i, j int) bool {
-		return strings.Compare(specs[i].Value("name").(string), specs[j].Value("name").(string)) != 1
+		return strings.Compare(specs[i].Name(), specs[j].Name()) != 1
 	})
 	for _, spec := range specs {
 		var replicas string
-		if fmt.Sprint(spec.Value("pause")) == "true" {
+		if spec.GetBool("pause") {
 			replicas = "Paused"
 		} else {
-			replicas = fmt.Sprint(spec.Value("replicas"))
+			replicas = fmt.Sprint(spec.GetString("replicas"))
 		}
 
 		row := fmt.Sprintf(
 			pattern,
-			spec.Value("cluster"),
-			spec.Value("envName"),
-			spec.Value("name"),
-			spec.Value("version"),
+			spec.Cluster(),
+			spec.Environment(),
+			spec.Name(),
+			spec.Version(),
 			replicas,
-			spec.Value("type"),
-			spec.Value("deployStrategy/type"),
+			spec.GetString("type"),
+			spec.GetString("deployStrategy/type"),
 		)
 		rows = append(rows, row)
 	}
