@@ -201,7 +201,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	if len(matches) == 0 {
 		return errors.Errorf("No matches for %s", search)
 	} else if len(matches) > 1 {
-		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+		return errors.Errorf("Search matched more than one file. Search must be more specific.\n%v", matches)
 	}
 
 	split := strings.Split(matches[0], "/")
@@ -250,7 +250,7 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 	if len(matches) == 0 {
 		return errors.Errorf("No matches for %s", search)
 	} else if len(matches) > 1 {
-		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+		return errors.Errorf("Search matched more than one file. Search must be more specific.\n%v", matches)
 	}
 
 	auroraConfigFile, _, err := DefaultApiClient.GetAuroraConfigFile(matches[0])
