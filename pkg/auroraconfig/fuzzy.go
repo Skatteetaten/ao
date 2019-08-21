@@ -1,11 +1,9 @@
-package fuzzy
+package auroraconfig
 
 import (
 	"path/filepath"
 	"sort"
 	"strings"
-
-	"github.com/skatteetaten/ao/pkg/client"
 
 	"github.com/renstrom/fuzzysearch/fuzzy"
 	"github.com/skatteetaten/ao/pkg/collections"
@@ -19,7 +17,7 @@ const (
 )
 
 func FindMatches(search string, fileNames []string, withSuffix bool) []string {
-	files := client.FileNames(fileNames)
+	files := FileNames(fileNames)
 	matches := fuzzy.RankFind(strings.TrimSuffix(search, filepath.Ext(search)), files.WithoutExtension())
 	sort.Sort(matches)
 

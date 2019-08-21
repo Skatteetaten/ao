@@ -1,13 +1,12 @@
-package fuzzy
+package auroraconfig
 
 import (
 	"testing"
 
-	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/stretchr/testify/assert"
 )
 
-var fileNames = client.FileNames{
+var fileNames = FileNames{
 	"about.json",
 	"console.json",
 	"boober.json",

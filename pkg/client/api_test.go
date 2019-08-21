@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -92,7 +93,7 @@ func TestApiClient_Do(t *testing.T) {
 	})
 
 	t.Run("Should send payload and retrieve response correctly", func(t *testing.T) {
-		ac := AuroraConfig{}
+		ac := auroraconfig.AuroraConfig{}
 		response := BooberResponse{
 			Items: json.RawMessage(`[]`),
 		}

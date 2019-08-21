@@ -4,46 +4,21 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
+
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 )
 
 type DeploySpecClient interface {
 	Doer
-	GetAuroraDeploySpec(applications []string, defaults bool) ([]DeploySpec, error)
+	GetAuroraDeploySpec(applications []string, defaults bool) ([]deploymentspec.DeploymentSpec, error)
 	GetAuroraDeploySpecFormatted(environment, application string, defaults bool) (string, error)
 }
 
-type DeploySpec interface {
-	Value(jsonPointer string) interface{}
-}
-
-type AuroraDeploySpec map[string]interface{}
-
-func (a AuroraDeploySpec) Value(jsonPointer string) interface{} {
-	return a.get(jsonPointer + "/value")
-}
-
-func (a AuroraDeploySpec) get(jsonPointer string) interface{} {
-	pointers := strings.Fields(strings.Replace(jsonPointer, "/", " ", -1))
-	current := a
-	for i, pointer := range pointers {
-		isLast := i == len(pointers)-1
-		if next, ok := current[pointer]; ok && isLast {
-			return next
-		} else if ok && !isLast {
-			current = next.(map[string]interface{})
-		} else {
-			return "-"
-		}
-	}
-	return "-"
-}
-
-func (api *ApiClient) GetAuroraDeploySpec(applications []string, defaults bool) ([]DeploySpec, error) {
+func (api *ApiClient) GetAuroraDeploySpec(applications []string, defaults bool) ([]deploymentspec.DeploymentSpec, error) {
 	endpoint := fmt.Sprintf("/auroradeployspec/%s/?", api.Affiliation)
 	queries := buildDeploySpecQueries(applications, defaults)
 
-	adsCh := make(chan []AuroraDeploySpec)
+	adsCh := make(chan []deploymentspec.DeploymentSpec)
 	errCh := make(chan error)
 	for _, q := range queries {
 		go func(path, query string) {
@@ -53,7 +28,7 @@ func (api *ApiClient) GetAuroraDeploySpec(applications []string, defaults bool) 
 				return
 			}
 
-			var specs []AuroraDeploySpec
+			var specs []deploymentspec.DeploymentSpec
 			err = response.ParseItems(&specs)
 			if err != nil {
 				errCh <- err
@@ -63,7 +38,7 @@ func (api *ApiClient) GetAuroraDeploySpec(applications []string, defaults bool) 
 		}(endpoint, q)
 	}
 
-	var allSpecs []AuroraDeploySpec
+	var allSpecs []deploymentspec.DeploymentSpec
 	for i := 0; i < len(queries); i++ {
 		select {
 		case err := <-errCh:
@@ -75,9 +50,9 @@ func (api *ApiClient) GetAuroraDeploySpec(applications []string, defaults bool) 
 
 	// Must copy elements to array of interfaces.
 	// TODO: Find a way to avoid having to do this.
-	deploySpecs := make([]DeploySpec, len(allSpecs))
+	deploySpecs := make([]deploymentspec.DeploymentSpec, len(allSpecs))
 	for i, spec := range allSpecs {
-		deploySpecs[i] = DeploySpec(spec)
+		deploySpecs[i] = deploymentspec.DeploymentSpec(spec)
 	}
 
 	return deploySpecs, nil

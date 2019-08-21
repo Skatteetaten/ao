@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/editor"
-	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/spf13/cobra"
 )
 
@@ -54,11 +54,11 @@ func EditFile(cmd *cobra.Command, args []string) error {
 		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	matches := fuzzy.FindMatches(search, fileNames, true)
+	matches := auroraconfig.FindMatches(search, fileNames, true)
 	if len(matches) == 0 {
 		return errors.Errorf("No matches for %s", search)
 	} else if len(matches) > 1 {
-		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+		return errors.Errorf("Search matched more than one file. Search must be more specific.\n%v", matches)
 	}
 
 	fileName := matches[0]

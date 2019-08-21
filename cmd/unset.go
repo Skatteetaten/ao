@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +38,7 @@ func Unset(cmd *cobra.Command, args []string) error {
 	}
 
 	path := args[1]
-	op := client.JsonPatchOp{
+	op := auroraconfig.JsonPatchOp{
 		OP:   "remove",
 		Path: path,
 	}

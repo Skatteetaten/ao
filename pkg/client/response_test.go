@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -84,7 +85,7 @@ func TestResponse_ParseItemsWithErrors(t *testing.T) {
 		t.Error(err)
 	}
 
-	var acs []AuroraConfig
+	var acs []auroraconfig.AuroraConfig
 	err = response.ParseItems(&acs)
 	if err == nil {
 		t.Error("Expected response to contain errors")
@@ -99,7 +100,7 @@ func TestResponse_ParseItems(t *testing.T) {
 		t.Error(err)
 	}
 
-	var acs []AuroraConfig
+	var acs []auroraconfig.AuroraConfig
 	err = response.ParseItems(&acs)
 	if err != nil {
 		t.Error(err)
@@ -121,7 +122,7 @@ func TestResponse_ParseFirstItem(t *testing.T) {
 		t.Error(err)
 	}
 
-	var ac AuroraConfig
+	var ac auroraconfig.AuroraConfig
 	err = response.ParseFirstItem(&ac)
 	if err != nil {
 		t.Error(err)

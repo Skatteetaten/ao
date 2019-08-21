@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 )
 
 type partialExistsResult struct {
@@ -17,7 +18,7 @@ func newPartialExistsResults(partition DeploySpecPartition, existsResults client
 	}
 }
 
-func getDeployedApplications(getClient func(partition Partition) client.ApplicationDeploymentClient, deploySpecs []client.DeploySpec, auroraConfigName, overrideToken string) ([]DeploymentInfo, error) {
+func getDeployedApplications(getClient func(partition Partition) client.ApplicationDeploymentClient, deploySpecs []deploymentspec.DeploymentSpec, auroraConfigName, overrideToken string) ([]DeploymentInfo, error) {
 	partitions, err := createDeploySpecPartitions(auroraConfigName, overrideToken, AO.Clusters, deploySpecs)
 	if err != nil {
 		return nil, err
@@ -76,7 +77,7 @@ func performExists(deployClient client.ApplicationDeploymentClient, partition De
 
 	var applicationList []string
 	for _, spec := range partition.DeploySpecs {
-		applicationList = append(applicationList, spec.Value("applicationDeploymentRef").(string))
+		applicationList = append(applicationList, spec.GetString("applicationDeploymentRef"))
 	}
 
 	results, err := deployClient.Exists(client.NewExistsPayload(applicationList))

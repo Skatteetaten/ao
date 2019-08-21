@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -20,37 +21,37 @@ func Test_checkExistence(t *testing.T) {
 
 	partitions := []DeploySpecPartition{
 		*newDeploySpecPartition(
-			[]client.DeploySpec{
-				MockDeploySpec{"applicationDeploymentRef": "dev/crm", "cluster": "east", "envName": "dev", "affiliation": "sales"},
-				MockDeploySpec{"applicationDeploymentRef": "dev/erp", "cluster": "east", "envName": "dev", "affiliation": "sales"},
-				MockDeploySpec{"applicationDeploymentRef": "dev/sap", "cluster": "east", "envName": "dev", "affiliation": "sales"},
+			[]deploymentspec.DeploymentSpec{
+				deploymentspec.NewDeploymentSpec("crm", "dev", "east", "1"),
+				deploymentspec.NewDeploymentSpec("erp", "dev", "east", "1"),
+				deploymentspec.NewDeploymentSpec("booking", "dev", "east", "1"),
 			},
 			*newTestCluster("east", true),
 			auroraConfigName,
 			overrideToken),
 		*newDeploySpecPartition(
-			[]client.DeploySpec{
-				MockDeploySpec{"applicationDeploymentRef": "test-qa/crm", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
-				MockDeploySpec{"applicationDeploymentRef": "test-qa/crmv2", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
-				MockDeploySpec{"applicationDeploymentRef": "test-qa/booking", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
+			[]deploymentspec.DeploymentSpec{
+				deploymentspec.NewDeploymentSpec("crm", "test-qa", "west", "1"),
+				deploymentspec.NewDeploymentSpec("crmv2", "test-qa", "west", "1"),
+				deploymentspec.NewDeploymentSpec("booking", "test-qa", "west", "1"),
 			},
 			*newTestCluster("west", true),
 			auroraConfigName,
 			overrideToken),
 		*newDeploySpecPartition(
-			[]client.DeploySpec{
-				MockDeploySpec{"applicationDeploymentRef": "test-st/crm-1-GA", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
-				MockDeploySpec{"applicationDeploymentRef": "test-st/crm-2-GA", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
-				MockDeploySpec{"applicationDeploymentRef": "test-st/booking", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
-				MockDeploySpec{"applicationDeploymentRef": "test-st/erp", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
+			[]deploymentspec.DeploymentSpec{
+				deploymentspec.NewDeploymentSpec("crm-1-GA", "test-st", "west", "1"),
+				deploymentspec.NewDeploymentSpec("crm-2-GA", "test-st", "west", "1"),
+				deploymentspec.NewDeploymentSpec("booking", "test-st", "west", "1"),
+				deploymentspec.NewDeploymentSpec("bookingv2", "test-st", "west", "1"),
 			},
 			*newTestCluster("west", true),
 			auroraConfigName,
 			overrideToken),
 		*newDeploySpecPartition(
-			[]client.DeploySpec{
-				MockDeploySpec{"applicationDeploymentRef": "prod/crm", "cluster": "north", "envName": "prod", "affiliation": "sales"},
-				MockDeploySpec{"applicationDeploymentRef": "prod/booking", "cluster": "north", "envName": "prod", "affiliation": "sales"},
+			[]deploymentspec.DeploymentSpec{
+				deploymentspec.NewDeploymentSpec("crm", "prod", "north", "1"),
+				deploymentspec.NewDeploymentSpec("booking", "prod", "north", "1"),
 			},
 			*newTestCluster("north", true),
 			auroraConfigName,

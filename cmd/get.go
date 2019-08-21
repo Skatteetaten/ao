@@ -3,14 +3,14 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 
 	"encoding/json"
 	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/pkg/fuzzy"
 	"github.com/spf13/cobra"
 )
 
@@ -107,7 +107,7 @@ func PrintApplications(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications available")
 	}
 	if len(args) > 0 {
-		return PrintDeploySpecTable(args, fuzzy.APP_FILTER, cmd, fileNames)
+		return PrintDeploySpecTable(args, auroraconfig.APP_FILTER, cmd, fileNames)
 	}
 
 	applications := fileNames.GetApplications()
@@ -126,7 +126,7 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) > 0 {
-		return PrintDeploySpecTable(args, fuzzy.ENV_FILTER, cmd, fileNames)
+		return PrintDeploySpecTable(args, auroraconfig.ENV_FILTER, cmd, fileNames)
 	}
 
 	envrionments := fileNames.GetEnvironments()
@@ -134,10 +134,10 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func PrintDeploySpecTable(args []string, filter fuzzy.FilterMode, cmd *cobra.Command, fileNames client.FileNames) error {
+func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *cobra.Command, fileNames auroraconfig.FileNames) error {
 	var selected []string
 	for _, arg := range args {
-		matches := fuzzy.FindAllDeploysFor(filter, arg, fileNames.GetApplicationDeploymentRefs())
+		matches := auroraconfig.FindAllDeploysFor(filter, arg, fileNames.GetApplicationDeploymentRefs())
 		if len(matches) == 0 {
 			return errors.Errorf("No matches for %s", arg)
 		}
@@ -152,30 +152,30 @@ func PrintDeploySpecTable(args []string, filter fuzzy.FilterMode, cmd *cobra.Com
 	return nil
 }
 
-func GetDeploySpecTable(specs []client.DeploySpec) (string, []string) {
+func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string) {
 	var rows []string
 	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tREPLICAS\tTYPE\tDEPLOY STRATEGY"
 	pattern := "%v\t%v\t%v\t%v\t%v\t%v\t%v"
 	sort.Slice(specs, func(i, j int) bool {
-		return strings.Compare(specs[i].Value("name").(string), specs[j].Value("name").(string)) != 1
+		return strings.Compare(specs[i].Name(), specs[j].Name()) != 1
 	})
 	for _, spec := range specs {
 		var replicas string
-		if fmt.Sprint(spec.Value("pause")) == "true" {
+		if spec.GetBool("pause") {
 			replicas = "Paused"
 		} else {
-			replicas = fmt.Sprint(spec.Value("replicas"))
+			replicas = fmt.Sprint(spec.GetString("replicas"))
 		}
 
 		row := fmt.Sprintf(
 			pattern,
-			spec.Value("cluster"),
-			spec.Value("envName"),
-			spec.Value("name"),
-			spec.Value("version"),
+			spec.Cluster(),
+			spec.Environment(),
+			spec.Name(),
+			spec.Version(),
 			replicas,
-			spec.Value("type"),
-			spec.Value("deployStrategy/type"),
+			spec.GetString("type"),
+			spec.GetString("deployStrategy/type"),
 		)
 		rows = append(rows, row)
 	}
@@ -197,11 +197,11 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	matches := fuzzy.FindMatches(search, fileNames.GetApplicationDeploymentRefs(), false)
+	matches := auroraconfig.FindMatches(search, fileNames.GetApplicationDeploymentRefs(), false)
 	if len(matches) == 0 {
 		return errors.Errorf("No matches for %s", search)
 	} else if len(matches) > 1 {
-		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+		return errors.Errorf("Search matched more than one file. Search must be more specific.\n%v", matches)
 	}
 
 	split := strings.Split(matches[0], "/")
@@ -246,11 +246,11 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	matches := fuzzy.FindMatches(search, fileNames, true)
+	matches := auroraconfig.FindMatches(search, fileNames, true)
 	if len(matches) == 0 {
 		return errors.Errorf("No matches for %s", search)
 	} else if len(matches) > 1 {
-		return errors.Errorf("Search matched than one file. Search must be more specific.\n%v", matches)
+		return errors.Errorf("Search matched more than one file. Search must be more specific.\n%v", matches)
 	}
 
 	auroraConfigFile, _, err := DefaultApiClient.GetAuroraConfigFile(matches[0])

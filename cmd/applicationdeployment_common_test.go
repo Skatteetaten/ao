@@ -1,15 +1,12 @@
 package cmd
 
 import (
-	"strings"
 	"testing"
 
-	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/skatteetaten/ao/pkg/config"
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 	"github.com/stretchr/testify/assert"
 )
-
-type MockDeploySpec map[string]interface{}
 
 var testClusters = map[string]*config.Cluster{
 	"east":  newTestCluster("east", true),
@@ -17,25 +14,20 @@ var testClusters = map[string]*config.Cluster{
 	"north": newTestCluster("north", true),
 }
 
-var testSpecs = [...]client.DeploySpec{
-	&MockDeploySpec{"applicationDeploymentRef": "dev/crm", "cluster": "east", "envName": "dev", "affiliation": "sales"},
-	&MockDeploySpec{"applicationDeploymentRef": "dev/erp", "cluster": "east", "envName": "dev", "affiliation": "sales"},
-	&MockDeploySpec{"applicationDeploymentRef": "dev/sap", "cluster": "east", "envName": "dev", "affiliation": "sales"},
-	&MockDeploySpec{"applicationDeploymentRef": "test-qa/crm", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
-	&MockDeploySpec{"applicationDeploymentRef": "test-qa/crmv2", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
-	&MockDeploySpec{"applicationDeploymentRef": "test-qa/booking", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
-	&MockDeploySpec{"applicationDeploymentRef": "test-qa/erp", "cluster": "west", "envName": "test-qa", "affiliation": "sales"},
-	&MockDeploySpec{"applicationDeploymentRef": "test-st/crm-1-GA", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
-	&MockDeploySpec{"applicationDeploymentRef": "test-st/crm-2-GA", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
-	&MockDeploySpec{"applicationDeploymentRef": "test-st/booking", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
-	&MockDeploySpec{"applicationDeploymentRef": "test-st/erp", "cluster": "west", "envName": "test-st", "affiliation": "sales"},
-	&MockDeploySpec{"applicationDeploymentRef": "prod/crm", "cluster": "north", "envName": "prod", "affiliation": "sales"},
-	&MockDeploySpec{"applicationDeploymentRef": "prod/booking", "cluster": "north", "envName": "prod", "affiliation": "sales"},
-}
-
-func (mds MockDeploySpec) Value(jsonPointer string) interface{} {
-	key := strings.Replace(jsonPointer, "/", "", -1)
-	return mds[key]
+var testSpecs = [...]deploymentspec.DeploymentSpec{
+	deploymentspec.NewDeploymentSpec("crm", "dev", "east", "1"),
+	deploymentspec.NewDeploymentSpec("erp", "dev", "east", "1"),
+	deploymentspec.NewDeploymentSpec("sap", "dev", "east", "1"),
+	deploymentspec.NewDeploymentSpec("crm", "test-qa", "west", "1"),
+	deploymentspec.NewDeploymentSpec("crmv2", "test-qa", "west", "1"),
+	deploymentspec.NewDeploymentSpec("booking", "test-qa", "west", "1"),
+	deploymentspec.NewDeploymentSpec("erp", "test-qa", "west", "1"),
+	deploymentspec.NewDeploymentSpec("crm-1-GA", "test-st", "west", "1"),
+	deploymentspec.NewDeploymentSpec("crm-2-GA", "test-st", "west", "1"),
+	deploymentspec.NewDeploymentSpec("booking", "test-st", "west", "1"),
+	deploymentspec.NewDeploymentSpec("erp", "test-st", "west", "1"),
+	deploymentspec.NewDeploymentSpec("crm", "prod", "north", "1"),
+	deploymentspec.NewDeploymentSpec("booking", "prod", "north", "1"),
 }
 
 func newTestCluster(name string, reachable bool) *config.Cluster {

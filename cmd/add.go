@@ -4,9 +4,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/skatteetaten/ao/pkg/client"
-
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -59,7 +58,7 @@ func Add(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = DefaultApiClient.PutAuroraConfigFile(&client.AuroraConfigFile{
+	err = DefaultApiClient.PutAuroraConfigFile(&auroraconfig.AuroraConfigFile{
 		Name:     fileName,
 		Contents: string(data),
 	}, "")
