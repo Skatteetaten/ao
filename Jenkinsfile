@@ -72,6 +72,12 @@ timestamps {
         }
       }
 
+      if (props.isReleaseBuild && !props.tagExists) {
+        stage("Tag") {
+          git.tagAndPush(props.credentialsId, "v$props.version")
+        }
+      }
+
       stage('Build, Test & coverage') {
         go.buildGoWithJenkinsSh("Go 1.9")
       }
@@ -83,12 +89,6 @@ timestamps {
         sh 'cp ./.go/bin/ao ./website/public/assets'
         sh 'cp ./.go/bin/darwin_amd64/ao ./website/public/assets/macos'
         sh 'cp ./.go/bin/windows_amd64/ao.exe ./website/public/assets/windows'
-      }
-
-      if (props.isReleaseBuild && !props.tagExists) {
-        stage("Tag") {
-          git.tagAndPush(props.credentialsId, "v$props.version")
-        }
       }
 
       dir('website') {
