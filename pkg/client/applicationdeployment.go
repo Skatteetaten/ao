@@ -142,7 +142,7 @@ func (api *ApiClient) Deploy(deployPayload *DeployPayload) (*DeployResults, erro
 		for _, deploy := range deploys.Results {
 			// Hack-ish solution since validation errors and deploy errors have
 			// different payload. TODO: Fix error response from Boober.
-			if deploy.DeploymentSpec.Name() == "" {
+			if deploy.DeploymentSpec.Name() == "-" {
 				return nil, response.Error()
 			}
 		}
