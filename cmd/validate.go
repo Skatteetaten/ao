@@ -39,7 +39,6 @@ func Validate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-
 	fmt.Printf("Validating auroraAonfig=%s gitRoot=%s fullValidation=%t\n", DefaultApiClient.Affiliation, gitRoot, flagFullValidation)
 
 	if err := DefaultApiClient.ValidateAuroraConfig(ac, flagFullValidation); err != nil {
