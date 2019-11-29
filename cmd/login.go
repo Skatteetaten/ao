@@ -29,6 +29,7 @@ var loginCmd = &cobra.Command{
 	Short:   "Login to all available OpenShift clusters",
 	PreRunE: PreLogin,
 	RunE:    Login,
+	PostRun: PostLogin,
 }
 
 func init() {
@@ -146,4 +147,13 @@ func Login(cmd *cobra.Command, args []string) error {
 
 	AO.Update(false)
 	return config.WriteConfig(*AO, ConfigLocation)
+}
+
+func PostLogin(cmd *cobra.Command, args []string) {
+
+	PrintClusters(cmd, args)
+	if AO.RefName != "" && AO.RefName != "master" {
+		fmt.Printf("\nrefName=%s in AO configurations file. Consider running command \"ao adm update-ref <refName>\" if this is incorrect\n", AO.RefName)
+	}
+	fmt.Printf("\nConsider running command \"ao adm update-clusters\" if cluster information above looks incorrect \n")
 }

@@ -50,7 +50,7 @@ var updateHookCmd = &cobra.Command{
 }
 
 var updateRefCmd = &cobra.Command{
-	Use:   "update-ref <auroraconfig>",
+	Use:   "update-ref <refName>",
 	Short: `Update git ref for your auroraconfig checkout.`,
 	RunE:  SetRefName,
 }
@@ -102,15 +102,20 @@ func PrintClusters(cmd *cobra.Command, args []string) {
 			loggedIn = "Yes"
 		}
 
+		apiUrl := cluster.BooberUrl
+
 		api := ""
 		if name == AO.APICluster {
 			api = "Yes"
+			if AO.Localhost {
+				apiUrl = "http://localhost:8080"
+			}
 		}
-		line := fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s", name, reachable, loggedIn, api, cluster.Url)
+		line := fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s\t%s", name, reachable, loggedIn, api, cluster.Url, apiUrl)
 		rows = append(rows, line)
 	}
 
-	header := "\tCLUSTER NAME\tREACHABLE\tLOGGED IN\tAPI\tURL"
+	header := "\tCLUSTER NAME\tREACHABLE\tLOGGED IN\tAPI\tURL\tAPI_URL"
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 }
 
