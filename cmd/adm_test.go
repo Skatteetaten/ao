@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPrintClusters(t *testing.T) {
@@ -23,7 +24,7 @@ func TestPrintClusters(t *testing.T) {
 		testCommand.SetOutput(buffer)
 
 		flagShowAll = tc.FlagShowAll
-		PrintClusters(testCommand, []string{})
+		printClusters(testCommand, []string{})
 
 		fileName := "test_files/" + tc.ExpectedStringFile
 

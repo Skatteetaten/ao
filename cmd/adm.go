@@ -22,7 +22,7 @@ var getClusterCmd = &cobra.Command{
 	Use:     "clusters",
 	Short:   "List configured clusters",
 	Aliases: []string{"cluster"},
-	Run:     PrintClusters,
+	Run:     printClusters,
 }
 
 var getAffiliationCmd = &cobra.Command{
@@ -50,7 +50,7 @@ var updateHookCmd = &cobra.Command{
 }
 
 var updateRefCmd = &cobra.Command{
-	Use:   "update-ref <auroraconfig>",
+	Use:   "update-ref <refName>",
 	Short: `Update git ref for your auroraconfig checkout.`,
 	RunE:  SetRefName,
 }
@@ -84,12 +84,12 @@ func init() {
 	updateHookCmd.Flags().StringVarP(&flagGitHookType, "git-hook", "g", "pre-push", "Change git hook to validate AuroraConfig")
 }
 
-func PrintClusters(cmd *cobra.Command, args []string) {
+func PrintClusters(cmd *cobra.Command, printAll bool) {
 	var rows []string
 	for _, name := range AO.AvailableClusters {
 		cluster := AO.Clusters[name]
 
-		if !(cluster.Reachable || flagShowAll) {
+		if !(cluster.Reachable || printAll) {
 			continue
 		}
 		reachable := ""
@@ -102,16 +102,25 @@ func PrintClusters(cmd *cobra.Command, args []string) {
 			loggedIn = "Yes"
 		}
 
+		apiUrl := cluster.BooberUrl
+
 		api := ""
 		if name == AO.APICluster {
 			api = "Yes"
+			if AO.Localhost {
+				apiUrl = "http://localhost:8080"
+			}
 		}
-		line := fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s", name, reachable, loggedIn, api, cluster.Url)
+		line := fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s\t%s", name, reachable, loggedIn, api, cluster.Url, apiUrl)
 		rows = append(rows, line)
 	}
 
-	header := "\tCLUSTER NAME\tREACHABLE\tLOGGED IN\tAPI\tURL"
+	header := "\tCLUSTER NAME\tREACHABLE\tLOGGED IN\tAPI\tURL\tAPI_URL"
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+}
+
+func printClusters(cmd *cobra.Command, args []string) {
+	PrintClusters(cmd, flagShowAll)
 }
 
 func PrintAffiliations(cmd *cobra.Command, args []string) {
