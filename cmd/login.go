@@ -151,7 +151,7 @@ func Login(cmd *cobra.Command, args []string) error {
 
 func PostLogin(cmd *cobra.Command, args []string) {
 
-	PrintClusters(cmd, args)
+	PrintClusters(cmd, true)
 	if AO.RefName != "" && AO.RefName != "master" {
 		fmt.Printf("\nrefName=%s in AO configurations file. Consider running command \"ao adm update-ref <refName>\" if this is incorrect\n", AO.RefName)
 	}

@@ -22,7 +22,7 @@ var getClusterCmd = &cobra.Command{
 	Use:     "clusters",
 	Short:   "List configured clusters",
 	Aliases: []string{"cluster"},
-	Run:     PrintClusters,
+	Run:     printClusters,
 }
 
 var getAffiliationCmd = &cobra.Command{
@@ -84,12 +84,12 @@ func init() {
 	updateHookCmd.Flags().StringVarP(&flagGitHookType, "git-hook", "g", "pre-push", "Change git hook to validate AuroraConfig")
 }
 
-func PrintClusters(cmd *cobra.Command, args []string) {
+func PrintClusters(cmd *cobra.Command, full bool) {
 	var rows []string
 	for _, name := range AO.AvailableClusters {
 		cluster := AO.Clusters[name]
 
-		if !(cluster.Reachable || flagShowAll) {
+		if !(cluster.Reachable || full) {
 			continue
 		}
 		reachable := ""
@@ -117,6 +117,10 @@ func PrintClusters(cmd *cobra.Command, args []string) {
 
 	header := "\tCLUSTER NAME\tREACHABLE\tLOGGED IN\tAPI\tURL\tAPI_URL"
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+}
+
+func printClusters(cmd *cobra.Command, args []string) {
+	PrintClusters(cmd, flagShowAll)
 }
 
 func PrintAffiliations(cmd *cobra.Command, args []string) {
