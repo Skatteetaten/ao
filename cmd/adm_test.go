@@ -24,7 +24,7 @@ func TestPrintClusters(t *testing.T) {
 		testCommand.SetOutput(buffer)
 
 		flagShowAll = tc.FlagShowAll
-		PrintClusters(testCommand, []string{})
+		printClusters(testCommand, []string{})
 
 		fileName := "test_files/" + tc.ExpectedStringFile
 
