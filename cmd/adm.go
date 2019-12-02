@@ -84,12 +84,12 @@ func init() {
 	updateHookCmd.Flags().StringVarP(&flagGitHookType, "git-hook", "g", "pre-push", "Change git hook to validate AuroraConfig")
 }
 
-func PrintClusters(cmd *cobra.Command, full bool) {
+func PrintClusters(cmd *cobra.Command, printAll bool) {
 	var rows []string
 	for _, name := range AO.AvailableClusters {
 		cluster := AO.Clusters[name]
 
-		if !(cluster.Reachable || full) {
+		if !(cluster.Reachable || printAll) {
 			continue
 		}
 		reachable := ""
