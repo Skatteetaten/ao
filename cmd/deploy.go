@@ -267,6 +267,8 @@ func printDeployResult(result []client.DeployResults, out io.Writer) error {
 		}
 	}
 
+	//TODO: Print Warnings
+
 	return nil
 }
 
