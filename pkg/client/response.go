@@ -22,6 +22,7 @@ type (
 		IllegalFieldErrors []string
 		MissingFieldErrors []string
 		InvalidFieldErrors []string
+		Warnings           []string
 	}
 
 	errorField struct {
@@ -79,6 +80,20 @@ func (res *BooberResponse) Error() error {
 		return errors.New(errRes.String())
 	}
 	return nil
+}
+
+func (e *ErrorResponse) formatWarnings() string {
+	var status string
+
+	messages := e.Warnings
+	for i, message := range messages {
+		status += message
+		if i != len(messages)-1 {
+			status += "\n\n"
+		}
+	}
+
+	return status
 }
 
 func (e *ErrorResponse) String() string {
@@ -146,8 +161,16 @@ Message:     %s`
 	genericFormat := `Application: %s/%s
 Message:     %s`
 
+	warningFormat := `Application: %s/%s
+Warning:     %s`
+
 	for _, message := range res.Details {
 		switch message.Type {
+		case "WARNING":
+			{
+				warning := fmt.Sprintf(warningFormat, res.Environment, res.Application, message.Message)
+				e.Warnings = append(e.Warnings, warning)
+			}
 		case "ILLEGAL":
 			{
 				illegal := fmt.Sprintf(illegalFieldFormat,

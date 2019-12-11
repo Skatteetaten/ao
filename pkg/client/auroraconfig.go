@@ -15,7 +15,7 @@ type AuroraConfigClient interface {
 	GetAuroraConfig() (*auroraconfig.AuroraConfig, error)
 	GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, error)
 	PutAuroraConfig(endpoint string, ac *auroraconfig.AuroraConfig) error
-	ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) error
+	ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) (string, error)
 	PatchAuroraConfigFile(fileName string, operation auroraconfig.JsonPatchOp) error
 	GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error)
 	PutAuroraConfigFile(file *auroraconfig.AuroraConfigFile, eTag string) error
@@ -96,13 +96,38 @@ func (api *ApiClient) PutAuroraConfig(endpoint string, ac *auroraconfig.AuroraCo
 	return nil
 }
 
-func (api *ApiClient) ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) error {
+func (api *ApiClient) ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) (string, error) {
 	resourceValidation := "false"
 	if fullValidation {
 		resourceValidation = "true"
 	}
 	endpoint := fmt.Sprintf("/auroraconfig/%s/validate?resourceValidation=%s", api.Affiliation, resourceValidation)
-	return api.PutAuroraConfig(endpoint, ac)
+
+	payload, err := json.Marshal(ac)
+	if err != nil {
+		return "", err
+	}
+
+	response, err := api.Do(http.MethodPut, endpoint, payload)
+	if err != nil {
+		return "", err
+	}
+
+	if !response.Success {
+		return "", response.Error()
+	}
+
+	//for validation you can also have warnings
+	warnings, err := response.toErrorResponse()
+	if err != nil {
+		return "", err
+	}
+
+	if warnings != nil {
+		return warnings.formatWarnings(), nil
+	}
+
+	return "", nil
 }
 
 func (api *ApiClient) GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error) {

@@ -62,7 +62,7 @@ func TestApiClient_GetFileNames(t *testing.T) {
 	})
 }
 
-func TestApiClient_PutAuroraConfig(t *testing.T) {
+func TestApiClient_ValidateAuroraConfig(t *testing.T) {
 	t.Run("Successfully validate and save AuroraConfig", func(t *testing.T) {
 		fileName := "auroraconfig_paas_success_response"
 		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(t, fileName))
@@ -76,8 +76,27 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		err = api.ValidateAuroraConfig(&ac, false)
+		warnings, err := api.ValidateAuroraConfig(&ac, false)
 		assert.NoError(t, err)
+		assert.Empty(t, warnings)
+	})
+
+	t.Run("Validate AuroraConfig with warnings", func(t *testing.T) {
+		fileName := "auroraconfig_paas_warning_validation_response"
+		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(t, fileName))
+		defer ts.Close()
+
+		api := NewApiClientDefaultRef(ts.URL, "", affiliation)
+
+		data := ReadTestFile("auroraconfig_paas_warning_validation_request")
+		var ac auroraconfig.AuroraConfig
+		err := json.Unmarshal(data, &ac)
+		if err != nil {
+			t.Error(err)
+		}
+		warnings, err := api.ValidateAuroraConfig(&ac, false)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, warnings)
 	})
 
 	t.Run("Validation and save should fail when deploy type is illegal", func(t *testing.T) {
@@ -93,8 +112,9 @@ func TestApiClient_PutAuroraConfig(t *testing.T) {
 			t.Error(err)
 		}
 
-		err = api.ValidateAuroraConfig(&ac, false)
+		warnings, err := api.ValidateAuroraConfig(&ac, false)
 		assert.Error(t, err)
+		assert.Empty(t, warnings)
 	})
 }
 
