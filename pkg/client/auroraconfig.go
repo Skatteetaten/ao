@@ -105,6 +105,25 @@ func (api *ApiClient) ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullVa
 	return api.PutAuroraConfig(endpoint, ac)
 }
 
+func (api *ApiClient) ValidateRemoteAuroraConfig(fullValidation bool) error {
+	resourceValidation := "false"
+	if fullValidation {
+		resourceValidation = "true"
+	}
+	endpoint := fmt.Sprintf("/auroraconfig/%s/validate?resourceValidation=%s&mergeWithRemoteConfig=true", api.Affiliation, resourceValidation)
+
+	response, err := api.Do(http.MethodPut, endpoint, nil)
+	if err != nil {
+		return err
+	}
+
+	if !response.Success {
+		return response.Error()
+	}
+
+	return nil
+}
+
 func (api *ApiClient) GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, fileName)
 

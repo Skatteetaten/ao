@@ -9,6 +9,7 @@ import (
 )
 
 var flagFullValidation bool
+var flagRemoteValidation bool
 
 var validateCmd = &cobra.Command{
 	Use:         "validate",
@@ -21,6 +22,7 @@ func init() {
 	RootCmd.AddCommand(validateCmd)
 	validateCmd.Flags().StringVarP(&flagAuroraConfig, "auroraconfig", "a", "", "AuroraConfig to validate")
 	validateCmd.Flags().BoolVarP(&flagFullValidation, "full", "f", false, "Validate resources")
+	validateCmd.Flags().BoolVarP(&flagRemoteValidation, "remote", "r", false, "Validate remote aurora config instead of local files")
 }
 
 func Validate(cmd *cobra.Command, args []string) error {
@@ -34,15 +36,24 @@ func Validate(cmd *cobra.Command, args []string) error {
 		DefaultApiClient.Affiliation = flagAuroraConfig
 	}
 
-	ac, err := versioncontrol.CollectAuroraConfigFilesInRepo(DefaultApiClient.Affiliation, gitRoot)
-	if err != nil {
-		return err
-	}
+	if flagRemoteValidation {
+		fmt.Printf("Validating remote auroraAonfig=%s fullValidation=%t\n", DefaultApiClient.Affiliation, flagFullValidation)
 
-	fmt.Printf("Validating auroraAonfig=%s gitRoot=%s fullValidation=%t\n", DefaultApiClient.Affiliation, gitRoot, flagFullValidation)
+		if err := DefaultApiClient.ValidateRemoteAuroraConfig(flagFullValidation); err != nil {
+			return err
+		}
+	} else {
 
-	if err := DefaultApiClient.ValidateAuroraConfig(ac, flagFullValidation); err != nil {
-		return err
+		ac, err := versioncontrol.CollectAuroraConfigFilesInRepo(DefaultApiClient.Affiliation, gitRoot)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Validating auroraAonfig=%s gitRoot=%s fullValidation=%t\n", DefaultApiClient.Affiliation, gitRoot, flagFullValidation)
+
+		if err := DefaultApiClient.ValidateAuroraConfig(ac, flagFullValidation); err != nil {
+			return err
+		}
 	}
 
 	fmt.Println("OK")
