@@ -37,7 +37,7 @@ func Validate(cmd *cobra.Command, args []string) error {
 	}
 
 	if flagRemoteValidation {
-		fmt.Printf("Validating remote auroraAonfig=%s fullValidation=%t\n", DefaultApiClient.Affiliation, flagFullValidation)
+		fmt.Printf("Validating remote auroraAonfig=%s@%s fullValidation=%t\n", DefaultApiClient.Affiliation, DefaultApiClient.RefName, flagFullValidation)
 
 		if err := DefaultApiClient.ValidateRemoteAuroraConfig(flagFullValidation); err != nil {
 			return err
