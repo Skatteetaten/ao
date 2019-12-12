@@ -118,16 +118,30 @@ func (api *ApiClient) ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullVa
 	}
 
 	//for validation you can also have warnings
-	warnings, err := response.toErrorResponse()
+	warnings, err := response.toWarningResponse()
 	if err != nil {
 		return "", err
 	}
 
 	if warnings != nil {
-		return warnings.formatWarnings(), nil
+		return formatWarnings(warnings), nil
 	}
 
 	return "", nil
+}
+
+func formatWarnings(warnings []string) string {
+	var status string
+
+	messages := warnings
+	for i, message := range messages {
+		status += message
+		if i != len(messages)-1 {
+			status += "\n\n"
+		}
+	}
+
+	return status
 }
 
 func (api *ApiClient) GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error) {

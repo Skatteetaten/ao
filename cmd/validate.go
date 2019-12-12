@@ -48,6 +48,9 @@ func Validate(cmd *cobra.Command, args []string) error {
 	}
 
 	if warnings != "" {
+		fmt.Println("")
+		fmt.Println("AuroraConfig contains the following warnings:")
+		fmt.Println("")
 		fmt.Println(warnings)
 	} else {
 		fmt.Println("OK")

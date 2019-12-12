@@ -22,7 +22,6 @@ type (
 		IllegalFieldErrors []string
 		MissingFieldErrors []string
 		InvalidFieldErrors []string
-		Warnings           []string
 	}
 
 	errorField struct {
@@ -82,19 +81,6 @@ func (res *BooberResponse) Error() error {
 	return nil
 }
 
-func (e *ErrorResponse) formatWarnings() string {
-	var status string
-
-	messages := e.Warnings
-	for i, message := range messages {
-		status += message
-		if i != len(messages)-1 {
-			status += "\n\n"
-		}
-	}
-
-	return status
-}
 
 func (e *ErrorResponse) String() string {
 	var status string
@@ -113,6 +99,28 @@ func (e *ErrorResponse) String() string {
 
 	return status
 }
+
+func (res *BooberResponse) toWarningResponse() ([]string, error) {
+	var rei []responseErrorItem
+	err := json.Unmarshal(res.Items, &rei)
+	if err != nil {
+		return nil, err
+	}
+
+	warningFormat := `Application: %s/%s
+Warning:     %s`
+
+	var warnings []string
+	for _, res := range rei {
+		for _, details := range res.Details {
+			warning := fmt.Sprintf(warningFormat, res.Environment, res.Application, details.Message)
+			warnings = append(warnings, warning)
+		}
+	}
+
+	return warnings, nil
+}
+
 
 func (res *BooberResponse) toErrorResponse() (*ErrorResponse, error) {
 	var rei []responseErrorItem
@@ -161,16 +169,10 @@ Message:     %s`
 	genericFormat := `Application: %s/%s
 Message:     %s`
 
-	warningFormat := `Application: %s/%s
-Warning:     %s`
 
 	for _, message := range res.Details {
 		switch message.Type {
-		case "WARNING":
-			{
-				warning := fmt.Sprintf(warningFormat, res.Environment, res.Application, message.Message)
-				e.Warnings = append(e.Warnings, warning)
-			}
+
 		case "ILLEGAL":
 			{
 				illegal := fmt.Sprintf(illegalFieldFormat,
