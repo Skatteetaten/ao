@@ -261,15 +261,43 @@ func printDeployResult(result []client.DeployResults, out io.Writer) error {
 	}
 
 	DefaultTablePrinter(header, rows, out)
+
+	warningHeader, warningRows := getWarningTable(results)
+	if len(warningRows) != 0 {
+		fmt.Println("")
+		fmt.Println("Some warnings where found:")
+		DefaultTablePrinter(warningHeader, warningRows, out)
+	}
 	for _, deploy := range results {
 		if !deploy.Success {
 			return errors.New("One or more deploys failed")
 		}
 	}
 
-	//TODO: Print Warnings
-
 	return nil
+}
+
+func getWarningTable(deploys []client.DeployResult) (string, []string) {
+	var rows []string
+	for _, item := range deploys {
+		cluster := item.DeploymentSpec.Cluster()
+		environment := item.DeploymentSpec.Environment()
+		name := item.DeploymentSpec.Name()
+		pattern := "%s\t%s\t%s\t%s\t%s"
+		for index, warning := range item.Warnings {
+			var result string
+			if index == 0 {
+				result = fmt.Sprintf(pattern, cluster, environment, name, item.DeployId, warning)
+			} else {
+				result = fmt.Sprintf(pattern, "", "", "", "", warning)
+			}
+			rows = append(rows, result)
+		}
+
+	}
+
+	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tDEPLOY_ID\tWARNING"
+	return header, rows
 }
 
 func getDeployResultTable(deploys []client.DeployResult) (string, []string) {
