@@ -284,16 +284,10 @@ func getWarningTable(deploys []client.DeployResult) (string, []string) {
 		environment := item.DeploymentSpec.Environment()
 		name := item.DeploymentSpec.Name()
 		pattern := "%s\t%s\t%s\t%s\t%s"
-		for index, warning := range item.Warnings {
-			var result string
-			if index == 0 {
-				result = fmt.Sprintf(pattern, cluster, environment, name, item.DeployId, warning)
-			} else {
-				result = fmt.Sprintf(pattern, "", "", "", "", warning)
-			}
+		for _, warning := range item.Warnings {
+			result := fmt.Sprintf(pattern, cluster, environment, name, item.DeployId, warning)
 			rows = append(rows, result)
 		}
-
 	}
 
 	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tDEPLOY_ID\tWARNING"
