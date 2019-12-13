@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
@@ -26,7 +25,12 @@ func init() {
 }
 
 func Validate(cmd *cobra.Command, args []string) error {
-	wd, _ := os.Getwd()
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
 	gitRoot, err := versioncontrol.FindGitPath(wd)
 	if err != nil {
 		return err
@@ -37,26 +41,25 @@ func Validate(cmd *cobra.Command, args []string) error {
 	}
 
 	if flagRemoteValidation {
-		fmt.Printf("Validating remote auroraAonfig=%s@%s fullValidation=%t\n", DefaultApiClient.Affiliation, DefaultApiClient.RefName, flagFullValidation)
-
+		cmd.Printf("Validating remote auroraAonfig=%s@%s fullValidation=%t\n", DefaultApiClient.Affiliation, DefaultApiClient.RefName, flagFullValidation)
 		if err := DefaultApiClient.ValidateRemoteAuroraConfig(flagFullValidation); err != nil {
 			return err
 		}
-	} else {
 
+	} else {
 		ac, err := versioncontrol.CollectAuroraConfigFilesInRepo(DefaultApiClient.Affiliation, gitRoot)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Validating auroraAonfig=%s gitRoot=%s fullValidation=%t\n", DefaultApiClient.Affiliation, gitRoot, flagFullValidation)
+		cmd.Printf("Validating auroraAonfig=%s gitRoot=%s fullValidation=%t\n", DefaultApiClient.Affiliation, gitRoot, flagFullValidation)
 
 		if err := DefaultApiClient.ValidateAuroraConfig(ac, flagFullValidation); err != nil {
 			return err
 		}
 	}
 
-	fmt.Println("OK")
+	cmd.Println("OK")
 
 	return nil
 }
