@@ -218,3 +218,39 @@ func TestAuroraConfigFile_ToPrettyJson(t *testing.T) {
 	expected := "{\n  \"type\": \"development\"\n}"
 	assert.Equal(t, expected, acf.ToPrettyJson())
 }
+
+func TestApiClient_ValidateRemoteAuroraConfig(t *testing.T) {
+	t.Run("Successfully validate remote AuroraConfig", func(t *testing.T) {
+		fileName := "auroraconfig_paas_success_response"
+		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(t, fileName))
+		defer ts.Close()
+
+		api := NewApiClientDefaultRef(ts.URL, "", affiliation)
+
+		data := ReadTestFile("auroraconfig_paas_success_validation_request")
+		var ac auroraconfig.AuroraConfig
+		err := json.Unmarshal(data, &ac)
+		if err != nil {
+			t.Error(err)
+		}
+		err = api.ValidateRemoteAuroraConfig(false)
+		assert.NoError(t, err)
+	})
+
+	t.Run("Validation and save should fail when deploy type is illegal", func(t *testing.T) {
+		fileName := "auroraconfig_paas_failed_validation_response"
+		ts := httptest.NewServer(AuroraConfigFailedResponseHandler(t, fileName, http.StatusBadRequest))
+		defer ts.Close()
+
+		api := NewApiClientDefaultRef(ts.URL, "", affiliation)
+		data := ReadTestFile("auroraconfig_paas_fail_validation_request")
+		var ac auroraconfig.AuroraConfig
+		err := json.Unmarshal(data, &ac)
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = api.ValidateRemoteAuroraConfig(false)
+		assert.Error(t, err)
+	})
+}
