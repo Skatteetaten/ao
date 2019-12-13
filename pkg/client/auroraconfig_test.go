@@ -227,13 +227,7 @@ func TestApiClient_ValidateRemoteAuroraConfig(t *testing.T) {
 
 		api := NewApiClientDefaultRef(ts.URL, "", affiliation)
 
-		data := ReadTestFile("auroraconfig_paas_success_validation_request")
-		var ac auroraconfig.AuroraConfig
-		err := json.Unmarshal(data, &ac)
-		if err != nil {
-			t.Error(err)
-		}
-		err = api.ValidateRemoteAuroraConfig(false)
+		err := api.ValidateRemoteAuroraConfig(false)
 		assert.NoError(t, err)
 	})
 
@@ -243,14 +237,8 @@ func TestApiClient_ValidateRemoteAuroraConfig(t *testing.T) {
 		defer ts.Close()
 
 		api := NewApiClientDefaultRef(ts.URL, "", affiliation)
-		data := ReadTestFile("auroraconfig_paas_fail_validation_request")
-		var ac auroraconfig.AuroraConfig
-		err := json.Unmarshal(data, &ac)
-		if err != nil {
-			t.Error(err)
-		}
 
-		err = api.ValidateRemoteAuroraConfig(false)
+		err := api.ValidateRemoteAuroraConfig(false)
 		assert.Error(t, err)
 	})
 }
