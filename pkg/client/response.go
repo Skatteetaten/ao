@@ -81,7 +81,6 @@ func (res *BooberResponse) Error() error {
 	return nil
 }
 
-
 func (e *ErrorResponse) String() string {
 	var status string
 
@@ -120,7 +119,6 @@ Warning:     %s`
 
 	return warnings, nil
 }
-
 
 func (res *BooberResponse) toErrorResponse() (*ErrorResponse, error) {
 	var rei []responseErrorItem
@@ -168,7 +166,6 @@ Message:     %s`
 
 	genericFormat := `Application: %s/%s
 Message:     %s`
-
 
 	for _, message := range res.Details {
 		switch message.Type {
