@@ -29,3 +29,4 @@ vendor
 buildnumber.txt
 bin/
 .vscode/
+*.iml

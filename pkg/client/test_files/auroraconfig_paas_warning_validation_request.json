@@ -1,0 +1,21 @@
+{
+    "name": "paas",
+    "files": [
+        {
+            "name": "mokey/mokey.json",
+            "contents": "{}"
+        },
+        {
+            "name": "mokey/about.json",
+            "contents": "{\"cluster\":\"utv\",\"type\":\"davalopmant\"}"
+        },
+        {
+            "name": "mokey.json",
+            "contents": "{\"name\":\"mokey\",\"groupId\":\"no.skatteetaten.aurora\",\"artifactId\":\"mokey\",\"version\":\"development-SNAPSHOT\",\"replicas\":1,\"route\":{\"mokey\":{\"annotations\":{\"haproxy.router.openshift.io|timeout\":\"300s\"}}},\"resources\":{\"memory\":{\"min\":\"1Gi\",\"max\":\"1Gi\"},\"cpu\":{\"min\":\"1400m\",\"max\":\"2000m\"}},\"debug\":true,\"config\":{\"SERVER_CONTEXT_PATH\":\"/\"},\"baseImage\":{\"name\":\"flange\"},\"serviceAccount\":\"mokey\"}"
+        },
+        {
+            "name": "about.json",
+            "contents": "{\"schemaVersion\":\"v1\",\"affiliation\":\"paas\",\"splunkIndex\":\"openshift-test\",\"certificate\":true,\"permissions\":{\"admin\":\"APP_PaaS_drift APP_PaaS_utv\"}}"
+        }
+    ]
+}

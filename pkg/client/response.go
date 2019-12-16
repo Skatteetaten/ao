@@ -99,6 +99,27 @@ func (e *ErrorResponse) String() string {
 	return status
 }
 
+func (res *BooberResponse) toWarningResponse() ([]string, error) {
+	var rei []responseErrorItem
+	err := json.Unmarshal(res.Items, &rei)
+	if err != nil {
+		return nil, err
+	}
+
+	warningFormat := `Application: %s/%s
+Warning:     %s`
+
+	var warnings []string
+	for _, res := range rei {
+		for _, details := range res.Details {
+			warning := fmt.Sprintf(warningFormat, res.Environment, res.Application, details.Message)
+			warnings = append(warnings, warning)
+		}
+	}
+
+	return warnings, nil
+}
+
 func (res *BooberResponse) toErrorResponse() (*ErrorResponse, error) {
 	var rei []responseErrorItem
 	err := json.Unmarshal(res.Items, &rei)
@@ -148,6 +169,7 @@ Message:     %s`
 
 	for _, message := range res.Details {
 		switch message.Type {
+
 		case "ILLEGAL":
 			{
 				illegal := fmt.Sprintf(illegalFieldFormat,
