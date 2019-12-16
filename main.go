@@ -25,16 +25,16 @@ Examples:
 {{.Example}}{{end}}{{if hasSubCommandsAnnotation . "actions"}}
 
 OpenShift Action Commands:{{range .Commands}}{{if eq (index .Annotations "type") "actions"}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if hasSubCommandsAnnotation . "remote"}}
+  {{rpad .NameAndAliases .UsagePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if hasSubCommandsAnnotation . "remote"}}
 
 Remote AuroraConfig Commands:{{range .Commands}}{{if eq (index .Annotations "type") "remote"}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if hasSubCommandsAnnotation . "local"}}
+  {{rpad .NameAndAliases .UsagePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if hasSubCommandsAnnotation . "local"}}
 
 Local File Commands:{{range .Commands}}{{if eq (index .Annotations "type") "local"}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
+  {{rpad .NameAndAliases .UsagePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
 
 Commands:{{range .Commands}}{{if (and (eq (index .Annotations "type") "") .IsAvailableCommand)}}
-  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+  {{rpad .NameAndAliases .UsagePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
 
 Flags:
 {{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableSubCommands}}

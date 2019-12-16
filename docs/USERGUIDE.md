@@ -5,9 +5,9 @@
 AO is a command line interface for the Boober API. It is used to
 
 - Deploy one or more ApplicationDeploymentRef (environment/application) to one or more clusters
-- Manipulate AuroraConfig remotely
+- Manage AuroraConfig remotely
 - Support modifying AuroraConfig locally
-- Manipulate vaults and secrets
+- Manage vaults and secrets
 
 # General
 
