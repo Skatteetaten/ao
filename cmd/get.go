@@ -154,8 +154,8 @@ func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *co
 
 func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string) {
 	var rows []string
-	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tREPLICAS\tTYPE\tDEPLOY STRATEGY"
-	pattern := "%v\t%v\t%v\t%v\t%v\t%v\t%v"
+	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tRELEASE TO\tREPLICAS\tTYPE\tDEPLOY STRATEGY"
+	pattern := "%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v"
 	sort.Slice(specs, func(i, j int) bool {
 		return strings.Compare(specs[i].Name(), specs[j].Name()) != 1
 	})
@@ -172,6 +172,7 @@ func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string
 			spec.Cluster(),
 			spec.Environment(),
 			spec.Name(),
+			spec.Version(),
 			spec.Version(),
 			replicas,
 			spec.GetString("type"),
