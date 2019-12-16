@@ -41,6 +41,7 @@ type (
 		Success        bool                          `json:"success"`
 		Ignored        bool                          `json:"ignored"`
 		Reason         string                        `json:"reason"`
+		Warnings       []string                      `json:"warnings"`
 	}
 
 	DeployPayload struct {

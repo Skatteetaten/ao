@@ -1,0 +1,17 @@
+{
+  "success": true,
+  "message": "OK",
+  "items": [
+    {
+      "application": "reference-web",
+      "environment": "boober-utv",
+      "details": [
+        {
+          "type": "WARNING",
+          "message": "This is a warning"
+        }
+      ]
+    }
+  ],
+  "count": 1
+}

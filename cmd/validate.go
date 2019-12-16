@@ -54,12 +54,21 @@ func Validate(cmd *cobra.Command, args []string) error {
 
 		cmd.Printf("Validating AuroraConfig=%s gitRoot=%s fullValidation=%t\n", DefaultApiClient.Affiliation, gitRoot, flagFullValidation)
 
-		if err := DefaultApiClient.ValidateAuroraConfig(ac, flagFullValidation); err != nil {
+		warnings, err := DefaultApiClient.ValidateAuroraConfig(ac, flagFullValidation)
+
+	if err != nil {
 			return err
 		}
 	}
 
-	cmd.Println("OK")
+	if warnings != "" {
+		fmt.Println("")
+		fmt.Println("AuroraConfig contains the following warnings:")
+		fmt.Println("")
+		fmt.Println(warnings)
+	} else {
+		fmt.Println("OK")
+	}
 
 	return nil
 }

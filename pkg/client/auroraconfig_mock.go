@@ -37,8 +37,8 @@ func (api *AuroraConfigClientMock) PutAuroraConfig(endpoint string, ac *auroraco
 }
 
 // ValidateAuroraConfig default mock implementation
-func (api *AuroraConfigClientMock) ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) error {
-	return errors.New("Not implemented")
+func (api *AuroraConfigClientMock) ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) (string, error) {
+	return "", errors.New("Not implemented")
 }
 
 // PatchAuroraConfigFile default mock implementation
