@@ -32,8 +32,8 @@ func (api *AuroraConfigClientMock) GetAuroraConfigNames() (*auroraconfig.AuroraC
 }
 
 // PutAuroraConfig default mock implementation
-func (api *AuroraConfigClientMock) PutAuroraConfig(endpoint string, ac *auroraconfig.AuroraConfig) error {
-	return errors.New("Not implemented")
+func (api *AuroraConfigClientMock) PutAuroraConfig(endpoint string, payload []byte) (string, error) {
+	return "", errors.New("Not implemented")
 }
 
 // ValidateAuroraConfig default mock implementation

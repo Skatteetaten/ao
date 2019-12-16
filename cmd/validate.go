@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
@@ -9,6 +8,7 @@ import (
 )
 
 var flagFullValidation bool
+var flagRemoteValidation bool
 
 var validateCmd = &cobra.Command{
 	Use:         "validate",
@@ -21,10 +21,16 @@ func init() {
 	RootCmd.AddCommand(validateCmd)
 	validateCmd.Flags().StringVarP(&flagAuroraConfig, "auroraconfig", "a", "", "AuroraConfig to validate")
 	validateCmd.Flags().BoolVarP(&flagFullValidation, "full", "f", false, "Validate resources")
+	validateCmd.Flags().BoolVarP(&flagRemoteValidation, "remote", "r", false, "Validate remote AuroraConfig instead of local files")
 }
 
 func Validate(cmd *cobra.Command, args []string) error {
-	wd, _ := os.Getwd()
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
 	gitRoot, err := versioncontrol.FindGitPath(wd)
 	if err != nil {
 		return err
@@ -34,26 +40,29 @@ func Validate(cmd *cobra.Command, args []string) error {
 		DefaultApiClient.Affiliation = flagAuroraConfig
 	}
 
-	ac, err := versioncontrol.CollectAuroraConfigFilesInRepo(DefaultApiClient.Affiliation, gitRoot)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Validating auroraAonfig=%s gitRoot=%s fullValidation=%t\n", DefaultApiClient.Affiliation, gitRoot, flagFullValidation)
-
-	warnings, err := DefaultApiClient.ValidateAuroraConfig(ac, flagFullValidation)
-
-	if err != nil {
-		return err
-	}
-
-	if warnings != "" {
-		fmt.Println("")
-		fmt.Println("AuroraConfig contains the following warnings:")
-		fmt.Println("")
-		fmt.Println(warnings)
+	var warnings string
+	if flagRemoteValidation {
+		cmd.Printf("Validating remote AuroraConfig=%s@%s fullValidation=%t\n", DefaultApiClient.Affiliation, DefaultApiClient.RefName, flagFullValidation)
+		warnings, err = DefaultApiClient.ValidateRemoteAuroraConfig(flagFullValidation)
 	} else {
-		fmt.Println("OK")
+		ac, err := versioncontrol.CollectAuroraConfigFilesInRepo(DefaultApiClient.Affiliation, gitRoot)
+		if err != nil {
+			return err
+		}
+		cmd.Printf("Validating AuroraConfig=%s gitRoot=%s fullValidation=%t\n", DefaultApiClient.Affiliation, gitRoot, flagFullValidation)
+		warnings, err = DefaultApiClient.ValidateAuroraConfig(ac, flagFullValidation)
+	}
+
+	if err != nil {
+		return err
+	}
+	if warnings != "" {
+		cmd.Println("")
+		cmd.Println("AuroraConfig contains the following warnings:")
+		cmd.Println("")
+		cmd.Println(warnings)
+	} else {
+		cmd.Println("OK")
 	}
 
 	return nil
