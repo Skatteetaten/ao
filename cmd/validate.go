@@ -40,34 +40,29 @@ func Validate(cmd *cobra.Command, args []string) error {
 		DefaultApiClient.Affiliation = flagAuroraConfig
 	}
 
+	var warnings string
 	if flagRemoteValidation {
 		cmd.Printf("Validating remote AuroraConfig=%s@%s fullValidation=%t\n", DefaultApiClient.Affiliation, DefaultApiClient.RefName, flagFullValidation)
-		if err := DefaultApiClient.ValidateRemoteAuroraConfig(flagFullValidation); err != nil {
-			return err
-		}
-
+		warnings, err = DefaultApiClient.ValidateRemoteAuroraConfig(flagFullValidation)
 	} else {
 		ac, err := versioncontrol.CollectAuroraConfigFilesInRepo(DefaultApiClient.Affiliation, gitRoot)
 		if err != nil {
 			return err
 		}
-
 		cmd.Printf("Validating AuroraConfig=%s gitRoot=%s fullValidation=%t\n", DefaultApiClient.Affiliation, gitRoot, flagFullValidation)
-
-		warnings, err := DefaultApiClient.ValidateAuroraConfig(ac, flagFullValidation)
-
-	if err != nil {
-			return err
-		}
+		warnings, err = DefaultApiClient.ValidateAuroraConfig(ac, flagFullValidation)
 	}
 
+	if err != nil {
+		return err
+	}
 	if warnings != "" {
-		fmt.Println("")
-		fmt.Println("AuroraConfig contains the following warnings:")
-		fmt.Println("")
-		fmt.Println(warnings)
+		cmd.Println("")
+		cmd.Println("AuroraConfig contains the following warnings:")
+		cmd.Println("")
+		cmd.Println(warnings)
 	} else {
-		fmt.Println("OK")
+		cmd.Println("OK")
 	}
 
 	return nil

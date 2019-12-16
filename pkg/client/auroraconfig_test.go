@@ -247,8 +247,10 @@ func TestApiClient_ValidateRemoteAuroraConfig(t *testing.T) {
 
 		api := NewApiClientDefaultRef(ts.URL, "", affiliation)
 
-		err := api.ValidateRemoteAuroraConfig(false)
+		warnings, err := api.ValidateRemoteAuroraConfig(false)
 		assert.NoError(t, err)
+		assert.Empty(t, warnings)
+
 	})
 
 	t.Run("Validation and save should fail when deploy type is illegal", func(t *testing.T) {
@@ -258,7 +260,9 @@ func TestApiClient_ValidateRemoteAuroraConfig(t *testing.T) {
 
 		api := NewApiClientDefaultRef(ts.URL, "", affiliation)
 
-		err := api.ValidateRemoteAuroraConfig(false)
+		warnings, err := api.ValidateRemoteAuroraConfig(false)
 		assert.Error(t, err)
+		assert.Empty(t, warnings)
+
 	})
 }

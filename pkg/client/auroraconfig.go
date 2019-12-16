@@ -14,7 +14,7 @@ type AuroraConfigClient interface {
 	GetFileNames() (auroraconfig.FileNames, error)
 	GetAuroraConfig() (*auroraconfig.AuroraConfig, error)
 	GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, error)
-	PutAuroraConfig(endpoint string, ac *auroraconfig.AuroraConfig) error
+	PutAuroraConfig(endpoint string, payload []byte) (string, error)
 	ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) (string, error)
 	PatchAuroraConfigFile(fileName string, operation auroraconfig.JsonPatchOp) error
 	GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error)
@@ -77,36 +77,7 @@ func (api *ApiClient) GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, e
 	return &acn, nil
 }
 
-func (api *ApiClient) PutAuroraConfig(endpoint string, ac *auroraconfig.AuroraConfig) error {
-
-	payload, err := json.Marshal(ac)
-	if err != nil {
-		return err
-	}
-
-	response, err := api.Do(http.MethodPut, endpoint, payload)
-	if err != nil {
-		return err
-	}
-
-	if !response.Success {
-		return response.Error()
-	}
-
-	return nil
-}
-
-func (api *ApiClient) ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) (string, error) {
-	resourceValidation := "false"
-	if fullValidation {
-		resourceValidation = "true"
-	}
-	endpoint := fmt.Sprintf("/auroraconfig/%s/validate?resourceValidation=%s", api.Affiliation, resourceValidation)
-
-	payload, err := json.Marshal(ac)
-	if err != nil {
-		return "", err
-	}
+func (api *ApiClient) PutAuroraConfig(endpoint string, payload []byte) (string, error) {
 
 	response, err := api.Do(http.MethodPut, endpoint, payload)
 	if err != nil {
@@ -128,6 +99,32 @@ func (api *ApiClient) ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullVa
 	}
 
 	return "", nil
+
+}
+
+func (api *ApiClient) ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) (string, error) {
+	resourceValidation := "false"
+	if fullValidation {
+		resourceValidation = "true"
+	}
+	endpoint := fmt.Sprintf("/auroraconfig/%s/validate?resourceValidation=%s", api.Affiliation, resourceValidation)
+
+	payload, err := json.Marshal(ac)
+	if err != nil {
+		return "", err
+	}
+	return api.PutAuroraConfig(endpoint, payload)
+
+}
+
+func (api *ApiClient) ValidateRemoteAuroraConfig(fullValidation bool) (string, error) {
+	resourceValidation := "false"
+	if fullValidation {
+		resourceValidation = "true"
+	}
+	endpoint := fmt.Sprintf("/auroraconfig/%s/validate?resourceValidation=%s&mergeWithRemoteConfig=true", api.Affiliation, resourceValidation)
+
+	return api.PutAuroraConfig(endpoint, nil)
 }
 
 func formatWarnings(warnings []string) string {
@@ -142,25 +139,6 @@ func formatWarnings(warnings []string) string {
 	}
 
 	return status
-}
-
-func (api *ApiClient) ValidateRemoteAuroraConfig(fullValidation bool) error {
-	resourceValidation := "false"
-	if fullValidation {
-		resourceValidation = "true"
-	}
-	endpoint := fmt.Sprintf("/auroraconfig/%s/validate?resourceValidation=%s&mergeWithRemoteConfig=true", api.Affiliation, resourceValidation)
-
-	response, err := api.Do(http.MethodPut, endpoint, nil)
-	if err != nil {
-		return err
-	}
-
-	if !response.Success {
-		return response.Error()
-	}
-
-	return nil
 }
 
 func (api *ApiClient) GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error) {
