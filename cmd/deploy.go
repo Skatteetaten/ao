@@ -61,6 +61,7 @@ func init() {
 	deployCmd.Flags().StringVarP(&flagAuroraConfig, "auroraconfig", "a", "", "Overrides the logged in AuroraConfig")
 	deployCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Limit deploy to given cluster name")
 	deployCmd.Flags().BoolVarP(&flagNoPrompt, "no-prompt", "", false, "Suppress prompts")
+	deployCmd.Flags().BoolVarP(&flagVerbose, "verbose", "", false, "Provides more detailed information about the deployment")
 	deployCmd.Flags().StringArrayVarP(&flagOverrides, "overrides", "o", []string{}, "Override in the form '[env/]file:{<json override>}'")
 	deployCmd.Flags().StringArrayVarP(&flagExcludes, "exclude", "e", []string{}, "Select applications or environments to exclude from deploy")
 	deployCmd.Flags().StringVarP(&flagVersion, "version", "v", "", "Set the given version in AuroraConfig before deploy")
@@ -162,7 +163,7 @@ func parseOverride(overrides []string) (map[string]string, error) {
 }
 
 func getDeployConfirmation(force bool, filteredDeploymentSpecs []deploymentspec.DeploymentSpec, out io.Writer) bool {
-	header, rows := GetDeploySpecTable(filteredDeploymentSpecs)
+	header, rows := GetDeploySpecTable(filteredDeploymentSpecs, flagVerbose)
 	DefaultTablePrinter(header, rows, out)
 
 	shouldDeploy := true

@@ -42,7 +42,7 @@ var (
 
 	getEnvsCmd = &cobra.Command{
 		Use:     "env [envirionments]",
-		Short:   "Get all environments og all applications for one or more environments",
+		Short:   "Get all environments or all applications for one or more environments",
 		Aliases: []string{"envs"},
 		RunE:    PrintEnvironments,
 	}
@@ -147,15 +147,17 @@ func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *co
 	if err != nil {
 		return err
 	}
-	header, rows := GetDeploySpecTable(specs)
+	header, rows := GetDeploySpecTable(specs, false)
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 	return nil
 }
 
-func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string) {
+func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec, flagVerbose bool) (string, []string) {
 	var rows []string
-	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tRELEASE TO\tREPLICAS\tTYPE\tDEPLOY STRATEGY"
-	pattern := "%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v"
+	var releaseToRows []string
+	var positionRightOfVersion int
+	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tREPLICAS\tTYPE\tDEPLOY STRATEGY"
+	pattern := "%v\t%v\t%v\t%v\t%v\t%v\t%v"
 	sort.Slice(specs, func(i, j int) bool {
 		return strings.Compare(specs[i].Name(), specs[j].Name()) != 1
 	})
@@ -173,12 +175,24 @@ func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string
 			spec.Environment(),
 			spec.Name(),
 			spec.Version(),
-			spec.Version(),
 			replicas,
 			spec.GetString("type"),
 			spec.GetString("deployStrategy/type"),
 		)
 		rows = append(rows, row)
+		releaseToRows = append(releaseToRows, spec.GetString("releaseTo"))
+	}
+	if flagVerbose {
+		splitHeader := strings.Split(header, "\t")
+		positionRightOfVersion = sort.StringSlice(splitHeader).Search("VERSION") + 1
+		headerWithReleaseTo := append(splitHeader[:positionRightOfVersion], append([]string{"RELEASE_TO"}, splitHeader[positionRightOfVersion:]...)...)
+		header = strings.Join(headerWithReleaseTo, "\t")
+
+		for i, row := range rows {
+			splitRow := strings.Split(row, "\t")
+			splitRow = append(splitRow[:positionRightOfVersion], append([]string{releaseToRows[i]}, splitRow[positionRightOfVersion:]...)...)
+			rows[i] = strings.Join(splitRow, "\t")
+		}
 	}
 	return header, rows
 }
