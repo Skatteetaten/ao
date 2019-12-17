@@ -185,13 +185,13 @@ func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec, flagVerbose bool)
 	if flagVerbose {
 		splitHeader := strings.Split(header, "\t")
 		positionRightOfVersion = sort.StringSlice(splitHeader).Search("VERSION") + 1
-		headerWithReleaseTo := append(splitHeader[:positionRightOfVersion], append([]string{"RELEASE_TO"}, splitHeader[positionRightOfVersion:]...)...)
-		header = strings.Join(headerWithReleaseTo, "\t")
+		headerWithReleaseToField := append(splitHeader[:positionRightOfVersion], append([]string{"RELEASE_TO"}, splitHeader[positionRightOfVersion:]...)...)
+		header = strings.Join(headerWithReleaseToField, "\t")
 
 		for i, row := range rows {
 			splitRow := strings.Split(row, "\t")
-			splitRow = append(splitRow[:positionRightOfVersion], append([]string{releaseToRows[i]}, splitRow[positionRightOfVersion:]...)...)
-			rows[i] = strings.Join(splitRow, "\t")
+			rowWithRelaseToField := append(splitRow[:positionRightOfVersion], append([]string{releaseToRows[i]}, splitRow[positionRightOfVersion:]...)...)
+			rows[i] = strings.Join(rowWithRelaseToField, "\t")
 		}
 	}
 	return header, rows
