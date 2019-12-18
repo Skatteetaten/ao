@@ -13,7 +13,6 @@ var (
 	flagAuroraConfig string
 	flagOverrides    []string
 	flagNoPrompt     bool
-	flagVerbose      bool
 	flagVersion      string
 	flagCluster      string
 	flagExcludes     []string

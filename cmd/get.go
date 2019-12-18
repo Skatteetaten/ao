@@ -147,26 +147,26 @@ func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *co
 	if err != nil {
 		return err
 	}
-	header, rows := GetDeploySpecTable(specs, false)
+	header, rows := GetDeploySpecTable(specs)
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 	return nil
 }
 
-func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec, flagVerbose bool) (string, []string) {
+func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string) {
 	var rows []string
-	// var releaseToRows []string
-	// var positionRightOfVersion int
 	headers := []string{"CLUSTER", "ENVIRONMENT", "APPLICATION", "VERSION", "REPLICAS", "TYPE", "DEPLOY_STRATEGY"}
 	sort.Slice(specs, func(i, j int) bool {
 		return strings.Compare(specs[i].Name(), specs[j].Name()) != 1
 	})
 
-	if flagVerbose {
-		// header = "CLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tRELEASE_TO\tREPLICAS\tTYPE\tDEPLOY_STRATEGY"
-		// pattern = "%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v"
+	releaseToDefined := checkForReleaseToInSpecs(specs)
+	if releaseToDefined {
+		headers = append(headers, "RELEASE_TO")
 	}
+
 	patterns := FillSlice(make([]string, len(headers)), "%v")
 	pattern := strings.Join(patterns, "\t")
+
 	for _, spec := range specs {
 		var replicas string
 		if spec.GetBool("pause") {
@@ -176,8 +176,8 @@ func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec, flagVerbose bool)
 		}
 
 		specValues := []interface{}{spec.Cluster(), spec.Environment(), spec.Name(), spec.Version(), replicas, spec.GetString("type"), spec.GetString("deployStrategy/type")}
-		if flagVerbose {
-			specValues = append(specValues[:4], append([]interface{}{spec.GetString("releaseTo")}, specValues[4:]...)...)
+		if releaseToDefined {
+			specValues = append(specValues, spec.GetString("releaseTo"))
 		}
 
 		row := fmt.Sprintf(
@@ -186,19 +186,17 @@ func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec, flagVerbose bool)
 		)
 		rows = append(rows, row)
 	}
-	// if flagVerbose {
-	// 	splitHeader := strings.Split(header, "\t")
-	// 	positionRightOfVersion = sort.StringSlice(splitHeader).Search("VERSION") + 1
-	// 	headerWithReleaseToField := append(splitHeader[:positionRightOfVersion], append([]string{"RELEASE_TO"}, splitHeader[positionRightOfVersion:]...)...)
-	// 	header = strings.Join(headerWithReleaseToField, "\t")
-
-	// 	for i, row := range rows {
-	// 		splitRow := strings.Split(row, "\t")
-	// 		rowWithRelaseToField := append(splitRow[:positionRightOfVersion], append([]string{releaseToRows[i]}, splitRow[positionRightOfVersion:]...)...)
-	// 		rows[i] = strings.Join(rowWithRelaseToField, "\t")
-	// 	}
-	// }
 	return strings.Join(headers, "\t"), rows
+}
+
+func checkForReleaseToInSpecs(specs []deploymentspec.DeploymentSpec) bool {
+	releaseToDefined := false
+	for _, spec := range specs {
+		if spec.GetString("releaseTo") != "-" {
+			releaseToDefined = true
+		}
+	}
+	return releaseToDefined
 }
 
 func FillSlice(slice []string, value string) []string {
