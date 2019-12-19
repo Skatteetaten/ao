@@ -23,6 +23,11 @@ func (spec DeploymentSpec) GetBool(name string) bool {
 	return strings.EqualFold(spec.GetString(name), "true")
 }
 
+// HasValue returns true if parameter has a value other than the default empty value, otherwise false.
+func (spec DeploymentSpec) HasValue(name string) bool {
+	return !strings.EqualFold(spec.GetString(name), "-")
+}
+
 // Cluster returns value of the cluster field.
 func (spec DeploymentSpec) Cluster() string {
 	return spec.GetString("cluster")

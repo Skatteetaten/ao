@@ -41,7 +41,7 @@ var (
 	}
 
 	getEnvsCmd = &cobra.Command{
-		Use:     "env [envirionments]",
+		Use:     "env [environments]",
 		Short:   "Get all environments or all applications for one or more environments",
 		Aliases: []string{"envs"},
 		RunE:    PrintEnvironments,
@@ -164,8 +164,7 @@ func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string
 		headers = append(headers, "RELEASE_TO")
 	}
 
-	patterns := FillSlice(make([]string, len(headers)), "%v")
-	pattern := strings.Join(patterns, "\t")
+	pattern := makeRowPattern(len(headers))
 
 	for _, spec := range specs {
 		var replicas string
@@ -192,6 +191,8 @@ func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string
 func checkForReleaseToInSpecs(specs []deploymentspec.DeploymentSpec) bool {
 	releaseToDefined := false
 	for _, spec := range specs {
+		test := spec.HasValue("releaseTo")
+		fmt.Println(test)
 		if spec.GetString("releaseTo") != "-" {
 			releaseToDefined = true
 		}
@@ -199,11 +200,13 @@ func checkForReleaseToInSpecs(specs []deploymentspec.DeploymentSpec) bool {
 	return releaseToDefined
 }
 
-func FillSlice(slice []string, value string) []string {
-	for i := range slice {
-		slice[i] = value
+func makeRowPattern(len int) string {
+	var slice []string
+	for i := 0; i < len; i++ {
+		slice = append(slice, "%v")
 	}
-	return slice
+	pattern := strings.Join(slice, "\t")
+	return pattern
 }
 
 func PrintDeploySpec(cmd *cobra.Command, args []string) error {
