@@ -41,8 +41,8 @@ var (
 	}
 
 	getEnvsCmd = &cobra.Command{
-		Use:     "env [envirionments]",
-		Short:   "Get all environments og all applications for one or more environments",
+		Use:     "env [environments]",
+		Short:   "Get all environments or all applications for one or more environments",
 		Aliases: []string{"envs"},
 		RunE:    PrintEnvironments,
 	}
@@ -154,11 +154,22 @@ func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *co
 
 func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string) {
 	var rows []string
-	header := "CLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tREPLICAS\tTYPE\tDEPLOY STRATEGY"
-	pattern := "%v\t%v\t%v\t%v\t%v\t%v\t%v"
+	releaseToDefined := false
+	headers := []string{"CLUSTER", "ENVIRONMENT", "APPLICATION", "VERSION", "REPLICAS", "TYPE", "DEPLOY_STRATEGY"}
 	sort.Slice(specs, func(i, j int) bool {
 		return strings.Compare(specs[i].Name(), specs[j].Name()) != 1
 	})
+
+	for _, spec := range specs {
+		if spec.HasValue("releaseTo") {
+			headers = append(headers, "RELEASE_TO")
+			releaseToDefined = true
+			break
+		}
+	}
+
+	pattern := makeColumnPattern(len(headers))
+
 	for _, spec := range specs {
 		var replicas string
 		if spec.GetBool("pause") {
@@ -167,19 +178,27 @@ func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string
 			replicas = fmt.Sprint(spec.GetString("replicas"))
 		}
 
+		specValues := []interface{}{spec.Cluster(), spec.Environment(), spec.Name(), spec.Version(), replicas, spec.GetString("type"), spec.GetString("deployStrategy/type")}
+		if releaseToDefined {
+			specValues = append(specValues, spec.GetString("releaseTo"))
+		}
+
 		row := fmt.Sprintf(
 			pattern,
-			spec.Cluster(),
-			spec.Environment(),
-			spec.Name(),
-			spec.Version(),
-			replicas,
-			spec.GetString("type"),
-			spec.GetString("deployStrategy/type"),
+			specValues...,
 		)
 		rows = append(rows, row)
 	}
-	return header, rows
+	return strings.Join(headers, "\t"), rows
+}
+
+func makeColumnPattern(columnCount int) string {
+	var slice []string
+	for i := 0; i < columnCount; i++ {
+		slice = append(slice, "%v")
+	}
+	pattern := strings.Join(slice, "\t")
+	return pattern
 }
 
 func PrintDeploySpec(cmd *cobra.Command, args []string) error {
