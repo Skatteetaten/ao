@@ -154,14 +154,18 @@ func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *co
 
 func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string) {
 	var rows []string
+	releaseToDefined := false
 	headers := []string{"CLUSTER", "ENVIRONMENT", "APPLICATION", "VERSION", "REPLICAS", "TYPE", "DEPLOY_STRATEGY"}
 	sort.Slice(specs, func(i, j int) bool {
 		return strings.Compare(specs[i].Name(), specs[j].Name()) != 1
 	})
 
-	releaseToDefined := checkForReleaseToInSpecs(specs)
-	if releaseToDefined {
-		headers = append(headers, "RELEASE_TO")
+	for _, spec := range specs {
+		if spec.HasValue("releaseTo") {
+			headers = append(headers, "RELEASE_TO")
+			releaseToDefined = true
+			break
+		}
 	}
 
 	pattern := makeColumnPattern(len(headers))
@@ -186,18 +190,6 @@ func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string
 		rows = append(rows, row)
 	}
 	return strings.Join(headers, "\t"), rows
-}
-
-func checkForReleaseToInSpecs(specs []deploymentspec.DeploymentSpec) bool {
-	releaseToDefined := false
-	for _, spec := range specs {
-		test := spec.HasValue("releaseTo")
-		fmt.Println(test)
-		if spec.GetString("releaseTo") != "-" {
-			releaseToDefined = true
-		}
-	}
-	return releaseToDefined
 }
 
 func makeColumnPattern(columnCount int) string {
