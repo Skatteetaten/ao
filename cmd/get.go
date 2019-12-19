@@ -164,7 +164,7 @@ func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string
 		headers = append(headers, "RELEASE_TO")
 	}
 
-	pattern := makeRowPattern(len(headers))
+	pattern := makeColumnPattern(len(headers))
 
 	for _, spec := range specs {
 		var replicas string
@@ -200,9 +200,9 @@ func checkForReleaseToInSpecs(specs []deploymentspec.DeploymentSpec) bool {
 	return releaseToDefined
 }
 
-func makeRowPattern(len int) string {
+func makeColumnPattern(columnCount int) string {
 	var slice []string
-	for i := 0; i < len; i++ {
+	for i := 0; i < columnCount; i++ {
 		slice = append(slice, "%v")
 	}
 	pattern := strings.Join(slice, "\t")
