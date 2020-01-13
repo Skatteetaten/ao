@@ -3,7 +3,7 @@
   "groupId": "no.skatteetaten.aurora",
   "version": "0.0.0",
   "private": false,
-  "license": "Apache2",
+  "license": "Apache-2.0",
   "author": {
     "name": "Skatteetaten"
   },
@@ -13,7 +13,8 @@
     "metadata",
     "public"
   ],
-  "devDependencies": {
-    "aurora-openshift": "0.0.12"
+  "devDependencies": {},
+  "dependencies": {
+    "@skatteetaten/ci-scripts": "^2.0.2"
   }
 }
