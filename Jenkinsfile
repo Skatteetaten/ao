@@ -98,6 +98,7 @@ timestamps {
 
         if ('aurora-nexus' == props.deployTo) {
           stage('Deploy to Nexus') {
+            npm.pack()
             npm.deployToNexus(props.version, props.deliveryBundleClassifier)
           }
         }
