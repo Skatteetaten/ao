@@ -7,6 +7,7 @@ def overrides = [
     checkstyle : false,
     jiraFiksetIKomponentversjon: true,
     chatRoom: "#aos-notifications",
+    iq: false,
     sonarQube: false,
     nodeVersion: "10",
     applicationType: "nodejs",
