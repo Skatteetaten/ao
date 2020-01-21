@@ -62,6 +62,7 @@ func (api *ApiClient) GetAuroraConfig() (*auroraconfig.AuroraConfig, error) {
 }
 
 func (api *ApiClient) GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, error) {
+	// Deprecated: Remove when it is fully replaced by graphql
 	endpoint := fmt.Sprintf("/auroraconfignames")
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)

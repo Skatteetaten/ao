@@ -1,31 +1,36 @@
 package client
 
 import (
-	"net/http"
-
-	"github.com/pkg/errors"
+	"strconv"
 )
 
-type (
-	ClientConfig struct {
-		GitUrlPattern string `json:"gitUrlPattern"`
-		ApiVersion    int    `json:"apiVersion"`
-	}
-)
+type ClientConfig struct {
+	GitUrlPattern string `json:"gitUrlPattern"`
+	ApiVersion    int    `json:"apiVersion"`
+}
 
 func (api *ApiClient) GetClientConfig() (*ClientConfig, error) {
-	endpoint := "/clientconfig"
+	clientConfigGraphqlRequest := `{auroraApiMetadata{clientConfig{gitUrlPattern apiVersion}}}`
+	type ClientConfigResponse struct {
+		AuroraApiMetadata struct {
+			ClientConfig struct {
+				GitUrlPattern string `json:"gitUrlPattern"`
+				ApiVersion    string `json:"apiVersion"`
+			}
+		}
+	}
 
-	response, err := api.Do(http.MethodGet, endpoint, nil)
-	if err != nil {
+	var clientConfigResponse ClientConfigResponse
+	if err := api.RunGraphQl(clientConfigGraphqlRequest, &clientConfigResponse); err != nil {
 		return nil, err
 	}
 
-	var gc ClientConfig
-	err = response.ParseFirstItem(&gc)
+	// Need to convert to int for reuse in existing domain logic
+	apiVersion, err := strconv.Atoi(clientConfigResponse.AuroraApiMetadata.ClientConfig.ApiVersion)
 	if err != nil {
-		return nil, errors.Wrap(err, "git config")
+		return nil, err
 	}
+	gc := ClientConfig{clientConfigResponse.AuroraApiMetadata.ClientConfig.GitUrlPattern, apiVersion}
 
 	return &gc, nil
 }

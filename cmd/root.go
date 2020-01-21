@@ -149,6 +149,7 @@ func initialize(cmd *cobra.Command, args []string) error {
 	if aoConfig.Localhost {
 		// TODO: Move to config?
 		api.Host = "http://localhost:8080"
+		api.GoboHost = "http://localhost:8080"
 	}
 
 	if pFlagRefName != "" {

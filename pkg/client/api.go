@@ -43,6 +43,7 @@ func NewApiClientDefaultRef(host, token, affiliation string) *ApiClient {
 func NewApiClient(host, token, affiliation, refName string) *ApiClient {
 	return &ApiClient{
 		Host:        host,
+		GoboHost:    host,
 		Token:       token,
 		Affiliation: affiliation,
 		RefName:     refName,

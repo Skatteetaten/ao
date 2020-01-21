@@ -29,7 +29,7 @@ var getAffiliationCmd = &cobra.Command{
 	Use:     "affiliations",
 	Short:   "List defined affiliations",
 	Aliases: []string{"affiliation"},
-	Run:     PrintAffiliations,
+	Run:     PrintAffiliationsGraphql,
 }
 var updateClustersCmd = &cobra.Command{
 	Use:   "update-clusters",
@@ -121,24 +121,6 @@ func PrintClusters(cmd *cobra.Command, printAll bool) {
 
 func printClusters(cmd *cobra.Command, args []string) {
 	PrintClusters(cmd, flagShowAll)
-}
-
-func PrintAffiliations(cmd *cobra.Command, args []string) {
-	acn, err := DefaultApiClient.GetAuroraConfigNames()
-	if err != nil {
-		return
-	}
-
-	var mark string
-	for _, affiliation := range *acn {
-		if affiliation == AO.Affiliation {
-			mark = "*"
-		} else {
-			mark = " "
-		}
-		line := fmt.Sprintf("  %s %s", mark, affiliation)
-		cmd.Println(line)
-	}
 }
 
 func SetRefName(cmd *cobra.Command, args []string) error {
