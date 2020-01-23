@@ -1,12 +1,13 @@
 #!/usr/bin/env groovy
 
 def overrides = [
-    scriptVersion  : 'v6',
+    scriptVersion  : 'v7',
     pipelineScript: 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
     credentialsId: "github",
     checkstyle : false,
     jiraFiksetIKomponentversjon: true,
     chatRoom: "#aos-notifications",
+    iq: false,
     sonarQube: false,
     nodeVersion: "10",
     applicationType: "nodejs",
@@ -93,11 +94,12 @@ timestamps {
 
       dir('website') {
         npm.run("cache verify")
-        npm.install(props.npmInstallSwitches)
+        npm.run("ci")
 
         if ('aurora-nexus' == props.deployTo) {
           stage('Deploy to Nexus') {
-            npm.deployToNexus(props.version)
+            npm.pack()
+            npm.deployToNexus(props.version, props.deliveryBundleClassifier)
           }
         }
 
