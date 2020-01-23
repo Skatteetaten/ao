@@ -2,7 +2,7 @@
   "auroraApiMetadata": {
     "clientConfig": {
       "gitUrlPattern": "file:///tmp/boober/%s",
-      "apiVersion": "2"
+      "apiVersion": 2
     }
   }
 }}
