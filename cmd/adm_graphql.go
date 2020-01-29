@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func PrintAffiliationsGraphql(cmd *cobra.Command, args []string) {
+func PrintAffiliationsGraphql(cmd *cobra.Command, args []string) error {
 
 	configNamesGraphqlRequest := `{auroraApiMetadata{configNames}}`
 	type ConfigNamesResponse struct {
@@ -16,7 +16,7 @@ func PrintAffiliationsGraphql(cmd *cobra.Command, args []string) {
 
 	var configNamesResponse ConfigNamesResponse
 	if err := DefaultApiClient.RunGraphQl(configNamesGraphqlRequest, &configNamesResponse); err != nil {
-		return
+		return err
 	}
 
 	var mark string
@@ -29,4 +29,6 @@ func PrintAffiliationsGraphql(cmd *cobra.Command, args []string) {
 		line := fmt.Sprintf("  %s %s", mark, affiliation)
 		cmd.Println(line)
 	}
+
+	return nil
 }

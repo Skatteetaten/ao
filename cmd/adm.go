@@ -29,7 +29,7 @@ var getAffiliationCmd = &cobra.Command{
 	Use:     "affiliations",
 	Short:   "List defined affiliations",
 	Aliases: []string{"affiliation"},
-	Run:     PrintAffiliationsGraphql,
+	RunE:    PrintAffiliationsGraphql,
 }
 var updateClustersCmd = &cobra.Command{
 	Use:   "update-clusters",
