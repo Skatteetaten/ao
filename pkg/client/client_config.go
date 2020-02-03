@@ -1,31 +1,23 @@
 package client
 
-import (
-	"net/http"
-
-	"github.com/pkg/errors"
-)
-
-type (
-	ClientConfig struct {
-		GitUrlPattern string `json:"gitUrlPattern"`
-		ApiVersion    int    `json:"apiVersion"`
-	}
-)
+type ClientConfig struct {
+	GitUrlPattern string `json:"gitUrlPattern"`
+	ApiVersion    int    `json:"apiVersion"`
+}
 
 func (api *ApiClient) GetClientConfig() (*ClientConfig, error) {
-	endpoint := "/clientconfig"
+	clientConfigGraphqlRequest := `{auroraApiMetadata{clientConfig{gitUrlPattern apiVersion}}}`
+	type ClientConfigResponse struct {
+		AuroraApiMetadata struct {
+			ClientConfig ClientConfig
+		}
+	}
 
-	response, err := api.Do(http.MethodGet, endpoint, nil)
-	if err != nil {
+	var clientConfigResponse ClientConfigResponse
+	if err := api.RunGraphQl(clientConfigGraphqlRequest, &clientConfigResponse); err != nil {
 		return nil, err
 	}
-
-	var gc ClientConfig
-	err = response.ParseFirstItem(&gc)
-	if err != nil {
-		return nil, errors.Wrap(err, "git config")
-	}
+	gc := clientConfigResponse.AuroraApiMetadata.ClientConfig
 
 	return &gc, nil
 }

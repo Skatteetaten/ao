@@ -30,6 +30,7 @@ type ResponseBundle struct {
 
 type ApiClient struct {
 	Host        string
+	GoboHost    string
 	Token       string
 	Affiliation string
 	RefName     string
@@ -42,6 +43,7 @@ func NewApiClientDefaultRef(host, token, affiliation string) *ApiClient {
 func NewApiClient(host, token, affiliation, refName string) *ApiClient {
 	return &ApiClient{
 		Host:        host,
+		GoboHost:    host,
 		Token:       token,
 		Affiliation: affiliation,
 		RefName:     refName,

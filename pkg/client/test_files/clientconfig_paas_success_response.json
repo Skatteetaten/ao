@@ -1,8 +1,0 @@
-{
-  "success": true,
-  "message": "OK",
-  "items": [{
-    "gitUrlPattern": "file:///tmp/boober/%s"
-  }],
-  "count": 1
-}
