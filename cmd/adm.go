@@ -102,7 +102,7 @@ func PrintClusters(cmd *cobra.Command, printAll bool) {
 			loggedIn = "Yes"
 		}
 
-		apiUrl := cluster.BooberUrl
+		apiUrl := fmt.Sprintf("%s %s", cluster.BooberUrl, cluster.GoboUrl)
 
 		api := ""
 		if name == AO.APICluster {
@@ -115,7 +115,7 @@ func PrintClusters(cmd *cobra.Command, printAll bool) {
 		rows = append(rows, line)
 	}
 
-	header := "\tCLUSTER NAME\tREACHABLE\tLOGGED IN\tAPI\tURL\tAPI_URL"
+	header := "\tCLUSTER NAME\tREACHABLE\tLOGGED IN\tAPI\tURL\tAPI_URLS"
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 }
 
