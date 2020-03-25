@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+const pathSep = "/"
+
 // SetValue sets a value in an AuroraConfigFile on specified path
 func SetValue(auroraConfigFile *AuroraConfigFile, path string, value string) error {
 	fmt.Printf("Got path: %s, value: %s\n", path, value)
@@ -21,7 +23,7 @@ func SetValue(auroraConfigFile *AuroraConfigFile, path string, value string) err
 		return err
 	}
 
-	// Call the recursive parsing to set the value
+	// Call the recursive parsing of content to locate and set the value
 	if err := setOrCreate(&jsonContent, pathParts, value); err != nil {
 		return err
 	}
@@ -36,9 +38,15 @@ func SetValue(auroraConfigFile *AuroraConfigFile, path string, value string) err
 }
 
 func getPathParts(path string) []string {
-	pathParts := strings.Split(path, "/")
-	if strings.HasPrefix(path, "/") {
+	if path == "" {
+		return nil
+	}
+	pathParts := strings.Split(path, pathSep)
+	if strings.HasPrefix(path, pathSep) {
 		pathParts = pathParts[1:]
+	}
+	if strings.HasSuffix(path, pathSep) {
+		pathParts = pathParts[:len(pathParts)-1]
 	}
 	fmt.Printf("Got pathparts: %s\n", pathParts)
 	return pathParts
