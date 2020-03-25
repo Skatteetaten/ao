@@ -121,7 +121,20 @@ func TestSetOrCreate_Do(t *testing.T) {
 
 		err = setOrCreate(&jsonContent, pathParts, value)
 		assert.NotNil(t, err)
-		assert.Equal(t, "No names in path", err.Error())
+		assert.Equal(t, "Path can not be empty", err.Error())
+	})
+
+	t.Run("Should fail on numeric entry in path", func(t *testing.T) {
+		content := `{"baseFile": "myapp.json", "config": {"MYAPP_SOME_KEY": "somevalue"}}`
+		pathParts := []string{"config", "270"}
+		value := "newValue"
+		var jsonContent map[string]interface{}
+		err := json.Unmarshal([]byte(content), &jsonContent)
+		assert.Nil(t, err)
+
+		err = setOrCreate(&jsonContent, pathParts, value)
+		assert.NotNil(t, err)
+		assert.Equal(t, "Path can not have numeric entries", err.Error())
 	})
 }
 
@@ -136,14 +149,14 @@ func TestGetPartsPath_Do(t *testing.T) {
 		assert.Equal(t, "someattribute", pathParts[0])
 	})
 
-	t.Run("Should return correct response on multiple step path: /one/2/three/four/FIVE/Six/S_E_V_E_N", func(t *testing.T) {
+	t.Run("Should return correct response on multiple step path: /one/number2/three/four/FIVE/Six/S_E_V_E_N", func(t *testing.T) {
 
-		pathParts := getPathParts("/one/2/three/four/FIVE/Six/S_E_V_E_N")
+		pathParts := getPathParts("/one/number2/three/four/FIVE/Six/S_E_V_E_N")
 
 		assert.NotNil(t, pathParts)
 		assert.Equal(t, 7, len(pathParts))
 		assert.Equal(t, "one", pathParts[0])
-		assert.Equal(t, "2", pathParts[1])
+		assert.Equal(t, "number2", pathParts[1])
 		assert.Equal(t, "three", pathParts[2])
 		assert.Equal(t, "four", pathParts[3])
 		assert.Equal(t, "FIVE", pathParts[4])

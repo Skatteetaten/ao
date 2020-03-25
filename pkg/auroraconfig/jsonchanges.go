@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/sirupsen/logrus"
+	"regexp"
 	"strings"
 )
 
@@ -53,9 +54,13 @@ func getPathParts(path string) []string {
 
 func setOrCreate(jsonContent *map[string]interface{}, pathParts []string, value string) error {
 	if len(pathParts) == 0 {
-		return errors.New("No names in path")
+		return errors.New("Path can not be empty")
 	}
 	firstOfPath := pathParts[0]
+	isNumber, _ := regexp.MatchString(`^\d+$`, firstOfPath)
+	if isNumber {
+		return errors.New("Path can not have numeric entries")
+	}
 
 	if len(pathParts) == 1 {
 		setValue(jsonContent, firstOfPath, value)
@@ -67,7 +72,9 @@ func setOrCreate(jsonContent *map[string]interface{}, pathParts []string, value 
 			(*jsonContent)[firstOfPath] = make(map[string]interface{})
 		}
 		subContent := (*jsonContent)[firstOfPath].(map[string]interface{})
-		setOrCreate(&subContent, restOfPath, value)
+		if err := setOrCreate(&subContent, restOfPath, value); err != nil {
+			return err
+		}
 	}
 
 	return nil
