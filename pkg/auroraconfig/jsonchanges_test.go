@@ -6,6 +6,115 @@ import (
 	"testing"
 )
 
+func Test_removeEntry_Do(t *testing.T) {
+	t.Run("Should remove entry from normal JSON content", func(t *testing.T) {
+		content := `{
+		    "baseFile": "myapp.json",
+			"cluster": "utv",
+			"config": {
+			    "MYAPP_SOME_KEY": "somevalue",
+				"MYAPP_SOME_OTHER_KEY": "someothervalue",
+                "MYAPP_KEYTOREMOVE": "sometrash"
+			},
+			"replicas": "1",
+			"version": "1.2.3"
+		}`
+		pathParts := []string{"config", "MYAPP_KEYTOREMOVE"}
+		var jsonContent map[string]interface{}
+		err := json.Unmarshal([]byte(content), &jsonContent)
+		assert.Nil(t, err)
+
+		err = removeEntry(&jsonContent, pathParts)
+		assert.Nil(t, err)
+
+		changedjsonbytearray, err := json.Marshal(jsonContent)
+		assert.Nil(t, err)
+		changedjson := string(changedjsonbytearray)
+		assert.NotNil(t, changedjson)
+		assert.NotContains(t, changedjson, "MYAPP_KEYTOREMOVE")
+		assert.NotContains(t, changedjson, "sometrash")
+	})
+	t.Run("Should fail when trying to remove non-existant entry", func(t *testing.T) {
+		content := `{
+		    "baseFile": "myapp.json",
+			"cluster": "utv",
+			"config": {
+			    "MYAPP_SOME_KEY": "somevalue",
+				"MYAPP_SOME_OTHER_KEY": "someothervalue"
+			},
+			"replicas": "1",
+			"version": "1.2.3"
+		}`
+		pathParts := []string{"config", "MYAPP_KEYTOREMOVE"}
+		var jsonContent map[string]interface{}
+		err := json.Unmarshal([]byte(content), &jsonContent)
+		assert.Nil(t, err)
+
+		err = removeEntry(&jsonContent, pathParts)
+		assert.NotNil(t, err)
+		assert.Contains(t, "No such path in target JSON document", err.Error())
+	})
+	t.Run("Should fail when trying to remove named entry without full path", func(t *testing.T) {
+		content := `{
+		    "baseFile": "myapp.json",
+			"cluster": "utv",
+			"config": {
+			    "MYAPP_SOME_KEY": "somevalue",
+				"MYAPP_SOME_OTHER_KEY": "someothervalue",
+                "MYAPP_KEYTOREMOVE": "sometrash"
+			},
+			"replicas": "1",
+			"version": "1.2.3"
+		}`
+		pathParts := []string{"MYAPP_KEYTOREMOVE"}
+		var jsonContent map[string]interface{}
+		err := json.Unmarshal([]byte(content), &jsonContent)
+		assert.Nil(t, err)
+
+		err = removeEntry(&jsonContent, pathParts)
+		assert.NotNil(t, err)
+		assert.Contains(t, "No such path in target JSON document", err.Error())
+
+		changedjsonbytearray, err := json.Marshal(jsonContent)
+		assert.Nil(t, err)
+		changedjson := string(changedjsonbytearray)
+		assert.NotNil(t, changedjson)
+		assert.Contains(t, changedjson, "MYAPP_KEYTOREMOVE")
+		assert.Contains(t, changedjson, "sometrash")
+	})
+	t.Run("Should remove subtree if it matches the key", func(t *testing.T) {
+		content := `{
+		    "baseFile": "myapp.json",
+			"cluster": "utv",
+			"config": {
+			    "MYAPP_SOME_KEY": "somevalue",
+				"MYAPP_SOME_OTHER_KEY": "someothervalue"
+			},
+			"replicas": "1",
+			"version": "1.2.3"
+		}`
+		pathParts := []string{"config"}
+		var jsonContent map[string]interface{}
+		err := json.Unmarshal([]byte(content), &jsonContent)
+		assert.Nil(t, err)
+
+		err = removeEntry(&jsonContent, pathParts)
+		assert.Nil(t, err)
+
+		changedjsonbytearray, err := json.Marshal(jsonContent)
+		assert.Nil(t, err)
+		changedjson := string(changedjsonbytearray)
+		assert.NotNil(t, changedjson)
+		assert.NotContains(t, changedjson, "config")
+		assert.NotContains(t, changedjson, "MYAPP_SOME_KEY")
+		assert.NotContains(t, changedjson, "somevalue")
+		assert.NotContains(t, changedjson, "MYAPP_SOME_OTHER_KEY")
+		assert.NotContains(t, changedjson, "someothervalue")
+		assert.Equal(t, 4, len(jsonContent))
+	})
+
+}
+
 func TestSetValue_Do(t *testing.T) {
 	t.Run("Should set value in AuroraConfigFile (happy test)", func(t *testing.T) {
 		content := `{
@@ -18,7 +127,8 @@ func TestSetValue_Do(t *testing.T) {
 		path := "/config/MYAPP_NEW_KEY"
 		value := "newValue"
 
-		SetValue(&auroraConfigFile, path, value)
+		err := SetValue(&auroraConfigFile, path, value)
+		assert.Nil(t, err)
 
 		changedjson := auroraConfigFile.Contents
 		assert.NotNil(t, changedjson)
@@ -46,7 +156,8 @@ func TestSetOrCreate_Do(t *testing.T) {
 		err := json.Unmarshal([]byte(content), &jsonContent)
 		assert.Nil(t, err)
 
-		setOrCreate(&jsonContent, pathParts, value)
+		err = setOrCreate(&jsonContent, pathParts, value)
+		assert.Nil(t, err)
 
 		changedjsonbytearray, err := json.Marshal(jsonContent)
 		assert.Nil(t, err)
@@ -64,7 +175,8 @@ func TestSetOrCreate_Do(t *testing.T) {
 		err := json.Unmarshal([]byte(content), &jsonContent)
 		assert.Nil(t, err)
 
-		setOrCreate(&jsonContent, pathParts, value)
+		err = setOrCreate(&jsonContent, pathParts, value)
+		assert.Nil(t, err)
 
 		changedjsonbytearray, err := json.Marshal(jsonContent)
 		assert.Nil(t, err)
@@ -83,7 +195,8 @@ func TestSetOrCreate_Do(t *testing.T) {
 		err := json.Unmarshal([]byte(content), &jsonContent)
 		assert.Nil(t, err)
 
-		setOrCreate(&jsonContent, pathParts, value)
+		err = setOrCreate(&jsonContent, pathParts, value)
+		assert.Nil(t, err)
 
 		changedjsonbytearray, err := json.Marshal(jsonContent)
 		assert.Nil(t, err)
@@ -100,7 +213,8 @@ func TestSetOrCreate_Do(t *testing.T) {
 		err := json.Unmarshal([]byte(content), &jsonContent)
 		assert.Nil(t, err)
 
-		setOrCreate(&jsonContent, pathParts, value)
+		err = setOrCreate(&jsonContent, pathParts, value)
+		assert.Nil(t, err)
 
 		changedjsonbytearray, err := json.Marshal(jsonContent)
 		assert.Nil(t, err)
