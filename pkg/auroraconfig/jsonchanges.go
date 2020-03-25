@@ -3,7 +3,7 @@ package auroraconfig
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"github.com/sirupsen/logrus"
 	"strings"
 )
 
@@ -11,13 +11,12 @@ const pathSep = "/"
 
 // SetValue sets a value in an AuroraConfigFile on specified path
 func SetValue(auroraConfigFile *AuroraConfigFile, path string, value string) error {
-	fmt.Printf("Got path: %s, value: %s\n", path, value)
-
 	pathParts := getPathParts(path)
 	if len(pathParts) == 0 {
 		return errors.New("Too short path. No named key.")
 	}
 
+	// Unmarshal JSON content from file
 	var jsonContent map[string]interface{}
 	if err := json.Unmarshal([]byte(auroraConfigFile.Contents), &jsonContent); err != nil {
 		return err
@@ -28,6 +27,7 @@ func SetValue(auroraConfigFile *AuroraConfigFile, path string, value string) err
 		return err
 	}
 
+	// Marshal changed content back into file
 	changedjson, err := json.Marshal(jsonContent)
 	if err != nil {
 		return err
@@ -48,7 +48,6 @@ func getPathParts(path string) []string {
 	if strings.HasSuffix(path, pathSep) {
 		pathParts = pathParts[:len(pathParts)-1]
 	}
-	fmt.Printf("Got pathparts: %s\n", pathParts)
 	return pathParts
 }
 
@@ -56,19 +55,15 @@ func setOrCreate(jsonContent *map[string]interface{}, pathParts []string, value 
 	if len(pathParts) == 0 {
 		return errors.New("No names in path")
 	}
-
-	fmt.Printf("Handling %s for value: %s\n", pathParts, value)
-	fmt.Printf("--- jsonContent %s\n", jsonContent)
-
 	firstOfPath := pathParts[0]
-	fmt.Printf("--- firstOfPath: %s\n", firstOfPath)
+
 	if len(pathParts) == 1 {
 		setValue(jsonContent, firstOfPath, value)
 	} else {
 		restOfPath := pathParts[1:]
 		_, ok := (*jsonContent)[firstOfPath].(map[string]interface{})
 		if !ok {
-			fmt.Printf("No key %s found. Creating it.\n", firstOfPath)
+			logrus.Debugf("No key %s found. Creating it.\n", firstOfPath)
 			(*jsonContent)[firstOfPath] = make(map[string]interface{})
 		}
 		subContent := (*jsonContent)[firstOfPath].(map[string]interface{})
@@ -79,7 +74,7 @@ func setOrCreate(jsonContent *map[string]interface{}, pathParts []string, value 
 }
 
 func setValue(jsonContent *map[string]interface{}, key string, value string) error {
-	fmt.Printf("Setting %s = %s\n", key, value)
+	logrus.Debugf("Setting %s = %s\n", key, value)
 	(*jsonContent)[key] = value
 	return nil
 }

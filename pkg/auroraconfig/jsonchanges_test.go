@@ -53,7 +53,7 @@ func TestSetOrCreate_Do(t *testing.T) {
 		assert.Equal(t, `{"MYAPP_NEW_KEY":"newValue"}`, changedjson)
 	})
 
-	t.Run("Should set multi level value on small JSON content", func(t *testing.T) {
+	t.Run("Should set new value on new multi level path", func(t *testing.T) {
 		content := `{"baseFile": "myapp.json"}`
 		pathParts := []string{"first", "second", "MYAPP_NEW_KEY"}
 		value := "newValue"

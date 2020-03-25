@@ -1,11 +1,9 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
-	"github.com/spf13/cobra"
-
 	"github.com/skatteetaten/ao/pkg/service"
+	"github.com/spf13/cobra"
 )
 
 const setExample = `  ao set foo.json /pause true
@@ -74,8 +72,6 @@ func SetNew(cmd *cobra.Command, args []string) error {
 	if err := auroraconfig.SetValue(auroraConfigFile, path, value); err != nil {
 		return err
 	}
-
-	fmt.Printf("changed file content: %s\n", auroraConfigFile.ToPrettyJson())
 
 	// Save config file
 	if err := DefaultApiClient.PutAuroraConfigFile(auroraConfigFile, eTag); err != nil {
