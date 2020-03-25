@@ -6,6 +6,28 @@ import (
 	"testing"
 )
 
+func TestSetValue_Do(t *testing.T) {
+	t.Run("Should set value in AuroraConfigFile (happy test)", func(t *testing.T) {
+		content := `{
+		    "baseFile": "myapp.json"
+		}`
+		auroraConfigFile := AuroraConfigFile{
+			Name:     "myconfigfile.json",
+			Contents: content,
+		}
+		path := "/config/MYAPP_NEW_KEY"
+		value := "newValue"
+
+		SetValue(&auroraConfigFile, path, value)
+
+		changedjson := auroraConfigFile.Contents
+		assert.NotNil(t, changedjson)
+		assert.Contains(t, changedjson, "MYAPP_NEW_KEY")
+		assert.Contains(t, changedjson, "newValue")
+		assert.Equal(t, "{\n  \"baseFile\": \"myapp.json\",\n  \"config\": {\n    \"MYAPP_NEW_KEY\": \"newValue\"\n  }\n}", changedjson)
+	})
+}
+
 func TestSetOrCreate_Do(t *testing.T) {
 	t.Run("Should set value on normal JSON content", func(t *testing.T) {
 		content := `{

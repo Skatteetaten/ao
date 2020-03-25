@@ -27,12 +27,12 @@ func SetValue(auroraConfigFile *AuroraConfigFile, path string, value string) err
 		return err
 	}
 
-	// Marshal changed content back into file
-	changedjson, err := json.Marshal(jsonContent)
+	// Marshal changed content prettyfied back into file
+	prettyjson, err := json.MarshalIndent(jsonContent, "", "  ")
 	if err != nil {
 		return err
 	}
-	auroraConfigFile.Contents = string(changedjson)
+	auroraConfigFile.Contents = string(prettyjson)
 
 	return nil
 }
