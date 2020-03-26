@@ -124,7 +124,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !getDeployConfirmation(flagNoPrompt, filteredDeploymentSpecs, cmd.OutOrStdout()) {
+	if !getDeployConfirmation(flagNoPrompt, filteredDeploymentSpecs, flagVersion, cmd.OutOrStdout()) {
 		return errors.New("No applications to deploy")
 	}
 
@@ -173,8 +173,8 @@ func parseOverride(overrides []string) (map[string]string, error) {
 	return returnMap, nil
 }
 
-func getDeployConfirmation(force bool, filteredDeploymentSpecs []deploymentspec.DeploymentSpec, out io.Writer) bool {
-	header, rows := GetDeploySpecTable(filteredDeploymentSpecs)
+func getDeployConfirmation(force bool, filteredDeploymentSpecs []deploymentspec.DeploymentSpec, newVersion string, out io.Writer) bool {
+	header, rows := GetDeploySpecTable(filteredDeploymentSpecs, newVersion)
 	DefaultTablePrinter(header, rows, out)
 
 	shouldDeploy := true

@@ -147,12 +147,12 @@ func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *co
 	if err != nil {
 		return err
 	}
-	header, rows := GetDeploySpecTable(specs)
+	header, rows := GetDeploySpecTable(specs, "")
 	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 	return nil
 }
 
-func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string) {
+func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec, newVersion string) (string, []string) {
 	var rows []string
 	releaseToDefined := false
 	headers := []string{"CLUSTER", "ENVIRONMENT", "APPLICATION", "VERSION", "REPLICAS", "TYPE", "DEPLOY_STRATEGY"}
@@ -177,8 +177,11 @@ func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec) (string, []string
 		} else {
 			replicas = fmt.Sprint(spec.GetString("replicas"))
 		}
-
-		specValues := []interface{}{spec.Cluster(), spec.Environment(), spec.Name(), spec.Version(), replicas, spec.GetString("type"), spec.GetString("deployStrategy/type")}
+		specVersion := spec.Version()
+		if newVersion != "" && len(specs) == 1 {
+			specVersion = newVersion
+		}
+		specValues := []interface{}{spec.Cluster(), spec.Environment(), spec.Name(), specVersion, replicas, spec.GetString("type"), spec.GetString("deployStrategy/type")}
 		if releaseToDefined {
 			specValues = append(specValues, spec.GetString("releaseTo"))
 		}
