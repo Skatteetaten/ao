@@ -96,7 +96,7 @@ func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	applications, err := service.GetApplications(apiClient, search, "", flagExcludes, cmd.OutOrStdout())
+	applications, err := service.GetApplications(apiClient, search, flagExcludes)
 	if err != nil {
 		return err
 	} else if len(applications) == 0 {

@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"io"
 	"sort"
 	"strings"
@@ -97,11 +98,15 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	applications, err := service.GetApplications(apiClient, search, flagVersion, flagExcludes, cmd.OutOrStdout())
+	applications, err := service.GetApplications(apiClient, search, flagExcludes)
 	if err != nil {
 		return err
 	} else if len(applications) == 0 {
 		return errors.New("No applications to deploy")
+	}
+
+	if flagVersion != "" && len(applications) > 1 {
+		return errors.New("Deploy with version does only support one application")
 	}
 
 	filteredDeploymentSpecs, err := service.GetFilteredDeploymentSpecs(apiClient, applications, flagCluster)
@@ -121,6 +126,13 @@ func deploy(cmd *cobra.Command, args []string) error {
 
 	if !getDeployConfirmation(flagNoPrompt, filteredDeploymentSpecs, cmd.OutOrStdout()) {
 		return errors.New("No applications to deploy")
+	}
+
+	if flagVersion != "" {
+		err = updateVersion(apiClient, applications, flagVersion, cmd.OutOrStdout())
+		if err != nil {
+			return err
+		}
 	}
 
 	result, err := deployToReachableClusters(getApplicationDeploymentClient, partitions, overrideConfig)
@@ -315,4 +327,37 @@ func getDeployResultTable(deploys []client.DeployResult) (string, []string) {
 
 	header := "\x1b[00mSTATUS\x1b[0m\tCLUSTER\tENVIRONMENT\tAPPLICATION\tVERSION\tDEPLOY_ID\tMESSAGE"
 	return header, rows
+}
+
+func updateVersion(apiClient client.AuroraConfigClient, applications []string, version string, out io.Writer) error {
+	path := "/version"
+
+	filenames, err := apiClient.GetFileNames()
+	if err != nil {
+		return err
+	}
+	fileName, err := filenames.Find(applications[0])
+	if err != nil {
+		return err
+	}
+
+	// Load config file
+	auroraConfigFile, eTag, err := apiClient.GetAuroraConfigFile(fileName)
+	if err != nil {
+		return err
+	}
+
+	// Set new version
+	if err := auroraconfig.SetValue(auroraConfigFile, path, version); err != nil {
+		return err
+	}
+
+	// Save config file
+	if err := apiClient.PutAuroraConfigFile(auroraConfigFile, eTag); err != nil {
+		return err
+	}
+
+	fmt.Fprintf(out, "%s has been updated with %s %s\n", fileName, path, version)
+
+	return nil
 }
