@@ -16,7 +16,6 @@ type AuroraConfigClient interface {
 	GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, error)
 	PutAuroraConfig(endpoint string, payload []byte) (string, error)
 	ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) (string, error)
-	PatchAuroraConfigFile(fileName string, operation auroraconfig.JsonPatchOp) error
 	GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error)
 	PutAuroraConfigFile(file *auroraconfig.AuroraConfigFile, eTag string) error
 }
@@ -163,40 +162,6 @@ func (api *ApiClient) GetAuroraConfigFile(fileName string) (*auroraconfig.Aurora
 	eTag := bundle.HttpResponse.Header.Get("ETag")
 
 	return &file, eTag, nil
-}
-
-func (api *ApiClient) PatchAuroraConfigFile(fileName string, operation auroraconfig.JsonPatchOp) error {
-	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, fileName)
-
-	_, _, err := api.GetAuroraConfigFile(fileName)
-	if err != nil {
-		return err
-	}
-
-	op, err := json.Marshal([]auroraconfig.JsonPatchOp{operation})
-	if err != nil {
-		return err
-	}
-
-	payload := auroraConfigFilePayload{
-		Content: string(op),
-	}
-
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-
-	response, err := api.Do(http.MethodPatch, endpoint, data)
-	if err != nil {
-		return err
-	}
-
-	if !response.Success {
-		return response.Error()
-	}
-
-	return nil
 }
 
 func (api *ApiClient) PutAuroraConfigFile(file *auroraconfig.AuroraConfigFile, eTag string) error {

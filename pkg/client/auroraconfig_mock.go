@@ -41,11 +41,6 @@ func (api *AuroraConfigClientMock) ValidateAuroraConfig(ac *auroraconfig.AuroraC
 	return "", errors.New("Not implemented")
 }
 
-// PatchAuroraConfigFile default mock implementation
-func (api *AuroraConfigClientMock) PatchAuroraConfigFile(fileName string, operation auroraconfig.JsonPatchOp) error {
-	return errors.New("Not implemented")
-}
-
 // GetAuroraConfigFile default mock implementation
 func (api *AuroraConfigClientMock) GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error) {
 	return nil, "", errors.New("Not implemented")

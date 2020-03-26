@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"regexp"
-	"strings"
 )
 
 type (
@@ -18,12 +17,6 @@ type (
 	AuroraConfigFile struct {
 		Name     string `json:"name"`
 		Contents string `json:"contents"`
-	}
-
-	JsonPatchOp struct {
-		OP    string      `json:"op"`
-		Path  string      `json:"path"`
-		Value interface{} `json:"value"`
 	}
 )
 
@@ -41,13 +34,6 @@ func GetApplicationRefs(filenames FileNames, pattern string, excludes []string) 
 	}
 
 	return applications, nil
-}
-
-func (op JsonPatchOp) Validate() error {
-	if !strings.HasPrefix(op.Path, "/") {
-		return ErrJsonPathPrefix
-	}
-	return nil
 }
 
 func (f *AuroraConfigFile) ToPrettyJson() string {
