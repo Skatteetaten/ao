@@ -1,5 +1,5 @@
 hash: e2d47b9bd6e91cd237756c6c5a0b4f391898dd431c1ec7cf285bfb7bfe5e12b9
-updated: 2020-01-17T15:19:05.783608452+01:00
+updated: 2020-04-20T11:05:40.641355769+02:00
 imports:
 - name: github.com/andybalholm/crlf
   version: 670099aa064ff74d1d109d04f02fe3a5b2e5030f
@@ -32,7 +32,7 @@ imports:
   subpackages:
   - fuzzy
 - name: github.com/sirupsen/logrus
-  version: 839c75faf7f98a33d445d181f3018b5c3409a45e
+  version: d417be0fe654de640a82370515129985b407c7e3
 - name: github.com/spf13/cobra
   version: 3c0b56b677e04926dfa835a1b3f11cd4f62f076e
 - name: github.com/spf13/pflag
@@ -59,4 +59,6 @@ imports:
   subpackages:
   - core
   - terminal
+- name: gopkg.in/yaml.v2
+  version: 53403b58ad1b561927d19068c655246f2db79d48
 testImports: []
