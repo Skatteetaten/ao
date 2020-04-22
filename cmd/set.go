@@ -12,7 +12,7 @@ const setExample = `  ao set foo.json /pause true
   ao set test/foo.yaml /config/IMPORTANT_ENV 'Hello World'`
 
 var setCmd = &cobra.Command{
-	Use:         "set <file> <json-path> <value>",
+	Use:         "set <file> <path-to-key> <value>",
 	Short:       "Set a single configuration value in the current AuroraConfig",
 	Annotations: map[string]string{"type": "remote"},
 	Example:     setExample,

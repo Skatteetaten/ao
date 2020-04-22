@@ -12,8 +12,8 @@ const unsetExample = `  ao unset foo.json /pause
   ao unset test/bar.yaml /config/DEBUG`
 
 var unsetCmd = &cobra.Command{
-	Use:         "unset <file> <json-path>",
-	Short:       "Remove a single configuration entry in the current AuroraConfig",
+	Use:         "unset <file> <path-to-key>",
+	Short:       "Remove a single configuration key from the current AuroraConfig",
 	Annotations: map[string]string{"type": "remote"},
 	Example:     unsetExample,
 	RunE:        Unset,
