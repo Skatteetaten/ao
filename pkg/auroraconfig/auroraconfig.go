@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"regexp"
+	"strings"
 )
 
 type (
@@ -49,6 +50,10 @@ func (f *AuroraConfigFile) ToPrettyJson() string {
 	}
 
 	return string(data)
+}
+
+func (f *AuroraConfigFile) IsYaml() bool {
+	return (strings.HasSuffix(strings.ToLower(f.Name), ".yaml") || (strings.HasSuffix(strings.ToLower(f.Name), ".yml")))
 }
 
 func filterExcludes(expressions, applications []string) ([]string, error) {

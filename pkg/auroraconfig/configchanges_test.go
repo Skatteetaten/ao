@@ -125,7 +125,7 @@ replicas: "1"
 version: 1.2.3
 `
 		auroraConfigFile := AuroraConfigFile{
-			Name:     "myconfigfile.yaml",
+			Name:     "myconfigfile.yml",
 			Contents: content,
 		}
 		path := "/config/MYAPP_SOMEKEYTOREMOVE"

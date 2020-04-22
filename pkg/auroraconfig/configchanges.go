@@ -14,9 +14,8 @@ func RemoveEntry(auroraConfigFile *AuroraConfigFile, path string) error {
 	if len(pathParts) == 0 {
 		return errors.New("Too short path. Must have a named key.")
 	}
-	isYaml := strings.HasSuffix(strings.ToLower(auroraConfigFile.Name), ".yaml")
 
-	if isYaml {
+	if auroraConfigFile.IsYaml() {
 		if err := yamlRemoveEntry(auroraConfigFile, pathParts); err != nil {
 			return err
 		}
@@ -35,9 +34,8 @@ func SetValue(auroraConfigFile *AuroraConfigFile, path string, value string) err
 	if len(pathParts) == 0 {
 		return errors.New("Too short path. Must have a named key.")
 	}
-	isYaml := strings.HasSuffix(strings.ToLower(auroraConfigFile.Name), ".yaml")
 
-	if isYaml {
+	if auroraConfigFile.IsYaml() {
 		if err := yamlSetValue(auroraConfigFile, pathParts, value); err != nil {
 			return err
 		}

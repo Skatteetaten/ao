@@ -7,7 +7,9 @@ import (
 
 const unsetExample = `  ao unset foo.json /pause
 
-  ao unset test/foo.json /config/IMPORTANT_ENV`
+  ao unset test/foo.json /config/IMPORTANT_ENV
+
+  ao unset test/bar.yaml /config/DEBUG`
 
 var unsetCmd = &cobra.Command{
 	Use:         "unset <file> <json-path>",
