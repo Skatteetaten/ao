@@ -1,11 +1,9 @@
 package service
 
 import (
-	"os"
-	"testing"
-
 	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 var fileNames = [...]string{
@@ -20,7 +18,7 @@ func Test_getApplications(t *testing.T) {
 
 	apiClient := client.NewAuroraConfigClientMock(fileNames[:])
 
-	actualApplications, err := GetApplications(apiClient, search, "", []string{}, os.Stdout)
+	actualApplications, err := GetApplications(apiClient, search, []string{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +36,7 @@ func Test_getApplicationsWithExclusions(t *testing.T) {
 
 	apiClient := client.NewAuroraConfigClientMock(fileNames[:])
 
-	actualApplications, err := GetApplications(apiClient, search, "", exclusions, os.Stdout)
+	actualApplications, err := GetApplications(apiClient, search, exclusions)
 	if err != nil {
 		t.Fatal(err)
 	}

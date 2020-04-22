@@ -7,11 +7,13 @@ import (
 
 const unsetExample = `  ao unset foo.json /pause
 
-  ao unset test/foo.json /config/IMPORTANT_ENV`
+  ao unset test/foo.json /config/IMPORTANT_ENV
+
+  ao unset test/bar.yaml /config/DEBUG`
 
 var unsetCmd = &cobra.Command{
-	Use:         "unset <file> <json-path>",
-	Short:       "Remove a single configuration value in the current AuroraConfig",
+	Use:         "unset <file> <path-to-key>",
+	Short:       "Remove a single configuration key from the current AuroraConfig",
 	Annotations: map[string]string{"type": "remote"},
 	Example:     unsetExample,
 	RunE:        Unset,
@@ -38,16 +40,20 @@ func Unset(cmd *cobra.Command, args []string) error {
 	}
 
 	path := args[1]
-	op := auroraconfig.JsonPatchOp{
-		OP:   "remove",
-		Path: path,
-	}
 
-	if err = op.Validate(); err != nil {
+	// Load config file
+	auroraConfigFile, eTag, err := DefaultApiClient.GetAuroraConfigFile(fileName)
+	if err != nil {
 		return err
 	}
 
-	if err = DefaultApiClient.PatchAuroraConfigFile(fileName, op); err != nil {
+	// Remove entry at path
+	if err := auroraconfig.RemoveEntry(auroraConfigFile, path); err != nil {
+		return err
+	}
+
+	// Save config file
+	if err := DefaultApiClient.PutAuroraConfigFile(auroraConfigFile, eTag); err != nil {
 		return err
 	}
 

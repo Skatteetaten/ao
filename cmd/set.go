@@ -1,19 +1,18 @@
 package cmd
 
 import (
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/spf13/cobra"
-
-	"github.com/skatteetaten/ao/pkg/service"
 )
 
 const setExample = `  ao set foo.json /pause true
 
   ao set test/about.json /cluster utv
 
-  ao set test/foo.json /config/IMPORTANT_ENV 'Hello World'`
+  ao set test/foo.yaml /config/IMPORTANT_ENV 'Hello World'`
 
 var setCmd = &cobra.Command{
-	Use:         "set <file> <json-path> <value>",
+	Use:         "set <file> <path-to-key> <value>",
 	Short:       "Set a single configuration value in the current AuroraConfig",
 	Annotations: map[string]string{"type": "remote"},
 	Example:     setExample,
@@ -28,11 +27,21 @@ func Set(cmd *cobra.Command, args []string) error {
 	if len(args) != 3 {
 		return cmd.Usage()
 	}
+	fileName, path, value := args[0], args[1], args[2]
 
-	name, path, value := args[0], args[1], args[2]
-
-	fileName, err := service.SetValue(DefaultApiClient, name, path, value)
+	// Load config file
+	auroraConfigFile, eTag, err := DefaultApiClient.GetAuroraConfigFile(fileName)
 	if err != nil {
+		return err
+	}
+
+	// Set value
+	if err := auroraconfig.SetValue(auroraConfigFile, path, value); err != nil {
+		return err
+	}
+
+	// Save config file
+	if err := DefaultApiClient.PutAuroraConfigFile(auroraConfigFile, eTag); err != nil {
 		return err
 	}
 

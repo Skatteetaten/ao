@@ -19,12 +19,6 @@ type (
 		Name     string `json:"name"`
 		Contents string `json:"contents"`
 	}
-
-	JsonPatchOp struct {
-		OP    string      `json:"op"`
-		Path  string      `json:"path"`
-		Value interface{} `json:"value"`
-	}
 )
 
 var (
@@ -43,13 +37,6 @@ func GetApplicationRefs(filenames FileNames, pattern string, excludes []string) 
 	return applications, nil
 }
 
-func (op JsonPatchOp) Validate() error {
-	if !strings.HasPrefix(op.Path, "/") {
-		return ErrJsonPathPrefix
-	}
-	return nil
-}
-
 func (f *AuroraConfigFile) ToPrettyJson() string {
 
 	var out map[string]interface{}
@@ -63,6 +50,10 @@ func (f *AuroraConfigFile) ToPrettyJson() string {
 	}
 
 	return string(data)
+}
+
+func (f *AuroraConfigFile) IsYaml() bool {
+	return (strings.HasSuffix(strings.ToLower(f.Name), ".yaml") || (strings.HasSuffix(strings.ToLower(f.Name), ".yml")))
 }
 
 func filterExcludes(expressions, applications []string) ([]string, error) {

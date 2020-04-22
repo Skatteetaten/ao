@@ -154,67 +154,6 @@ func TestApiClient_GetAuroraConfigFile(t *testing.T) {
 	})
 }
 
-func TestApiClient_PatchAuroraConfigFile(t *testing.T) {
-	t.Run("", func(t *testing.T) {
-		fileName := "test/foo.json"
-
-		res := &BooberResponse{
-			Success: true,
-			Message: "OK",
-			Items:   json.RawMessage(`[{"name":"test/foo.json","contents":"{}","version":"abbcc"}]`),
-			Count:   1,
-		}
-
-		getResponse, err := json.Marshal(&res)
-		if err != nil {
-			t.Error(err)
-		}
-
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			w.WriteHeader(http.StatusOK)
-
-			if req.Method == http.MethodGet {
-				w.Write(getResponse)
-			} else if req.Method == http.MethodPatch {
-				w.Write([]byte(`{"success": true}`))
-			}
-		}))
-		defer ts.Close()
-
-		api := NewApiClientDefaultRef(ts.URL, "", affiliation)
-
-		op := auroraconfig.JsonPatchOp{
-			OP:    "add",
-			Path:  "/version",
-			Value: "develop-SNAPSHOT",
-		}
-
-		err = api.PatchAuroraConfigFile(fileName, op)
-		assert.NoError(t, err)
-	})
-}
-
-func TestJsonPatchOp_Validate(t *testing.T) {
-	cases := []struct {
-		JsonPath string
-		Expected error
-	}{
-		{"/version", nil},
-		{"version", auroraconfig.ErrJsonPathPrefix},
-	}
-
-	for _, tc := range cases {
-		op := auroraconfig.JsonPatchOp{
-			Path: tc.JsonPath,
-		}
-
-		err := op.Validate()
-		if err != nil {
-			assert.Error(t, err, tc.Expected.Error())
-		}
-	}
-}
-
 func TestFileNames_Filter(t *testing.T) {
 	fileNames := auroraconfig.FileNames{"about.json", "boober.json", "test/about.json", "test/boober.json"}
 	deploymentRefs := fileNames.GetApplicationDeploymentRefs()
