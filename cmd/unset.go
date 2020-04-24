@@ -28,7 +28,7 @@ func Unset(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	fileNames, err := DefaultApiClient.GetFileNames()
+	fileNames, err := DefaultAPIClient.GetFileNames()
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func Unset(cmd *cobra.Command, args []string) error {
 	path := args[1]
 
 	// Load config file
-	auroraConfigFile, eTag, err := DefaultApiClient.GetAuroraConfigFile(fileName)
+	auroraConfigFile, eTag, err := DefaultAPIClient.GetAuroraConfigFile(fileName)
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func Unset(cmd *cobra.Command, args []string) error {
 	}
 
 	// Save config file
-	if err := DefaultApiClient.PutAuroraConfigFile(auroraConfigFile, eTag); err != nil {
+	if err := DefaultAPIClient.PutAuroraConfigFile(auroraConfigFile, eTag); err != nil {
 		return err
 	}
 

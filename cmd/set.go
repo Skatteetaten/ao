@@ -30,7 +30,7 @@ func Set(cmd *cobra.Command, args []string) error {
 	fileName, path, value := args[0], args[1], args[2]
 
 	// Load config file
-	auroraConfigFile, eTag, err := DefaultApiClient.GetAuroraConfigFile(fileName)
+	auroraConfigFile, eTag, err := DefaultAPIClient.GetAuroraConfigFile(fileName)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func Set(cmd *cobra.Command, args []string) error {
 	}
 
 	// Save config file
-	if err := DefaultApiClient.PutAuroraConfigFile(auroraConfigFile, eTag); err != nil {
+	if err := DefaultAPIClient.PutAuroraConfigFile(auroraConfigFile, eTag); err != nil {
 		return err
 	}
 

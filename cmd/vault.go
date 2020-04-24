@@ -127,7 +127,7 @@ func GetSecret(cmd *cobra.Command, args []string) error {
 	}
 	vaultName, secretName := split[0], split[1]
 
-	vault, err := DefaultApiClient.GetVault(vaultName)
+	vault, err := DefaultAPIClient.GetVault(vaultName)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func AddSecret(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	vault, err := DefaultApiClient.GetVault(args[0])
+	vault, err := DefaultAPIClient.GetVault(args[0])
 	if err != nil {
 		return err
 	}
@@ -155,7 +155,7 @@ func AddSecret(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = DefaultApiClient.SaveVault(*vault)
+	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func RenameSecret(cmd *cobra.Command, args []string) error {
 
 	newSecretName := args[1]
 	vaultName, secretName := split[0], split[1]
-	vault, err := DefaultApiClient.GetVault(vaultName)
+	vault, err := DefaultAPIClient.GetVault(vaultName)
 	if err != nil {
 		return err
 	}
@@ -194,7 +194,7 @@ func RenameSecret(cmd *cobra.Command, args []string) error {
 	vault.Secrets[newSecretName] = vault.Secrets[secretName]
 	vault.Secrets.RemoveSecret(secretName)
 
-	err = DefaultApiClient.SaveVault(*vault)
+	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
 	}
@@ -208,24 +208,24 @@ func RenameVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	vault, err := DefaultApiClient.GetVault(args[1])
+	vault, err := DefaultAPIClient.GetVault(args[1])
 	if vault != nil {
 		return errors.Errorf("Can't rename vault. %s already exists", args[1])
 	}
 
-	vault, err = DefaultApiClient.GetVault(args[0])
+	vault, err = DefaultAPIClient.GetVault(args[0])
 	if err != nil {
 		return err
 	}
 
 	vault.Name = args[1]
 
-	err = DefaultApiClient.SaveVault(*vault)
+	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
 	}
 
-	err = DefaultApiClient.DeleteVault(args[0])
+	err = DefaultAPIClient.DeleteVault(args[0])
 	if err != nil {
 		return err
 	}
@@ -239,7 +239,7 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	v, _ := DefaultApiClient.GetVault(args[0])
+	v, _ := DefaultAPIClient.GetVault(args[0])
 	if v != nil {
 		return errors.Errorf("vault %s already exists", args[0])
 	}
@@ -251,7 +251,7 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = DefaultApiClient.SaveVault(*vault)
+	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
 	}
@@ -271,13 +271,13 @@ func EditSecret(cmd *cobra.Command, args []string) error {
 	}
 
 	vaultName, secretName := split[0], split[1]
-	contentToEdit, eTag, err := DefaultApiClient.GetSecretFile(vaultName, secretName)
+	contentToEdit, eTag, err := DefaultAPIClient.GetSecretFile(vaultName, secretName)
 	if err != nil {
 		return err
 	}
 
 	secretEditor := editor.NewEditor(func(modifiedContent string) error {
-		return DefaultApiClient.UpdateSecretFile(vaultName, secretName, eTag, []byte(modifiedContent))
+		return DefaultAPIClient.UpdateSecretFile(vaultName, secretName, eTag, []byte(modifiedContent))
 	})
 
 	err = secretEditor.Edit(contentToEdit, args[0])
@@ -300,7 +300,7 @@ func DeleteSecret(cmd *cobra.Command, args []string) error {
 	}
 
 	vaultName, secret := split[0], split[1]
-	vault, err := DefaultApiClient.GetVault(vaultName)
+	vault, err := DefaultAPIClient.GetVault(vaultName)
 	if err != nil {
 		return err
 	}
@@ -313,7 +313,7 @@ func DeleteSecret(cmd *cobra.Command, args []string) error {
 
 	vault.Secrets.RemoveSecret(secret)
 
-	err = DefaultApiClient.SaveVault(*vault)
+	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
 	}
@@ -333,7 +333,7 @@ func DeleteVault(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	err := DefaultApiClient.DeleteVault(args[0])
+	err := DefaultAPIClient.DeleteVault(args[0])
 	if err != nil {
 		return err
 	}
@@ -347,7 +347,7 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	vaults, err := DefaultApiClient.GetVaults()
+	vaults, err := DefaultAPIClient.GetVaults()
 	if err != nil {
 		return err
 	}
@@ -401,7 +401,7 @@ func changeVaultPermissions(action permissionAction, cmd *cobra.Command, args []
 		return cmd.Usage()
 	}
 
-	vault, err := DefaultApiClient.GetVault(args[0])
+	vault, err := DefaultAPIClient.GetVault(args[0])
 	if err != nil {
 		return err
 	}
@@ -411,7 +411,7 @@ func changeVaultPermissions(action permissionAction, cmd *cobra.Command, args []
 		return err
 	}
 
-	err = DefaultApiClient.SaveVault(*vault)
+	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
 	}

@@ -76,7 +76,7 @@ func init() {
 
 // PrintAll is the main method for the `get all` cli command
 func PrintAll(cmd *cobra.Command, args []string) error {
-	fileNames, err := DefaultApiClient.GetFileNames()
+	fileNames, err := DefaultAPIClient.GetFileNames()
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func PrintAll(cmd *cobra.Command, args []string) error {
 
 // PrintApplications is the main method for the `get app` cli command
 func PrintApplications(cmd *cobra.Command, args []string) error {
-	fileNames, err := DefaultApiClient.GetFileNames()
+	fileNames, err := DefaultAPIClient.GetFileNames()
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func PrintApplications(cmd *cobra.Command, args []string) error {
 
 // PrintEnvironments is the main method for the `get env` cli command
 func PrintEnvironments(cmd *cobra.Command, args []string) error {
-	fileNames, err := DefaultApiClient.GetFileNames()
+	fileNames, err := DefaultAPIClient.GetFileNames()
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *co
 		}
 		selected = append(selected, matches...)
 	}
-	specs, err := DefaultApiClient.GetAuroraDeploySpec(selected, true)
+	specs, err := DefaultAPIClient.GetAuroraDeploySpec(selected, true)
 	if err != nil {
 		return err
 	}
@@ -215,7 +215,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	fileNames, err := DefaultApiClient.GetFileNames()
+	fileNames, err := DefaultAPIClient.GetFileNames()
 	if err != nil {
 		return err
 	}
@@ -235,7 +235,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	split := strings.Split(matches[0], "/")
 
 	if !flagJSON {
-		spec, err := DefaultApiClient.GetAuroraDeploySpecFormatted(split[0], split[1], !flagNoDefaults)
+		spec, err := DefaultAPIClient.GetAuroraDeploySpecFormatted(split[0], split[1], !flagNoDefaults)
 		if err != nil {
 			return err
 		}
@@ -243,7 +243,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	spec, err := DefaultApiClient.GetAuroraDeploySpec(matches, !flagNoDefaults)
+	spec, err := DefaultAPIClient.GetAuroraDeploySpec(matches, !flagNoDefaults)
 	if err != nil {
 		return err
 	}
@@ -259,7 +259,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 
 // PrintFile is the main method for the `get file` cli command
 func PrintFile(cmd *cobra.Command, args []string) error {
-	fileNames, err := DefaultApiClient.GetFileNames()
+	fileNames, err := DefaultAPIClient.GetFileNames()
 	if err != nil {
 		return err
 	}
@@ -282,7 +282,7 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 		return errors.Errorf("Search matched more than one file. Search must be more specific.\n%v", matches)
 	}
 
-	auroraConfigFile, _, err := DefaultApiClient.GetAuroraConfigFile(matches[0])
+	auroraConfigFile, _, err := DefaultAPIClient.GetAuroraConfigFile(matches[0])
 	if err != nil {
 		return err
 	}

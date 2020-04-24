@@ -22,12 +22,12 @@ func inspect(cmd *cobra.Command, args []string) error {
 	}
 
 	if flagAuroraConfig != "" {
-		DefaultApiClient.Affiliation = flagAuroraConfig
+		DefaultAPIClient.Affiliation = flagAuroraConfig
 	}
-	result, err := DefaultApiClient.GetApplyResult(args[0])
+	result, err := DefaultAPIClient.GetApplyResult(args[0])
 	if err != nil {
 		if strings.HasSuffix(err.Error(), "not found") {
-			return errors.Errorf("could not find deploy-id %s for AuroraConfig %s", args[0], DefaultApiClient.Affiliation)
+			return errors.Errorf("could not find deploy-id %s for AuroraConfig %s", args[0], DefaultAPIClient.Affiliation)
 		}
 		return err
 	}

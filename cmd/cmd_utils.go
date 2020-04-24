@@ -63,7 +63,7 @@ func GetFilesTable(files []string) (string, []string) {
 }
 
 func getAPIClient(auroraConfig, overrideToken, overrideCluster string) (*client.ApiClient, error) {
-	api := DefaultApiClient
+	api := DefaultAPIClient
 	api.Affiliation = auroraConfig
 
 	if overrideCluster != "" && !AO.Localhost {

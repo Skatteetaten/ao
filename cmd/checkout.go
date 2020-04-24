@@ -51,7 +51,7 @@ func Checkout(cmd *cobra.Command, args []string) error {
 		path = flagCheckoutPath
 	}
 
-	clientConfig, err := DefaultApiClient.GetClientConfig()
+	clientConfig, err := DefaultAPIClient.GetClientConfig()
 	if err != nil {
 		return err
 	}

@@ -16,7 +16,7 @@ func PrintAffiliationsGraphql(cmd *cobra.Command, args []string) error {
 	}
 
 	var configNamesResponse ConfigNamesResponse
-	if err := DefaultApiClient.RunGraphQl(configNamesGraphqlRequest, &configNamesResponse); err != nil {
+	if err := DefaultAPIClient.RunGraphQl(configNamesGraphqlRequest, &configNamesResponse); err != nil {
 		return err
 	}
 

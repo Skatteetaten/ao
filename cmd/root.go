@@ -62,13 +62,16 @@ var (
 	pFlagRefName   string
 	pFlagNoHeader  bool
 
-	// DefaultApiClient will use APICluster from ao config as default values
+	// DefaultAPIClient will use APICluster from ao config as default values
 	// if persistent token and/or server api url is specified these will override default values
-	DefaultApiClient *client.ApiClient
-	AO               *config.AOConfig
-	ConfigLocation   string
+	DefaultAPIClient *client.ApiClient
+	// AO holds the config og ao
+	AO *config.AOConfig
+	// ConfigLocation is the location of the config
+	ConfigLocation string
 )
 
+// RootCmd is the root of the entire `ao` cli command structure
 var RootCmd = &cobra.Command{
 	Use:   "ao",
 	Short: "Aurora OpenShift CLI",
@@ -160,7 +163,7 @@ func initialize(cmd *cobra.Command, args []string) error {
 		api.Token = pFlagToken
 	}
 
-	AO, DefaultApiClient = aoConfig, api
+	AO, DefaultAPIClient = aoConfig, api
 
 	return nil
 }

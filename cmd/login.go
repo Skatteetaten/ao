@@ -105,7 +105,7 @@ func Login(cmd *cobra.Command, args []string) error {
 	}
 
 	cluster := AO.Clusters[AO.APICluster]
-	DefaultApiClient.Token = cluster.Token
+	DefaultAPIClient.Token = cluster.Token
 
 	host := cluster.BooberUrl
 	gobohost := cluster.GoboUrl
@@ -113,10 +113,10 @@ func Login(cmd *cobra.Command, args []string) error {
 	if AO.Localhost {
 		host = "http://localhost:8080"
 	}
-	DefaultApiClient.Host = host
-	DefaultApiClient.GoboHost = gobohost
+	DefaultAPIClient.Host = host
+	DefaultAPIClient.GoboHost = gobohost
 
-	acn, err := DefaultApiClient.GetAuroraConfigNames()
+	acn, err := DefaultAPIClient.GetAuroraConfigNames()
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func Login(cmd *cobra.Command, args []string) error {
 	}
 
 	var apiVersion int
-	clientConfig, err := DefaultApiClient.GetClientConfig()
+	clientConfig, err := DefaultAPIClient.GetClientConfig()
 	if err != nil {
 		return err
 	}
