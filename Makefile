@@ -1,132 +1,114 @@
-# Copyright 2016 The Kubernetes Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Courtesy of https://github.com/vincentbernat/hellogopher
 
-# The binary to build (just the basename).
-BIN := ao
+PACKAGE  = ao
+DATE    ?= $(shell date +%FT%T%z)
+VERSION ?= $(shell git describe --tags --always --dirty --match=v* 2> /dev/null || \
+			cat $(CURDIR)/.version 2> /dev/null || echo v0)
+PKGS     = $(or $(PKG),$(shell env GO111MODULE=on $(GO) list ./...))
+TESTPKGS = $(shell env GO111MODULE=on $(GO) list -f '{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' $(PKGS))
+BIN      = $(CURDIR)/bin
+export PATH := $(BIN):$(PATH)
 
-# This repo's root import path (under GOPATH).
-PKG := github.com/skatteetaten/ao
+GO      = go
+GODOC   = godoc
+TIMEOUT = 15
+V = 0
+Q = $(if $(filter 1,$V),,@)
+M = $(shell printf "\033[34;1m▶\033[0m")
 
-# Which architecture to build - see $(ALL_ARCH) for options.
-ARCH ?= amd64
+export GO111MODULE=on
 
-###
-### These variables should not need tweaking.
-###
+.PHONY: all
+all: fmt lint test-xml $(BIN) ; $(info $(M) building executable…) @ ## Build program binary
+	$Q $(GO) build \
+		-tags release \
+		-ldflags '-X $(PACKAGE)/cmd.Version=$(VERSION) -X $(PACKAGE)/cmd.BuildDate=$(DATE)' \
+		-o $(BIN)/$(PACKAGE) cmd/main.go
 
-SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
+# Tools
 
-#ARCH := amd64
-ARCH := amd64
+$(BIN):
+	@mkdir -p $@
+$(BIN)/%: | $(BIN) ; $(info $(M) building $(REPOSITORY)…)
+	$Q tmp=$$(mktemp -d); \
+	   env GO111MODULE=off GOPATH=$$tmp GOBIN=$(BIN) $(GO) get $(REPOSITORY) \
+		|| ret=$$?; \
+	   rm -rf $$tmp ; exit $$ret
 
-GOPATH := $(shell pwd)/.go
+GOLINT = $(BIN)/golint
+$(BIN)/golint: REPOSITORY=golang.org/x/lint/golint
 
-GOSRC := $(shell pwd)/.go/src
+GOCOVMERGE = $(BIN)/gocovmerge
+$(BIN)/gocovmerge: REPOSITORY=github.com/wadey/gocovmerge
 
-# GOBIN := $(shell pwd)/bin/$(ARCH)
-# GOBIN-LINUX := $(shell pwd)/bin/linux-$(ARCH)
-# GOBIN-DARWIN := $(shell pwd)/bin/darwin-$(ARCH)
+GOCOV = $(BIN)/gocov
+$(BIN)/gocov: REPOSITORY=github.com/axw/gocov/...
 
-VERSION := $(shell git describe --tags --always --dirty)
+GOCOVXML = $(BIN)/gocov-xml
+$(BIN)/gocov-xml: REPOSITORY=github.com/AlekSi/gocov-xml
 
-BRANCH := $(shell git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+GO2XUNIT = $(BIN)/go2xunit
+$(BIN)/go2xunit: REPOSITORY=github.com/tebeka/go2xunit
 
-BUILDSTAMP := $(shell date '+%Y-%m-%d_%H:%M:%S%p')
+# Tests
 
-GITHASH := $(shell git rev-parse HEAD)
+TEST_TARGETS := test-default test-bench test-short test-verbose test-race
+.PHONY: $(TEST_TARGETS) test-xml check test tests
+test-bench:   ARGS=-run=__absolutelynothing__ -bench=. ## Run benchmarks
+test-short:   ARGS=-short        ## Run only short tests
+test-verbose: ARGS=-v            ## Run tests in verbose mode with coverage reporting
+test-race:    ARGS=-race         ## Run tests with race detector
+$(TEST_TARGETS): NAME=$(MAKECMDGOALS:test-%=%)
+$(TEST_TARGETS): test
+check test tests: fmt  ; $(info $(M) running $(NAME:%=% )tests…) @ ## Run tests
+	$Q $(GO) test -timeout $(TIMEOUT)s $(ARGS) $(TESTPKGS)
 
-# If you want to build all binaries, see the 'all-build' rule.
-# If you want to build all containers, see the 'all-container' rule.
-# If you want to build AND push all containers, see the 'all-push' rule.
-all: build
+test-xml: fmt lint | $(GO2XUNIT) ; $(info $(M) running $(NAME:%=% )tests…) @ ## Run tests with xUnit output
+	$Q mkdir -p test
+	$Q 2>&1 $(GO) test -timeout 20s -v $(TESTPKGS) | tee test/tests.output
+	$(GO2XUNIT) -fail -input test/tests.output -output TEST-junit.xml
 
-deps:
-	@echo "installing deps"
-	@glide install
+COVERAGE_MODE = atomic
+COVERAGE_PROFILE = $(COVERAGE_DIR)/profile.out
+COVERAGE_XML = $(COVERAGE_DIR)/coverage.xml
+COVERAGE_HTML = $(COVERAGE_DIR)/index.html
+.PHONY: test-coverage test-coverage-tools
+test-coverage-tools: | $(GOCOVMERGE) $(GOCOV) $(GOCOVXML)
+test-coverage: COVERAGE_DIR := $(CURDIR)/test/coverage.$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+test-coverage: fmt lint test-coverage-tools ; $(info $(M) running coverage tests…) @ ## Run coverage tests
+	$Q mkdir -p $(COVERAGE_DIR)/coverage
+	$Q for pkg in $(TESTPKGS); do \
+		$(GO) test \
+			-coverpkg=$$($(GO) list -f '{{ join .Deps "\n" }}' $$pkg | \
+					grep '^$(PACKAGE)/' | \
+					tr '\n' ',')$$pkg \
+			-covermode=$(COVERAGE_MODE) \
+			-coverprofile="$(COVERAGE_DIR)/coverage/`echo $$pkg | tr "/" "-"`.cover" $$pkg ;\
+	 done
+	$Q $(GOCOVMERGE) $(COVERAGE_DIR)/coverage/*.cover > $(COVERAGE_PROFILE)
+	$Q $(GO) tool cover -html=$(COVERAGE_PROFILE) -o $(COVERAGE_HTML)
+	$Q $(GOCOV) convert $(COVERAGE_PROFILE) | $(GOCOVXML) > $(COVERAGE_XML)
 
+.PHONY: lint
+lint: | $(GOLINT) ; $(info $(M) running golint…) @ ## Run golint
+	$Q $(GOLINT) $(PKGS)
 
-build: build-dirs bin-file-linux bin-file-darwin bin-file-windows
+.PHONY: fmt
+fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
+	$Q $(GO) fmt ./...
 
-bin-file-linux:
-	@echo "Building for Linux with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
-	@/bin/sh -c "                                                          \
-	        cd .go/src/$(PKG);                                             \
-	        GOPATH=$(GOPATH)                                               \
-	        GOSRC=$(GOSRC)                                                 \
-			OS=linux													   \
-	        ARCH=$(ARCH)                                                   \
-	        PKG=$(PKG)                                                     \
-	        VERSION=$(VERSION)                                             \
-	        BRANCH=$(BRANCH)                                               \
-	        BUILDSTAMP=$(BUILDSTAMP)                                       \
-	        GITHASH=$(GITHASH)                                             \
-	        ./build/build.sh                                               \
-	    "
+# Misc
 
+.PHONY: clean
+clean: ; $(info $(M) cleaning…)	@ ## Cleanup everything
+	@rm -rf $(BIN)
+	@rm -rf test/tests.* test/coverage.*
 
-bin-file-darwin:
-	@echo "Building for Darwin with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
-	@/bin/sh -c "                                                          \
-	        cd .go/src/$(PKG);                                             \
-	        GOPATH=$(GOPATH)                                               \
-	        GOSRC=$(GOSRC)                                                 \
-			OS=darwin													   \
-	        ARCH=$(ARCH)                                                   \
-	        PKG=$(PKG)                                                     \
-	        VERSION=$(VERSION)                                             \
-	        BRANCH=$(BRANCH)                                               \
-	        BUILDSTAMP=$(BUILDSTAMP)                                       \
-	        GITHASH=$(GITHASH)                                             \
-	        ./build/build.sh                                               \
-	    "
+.PHONY: help
+help:
+	@grep -E '^[ a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
-bin-file-windows:
-	@echo "Building for Windows with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
-	@/bin/sh -c "                                                          \
-	        cd .go/src/$(PKG);                                             \
-	        GOPATH=$(GOPATH)                                               \
-	        GOSRC=$(GOSRC)                                                 \
-			OS=windows													   \
-	        ARCH=$(ARCH)                                                   \
-	        PKG=$(PKG)                                                     \
-	        VERSION=$(VERSION)                                             \
-	        BRANCH=$(BRANCH)                                               \
-	        BUILDSTAMP=$(BUILDSTAMP)                                       \
-	        GITHASH=$(GITHASH)                                             \
-	        ./build/build.sh                                               \
-	    "
-
-
-test: build-dirs
-	    @/bin/sh -c "                                                      \
-	    cd .go/src/$(PKG);                                                 \
-	    GOPATH=$(GOPATH)                                                   \
-	    GOSRC=$(GOSRC)                                                     \
-	    ./build/test.sh $(SRC_DIRS)                                        \
-	    "
-
-build-dirs: .go/src/$(PKG)
-	@mkdir -p bin/amd64
-	@mkdir -p bin/darwin_amd64
-	@mkdir -p bin/windows_amd64
-	@mkdir -p .go/pkg .go/bin .go/std/linux-$(ARCH) .go/std/darwin_$(ARCH) .go/std/windows_$(ARCH)
-
-.go/src/$(PKG):
-	@mkdir -p .go/src/$(PKG)
-	@rmdir .go/src/$(PKG)
-	@ln -s -r . .go/src/$(PKG)
-
-
-clean:
-	rm -rf .go bin
+.PHONY: version
+version:
+	@echo $(VERSION)

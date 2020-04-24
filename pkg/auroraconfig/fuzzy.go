@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/renstrom/fuzzysearch/fuzzy"
+	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/skatteetaten/ao/pkg/collections"
 )
 
