@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"runtime"
 
+	// blank import that is needed for side effects at initialization
 	_ "go/token"
 	"os"
 
@@ -37,6 +38,7 @@ func init() {
 	}
 }
 
+// Checkout is the main method for the `checkout` cli command
 func Checkout(cmd *cobra.Command, args []string) error {
 	affiliation := AO.Affiliation
 	if flagCheckoutAffiliation != "" {

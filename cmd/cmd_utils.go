@@ -11,6 +11,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/client"
 )
 
+// DefaultTablePrinter prints a table on screen
 func DefaultTablePrinter(header string, rows []string, out io.Writer) {
 	w := tabwriter.NewWriter(out, 0, 0, 3, ' ', tabwriter.TabIndent)
 
@@ -24,6 +25,7 @@ func DefaultTablePrinter(header string, rows []string, out io.Writer) {
 	w.Flush()
 }
 
+// GetApplicationDeploymentRefTable creates a table of deployments
 func GetApplicationDeploymentRefTable(deployments []string) (string, []string) {
 	var rows []string
 	last := ""
@@ -42,6 +44,7 @@ func GetApplicationDeploymentRefTable(deployments []string) (string, []string) {
 	return "ENVIRONMENT\tAPPLICATION", rows
 }
 
+// GetFilesTable creates a table of files
 func GetFilesTable(files []string) (string, []string) {
 	var single []string
 	var envApp []string

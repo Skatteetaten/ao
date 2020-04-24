@@ -38,6 +38,7 @@ func init() {
 	RootCmd.AddCommand(addCmd)
 }
 
+// Add is the entrypoint for the `add` cli command
 func Add(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
 		return cmd.Usage()

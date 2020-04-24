@@ -15,13 +15,13 @@ import (
 )
 
 // Change this for new releases of the Boober API
-const supportedApiVersion = 2
+const supportedAPIVersion = 2
 
 var (
 	flagPassword   string
 	flagUserName   string
 	flagLocalhost  bool
-	flagApiCluster string
+	flagAPICluster string
 )
 
 var loginCmd = &cobra.Command{
@@ -54,10 +54,11 @@ func init() {
 	loginCmd.Flags().StringVarP(&flagPassword, "password", "", "", "the password to log in with, if not set will prompt.  Should only be used in combination with a capturing function to avoid beeing shown in history files")
 	loginCmd.Flags().BoolVarP(&flagLocalhost, "localhost", "", false, "set api to localhost")
 	loginCmd.Flags().MarkHidden("localhost")
-	loginCmd.Flags().StringVarP(&flagApiCluster, "apicluster", "", "", "select specified API cluster")
+	loginCmd.Flags().StringVarP(&flagAPICluster, "apicluster", "", "", "select specified API cluster")
 	loginCmd.Flags().MarkHidden("apicluster")
 }
 
+// PreLogin performs pre command validation checks for the `login` cli command
 func PreLogin(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return errors.New("Please specify AuroraConfig to log in to")
@@ -90,16 +91,17 @@ func PreLogin(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// Login performs main part of the `login` cli command
 func Login(cmd *cobra.Command, args []string) error {
 	if AO.Localhost != flagLocalhost {
 		AO.Localhost = flagLocalhost
 	}
 
-	if flagApiCluster != "" {
-		if _, ok := AO.Clusters[flagApiCluster]; !ok {
-			return errors.Errorf("%s is not a valid cluster option. Choose between %v", flagApiCluster, AO.AvailableClusters)
+	if flagAPICluster != "" {
+		if _, ok := AO.Clusters[flagAPICluster]; !ok {
+			return errors.Errorf("%s is not a valid cluster option. Choose between %v", flagAPICluster, AO.AvailableClusters)
 		}
-		AO.APICluster = flagApiCluster
+		AO.APICluster = flagAPICluster
 	}
 
 	cluster := AO.Clusters[AO.APICluster]
@@ -137,9 +139,9 @@ func Login(cmd *cobra.Command, args []string) error {
 	}
 
 	apiVersion = clientConfig.ApiVersion
-	if apiVersion != supportedApiVersion {
+	if apiVersion != supportedAPIVersion {
 		var grade string
-		if apiVersion < supportedApiVersion {
+		if apiVersion < supportedAPIVersion {
 			grade = "downgrade"
 		} else {
 			grade = "upgrade"
@@ -152,6 +154,7 @@ func Login(cmd *cobra.Command, args []string) error {
 	return config.WriteConfig(*AO, ConfigLocation)
 }
 
+// PostLogin shows results at the end of performing the `login` cli command
 func PostLogin(cmd *cobra.Command, args []string) {
 
 	PrintClusters(cmd, true)

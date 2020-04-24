@@ -18,18 +18,21 @@ var (
 	flagExcludes     []string
 )
 
+// DeploymentInfo structures information about a deployment
 type DeploymentInfo struct {
 	Namespace   string
 	Name        string
 	ClusterName string
 }
 
+// Partition structures information about a partition
 type Partition struct {
 	Cluster          config.Cluster
 	AuroraConfigName string
 	OverrideToken    string
 }
 
+// DeploySpecPartition structures information about a partition of a deployment specification
 type DeploySpecPartition struct {
 	Partition
 	DeploySpecs []deploymentspec.DeploymentSpec

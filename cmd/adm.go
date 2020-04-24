@@ -84,6 +84,7 @@ func init() {
 	updateHookCmd.Flags().StringVarP(&flagGitHookType, "git-hook", "g", "pre-push", "Change git hook to validate AuroraConfig")
 }
 
+// PrintClusters is the main method for the `adm clusters` cli command
 func PrintClusters(cmd *cobra.Command, printAll bool) {
 	var rows []string
 	for _, name := range AO.AvailableClusters {
@@ -102,16 +103,16 @@ func PrintClusters(cmd *cobra.Command, printAll bool) {
 			loggedIn = "Yes"
 		}
 
-		apiUrl := fmt.Sprintf("%s %s", cluster.BooberUrl, cluster.GoboUrl)
+		apiURL := fmt.Sprintf("%s %s", cluster.BooberUrl, cluster.GoboUrl)
 
 		api := ""
 		if name == AO.APICluster {
 			api = "Yes"
 			if AO.Localhost {
-				apiUrl = "http://localhost:8080"
+				apiURL = "http://localhost:8080"
 			}
 		}
-		line := fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s\t%s", name, reachable, loggedIn, api, cluster.Url, apiUrl)
+		line := fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s\t%s", name, reachable, loggedIn, api, cluster.Url, apiURL)
 		rows = append(rows, line)
 	}
 
@@ -123,6 +124,7 @@ func printClusters(cmd *cobra.Command, args []string) {
 	PrintClusters(cmd, flagShowAll)
 }
 
+// SetRefName is the entry point for the `adm update-ref` cli command
 func SetRefName(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return cmd.Usage()
@@ -137,12 +139,14 @@ func SetRefName(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// UpdateClusters is the entry point for the `update-clusters` cli command
 func UpdateClusters(cmd *cobra.Command, args []string) error {
 	AO.InitClusters()
 	AO.SelectApiCluster()
 	return config.WriteConfig(*AO, ConfigLocation)
 }
 
+// RecreateConfig is the entry point for the `adm recreate-config` cli command
 func RecreateConfig(cmd *cobra.Command, args []string) error {
 	conf := &config.DefaultAOConfig
 	if flagCluster != "" {
@@ -157,6 +161,7 @@ func RecreateConfig(cmd *cobra.Command, args []string) error {
 	return config.WriteConfig(*conf, ConfigLocation)
 }
 
+// BashCompletion is the entry point for the `adm completion` cli command
 func BashCompletion(cmd *cobra.Command, args []string) error {
 	err := RootCmd.GenBashCompletionFile("ao.sh")
 	if err != nil {
@@ -167,6 +172,7 @@ func BashCompletion(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// UpdateGitHook is the entry point for the `adm update-hook` cli command
 func UpdateGitHook(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return cmd.Usage()

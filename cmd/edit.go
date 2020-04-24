@@ -39,6 +39,7 @@ func init() {
 	RootCmd.AddCommand(editCmd)
 }
 
+// EditFile is the main method for the `edit` cli command
 func EditFile(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return cmd.Usage()

@@ -74,6 +74,7 @@ func init() {
 	getDeploymentsCmd.Flags().BoolVarP(&flagAsList, "list", "", false, "print ApplicationDeploymentRefs as a list")
 }
 
+// PrintAll is the main method for the `get all` cli command
 func PrintAll(cmd *cobra.Command, args []string) error {
 	fileNames, err := DefaultApiClient.GetFileNames()
 	if err != nil {
@@ -97,6 +98,7 @@ func PrintAll(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// PrintApplications is the main method for the `get app` cli command
 func PrintApplications(cmd *cobra.Command, args []string) error {
 	fileNames, err := DefaultApiClient.GetFileNames()
 	if err != nil {
@@ -115,6 +117,7 @@ func PrintApplications(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// PrintEnvironments is the main method for the `get env` cli command
 func PrintEnvironments(cmd *cobra.Command, args []string) error {
 	fileNames, err := DefaultApiClient.GetFileNames()
 	if err != nil {
@@ -134,6 +137,7 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// PrintDeploySpecTable prints a table of deployment specifications
 func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *cobra.Command, fileNames auroraconfig.FileNames) error {
 	var selected []string
 	for _, arg := range args {
@@ -152,6 +156,7 @@ func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *co
 	return nil
 }
 
+// GetDeploySpecTable gets a table of deployment specifications
 func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec, newVersion string) (string, []string) {
 	var rows []string
 	releaseToDefined := false
@@ -204,6 +209,7 @@ func makeColumnPattern(columnCount int) string {
 	return pattern
 }
 
+// PrintDeploySpec is the main method for the `get spec` cli command
 func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	if len(args) > 2 || len(args) < 1 {
 		return cmd.Usage()
@@ -251,6 +257,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// PrintFile is the main method for the `get file` cli command
 func PrintFile(cmd *cobra.Command, args []string) error {
 	fileNames, err := DefaultApiClient.GetFileNames()
 	if err != nil {

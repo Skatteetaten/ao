@@ -5,11 +5,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// PrintAffiliationsGraphql is the entry point for the `adm affiliations` cli command
 func PrintAffiliationsGraphql(cmd *cobra.Command, args []string) error {
 
 	configNamesGraphqlRequest := `{auroraApiMetadata{configNames}}`
 	type ConfigNamesResponse struct {
-		AuroraApiMetadata struct {
+		AuroraAPIMetadata struct {
 			ConfigNames []string
 		}
 	}
@@ -20,7 +21,7 @@ func PrintAffiliationsGraphql(cmd *cobra.Command, args []string) error {
 	}
 
 	var mark string
-	for _, affiliation := range configNamesResponse.AuroraApiMetadata.ConfigNames {
+	for _, affiliation := range configNamesResponse.AuroraAPIMetadata.ConfigNames {
 		if affiliation == AO.Affiliation {
 			mark = "*"
 		} else {
