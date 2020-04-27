@@ -23,6 +23,7 @@ func init() {
 	RootCmd.AddCommand(setCmd)
 }
 
+// Set is the entry point of the `set` cli command
 func Set(cmd *cobra.Command, args []string) error {
 	if len(args) != 3 {
 		return cmd.Usage()

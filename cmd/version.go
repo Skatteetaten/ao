@@ -22,6 +22,7 @@ func init() {
 	versionCmd.Flags().BoolVarP(&flagJSON, "json", "", false, "output version as json")
 }
 
+// Version is the entry point of the `version` cli command
 func Version(cmd *cobra.Command, args []string) error {
 
 	if !flagJSON {

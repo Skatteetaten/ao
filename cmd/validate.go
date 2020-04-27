@@ -24,6 +24,7 @@ func init() {
 	validateCmd.Flags().BoolVarP(&flagRemoteValidation, "remote", "r", false, "Validate remote AuroraConfig instead of local files")
 }
 
+// Validate is the entry point of the `validate` cli command
 func Validate(cmd *cobra.Command, args []string) error {
 
 	wd, err := os.Getwd()

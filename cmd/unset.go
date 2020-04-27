@@ -23,6 +23,7 @@ func init() {
 	RootCmd.AddCommand(unsetCmd)
 }
 
+// Unset is the entry point of the `unset` cli command
 func Unset(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
 		return cmd.Usage()

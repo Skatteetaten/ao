@@ -20,12 +20,13 @@ func init() {
 	}
 }
 
+// Update is the entry point of the `update` cli command
 func Update(cmd *cobra.Command, args []string) error {
 	err := AO.Update(true)
 	if err != nil {
 		return err
-	} else {
-		fmt.Println("AO has been updated")
 	}
+	fmt.Println("AO has been updated")
+
 	return nil
 }

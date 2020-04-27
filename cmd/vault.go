@@ -21,8 +21,8 @@ import (
 var (
 	flagOnlyVaults bool
 
-	ErrEmptyGroups            = errors.New("Cannot find groups in permissions")
-	ErrNotValidSecretArgument = errors.New("not a valid argument, must be <vaultname/secret>")
+	errEmptyGroups            = errors.New("Cannot find groups in permissions")
+	errNotValidSecretArgument = errors.New("not a valid argument, must be <vaultname/secret>")
 )
 
 var (
@@ -117,13 +117,14 @@ func init() {
 	vaultGetCmd.Flags().BoolVarP(&flagOnlyVaults, "only-vaults", "", false, "print vaults as a list")
 }
 
+// GetSecret is the entry point of the `vault get-secret` cli command
 func GetSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return cmd.Usage()
 	}
 	split := strings.Split(args[0], "/")
 	if len(split) != 2 {
-		return ErrNotValidSecretArgument
+		return errNotValidSecretArgument
 	}
 	vaultName, secretName := split[0], split[1]
 
@@ -140,6 +141,7 @@ func GetSecret(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// AddSecret is the entry point of the `vault add-secret` cli command
 func AddSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
 		return cmd.Usage()
@@ -164,6 +166,7 @@ func AddSecret(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// RenameSecret is the entry point of the `vault rename-secret` cli command
 func RenameSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
 		return cmd.Usage()
@@ -171,7 +174,7 @@ func RenameSecret(cmd *cobra.Command, args []string) error {
 
 	split := strings.Split(args[0], "/")
 	if len(split) != 2 {
-		return ErrNotValidSecretArgument
+		return errNotValidSecretArgument
 	}
 
 	newSecretName := args[1]
@@ -203,6 +206,7 @@ func RenameSecret(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// RenameVault is the entry point of the `vault rename` cli command
 func RenameVault(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
 		return cmd.Usage()
@@ -234,6 +238,7 @@ func RenameVault(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// CreateVault is the entry point of the `vault create` cli command
 func CreateVault(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
 		return cmd.Usage()
@@ -260,6 +265,7 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// EditSecret is the entry point of the `vault edit-secret` cli command
 func EditSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return cmd.Usage()
@@ -267,7 +273,7 @@ func EditSecret(cmd *cobra.Command, args []string) error {
 
 	split := strings.Split(args[0], "/")
 	if len(split) != 2 {
-		return ErrNotValidSecretArgument
+		return errNotValidSecretArgument
 	}
 
 	vaultName, secretName := split[0], split[1]
@@ -289,6 +295,7 @@ func EditSecret(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// DeleteSecret is the entry point of the `vault delete-secret` cli command
 func DeleteSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return cmd.Usage()
@@ -296,7 +303,7 @@ func DeleteSecret(cmd *cobra.Command, args []string) error {
 
 	split := strings.Split(args[0], "/")
 	if len(split) != 2 {
-		return ErrNotValidSecretArgument
+		return errNotValidSecretArgument
 	}
 
 	vaultName, secret := split[0], split[1]
@@ -322,6 +329,7 @@ func DeleteSecret(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// DeleteVault is the entry point of the `vault delete` cli command
 func DeleteVault(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return cmd.Usage()
@@ -342,6 +350,7 @@ func DeleteVault(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// ListVaults is the entry point of the `vault get` cli command
 func ListVaults(cmd *cobra.Command, args []string) error {
 	if len(args) > 1 {
 		return cmd.Usage()
@@ -381,16 +390,19 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// VaultAddPermissions is the entry point of the `vault add-permissions` cli command
 func VaultAddPermissions(cmd *cobra.Command, args []string) error {
 	return changeVaultPermissions(ADD, cmd, args)
 }
 
+// VaultRemovePermissions is the entry point of the `vault remove-permissions` cli command
 func VaultRemovePermissions(cmd *cobra.Command, args []string) error {
 	return changeVaultPermissions(DELETE, cmd, args)
 }
 
 type permissionAction uint64
 
+// ADD and DELETE holds values for permission operations
 const (
 	ADD    permissionAction = 0
 	DELETE permissionAction = 1
@@ -525,7 +537,7 @@ func readPermissionFile(path string) ([]string, error) {
 		return nil, err
 	}
 	if permissions.Groups == nil {
-		return nil, ErrEmptyGroups
+		return nil, errEmptyGroups
 	}
 
 	return permissions.Groups, nil
