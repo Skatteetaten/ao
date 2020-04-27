@@ -4,11 +4,11 @@ go 1.14
 
 require (
 	github.com/andybalholm/crlf v0.0.0-20171020200849-670099aa064f
-	github.com/lithammer/fuzzysearch v1.1.0
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.3.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.9.1
+	github.com/renstrom/fuzzysearch v1.0.1
 	github.com/sirupsen/logrus v1.5.0
 	github.com/skatteetaten/ao v2.13.6+incompatible
 	github.com/spf13/cobra v1.0.0
@@ -18,5 +18,3 @@ require (
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/yaml.v2 v2.2.8
 )
-
-replace github.com/renstrom/fuzzysearch/fuzzy => github.com/lithammer/fuzzysearch/fuzzy v1.1.0

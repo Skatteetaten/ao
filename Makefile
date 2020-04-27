@@ -23,7 +23,7 @@ all: fmt lint test-xml $(BIN) ; $(info $(M) building executable…) @ ## Build p
 	$Q $(GO) build \
 		-tags release \
 		-ldflags '-X $(PACKAGE)/cmd.Version=$(VERSION) -X $(PACKAGE)/cmd.BuildDate=$(DATE)' \
-		-o $(BIN)/$(PACKAGE) cmd/main.go
+		-o $(BIN)/$(PACKAGE) main.go
 
 # Tools
 
