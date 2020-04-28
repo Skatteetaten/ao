@@ -7,8 +7,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"ao/pkg/client"
 	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/pkg/client"
 )
 
 // DefaultTablePrinter prints a table on screen

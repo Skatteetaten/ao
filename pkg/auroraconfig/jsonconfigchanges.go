@@ -7,7 +7,7 @@ import (
 )
 
 // RemoveEntry removes a value in an AuroraConfigFile on specified path
-func jsonRemoveEntry(auroraConfigFile *AuroraConfigFile, pathParts []string) error {
+func jsonRemoveEntry(auroraConfigFile *File, pathParts []string) error {
 
 	var jsoncontent map[string]interface{}
 	// Unmarshal content from configfile
@@ -52,7 +52,7 @@ func jsonRemoveEntryRecursive(jsonContent *map[string]interface{}, pathParts []s
 }
 
 // SetValue sets a value in an AuroraConfigFile on specified path
-func jsonSetValue(auroraConfigFile *AuroraConfigFile, pathParts []string, value string) error {
+func jsonSetValue(auroraConfigFile *File, pathParts []string, value string) error {
 
 	var content map[string]interface{}
 	// Unmarshal content from file
@@ -103,14 +103,14 @@ func jsonSetFoundValue(content *map[string]interface{}, key string, value string
 	return nil
 }
 
-func unmarshalJsonFile(auroraConfigFile *AuroraConfigFile, content *map[string]interface{}) error {
+func unmarshalJsonFile(auroraConfigFile *File, content *map[string]interface{}) error {
 	if err := json.Unmarshal([]byte(auroraConfigFile.Contents), &content); err != nil {
 		return err
 	}
 	return nil
 }
 
-func marshalJsonFile(auroraConfigFile *AuroraConfigFile, content *map[string]interface{}) error {
+func marshalJsonFile(auroraConfigFile *File, content *map[string]interface{}) error {
 	prettyfile, err := json.MarshalIndent(content, "", "  ")
 	if err != nil {
 		return err

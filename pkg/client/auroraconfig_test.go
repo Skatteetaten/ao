@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"ao/pkg/auroraconfig"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -169,7 +169,7 @@ func TestFileNames_Filter(t *testing.T) {
 }
 
 func TestAuroraConfigFile_ToPrettyJson(t *testing.T) {
-	acf := &auroraconfig.AuroraConfigFile{
+	acf := &auroraconfig.File{
 		Name:     "about.json",
 		Contents: `{"type":"development"}`,
 	}

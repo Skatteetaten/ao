@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"ao/pkg/auroraconfig"
 	"github.com/stretchr/testify/assert"
 )
 

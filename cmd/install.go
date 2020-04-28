@@ -5,7 +5,7 @@ package cmd
 import (
 	"runtime"
 
-	"github.com/skatteetaten/ao/pkg/config"
+	"ao/pkg/config"
 	"github.com/spf13/cobra"
 )
 

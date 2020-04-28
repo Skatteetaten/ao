@@ -3,8 +3,8 @@ package cmd
 import (
 	"testing"
 
-	"github.com/skatteetaten/ao/pkg/config"
-	"github.com/skatteetaten/ao/pkg/deploymentspec"
+	"ao/pkg/config"
+	"ao/pkg/deploymentspec"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -10,7 +10,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/renstrom/fuzzysearch v1.0.1
 	github.com/sirupsen/logrus v1.5.0
-	github.com/skatteetaten/ao v2.13.6+incompatible
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/sys v0.0.0-20190530182044-ad28b68e88f1

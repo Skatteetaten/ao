@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/skatteetaten/ao/pkg/versioncontrol"
+	"ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
 )
 

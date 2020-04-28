@@ -10,7 +10,7 @@ func Test_SetValue_Do(t *testing.T) {
 		content := `{
 		    "baseFile": "myapp.json"
 		}`
-		auroraConfigFile := AuroraConfigFile{
+		auroraConfigFile := File{
 			Name:     "myconfigfile.json",
 			Contents: content,
 		}
@@ -46,7 +46,7 @@ config:
 replicas: "1"
 version: 1.2.3
 `
-		auroraConfigFile := AuroraConfigFile{
+		auroraConfigFile := File{
 			Name:     "myconfigfile.yaml",
 			Contents: content,
 		}
@@ -89,7 +89,7 @@ func Test_RemoveEntry_Do(t *testing.T) {
   "version": "1.2.3"
 }
 `
-		auroraConfigFile := AuroraConfigFile{
+		auroraConfigFile := File{
 			Name:     "myconfigfile.json",
 			Contents: content,
 		}
@@ -124,7 +124,7 @@ config:
 replicas: "1"
 version: 1.2.3
 `
-		auroraConfigFile := AuroraConfigFile{
+		auroraConfigFile := File{
 			Name:     "myconfigfile.yml",
 			Contents: content,
 		}

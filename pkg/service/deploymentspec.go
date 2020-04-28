@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/skatteetaten/ao/pkg/client"
-	"github.com/skatteetaten/ao/pkg/deploymentspec"
+	"ao/pkg/client"
+	"ao/pkg/deploymentspec"
 )
 
 func GetFilteredDeploymentSpecs(apiClient client.DeploySpecClient, applications []string, overrideCluster string) ([]deploymentspec.DeploymentSpec, error) {

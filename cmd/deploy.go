@@ -1,18 +1,18 @@
 package cmd
 
 import (
+	"ao/pkg/auroraconfig"
 	"encoding/json"
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"io"
 	"sort"
 	"strings"
 
+	"ao/pkg/client"
+	"ao/pkg/deploymentspec"
+	"ao/pkg/prompt"
+	"ao/pkg/service"
 	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/pkg/client"
-	"github.com/skatteetaten/ao/pkg/deploymentspec"
-	"github.com/skatteetaten/ao/pkg/prompt"
-	"github.com/skatteetaten/ao/pkg/service"
 	"github.com/spf13/cobra"
 )
 

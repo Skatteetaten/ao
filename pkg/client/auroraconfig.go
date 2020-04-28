@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"net/http"
 
+	"ao/pkg/auroraconfig"
 	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/pkg/auroraconfig"
 )
 
 type AuroraConfigClient interface {
 	Doer
 	GetFileNames() (auroraconfig.FileNames, error)
 	GetAuroraConfig() (*auroraconfig.AuroraConfig, error)
-	GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, error)
+	GetAuroraConfigNames() (*auroraconfig.Names, error)
 	PutAuroraConfig(endpoint string, payload []byte) (string, error)
 	ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) (string, error)
-	GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error)
-	PutAuroraConfigFile(file *auroraconfig.AuroraConfigFile, eTag string) error
+	GetAuroraConfigFile(fileName string) (*auroraconfig.File, string, error)
+	PutAuroraConfigFile(file *auroraconfig.File, eTag string) error
 }
 
 type (
@@ -60,7 +60,7 @@ func (api *ApiClient) GetAuroraConfig() (*auroraconfig.AuroraConfig, error) {
 	return &ac, nil
 }
 
-func (api *ApiClient) GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, error) {
+func (api *ApiClient) GetAuroraConfigNames() (*auroraconfig.Names, error) {
 	// Deprecated: Remove when it is fully replaced by graphql
 	endpoint := fmt.Sprintf("/auroraconfignames")
 
@@ -69,7 +69,7 @@ func (api *ApiClient) GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, e
 		return nil, err
 	}
 
-	var acn auroraconfig.AuroraConfigNames
+	var acn auroraconfig.Names
 	err = response.ParseItems(&acn)
 	if err != nil {
 		return nil, errors.Wrap(err, "aurora config names")
@@ -141,7 +141,7 @@ func formatWarnings(warnings []string) string {
 	return status
 }
 
-func (api *ApiClient) GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error) {
+func (api *ApiClient) GetAuroraConfigFile(fileName string) (*auroraconfig.File, string, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, fileName)
 
 	bundle, err := api.DoWithHeader(http.MethodGet, endpoint, nil, nil)
@@ -153,7 +153,7 @@ func (api *ApiClient) GetAuroraConfigFile(fileName string) (*auroraconfig.Aurora
 		return nil, "", errors.New("Failed getting file " + fileName)
 	}
 
-	var file auroraconfig.AuroraConfigFile
+	var file auroraconfig.File
 	err = bundle.BooberResponse.ParseFirstItem(&file)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "aurora config file")
@@ -164,7 +164,7 @@ func (api *ApiClient) GetAuroraConfigFile(fileName string) (*auroraconfig.Aurora
 	return &file, eTag, nil
 }
 
-func (api *ApiClient) PutAuroraConfigFile(file *auroraconfig.AuroraConfigFile, eTag string) error {
+func (api *ApiClient) PutAuroraConfigFile(file *auroraconfig.File, eTag string) error {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, file.Name)
 
 	payload := auroraConfigFilePayload{

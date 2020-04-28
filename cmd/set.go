@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"ao/pkg/auroraconfig"
 	"github.com/spf13/cobra"
 )
 

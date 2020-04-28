@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/skatteetaten/ao/pkg/deploymentspec"
+	"ao/pkg/deploymentspec"
 )
 
 type DeploySpecClient interface {

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"ao/pkg/auroraconfig"
 
 	"github.com/pkg/errors"
 )
@@ -74,7 +74,7 @@ func CollectAuroraConfigFilesInRepo(affiliation, gitRoot string) (*auroraconfig.
 			return errors.Wrap(err, "Could not read file "+fileName)
 		}
 
-		ac.Files = append(ac.Files, auroraconfig.AuroraConfigFile{
+		ac.Files = append(ac.Files, auroraconfig.File{
 			Name:     fileName,
 			Contents: string(file),
 		})

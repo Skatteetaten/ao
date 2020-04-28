@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/skatteetaten/ao/pkg/deploymentspec"
+	"ao/pkg/deploymentspec"
 )
 
 type ApplicationDeploymentClient interface {

@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	"ao/pkg/collections"
 	"github.com/pkg/errors"
-	"github.com/skatteetaten/ao/pkg/collections"
 )
 
 type FileNames []string

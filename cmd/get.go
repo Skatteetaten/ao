@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/skatteetaten/ao/pkg/auroraconfig"
-	"github.com/skatteetaten/ao/pkg/deploymentspec"
+	"ao/pkg/auroraconfig"
+	"ao/pkg/deploymentspec"
 
 	"encoding/json"
 	"sort"

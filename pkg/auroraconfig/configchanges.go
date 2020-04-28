@@ -9,7 +9,7 @@ import (
 const pathSep = "/"
 
 // RemoveEntry removes a value in an AuroraConfigFile on specified path
-func RemoveEntry(auroraConfigFile *AuroraConfigFile, path string) error {
+func RemoveEntry(auroraConfigFile *File, path string) error {
 	pathParts := getPathParts(path)
 	if len(pathParts) == 0 {
 		return errors.New("Too short path. Must have a named key.")
@@ -29,7 +29,7 @@ func RemoveEntry(auroraConfigFile *AuroraConfigFile, path string) error {
 }
 
 // SetValue sets a value in an AuroraConfigFile on specified path
-func SetValue(auroraConfigFile *AuroraConfigFile, path string, value string) error {
+func SetValue(auroraConfigFile *File, path string, value string) error {
 	pathParts := getPathParts(path)
 	if len(pathParts) == 0 {
 		return errors.New("Too short path. Must have a named key.")

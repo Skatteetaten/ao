@@ -2,29 +2,28 @@ package auroraconfig
 
 import (
 	"encoding/json"
-	"errors"
 	"regexp"
 	"strings"
 )
 
 type (
-	AuroraConfigNames []string
+	// Names of AuroraConfigs
+	Names []string
 
+	// AuroraConfig is a named structure of files forming an Aurora configuration
 	AuroraConfig struct {
-		Name  string             `json:"name"`
-		Files []AuroraConfigFile `json:"files"`
+		Name  string `json:"name"`
+		Files []File `json:"files"`
 	}
 
-	AuroraConfigFile struct {
+	// File is a file in an Aurora configuration
+	File struct {
 		Name     string `json:"name"`
 		Contents string `json:"contents"`
 	}
 )
 
-var (
-	ErrJsonPathPrefix = errors.New("json path must start with /")
-)
-
+// GetApplicationRefs
 func GetApplicationRefs(filenames FileNames, pattern string, excludes []string) ([]string, error) {
 	possibleDeploys := filenames.GetApplicationDeploymentRefs()
 	applications := SearchForApplications(pattern, possibleDeploys)
@@ -37,7 +36,7 @@ func GetApplicationRefs(filenames FileNames, pattern string, excludes []string) 
 	return applications, nil
 }
 
-func (f *AuroraConfigFile) ToPrettyJson() string {
+func (f *File) ToPrettyJson() string {
 
 	var out map[string]interface{}
 	err := json.Unmarshal([]byte(f.Contents), &out)
@@ -52,7 +51,7 @@ func (f *AuroraConfigFile) ToPrettyJson() string {
 	return string(data)
 }
 
-func (f *AuroraConfigFile) IsYaml() bool {
+func (f *File) IsYaml() bool {
 	return (strings.HasSuffix(strings.ToLower(f.Name), ".yaml") || (strings.HasSuffix(strings.ToLower(f.Name), ".yml")))
 }
 

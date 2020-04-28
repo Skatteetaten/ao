@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/skatteetaten/ao/pkg/client"
-	"github.com/skatteetaten/ao/pkg/deploymentspec"
+	"ao/pkg/client"
+	"ao/pkg/deploymentspec"
 	"github.com/stretchr/testify/assert"
 )
 
