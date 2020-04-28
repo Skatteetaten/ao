@@ -11,7 +11,7 @@ func jsonRemoveEntry(auroraConfigFile *File, pathParts []string) error {
 
 	var jsoncontent map[string]interface{}
 	// Unmarshal content from configfile
-	if err := unmarshalJsonFile(auroraConfigFile, &jsoncontent); err != nil {
+	if err := unmarshalJSONFile(auroraConfigFile, &jsoncontent); err != nil {
 		return err
 	}
 
@@ -21,7 +21,7 @@ func jsonRemoveEntry(auroraConfigFile *File, pathParts []string) error {
 	}
 
 	// Marshal changed content prettyfied back into configfile
-	if err := marshalJsonFile(auroraConfigFile, &jsoncontent); err != nil {
+	if err := marshalJSONFile(auroraConfigFile, &jsoncontent); err != nil {
 		return err
 	}
 
@@ -56,7 +56,7 @@ func jsonSetValue(auroraConfigFile *File, pathParts []string, value string) erro
 
 	var content map[string]interface{}
 	// Unmarshal content from file
-	if err := unmarshalJsonFile(auroraConfigFile, &content); err != nil {
+	if err := unmarshalJSONFile(auroraConfigFile, &content); err != nil {
 		return err
 	}
 
@@ -66,7 +66,7 @@ func jsonSetValue(auroraConfigFile *File, pathParts []string, value string) erro
 	}
 
 	// Marshal changed content prettyfied back into file
-	if err := marshalJsonFile(auroraConfigFile, &content); err != nil {
+	if err := marshalJSONFile(auroraConfigFile, &content); err != nil {
 		return err
 	}
 
@@ -103,14 +103,14 @@ func jsonSetFoundValue(content *map[string]interface{}, key string, value string
 	return nil
 }
 
-func unmarshalJsonFile(auroraConfigFile *File, content *map[string]interface{}) error {
+func unmarshalJSONFile(auroraConfigFile *File, content *map[string]interface{}) error {
 	if err := json.Unmarshal([]byte(auroraConfigFile.Contents), &content); err != nil {
 		return err
 	}
 	return nil
 }
 
-func marshalJsonFile(auroraConfigFile *File, content *map[string]interface{}) error {
+func marshalJSONFile(auroraConfigFile *File, content *map[string]interface{}) error {
 	prettyfile, err := json.MarshalIndent(content, "", "  ")
 	if err != nil {
 		return err

@@ -12,7 +12,7 @@ const pathSep = "/"
 func RemoveEntry(auroraConfigFile *File, path string) error {
 	pathParts := getPathParts(path)
 	if len(pathParts) == 0 {
-		return errors.New("Too short path. Must have a named key.")
+		return errors.New("path is too short and must contain a named key")
 	}
 
 	if auroraConfigFile.IsYaml() {
@@ -32,7 +32,7 @@ func RemoveEntry(auroraConfigFile *File, path string) error {
 func SetValue(auroraConfigFile *File, path string, value string) error {
 	pathParts := getPathParts(path)
 	if len(pathParts) == 0 {
-		return errors.New("Too short path. Must have a named key.")
+		return errors.New("path is too short and must contain a named key")
 	}
 
 	if auroraConfigFile.IsYaml() {

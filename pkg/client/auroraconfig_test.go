@@ -175,7 +175,7 @@ func TestAuroraConfigFile_ToPrettyJson(t *testing.T) {
 	}
 
 	expected := "{\n  \"type\": \"development\"\n}"
-	assert.Equal(t, expected, acf.ToPrettyJson())
+	assert.Equal(t, expected, acf.ToPrettyJSON())
 }
 
 func TestApiClient_ValidateRemoteAuroraConfig(t *testing.T) {

@@ -9,8 +9,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+// FileNames holds an array of filenames
 type FileNames []string
 
+// GetApplicationDeploymentRefs filters application deployment references from FileNames
 func (f FileNames) GetApplicationDeploymentRefs() []string {
 	var filteredFiles []string
 	for _, file := range f.WithoutExtension() {
@@ -22,6 +24,7 @@ func (f FileNames) GetApplicationDeploymentRefs() []string {
 	return filteredFiles
 }
 
+// GetApplications gets unique application names from FileNames
 func (f FileNames) GetApplications() []string {
 	unique := collections.NewStringSet()
 	for _, file := range f.WithoutExtension() {
@@ -34,6 +37,7 @@ func (f FileNames) GetApplications() []string {
 	return filteredFiles
 }
 
+// GetEnvironments gets unique environment names from FileNames
 func (f FileNames) GetEnvironments() []string {
 	unique := collections.NewStringSet()
 	for _, file := range f {
@@ -47,6 +51,7 @@ func (f FileNames) GetEnvironments() []string {
 	return filteredFiles
 }
 
+// WithoutExtension gets the FileNames, stripped for extensions
 func (f FileNames) WithoutExtension() []string {
 	var withoutExt []string
 	for _, file := range f {
@@ -55,6 +60,7 @@ func (f FileNames) WithoutExtension() []string {
 	return withoutExt
 }
 
+// Find returns a filename if it exists in the list
 func (f FileNames) Find(name string) (string, error) {
 	for _, fileName := range f {
 		fileNameWithoutExtension := strings.TrimSuffix(fileName, filepath.Ext(fileName))

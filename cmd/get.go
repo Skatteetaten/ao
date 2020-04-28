@@ -109,7 +109,7 @@ func PrintApplications(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications available")
 	}
 	if len(args) > 0 {
-		return PrintDeploySpecTable(args, auroraconfig.APP_FILTER, cmd, fileNames)
+		return PrintDeploySpecTable(args, auroraconfig.AppFilter, cmd, fileNames)
 	}
 
 	applications := fileNames.GetApplications()
@@ -129,7 +129,7 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) > 0 {
-		return PrintDeploySpecTable(args, auroraconfig.ENV_FILTER, cmd, fileNames)
+		return PrintDeploySpecTable(args, auroraconfig.EnvFilter, cmd, fileNames)
 	}
 
 	envrionments := fileNames.GetEnvironments()

@@ -23,7 +23,7 @@ type (
 	}
 )
 
-// GetApplicationRefs
+// GetApplicationRefs gets applications reference names
 func GetApplicationRefs(filenames FileNames, pattern string, excludes []string) ([]string, error) {
 	possibleDeploys := filenames.GetApplicationDeploymentRefs()
 	applications := SearchForApplications(pattern, possibleDeploys)
@@ -36,7 +36,8 @@ func GetApplicationRefs(filenames FileNames, pattern string, excludes []string) 
 	return applications, nil
 }
 
-func (f *File) ToPrettyJson() string {
+// ToPrettyJSON returns content of file as prettyfied JSON
+func (f *File) ToPrettyJSON() string {
 
 	var out map[string]interface{}
 	err := json.Unmarshal([]byte(f.Contents), &out)
@@ -51,6 +52,7 @@ func (f *File) ToPrettyJson() string {
 	return string(data)
 }
 
+// IsYaml returns true if file name has a yaml suffix
 func (f *File) IsYaml() bool {
 	return (strings.HasSuffix(strings.ToLower(f.Name), ".yaml") || (strings.HasSuffix(strings.ToLower(f.Name), ".yml")))
 }
