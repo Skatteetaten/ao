@@ -40,7 +40,7 @@ func NewAuroraSecretVault(name string) *AuroraSecretVault {
 	}
 }
 
-func (api *ApiClient) GetVaults() ([]*AuroraVaultInfo, error) {
+func (api *APIClient) GetVaults() ([]*AuroraVaultInfo, error) {
 	endpoint := fmt.Sprintf("/vault/%s", api.Affiliation)
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
@@ -57,7 +57,7 @@ func (api *ApiClient) GetVaults() ([]*AuroraVaultInfo, error) {
 	return vaults, nil
 }
 
-func (api *ApiClient) GetVault(vaultName string) (*AuroraSecretVault, error) {
+func (api *APIClient) GetVault(vaultName string) (*AuroraSecretVault, error) {
 	endpoint := fmt.Sprintf("/vault/%s/%s", api.Affiliation, vaultName)
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
@@ -73,7 +73,7 @@ func (api *ApiClient) GetVault(vaultName string) (*AuroraSecretVault, error) {
 	return &vault, nil
 }
 
-func (api *ApiClient) DeleteVault(vaultName string) error {
+func (api *APIClient) DeleteVault(vaultName string) error {
 	endpoint := fmt.Sprintf("/vault/%s/%s", api.Affiliation, vaultName)
 
 	response, err := api.Do(http.MethodDelete, endpoint, nil)
@@ -88,7 +88,7 @@ func (api *ApiClient) DeleteVault(vaultName string) error {
 	return nil
 }
 
-func (api *ApiClient) SaveVault(vault AuroraSecretVault) error {
+func (api *APIClient) SaveVault(vault AuroraSecretVault) error {
 	endpoint := fmt.Sprintf("/vault/%s", api.Affiliation)
 
 	data, err := json.Marshal(vault)
@@ -108,7 +108,7 @@ func (api *ApiClient) SaveVault(vault AuroraSecretVault) error {
 	return nil
 }
 
-func (api *ApiClient) GetSecretFile(vault, secret string) (string, string, error) {
+func (api *APIClient) GetSecretFile(vault, secret string) (string, string, error) {
 	endpoint := fmt.Sprintf("/vault/%s/%s/%s", api.Affiliation, vault, secret)
 
 	bundle, err := api.DoWithHeader(http.MethodGet, endpoint, nil, nil)
@@ -131,12 +131,12 @@ func (api *ApiClient) GetSecretFile(vault, secret string) (string, string, error
 		return "", "", err
 	}
 
-	eTag := bundle.HttpResponse.Header.Get("ETag")
+	eTag := bundle.HTTPResponse.Header.Get("ETag")
 
 	return string(data), eTag, nil
 }
 
-func (api *ApiClient) UpdateSecretFile(vault, secret, eTag string, content []byte) error {
+func (api *APIClient) UpdateSecretFile(vault, secret, eTag string, content []byte) error {
 	endpoint := fmt.Sprintf("/vault/%s/%s/%s", api.Affiliation, vault, secret)
 
 	encoded := base64.StdEncoding.EncodeToString(content)

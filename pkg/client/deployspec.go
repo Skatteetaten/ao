@@ -14,7 +14,7 @@ type DeploySpecClient interface {
 	GetAuroraDeploySpecFormatted(environment, application string, defaults bool) (string, error)
 }
 
-func (api *ApiClient) GetAuroraDeploySpec(applications []string, defaults bool) ([]deploymentspec.DeploymentSpec, error) {
+func (api *APIClient) GetAuroraDeploySpec(applications []string, defaults bool) ([]deploymentspec.DeploymentSpec, error) {
 	endpoint := fmt.Sprintf("/auroradeployspec/%s/?", api.Affiliation)
 	queries := buildDeploySpecQueries(applications, defaults)
 
@@ -80,7 +80,7 @@ func buildDeploySpecQueries(applications []string, defaults bool) []string {
 	return append(queries, v.Encode())
 }
 
-func (api *ApiClient) GetAuroraDeploySpecFormatted(environment, application string, defaults bool) (string, error) {
+func (api *APIClient) GetAuroraDeploySpecFormatted(environment, application string, defaults bool) (string, error) {
 	endpoint := fmt.Sprintf("/auroradeployspec/%s/%s/%s/formatted", api.Affiliation, environment, application)
 	if !defaults {
 		endpoint += "?includeDefaults=false"

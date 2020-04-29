@@ -34,7 +34,7 @@ func TestGoboapi_Do(t *testing.T) {
 			}
 		}
 		var someResponse SomeResponse
-		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
 		err := api.RunGraphQl(graphQlRequest, &someResponse)
 
 		assert.NoError(t, err)

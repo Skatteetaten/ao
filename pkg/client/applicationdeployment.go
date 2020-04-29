@@ -121,7 +121,7 @@ func NewExistsPayload(applications []string) *ExistsPayload {
 	}
 }
 
-func (api *ApiClient) Deploy(deployPayload *DeployPayload) (*DeployResults, error) {
+func (api *APIClient) Deploy(deployPayload *DeployPayload) (*DeployResults, error) {
 	payload, err := json.Marshal(deployPayload)
 	if err != nil {
 		return nil, errors.New("failed to marshal DeployPayload")
@@ -157,7 +157,7 @@ func (api *ApiClient) Deploy(deployPayload *DeployPayload) (*DeployResults, erro
 	return &deploys, nil
 }
 
-func (api *ApiClient) Delete(deletePayload *DeletePayload) (*DeleteResults, error) {
+func (api *APIClient) Delete(deletePayload *DeletePayload) (*DeleteResults, error) {
 	payload, err := json.Marshal(deletePayload)
 	if err != nil {
 		return nil, errors.New("Failed to marshal DeletePayload")
@@ -183,7 +183,7 @@ func (api *ApiClient) Delete(deletePayload *DeletePayload) (*DeleteResults, erro
 	return &deleteResults, nil
 }
 
-func (api *ApiClient) Exists(existsPayload *ExistsPayload) (*ExistsResults, error) {
+func (api *APIClient) Exists(existsPayload *ExistsPayload) (*ExistsResults, error) {
 	payload, err := json.Marshal(existsPayload)
 	if err != nil {
 		return nil, errors.New("Failed to marshal ExistsPayload")

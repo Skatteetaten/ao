@@ -62,7 +62,7 @@ func GetFilesTable(files []string) (string, []string) {
 	return "FILES", append(single, envApp...)
 }
 
-func getAPIClient(auroraConfig, overrideToken, overrideCluster string) (*client.ApiClient, error) {
+func getAPIClient(auroraConfig, overrideToken, overrideCluster string) (*client.APIClient, error) {
 	api := DefaultAPIClient
 	api.Affiliation = auroraConfig
 

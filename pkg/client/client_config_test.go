@@ -22,7 +22,7 @@ func TestApiClient_GetClientConfig(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
 		clientConfig, err := api.GetClientConfig()
 
 		assert.Equal(t, 1, calls)

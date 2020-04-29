@@ -5,7 +5,7 @@ type ClientConfig struct {
 	ApiVersion    int    `json:"apiVersion"`
 }
 
-func (api *ApiClient) GetClientConfig() (*ClientConfig, error) {
+func (api *APIClient) GetClientConfig() (*ClientConfig, error) {
 	clientConfigGraphqlRequest := `{auroraApiMetadata{clientConfig{gitUrlPattern apiVersion}}}`
 	type ClientConfigResponse struct {
 		AuroraApiMetadata struct {

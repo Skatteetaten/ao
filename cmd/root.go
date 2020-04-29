@@ -64,7 +64,7 @@ var (
 
 	// DefaultAPIClient will use APICluster from ao config as default values
 	// if persistent token and/or server api url is specified these will override default values
-	DefaultAPIClient *client.ApiClient
+	DefaultAPIClient *client.APIClient
 	// AO holds the config og ao
 	AO *config.AOConfig
 	// ConfigLocation is the location of the config
@@ -141,7 +141,7 @@ func initialize(cmd *cobra.Command, args []string) error {
 		apiCluster = &config.Cluster{}
 	}
 
-	api := &client.ApiClient{
+	api := &client.APIClient{
 		Affiliation: aoConfig.Affiliation,
 		Host:        apiCluster.BooberUrl,
 		GoboHost:    apiCluster.GoboUrl,
