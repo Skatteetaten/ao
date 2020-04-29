@@ -56,6 +56,7 @@ func NewAPIClient(host, token, affiliation, refName string) *APIClient {
 	}
 }
 
+// Do performs an API call to an external endpoint
 func (api *APIClient) Do(method string, endpoint string, payload []byte) (*BooberResponse, error) {
 	bundle, err := api.DoWithHeader(method, endpoint, nil, payload)
 	if bundle == nil {
@@ -64,6 +65,7 @@ func (api *APIClient) Do(method string, endpoint string, payload []byte) (*Boobe
 	return bundle.BooberResponse, nil
 }
 
+// DoWithHeader performs an API call to an external endpoint with specific headers
 func (api *APIClient) DoWithHeader(method string, endpoint string, header map[string]string, payload []byte) (*ResponseBundle, error) {
 
 	url := api.Host + BooberAPIVersion + endpoint

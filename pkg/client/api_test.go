@@ -176,10 +176,10 @@ func Test_handleForbiddenError(t *testing.T) {
 		{
 			name: "Should return user has no permission error",
 			args: args{
-				body: []byte(`{"message":"You (user) do not have required permissions ([admin]) to operate on this vault (top-secret)."}`),
+				body: []byte(`{"message":"You (user) do not have required permissions ([admin]) to operate on this vault (top-secret)"}`),
 				host: "localhost",
 			},
-			wantErr: errors.New("Forbidden: You (user) do not have required permissions ([admin]) to operate on this vault (top-secret)."),
+			wantErr: errors.New("Forbidden: You (user) do not have required permissions ([admin]) to operate on this vault (top-secret)"),
 		},
 	}
 	for _, tt := range tests {

@@ -10,12 +10,13 @@ import (
 	"ao/pkg/deploymentspec"
 )
 
+// ApplicationDeploymentClient is a client for deploying an application via an external service
 type ApplicationDeploymentClient interface {
 	Doer
 	Deploy(deployPayload *DeployPayload) (*DeployResults, error)
 	Delete(deletePayload *DeletePayload) (*DeleteResults, error)
 	Exists(existPayload *ExistsPayload) (*ExistsResults, error)
-	GetApplyResult(deployId string) (string, error)
+	GetApplyResult(deployID string) (string, error)
 }
 
 type (
@@ -23,20 +24,22 @@ type (
 		Environment string `json:"environment"`
 		Application string `json:"application"`
 	}
-
+	// ApplicationRef references an application in a namespace
 	ApplicationRef struct {
 		Namespace string `json:"namespace"`
 		Name      string `json:"name"`
 	}
 
+	// DeployResults holds the results of deployments
 	DeployResults struct {
 		Message string
 		Success bool
 		Results []DeployResult
 	}
 
+	// DeployResult holds the result of a deployment
 	DeployResult struct {
-		DeployId       string                        `json:"deployId"`
+		DeployID       string                        `json:"deployId"`
 		DeploymentSpec deploymentspec.DeploymentSpec `json:"deploymentSpec"`
 		Success        bool                          `json:"success"`
 		Ignored        bool                          `json:"ignored"`
@@ -44,34 +47,40 @@ type (
 		Warnings       []string                      `json:"warnings"`
 	}
 
+	// DeployPayload holds the payload of a deployment
 	DeployPayload struct {
 		ApplicationDeploymentRefs []applicationDeploymentRef `json:"applicationDeploymentRefs"`
 		Overrides                 map[string]string          `json:"overrides"`
 		Deploy                    bool                       `json:"deploy"`
 	}
 
+	// DeleteResults hold the results from deleting applications
 	DeleteResults struct {
 		Message string
 		Success bool
 		Results []DeleteResult
 	}
 
+	// DeleteResult holds the results from deleting an application
 	DeleteResult struct {
 		ApplicationRef ApplicationRef `json:"applicationRef"`
 		Success        bool           `json:"success"`
 		Reason         string         `json:"reason"`
 	}
 
+	// DeletePayload holds references to applications that are to be deleted
 	DeletePayload struct {
 		ApplicationRefs []ApplicationRef `json:"applicationRefs"`
 	}
 
+	// ExistsResults hold information on which applications that exist
 	ExistsResults struct {
 		Message string
 		Success bool
 		Results []ExistsResult
 	}
 
+	// ExistsResult hold information on whether an application exists
 	ExistsResult struct {
 		ApplicationRef ApplicationRef `json:"applicationRef"`
 		Exists         bool           `json:"exists"`
@@ -79,11 +88,13 @@ type (
 		Message        string         `json:"message"`
 	}
 
+	// ExistsPayload is the payload of an enquiry action for application existence
 	ExistsPayload struct {
 		ApplicationDeploymentRefs []applicationDeploymentRef `json:"adr"`
 	}
 )
 
+// NewApplicationDeploymentRef creates an applicationDeploymentRef
 func NewApplicationDeploymentRef(name string) *applicationDeploymentRef {
 	slice := strings.Split(name, "/")
 	return &applicationDeploymentRef{
@@ -92,6 +103,7 @@ func NewApplicationDeploymentRef(name string) *applicationDeploymentRef {
 	}
 }
 
+// NewApplicationDeploymentRef creates an ApplicationRef
 func NewApplicationRef(namespace, name string) *ApplicationRef {
 	return &ApplicationRef{
 		Namespace: namespace,
@@ -99,6 +111,7 @@ func NewApplicationRef(namespace, name string) *ApplicationRef {
 	}
 }
 
+// NewDeployPayload creates a DeployPayload
 func NewDeployPayload(applications []string, overrides map[string]string) *DeployPayload {
 	applicationDeploymentRefs := createApplicationDeploymentRefs(applications)
 	return &DeployPayload{
@@ -108,12 +121,14 @@ func NewDeployPayload(applications []string, overrides map[string]string) *Deplo
 	}
 }
 
+// NewDeletePayload create a DeletePayload
 func NewDeletePayload(applicationRefs []ApplicationRef) *DeletePayload {
 	return &DeletePayload{
 		ApplicationRefs: applicationRefs,
 	}
 }
 
+// NewExistsPayload create an ExistsPayload
 func NewExistsPayload(applications []string) *ExistsPayload {
 	applicationDeploymentRefs := createApplicationDeploymentRefs(applications)
 	return &ExistsPayload{
@@ -121,6 +136,7 @@ func NewExistsPayload(applications []string) *ExistsPayload {
 	}
 }
 
+// Deploy deploys application(s) as specified in a DeployPayload
 func (api *APIClient) Deploy(deployPayload *DeployPayload) (*DeployResults, error) {
 	payload, err := json.Marshal(deployPayload)
 	if err != nil {
@@ -157,6 +173,7 @@ func (api *APIClient) Deploy(deployPayload *DeployPayload) (*DeployResults, erro
 	return &deploys, nil
 }
 
+// Delete deletes application(s) as specified in a DeletePayload
 func (api *APIClient) Delete(deletePayload *DeletePayload) (*DeleteResults, error) {
 	payload, err := json.Marshal(deletePayload)
 	if err != nil {
@@ -183,6 +200,7 @@ func (api *APIClient) Delete(deletePayload *DeletePayload) (*DeleteResults, erro
 	return &deleteResults, nil
 }
 
+// Exists queries the existence of application(s) as specified in an ExistsPayload
 func (api *APIClient) Exists(existsPayload *ExistsPayload) (*ExistsResults, error) {
 	payload, err := json.Marshal(existsPayload)
 	if err != nil {
