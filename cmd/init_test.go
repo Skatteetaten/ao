@@ -23,23 +23,23 @@ func GetDefaultAOConfig() *config.AOConfig {
 		"utv": {
 			Name:      "utv",
 			Reachable: true,
-			Url:       "https://utv:8443",
-			BooberUrl: "http://boober.utv",
-			GoboUrl:   "http://gobo.utv",
+			URL:       "https://utv:8443",
+			BooberURL: "http://boober.utv",
+			GoboURL:   "http://gobo.utv",
 		},
 		"relay": {
 			Name:      "relay",
 			Reachable: true,
-			Url:       "https://relay:8443",
-			BooberUrl: "http://boober.relay",
-			GoboUrl:   "http://gobo.relay",
+			URL:       "https://relay:8443",
+			BooberURL: "http://boober.relay",
+			GoboURL:   "http://gobo.relay",
 		},
 		"test": {
 			Name:      "test",
 			Reachable: false,
-			Url:       "https://test:8443",
-			BooberUrl: "http://boober.test",
-			GoboUrl:   "http://gobo.test",
+			URL:       "https://test:8443",
+			BooberURL: "http://boober.test",
+			GoboURL:   "http://gobo.test",
 		},
 	}
 

@@ -78,10 +78,10 @@ func PreLogin(cmd *cobra.Command, args []string) error {
 		if password == "" {
 			password = prompt.Password()
 		}
-		token, err := config.GetToken(c.Url, flagUserName, password)
+		token, err := config.GetToken(c.URL, flagUserName, password)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
-				"url":      c.Url,
+				"url":      c.URL,
 				"userName": flagUserName,
 			}).Fatal(err)
 		}
@@ -107,8 +107,8 @@ func Login(cmd *cobra.Command, args []string) error {
 	cluster := AO.Clusters[AO.APICluster]
 	DefaultAPIClient.Token = cluster.Token
 
-	host := cluster.BooberUrl
-	gobohost := cluster.GoboUrl
+	host := cluster.BooberURL
+	gobohost := cluster.GoboURL
 
 	if AO.Localhost {
 		host = "http://localhost:8080"

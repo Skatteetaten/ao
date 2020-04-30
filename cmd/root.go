@@ -119,7 +119,7 @@ func initialize(cmd *cobra.Command, args []string) error {
 		logrus.Info("Creating new config")
 		aoConfig = &config.DefaultAOConfig
 		aoConfig.InitClusters()
-		aoConfig.SelectApiCluster()
+		aoConfig.SelectAPICluster()
 		err = config.WriteConfig(*aoConfig, ConfigLocation)
 		if err != nil {
 			return err
@@ -143,8 +143,8 @@ func initialize(cmd *cobra.Command, args []string) error {
 
 	api := &client.APIClient{
 		Affiliation: aoConfig.Affiliation,
-		Host:        apiCluster.BooberUrl,
-		GoboHost:    apiCluster.GoboUrl,
+		Host:        apiCluster.BooberURL,
+		GoboHost:    apiCluster.GoboURL,
 		Token:       apiCluster.Token,
 		RefName:     aoConfig.RefName,
 	}

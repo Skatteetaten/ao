@@ -40,7 +40,7 @@ func TestCluster_HasValidToken(t *testing.T) {
 	}
 
 	cluster := &Cluster{
-		Url:  ts.URL,
+		URL:  ts.URL,
 		Name: "test",
 	}
 
@@ -65,7 +65,7 @@ func TestGetToken(t *testing.T) {
 
 	for _, tc := range cases {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			assert.Equal(t, authenticationUrlSuffix, req.URL.RequestURI())
+			assert.Equal(t, authenticationURLSuffix, req.URL.RequestURI())
 
 			// No redirect when user is not authorized
 			if tc.ExpectedError == "Not authorized" {
@@ -90,8 +90,8 @@ func TestGetToken(t *testing.T) {
 func TestAOConfig_InitClusters(t *testing.T) {
 
 	ao := DefaultAOConfig
-	ao.ClusterUrlPattern = "%s"
-	ao.BooberUrlPattern = "%s"
+	ao.ClusterURLPattern = "%s"
+	ao.BooberURLPattern = "%s"
 	ao.AvailableClusters = []string{}
 	ao.PreferredAPIClusters = []string{}
 
@@ -138,7 +138,7 @@ func TestAOConfig_InitClusters(t *testing.T) {
 		assert.Equal(t, test.Reachable, c.Reachable)
 
 		// Since clusterUrlPattern is %s then name and url should be equal
-		assert.Equal(t, c.Name, c.Url)
+		assert.Equal(t, c.Name, c.URL)
 	}
 
 	for _, t := range testServers {

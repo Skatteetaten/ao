@@ -103,7 +103,7 @@ func PrintClusters(cmd *cobra.Command, printAll bool) {
 			loggedIn = "Yes"
 		}
 
-		apiURL := fmt.Sprintf("%s %s", cluster.BooberUrl, cluster.GoboUrl)
+		apiURL := fmt.Sprintf("%s %s", cluster.BooberURL, cluster.GoboURL)
 
 		api := ""
 		if name == AO.APICluster {
@@ -112,7 +112,7 @@ func PrintClusters(cmd *cobra.Command, printAll bool) {
 				apiURL = "http://localhost:8080"
 			}
 		}
-		line := fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s\t%s", name, reachable, loggedIn, api, cluster.Url, apiURL)
+		line := fmt.Sprintf("\t%s\t%s\t%s\t%s\t%s\t%s", name, reachable, loggedIn, api, cluster.URL, apiURL)
 		rows = append(rows, line)
 	}
 
@@ -142,7 +142,7 @@ func SetRefName(cmd *cobra.Command, args []string) error {
 // UpdateClusters is the entry point for the `update-clusters` cli command
 func UpdateClusters(cmd *cobra.Command, args []string) error {
 	AO.InitClusters()
-	AO.SelectApiCluster()
+	AO.SelectAPICluster()
 	return config.WriteConfig(*AO, ConfigLocation)
 }
 
@@ -157,7 +157,7 @@ func RecreateConfig(cmd *cobra.Command, args []string) error {
 	}
 
 	conf.InitClusters()
-	conf.SelectApiCluster()
+	conf.SelectAPICluster()
 	return config.WriteConfig(*conf, ConfigLocation)
 }
 

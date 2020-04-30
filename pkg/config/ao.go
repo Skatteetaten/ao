@@ -14,6 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// AOConfig is a structure of the configuration of ao
 type AOConfig struct {
 	RefName     string              `json:"refName"`
 	APICluster  string              `json:"apiCluster"`
@@ -24,24 +25,26 @@ type AOConfig struct {
 	AvailableClusters       []string `json:"availableClusters"`
 	PreferredAPIClusters    []string `json:"preferredApiClusters"`
 	AvailableUpdateClusters []string `json:"availableUpdateClusters"`
-	ClusterUrlPattern       string   `json:"clusterUrlPattern"`
-	BooberUrlPattern        string   `json:"booberUrlPattern"`
-	UpdateUrlPattern        string   `json:"updateUrlPattern"`
-	GoboUrlPattern          string   `json:"goboUrlPattern"`
+	ClusterURLPattern       string   `json:"clusterUrlPattern"`
+	BooberURLPattern        string   `json:"booberUrlPattern"`
+	UpdateURLPattern        string   `json:"updateUrlPattern"`
+	GoboURLPattern          string   `json:"goboUrlPattern"`
 }
 
+// DefaultAOConfig is an AOConfig with default values
 var DefaultAOConfig = AOConfig{
 	RefName:                 "master",
 	Clusters:                make(map[string]*Cluster),
 	AvailableClusters:       []string{"utv", "utv-relay", "test", "test-relay", "prod", "prod-relay"},
 	PreferredAPIClusters:    []string{"utv", "test"},
 	AvailableUpdateClusters: []string{"utv", "test"},
-	ClusterUrlPattern:       "https://%s-master.paas.skead.no:8443",
-	BooberUrlPattern:        "http://boober-aurora.%s.paas.skead.no",
-	UpdateUrlPattern:        "http://ao-aurora-tools.%s.paas.skead.no",
-	GoboUrlPattern:          "http://gobo.aurora.%s.paas.skead.no",
+	ClusterURLPattern:       "https://%s-master.paas.skead.no:8443",
+	BooberURLPattern:        "http://boober-aurora.%s.paas.skead.no",
+	UpdateURLPattern:        "http://ao-aurora-tools.%s.paas.skead.no",
+	GoboURLPattern:          "http://gobo.aurora.%s.paas.skead.no",
 }
 
+// LoadConfigFile loads an AOConfig file from file system
 func LoadConfigFile(configLocation string) (*AOConfig, error) {
 	raw, err := ioutil.ReadFile(configLocation)
 	if err != nil {
@@ -57,6 +60,7 @@ func LoadConfigFile(configLocation string) (*AOConfig, error) {
 	return c, nil
 }
 
+// WriteConfig writes an AOConfig file to file system
 func WriteConfig(ao AOConfig, configLocation string) error {
 	data, err := json.MarshalIndent(ao, "", "  ")
 	if err != nil {
@@ -65,7 +69,8 @@ func WriteConfig(ao AOConfig, configLocation string) error {
 	return ioutil.WriteFile(configLocation, data, 0644)
 }
 
-func (ao *AOConfig) SelectApiCluster() {
+// SelectAPICluster returns specified APICluster or makes a priority based selection of an APICluster
+func (ao *AOConfig) SelectAPICluster() {
 	if ao.APICluster != "" {
 		return
 	}
@@ -90,8 +95,9 @@ func (ao *AOConfig) SelectApiCluster() {
 	}
 }
 
+// Update checks for a new version of ao and performs update with an optional interactive confirmation
 func (ao *AOConfig) Update(noPrompt bool) error {
-	url := ao.getUpdateUrl()
+	url := ao.getUpdateURL()
 	if url == "" {
 		return errors.New("No update server is available, check config")
 	}
@@ -109,12 +115,11 @@ func (ao *AOConfig) Update(noPrompt bool) error {
 			message := fmt.Sprintf("New version of AO is available (%s) - please download from %s", serverVersion.Version, url)
 			fmt.Println(message)
 			return nil
-		} else {
-			message := fmt.Sprintf("Do you want update AO from version %s -> %s?", Version, serverVersion.Version)
-			update := prompt.Confirm(message, true)
-			if !update {
-				return errors.New("Update aborted")
-			}
+		}
+		message := fmt.Sprintf("Do you want update AO from version %s -> %s?", Version, serverVersion.Version)
+		update := prompt.Confirm(message, true)
+		if !update {
+			return errors.New("Update aborted")
 		}
 	}
 
@@ -158,7 +163,7 @@ func (ao *AOConfig) replaceAO(data []byte) error {
 	return nil
 }
 
-func (ao *AOConfig) getUpdateUrl() string {
+func (ao *AOConfig) getUpdateURL() string {
 	var updateCluster string
 	for _, c := range ao.AvailableUpdateClusters {
 		available, found := ao.Clusters[c]
@@ -173,5 +178,5 @@ func (ao *AOConfig) getUpdateUrl() string {
 		return ""
 	}
 
-	return fmt.Sprintf(ao.UpdateUrlPattern, updateCluster)
+	return fmt.Sprintf(ao.UpdateURLPattern, updateCluster)
 }

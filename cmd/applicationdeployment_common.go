@@ -103,7 +103,7 @@ func getApplicationDeploymentClient(partition Partition) client.ApplicationDeplo
 		if partition.OverrideToken != "" {
 			token = partition.OverrideToken
 		}
-		cli = client.NewAPIClient(partition.Cluster.BooberUrl, token, partition.AuroraConfigName, AO.RefName)
+		cli = client.NewAPIClient(partition.Cluster.BooberURL, token, partition.AuroraConfigName, AO.RefName)
 	}
 
 	return cli
