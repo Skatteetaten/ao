@@ -9,8 +9,10 @@ import (
 	"time"
 )
 
+// PrettyFormatter is a utility object for prettifying log entrys
 type PrettyFormatter struct{}
 
+// Format pretty formats log entry
 func (df *PrettyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	var b *bytes.Buffer
 	if entry.Buffer != nil {
