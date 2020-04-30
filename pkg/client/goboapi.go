@@ -6,6 +6,7 @@ import (
 	"github.com/machinebox/graphql"
 )
 
+// RunGraphQl performs a GraphQl based API call
 func (api *APIClient) RunGraphQl(graphQlRequest string, response interface{}) error {
 	client := api.getGraphQlClient()
 	req := api.newRequest(graphQlRequest)

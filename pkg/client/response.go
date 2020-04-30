@@ -8,6 +8,7 @@ import (
 )
 
 type (
+	// BooberResponse holds the response of an external call to boober
 	BooberResponse struct {
 		Success bool            `json:"success"`
 		Message string          `json:"message"`
@@ -15,6 +16,7 @@ type (
 		Count   int             `json:"count"`
 	}
 
+	// ErrorResponse is a structured error response
 	ErrorResponse struct {
 		message            string
 		ContainsError      bool
@@ -48,6 +50,7 @@ func (e errorField) getValue() string {
 	return ""
 }
 
+// ParseItems unmarshals a boober response if it was successful
 func (res *BooberResponse) ParseItems(data interface{}) error {
 	if !res.Success {
 		return errors.New(res.Message)
@@ -56,6 +59,7 @@ func (res *BooberResponse) ParseItems(data interface{}) error {
 	return json.Unmarshal(res.Items, data)
 }
 
+// ParseFirstItem unmarshals the first item of a boober response
 func (res *BooberResponse) ParseFirstItem(data interface{}) error {
 	var items []json.RawMessage
 	err := res.ParseItems(&items)
@@ -70,6 +74,7 @@ func (res *BooberResponse) ParseFirstItem(data interface{}) error {
 	return json.Unmarshal(items[0], data)
 }
 
+// Error returns the error of a BooberResponse if there was an error
 func (res *BooberResponse) Error() error {
 	errRes, err := res.toErrorResponse()
 	if err != nil {
@@ -81,6 +86,7 @@ func (res *BooberResponse) Error() error {
 	return nil
 }
 
+// String returns the ErrorResponse as a string
 func (e *ErrorResponse) String() string {
 	var status string
 

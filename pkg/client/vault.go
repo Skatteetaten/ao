@@ -10,9 +10,10 @@ import (
 )
 
 type (
+	// Secrets is a key-value map of secrets
 	Secrets map[string]string
 
-	// TODO: rename to response
+	// AuroraVaultInfo TODO: rename to response
 	AuroraVaultInfo struct {
 		Name        string   `json:"name"`
 		Permissions []string `json:"permissions"`
@@ -20,18 +21,20 @@ type (
 		HasAccess   bool     `json:"hasAccess"`
 	}
 
-	// TODO: rename to request
+	// AuroraSecretVault TODO: rename to request
 	AuroraSecretVault struct {
 		Name        string   `json:"name"`
 		Permissions []string `json:"permissions"`
 		Secrets     Secrets  `json:"secrets"`
 	}
 
+	// VaultFileResource holds contents from a vault file resource
 	VaultFileResource struct {
 		Contents string `json:"contents"`
 	}
 )
 
+// NewAuroraSecretVault creates a new AuroraSecretVault
 func NewAuroraSecretVault(name string) *AuroraSecretVault {
 	return &AuroraSecretVault{
 		Name:        name,
@@ -40,6 +43,7 @@ func NewAuroraSecretVault(name string) *AuroraSecretVault {
 	}
 }
 
+// GetVaults gets aurora vault information via API calls
 func (api *APIClient) GetVaults() ([]*AuroraVaultInfo, error) {
 	endpoint := fmt.Sprintf("/vault/%s", api.Affiliation)
 
@@ -57,6 +61,7 @@ func (api *APIClient) GetVaults() ([]*AuroraVaultInfo, error) {
 	return vaults, nil
 }
 
+// GetVault gets an aurora secret vault via API calls
 func (api *APIClient) GetVault(vaultName string) (*AuroraSecretVault, error) {
 	endpoint := fmt.Sprintf("/vault/%s/%s", api.Affiliation, vaultName)
 
@@ -73,6 +78,7 @@ func (api *APIClient) GetVault(vaultName string) (*AuroraSecretVault, error) {
 	return &vault, nil
 }
 
+// DeleteVault deletes an aurora secret vault via API calls
 func (api *APIClient) DeleteVault(vaultName string) error {
 	endpoint := fmt.Sprintf("/vault/%s/%s", api.Affiliation, vaultName)
 
@@ -88,6 +94,7 @@ func (api *APIClient) DeleteVault(vaultName string) error {
 	return nil
 }
 
+// SaveVault saves an aurora secret vault via API calls
 func (api *APIClient) SaveVault(vault AuroraSecretVault) error {
 	endpoint := fmt.Sprintf("/vault/%s", api.Affiliation)
 
@@ -108,6 +115,7 @@ func (api *APIClient) SaveVault(vault AuroraSecretVault) error {
 	return nil
 }
 
+// GetSecretFile gets a secret file via API calls
 func (api *APIClient) GetSecretFile(vault, secret string) (string, string, error) {
 	endpoint := fmt.Sprintf("/vault/%s/%s/%s", api.Affiliation, vault, secret)
 
@@ -136,6 +144,7 @@ func (api *APIClient) GetSecretFile(vault, secret string) (string, string, error
 	return string(data), eTag, nil
 }
 
+// UpdateSecretFile updates a secret file via API calls
 func (api *APIClient) UpdateSecretFile(vault, secret, eTag string, content []byte) error {
 	endpoint := fmt.Sprintf("/vault/%s/%s/%s", api.Affiliation, vault, secret)
 
@@ -166,6 +175,7 @@ func (api *APIClient) UpdateSecretFile(vault, secret, eTag string, content []byt
 	return nil
 }
 
+// GetSecret gets a secret by name
 func (s Secrets) GetSecret(name string) (string, error) {
 	secret, found := s[name]
 	if !found {
@@ -179,11 +189,13 @@ func (s Secrets) GetSecret(name string) (string, error) {
 	return string(data), nil
 }
 
+// AddSecret adds a secret
 func (s Secrets) AddSecret(name, content string) {
 	encoded := base64.StdEncoding.EncodeToString([]byte(content))
 	s[name] = encoded
 }
 
+// RemoveSecret deletes a secret
 func (s Secrets) RemoveSecret(name string) {
 	delete(s, name)
 }

@@ -8,12 +8,14 @@ import (
 	"ao/pkg/deploymentspec"
 )
 
+// DeploySpecClient is an internal client facade for external deployment specification API calls
 type DeploySpecClient interface {
 	Doer
 	GetAuroraDeploySpec(applications []string, defaults bool) ([]deploymentspec.DeploymentSpec, error)
 	GetAuroraDeploySpecFormatted(environment, application string, defaults bool) (string, error)
 }
 
+// GetAuroraDeploySpec gets an Aurora deployment specification via API calls
 func (api *APIClient) GetAuroraDeploySpec(applications []string, defaults bool) ([]deploymentspec.DeploymentSpec, error) {
 	endpoint := fmt.Sprintf("/auroradeployspec/%s/?", api.Affiliation)
 	queries := buildDeploySpecQueries(applications, defaults)
@@ -80,6 +82,7 @@ func buildDeploySpecQueries(applications []string, defaults bool) []string {
 	return append(queries, v.Encode())
 }
 
+// GetAuroraDeploySpecFormatted gets a formatted Aurora deployment specification via API calls
 func (api *APIClient) GetAuroraDeploySpecFormatted(environment, application string, defaults bool) (string, error) {
 	endpoint := fmt.Sprintf("/auroradeployspec/%s/%s/%s/formatted", api.Affiliation, environment, application)
 	if !defaults {
