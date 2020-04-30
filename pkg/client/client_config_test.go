@@ -27,7 +27,7 @@ func TestApiClient_GetClientConfig(t *testing.T) {
 
 		assert.Equal(t, 1, calls)
 		assert.NoError(t, err)
-		assert.Equal(t, "file:///tmp/boober/%s", clientConfig.GitUrlPattern)
-		assert.Equal(t, 2, clientConfig.ApiVersion)
+		assert.Equal(t, "file:///tmp/boober/%s", clientConfig.GitURLPattern)
+		assert.Equal(t, 2, clientConfig.APIVersion)
 	})
 }

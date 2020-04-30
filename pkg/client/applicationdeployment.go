@@ -20,7 +20,8 @@ type ApplicationDeploymentClient interface {
 }
 
 type (
-	applicationDeploymentRef struct {
+	// ApplicationDeploymentRef specifies an application deployment reference
+	ApplicationDeploymentRef struct {
 		Environment string `json:"environment"`
 		Application string `json:"application"`
 	}
@@ -29,7 +30,6 @@ type (
 		Namespace string `json:"namespace"`
 		Name      string `json:"name"`
 	}
-
 	// DeployResults holds the results of deployments
 	DeployResults struct {
 		Message string
@@ -49,7 +49,7 @@ type (
 
 	// DeployPayload holds the payload of a deployment
 	DeployPayload struct {
-		ApplicationDeploymentRefs []applicationDeploymentRef `json:"applicationDeploymentRefs"`
+		ApplicationDeploymentRefs []ApplicationDeploymentRef `json:"applicationDeploymentRefs"`
 		Overrides                 map[string]string          `json:"overrides"`
 		Deploy                    bool                       `json:"deploy"`
 	}
@@ -90,20 +90,20 @@ type (
 
 	// ExistsPayload is the payload of an enquiry action for application existence
 	ExistsPayload struct {
-		ApplicationDeploymentRefs []applicationDeploymentRef `json:"adr"`
+		ApplicationDeploymentRefs []ApplicationDeploymentRef `json:"adr"`
 	}
 )
 
-// NewApplicationDeploymentRef creates an applicationDeploymentRef
-func NewApplicationDeploymentRef(name string) *applicationDeploymentRef {
+// NewApplicationDeploymentRef creates an ApplicationDeploymentRef
+func NewApplicationDeploymentRef(name string) *ApplicationDeploymentRef {
 	slice := strings.Split(name, "/")
-	return &applicationDeploymentRef{
+	return &ApplicationDeploymentRef{
 		Environment: slice[0],
 		Application: slice[1],
 	}
 }
 
-// NewApplicationDeploymentRef creates an ApplicationRef
+// NewApplicationRef creates an ApplicationRef
 func NewApplicationRef(namespace, name string) *ApplicationRef {
 	return &ApplicationRef{
 		Namespace: namespace,
@@ -227,8 +227,8 @@ func (api *APIClient) Exists(existsPayload *ExistsPayload) (*ExistsResults, erro
 	return &existsResults, nil
 }
 
-func createApplicationDeploymentRefs(apps []string) []applicationDeploymentRef {
-	var applicationDeploymentRefs []applicationDeploymentRef
+func createApplicationDeploymentRefs(apps []string) []ApplicationDeploymentRef {
+	var applicationDeploymentRefs []ApplicationDeploymentRef
 	for _, app := range apps {
 		applicationDeploymentRefs = append(applicationDeploymentRefs, *NewApplicationDeploymentRef(app))
 	}

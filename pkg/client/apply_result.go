@@ -6,8 +6,9 @@ import (
 	"net/http"
 )
 
-func (api *APIClient) GetApplyResult(deployId string) (string, error) {
-	endpoint := fmt.Sprintf("/apply-result/%s/%s", api.Affiliation, deployId)
+// GetApplyResult gets the result of an apply operation
+func (api *APIClient) GetApplyResult(deployID string) (string, error) {
+	endpoint := fmt.Sprintf("/apply-result/%s/%s", api.Affiliation, deployID)
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
 	if err != nil {

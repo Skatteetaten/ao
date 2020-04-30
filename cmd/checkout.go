@@ -55,7 +55,7 @@ func Checkout(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	url := versioncontrol.GetGitUrl(affiliation, flagCheckoutUser, clientConfig.GitUrlPattern)
+	url := versioncontrol.GetGitUrl(affiliation, flagCheckoutUser, clientConfig.GitURLPattern)
 
 	fmt.Printf("Cloning AuroraConfig %s\n", affiliation)
 	fmt.Printf("From: %s\n\n", url)

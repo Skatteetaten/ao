@@ -138,7 +138,7 @@ func Login(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	apiVersion = clientConfig.ApiVersion
+	apiVersion = clientConfig.APIVersion
 	if apiVersion != supportedAPIVersion {
 		var grade string
 		if apiVersion < supportedAPIVersion {
