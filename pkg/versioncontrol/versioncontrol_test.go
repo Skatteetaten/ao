@@ -31,35 +31,35 @@ var testFiles = map[string]string{
 	"test/reference.json": `{}`,
 }
 
-const REPO_PATH = "/tmp/ao/testRepo"
-const GIT_URL_FORMAT = "https://git.aurora.skead.no/scm/ac/%s.git"
+const RepoPath = "/tmp/ao/testRepo"
+const GitURLFormat = "https://git.aurora.skead.no/scm/ac/%s.git"
 
-func repoSetup(gitRemoteUrl string) {
+func repoSetup(gitRemoteURL string) {
 	// Clear old test files
-	os.RemoveAll(REPO_PATH)
-	os.MkdirAll(REPO_PATH, 0755)
-	os.Chdir(REPO_PATH)
+	os.RemoveAll(RepoPath)
+	os.MkdirAll(RepoPath, 0755)
+	os.Chdir(RepoPath)
 
 	if err := exec.Command("git", "init").Run(); err != nil {
 		panic(err)
 	}
-	if err := exec.Command("git", "remote", "add", "origin", gitRemoteUrl).Run(); err != nil {
+	if err := exec.Command("git", "remote", "add", "origin", gitRemoteURL).Run(); err != nil {
 		panic(err)
 	}
 }
 
 func TestFindGitPath(t *testing.T) {
-	gitRemoteUrl := fmt.Sprintf(GIT_URL_FORMAT, "aurora")
-	repoSetup(gitRemoteUrl)
+	gitRemoteURL := fmt.Sprintf(GitURLFormat, "aurora")
+	repoSetup(gitRemoteURL)
 
-	test := REPO_PATH + "/random/test"
+	test := RepoPath + "/random/test"
 
 	os.MkdirAll(test, 0755)
 	os.Chdir(test)
 
 	wd, _ := os.Getwd()
 	path, err := FindGitPath(wd)
-	if err != nil || path != REPO_PATH {
+	if err != nil || path != RepoPath {
 		t.Error("Expected git repo to be found")
 	}
 }
@@ -68,7 +68,7 @@ func TestGetGitUrl(t *testing.T) {
 	type args struct {
 		affiliation   string
 		user          string
-		gitUrlPattern string
+		gitURLPattern string
 	}
 	tests := []struct {
 		name string
@@ -80,7 +80,7 @@ func TestGetGitUrl(t *testing.T) {
 			args: args{
 				affiliation:   "pros",
 				user:          "hans",
-				gitUrlPattern: GIT_URL_FORMAT,
+				gitURLPattern: GitURLFormat,
 			},
 			want: "https://hans@git.aurora.skead.no/scm/ac/pros.git",
 		},
@@ -89,15 +89,15 @@ func TestGetGitUrl(t *testing.T) {
 			args: args{
 				affiliation:   "pros",
 				user:          "hans",
-				gitUrlPattern: "file:///tmp/local-git/%s",
+				gitURLPattern: "file:///tmp/local-git/%s",
 			},
 			want: "file:///tmp/local-git/pros",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetGitUrl(tt.args.affiliation, tt.args.user, tt.args.gitUrlPattern); got != tt.want {
-				t.Errorf("GetGitUrl() = %v, want %v", got, tt.want)
+			if got := GetGitURL(tt.args.affiliation, tt.args.user, tt.args.gitURLPattern); got != tt.want {
+				t.Errorf("GetGitURL() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -109,9 +109,9 @@ func TestCollectJSONFilesInRepo(t *testing.T) {
 	for name, text := range testFiles {
 		split := strings.Split(name, "/")
 		if len(split) == 2 {
-			os.Mkdir(fmt.Sprintf("%s/%s", REPO_PATH, split[0]), 0755)
+			os.Mkdir(fmt.Sprintf("%s/%s", RepoPath, split[0]), 0755)
 		}
-		err := ioutil.WriteFile(fmt.Sprintf("%s/%s", REPO_PATH, name), []byte(text), 0644)
+		err := ioutil.WriteFile(fmt.Sprintf("%s/%s", RepoPath, name), []byte(text), 0644)
 		if err != nil {
 			t.Error(err)
 		}
@@ -125,7 +125,7 @@ func TestCollectJSONFilesInRepo(t *testing.T) {
 	}{
 		{
 			name:    "Should collect all JSON files from folder successfully",
-			gitRoot: REPO_PATH,
+			gitRoot: RepoPath,
 			want:    4,
 			wantErr: false,
 		},
@@ -159,7 +159,7 @@ func TestCreateGitValidateHook(t *testing.T) {
 		{
 			name: "Should add pre-push hook to .git/hooks",
 			args: args{
-				gitPath:      REPO_PATH,
+				gitPath:      RepoPath,
 				auroraConfig: "pros",
 				hookType:     "pre-push",
 			},
@@ -171,7 +171,7 @@ func TestCreateGitValidateHook(t *testing.T) {
 			if err := CreateGitValidateHook(tt.args.gitPath, tt.args.hookType, tt.args.auroraConfig); (err != nil) != tt.wantErr {
 				t.Errorf("CreateGitValidateHook() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			data, err := ioutil.ReadFile(fmt.Sprintf("%s/.git/hooks/pre-push", REPO_PATH))
+			data, err := ioutil.ReadFile(fmt.Sprintf("%s/.git/hooks/pre-push", RepoPath))
 			assert.NotEmpty(t, data)
 			assert.NoError(t, err)
 		})
