@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# New code
+
+# make clean
+# make test-xml
+# make test-coverage
+# go test -short -coverprofile=bin/cov.out `go list ./... | grep -v vendor/`
+# make
+
+# Old build code below this line
 
 type glide 2> /dev/null || /bin/sh -c "export GOPATH=$GOROOT && curl -k https://glide.sh/get | sh"
 type go-junit-report 2> /dev/null || go get -u github.com/jstemmer/go-junit-report
