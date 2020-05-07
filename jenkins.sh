@@ -10,7 +10,7 @@
 
 # Old build code below this line
 
-type glide 2> /dev/null || /bin/sh -c "export GOPATH=$GOROOT && curl -k https://glide.sh/get | sh"
+#type glide 2> /dev/null || /bin/sh -c "export GOPATH=$GOROOT && curl -k https://glide.sh/get | sh"
 type go-junit-report 2> /dev/null || go get -u github.com/jstemmer/go-junit-report
 type gocov 2> /dev/null || go get github.com/axw/gocov/gocov
 type gocov-xml 2> /dev/null || go get github.com/AlekSi/gocov-xml

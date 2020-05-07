@@ -53,8 +53,8 @@ all: build
 
 deps:
 	@echo "installing deps"
-	@glide install
-
+	@echo "no deps (glide EOL)"
+#	@glide install
 
 build: build-dirs bin-file-linux bin-file-darwin bin-file-windows
 
