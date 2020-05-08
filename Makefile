@@ -51,11 +51,6 @@ GITHASH := $(shell git rev-parse HEAD)
 # If you want to build AND push all containers, see the 'all-push' rule.
 all: build
 
-deps:
-	@echo "installing deps"
-	@echo "no deps (glide EOL)"
-#	@glide install
-
 build: build-dirs bin-file-linux bin-file-darwin bin-file-windows
 
 bin-file-linux:
