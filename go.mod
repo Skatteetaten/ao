@@ -3,10 +3,7 @@ module ao
 go 1.14
 
 require (
-	github.com/AlekSi/gocov-xml v0.0.0-20190121064608-3a14fb1c4737 // indirect
 	github.com/andybalholm/crlf v0.0.0-20171020200849-670099aa064f
-	github.com/axw/gocov v1.0.0 // indirect
-	github.com/jstemmer/go-junit-report v0.9.1 // indirect
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.3.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
