@@ -49,9 +49,7 @@ mkdir -p {go}/src/github.com/skatteetaten
 cd {go}/src/github.com/skatteetaten
 git clone https://github.com/Skatteetaten/ao.git
 cd ao
-glide install
 make
-
 ```
 
 Windows and macOS versions are built on Linux. To develop and test
@@ -60,6 +58,5 @@ on windows, use the go install command instead of make.
 # Dependencies?
 
 ```
-glide up # Update dependencies. Only run when you change something in glide.yaml
-glide install # install dependencies
+go mod tidy
 ```
