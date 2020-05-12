@@ -29,7 +29,7 @@ func AddGraphql(cmd *cobra.Command, args []string) error {
 }`
 	type ConfigFileValidationResponse struct {
 		message string
-		success string
+		success bool
 	}
 
 	createAuroraConfigFileRequest := graphql.NewRequest(createAuroraConfigFileRequestString)
@@ -42,7 +42,9 @@ func AddGraphql(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// TODO: handle configFileValidationResponse
+	if !configFileValidationResponse.success {
+		return errors.Errorf("Remote error: %s\n", configFileValidationResponse.message)
+	}
 
 	cmd.Printf("%s has been added\n", fileName)
 
