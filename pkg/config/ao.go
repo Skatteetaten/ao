@@ -110,7 +110,7 @@ func (ao *AOConfig) Update(noPrompt bool) error {
 			fmt.Println(message)
 			return nil
 		} else {
-			message := fmt.Sprintf("Do you want update AO from version %s -> %s?", Version, serverVersion.Version)
+			message := fmt.Sprintf("Do you want to update AO from version %s -> %s?", Version, serverVersion.Version)
 			update := prompt.Confirm(message, true)
 			if !update {
 				return errors.New("Update aborted")
