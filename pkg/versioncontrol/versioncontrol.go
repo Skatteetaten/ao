@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"ao/pkg/auroraconfig"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 
 	"github.com/pkg/errors"
 )

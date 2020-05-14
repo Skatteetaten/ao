@@ -4,8 +4,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"ao/pkg/auroraconfig"
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/spf13/cobra"
 )
 

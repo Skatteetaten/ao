@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"ao/pkg/client"
-	"ao/pkg/deploymentspec"
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 )
 
 type partialExistsResult struct {

@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"ao/pkg/auroraconfig"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/stretchr/testify/assert"
 )
 

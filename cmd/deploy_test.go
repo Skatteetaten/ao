@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

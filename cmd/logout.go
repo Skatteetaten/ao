@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"ao/pkg/config"
+	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
 )
 

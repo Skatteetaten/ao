@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"ao/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/skatteetaten/ao/pkg/config"
 )
 
 // Constants for API access to boober/gobo

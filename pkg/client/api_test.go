@@ -8,8 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"ao/pkg/auroraconfig"
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"

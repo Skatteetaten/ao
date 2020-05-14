@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"ao/pkg/deploymentspec"
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 )
 
 // ApplicationDeploymentClient is a client for deploying an application via an external service

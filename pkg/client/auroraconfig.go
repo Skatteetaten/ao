@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"ao/pkg/auroraconfig"
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 )
 
 // AuroraConfigClient is a an internal client facade for external aurora configuration API calls

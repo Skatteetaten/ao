@@ -8,7 +8,7 @@ import (
 	_ "go/token"
 	"os"
 
-	"ao/pkg/versioncontrol"
+	"github.com/skatteetaten/ao/pkg/versioncontrol"
 	"github.com/spf13/cobra"
 )
 

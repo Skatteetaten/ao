@@ -1,8 +1,8 @@
 package client
 
 import (
-	"ao/pkg/auroraconfig"
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 )
 
 // AuroraConfigClientMock is a base mock type

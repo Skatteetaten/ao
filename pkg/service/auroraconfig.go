@@ -1,8 +1,8 @@
 package service
 
 import (
-	"ao/pkg/auroraconfig"
-	"ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/skatteetaten/ao/pkg/client"
 )
 
 // GetApplications returns list of applications

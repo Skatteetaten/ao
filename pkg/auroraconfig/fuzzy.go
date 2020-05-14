@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"ao/pkg/collections"
 	"github.com/renstrom/fuzzysearch/fuzzy"
+	"github.com/skatteetaten/ao/pkg/collections"
 )
 
 // FilterMode is a numeric filtering parameter

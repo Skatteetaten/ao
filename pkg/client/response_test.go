@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"ao/pkg/auroraconfig"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/stretchr/testify/assert"
 )
 

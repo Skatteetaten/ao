@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
-	"ao/pkg/auroraconfig"
-	"ao/pkg/editor"
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/skatteetaten/ao/pkg/editor"
 	"github.com/spf13/cobra"
 )
 

@@ -11,10 +11,10 @@ import (
 	"path"
 	"sort"
 
-	"ao/pkg/client"
-	"ao/pkg/editor"
-	"ao/pkg/prompt"
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/editor"
+	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/spf13/cobra"
 )
 

@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"ao/pkg/deploymentspec"
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 )
 
 // DeploySpecClient is an internal client facade for external deployment specification API calls

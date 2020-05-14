@@ -9,9 +9,9 @@ import (
 
 	"path/filepath"
 
-	"ao/pkg/prompt"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/skatteetaten/ao/pkg/prompt"
 )
 
 // AOConfig is a structure of the configuration of ao

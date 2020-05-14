@@ -1,7 +1,7 @@
 package service
 
 import (
-	"ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/client"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

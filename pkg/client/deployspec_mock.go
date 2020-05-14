@@ -1,6 +1,6 @@
 package client
 
-import "ao/pkg/deploymentspec"
+import "github.com/skatteetaten/ao/pkg/deploymentspec"
 
 // DeploySpecClientMock is a base mock type
 type DeploySpecClientMock struct {

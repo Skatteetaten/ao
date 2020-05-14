@@ -3,10 +3,10 @@ package cmd
 import (
 	"fmt"
 
-	"ao/pkg/client"
-	"ao/pkg/config"
-	"ao/pkg/deploymentspec"
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/config"
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 )
 
 var (

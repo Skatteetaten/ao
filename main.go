@@ -6,9 +6,9 @@ import (
 	"runtime"
 	"strings"
 
-	"ao/pkg/config"
+	"github.com/skatteetaten/ao/pkg/config"
 
-	"ao/cmd"
+	"github.com/skatteetaten/ao/cmd"
 	"github.com/spf13/cobra"
 )
 

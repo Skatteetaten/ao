@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"ao/pkg/client"
-	"ao/pkg/config"
-	"ao/pkg/log"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/config"
+	"github.com/skatteetaten/ao/pkg/log"
 	"github.com/spf13/cobra"
 )
 

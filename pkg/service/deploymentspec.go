@@ -1,8 +1,8 @@
 package service
 
 import (
-	"ao/pkg/client"
-	"ao/pkg/deploymentspec"
+	"github.com/skatteetaten/ao/pkg/client"
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 )
 
 // GetFilteredDeploymentSpecs gets a filtered array of deployment specifications
