@@ -8,6 +8,32 @@ import (
 	"os"
 )
 
+const createAuroraConfigFileRequestString = `mutation createAuroraConfigFile($newAuroraConfigFileInput: NewAuroraConfigFileInput!){
+  createAuroraConfigFile(input: $newAuroraConfigFileInput)
+  {
+    message
+    success
+  }
+}`
+
+// NewAuroraConfigFileInput is input to the graphql createAuroraConfigFile interface
+type NewAuroraConfigFileInput struct {
+	AuroraConfigName string `json:"auroraConfigName"`
+	FileName         string `json:"fileName"`
+	Contents         string `json:"contents"`
+}
+
+// AuroraConfigFileValidationResponse is core of response from the graphql "createAuroraConfigFile"
+type AuroraConfigFileValidationResponse struct {
+	Message string `json:"message"`
+	Success bool   `json:"success"`
+}
+
+// CreateAuroraConfigFileResponse is response from the named graphql mutation "createAuroraConfigFile"
+type CreateAuroraConfigFileResponse struct {
+	CreateAuroraConfigFile AuroraConfigFileValidationResponse `json:"createAuroraConfigFile"`
+}
+
 func AddGraphql(cmd *cobra.Command, args []string) error {
 
 	if len(args) != 2 {
@@ -20,30 +46,21 @@ func AddGraphql(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	createAuroraConfigFileRequestString := `mutation ($auroraConfigName: String!, $fileName: String!, $contents: String!){
-  createAuroraConfigFile(input: {auroraConfigName: $auroraConfigName, fileName: $fileName, contents: $contents })
-  {
-    message
-    success
-  }
-}`
-	type ConfigFileValidationResponse struct {
-		message string
-		success bool
-	}
-
 	createAuroraConfigFileRequest := graphql.NewRequest(createAuroraConfigFileRequestString)
-	createAuroraConfigFileRequest.Var("auroraConfigName", DefaultApiClient.Affiliation)
-	createAuroraConfigFileRequest.Var("fileName", fileName)
-	createAuroraConfigFileRequest.Var("contents", string(data))
+	newAuroraConfigFileInput := NewAuroraConfigFileInput{
+		AuroraConfigName: DefaultApiClient.Affiliation,
+		FileName:         fileName,
+		Contents:         string(data),
+	}
+	createAuroraConfigFileRequest.Var("newAuroraConfigFileInput", newAuroraConfigFileInput)
 
-	var configFileValidationResponse ConfigFileValidationResponse
-	if err := DefaultApiClient.RunGraphQlMutation(createAuroraConfigFileRequest, &configFileValidationResponse); err != nil {
+	var createAuroraConfigFileResponse CreateAuroraConfigFileResponse
+	if err := DefaultApiClient.RunGraphQlMutation(createAuroraConfigFileRequest, &createAuroraConfigFileResponse); err != nil {
 		return err
 	}
 
-	if !configFileValidationResponse.success {
-		return errors.Errorf("Remote error: %s\n", configFileValidationResponse.message)
+	if !createAuroraConfigFileResponse.CreateAuroraConfigFile.Success {
+		return errors.Errorf("Remote error: %s\n", createAuroraConfigFileResponse.CreateAuroraConfigFile.Message)
 	}
 
 	cmd.Printf("%s has been added\n", fileName)

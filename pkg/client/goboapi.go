@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/machinebox/graphql"
+	"github.com/sirupsen/logrus"
 )
 
 func (api *ApiClient) RunGraphQl(graphQlRequest string, response interface{}) error {
@@ -32,6 +33,7 @@ func (api *ApiClient) RunGraphQlMutation(graphQlRequest *graphql.Request, respon
 func (api *ApiClient) getGraphQlClient() *graphql.Client {
 	endpoint := fmt.Sprintf("%s/graphql", api.GoboHost)
 	client := graphql.NewClient(endpoint)
+	client.Log = func(logEntry string) { logrus.Debug(logEntry) }
 	return client
 }
 
