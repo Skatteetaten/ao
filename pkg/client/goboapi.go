@@ -19,7 +19,7 @@ func (api *APIClient) RunGraphQl(graphQlRequest string, response interface{}) er
 	return nil
 }
 
-func (api *ApiClient) RunGraphQlMutation(graphQlRequest *graphql.Request, response interface{}) error {
+func (api *APIClient) RunGraphQlMutation(graphQlRequest *graphql.Request, response interface{}) error {
 	client := api.getGraphQlClient()
 	ctx := context.Background()
 	graphQlRequest.Header.Set("Cache-Control", "no-cache")
@@ -31,7 +31,7 @@ func (api *ApiClient) RunGraphQlMutation(graphQlRequest *graphql.Request, respon
 	return nil
 }
 
-func (api *ApiClient) getGraphQlClient() *graphql.Client {
+func (api *APIClient) getGraphQlClient() *graphql.Client {
 	endpoint := fmt.Sprintf("%s/graphql", api.GoboHost)
 	client := graphql.NewClient(endpoint)
 	client.Log = func(logEntry string) { logrus.Debug(logEntry) }
