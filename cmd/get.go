@@ -74,8 +74,9 @@ func init() {
 	getDeploymentsCmd.Flags().BoolVarP(&flagAsList, "list", "", false, "print ApplicationDeploymentRefs as a list")
 }
 
+// PrintAll is the main method for the `get all` cli command
 func PrintAll(cmd *cobra.Command, args []string) error {
-	fileNames, err := DefaultApiClient.GetFileNames()
+	fileNames, err := DefaultAPIClient.GetFileNames()
 	if err != nil {
 		return err
 	}
@@ -97,8 +98,9 @@ func PrintAll(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// PrintApplications is the main method for the `get app` cli command
 func PrintApplications(cmd *cobra.Command, args []string) error {
-	fileNames, err := DefaultApiClient.GetFileNames()
+	fileNames, err := DefaultAPIClient.GetFileNames()
 	if err != nil {
 		return err
 	}
@@ -107,7 +109,7 @@ func PrintApplications(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications available")
 	}
 	if len(args) > 0 {
-		return PrintDeploySpecTable(args, auroraconfig.APP_FILTER, cmd, fileNames)
+		return PrintDeploySpecTable(args, auroraconfig.AppFilter, cmd, fileNames)
 	}
 
 	applications := fileNames.GetApplications()
@@ -115,8 +117,9 @@ func PrintApplications(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// PrintEnvironments is the main method for the `get env` cli command
 func PrintEnvironments(cmd *cobra.Command, args []string) error {
-	fileNames, err := DefaultApiClient.GetFileNames()
+	fileNames, err := DefaultAPIClient.GetFileNames()
 	if err != nil {
 		return err
 	}
@@ -126,7 +129,7 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) > 0 {
-		return PrintDeploySpecTable(args, auroraconfig.ENV_FILTER, cmd, fileNames)
+		return PrintDeploySpecTable(args, auroraconfig.EnvFilter, cmd, fileNames)
 	}
 
 	envrionments := fileNames.GetEnvironments()
@@ -134,6 +137,7 @@ func PrintEnvironments(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// PrintDeploySpecTable prints a table of deployment specifications
 func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *cobra.Command, fileNames auroraconfig.FileNames) error {
 	var selected []string
 	for _, arg := range args {
@@ -143,7 +147,7 @@ func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *co
 		}
 		selected = append(selected, matches...)
 	}
-	specs, err := DefaultApiClient.GetAuroraDeploySpec(selected, true)
+	specs, err := DefaultAPIClient.GetAuroraDeploySpec(selected, true)
 	if err != nil {
 		return err
 	}
@@ -152,6 +156,7 @@ func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *co
 	return nil
 }
 
+// GetDeploySpecTable gets a table of deployment specifications
 func GetDeploySpecTable(specs []deploymentspec.DeploymentSpec, newVersion string) (string, []string) {
 	var rows []string
 	releaseToDefined := false
@@ -204,12 +209,13 @@ func makeColumnPattern(columnCount int) string {
 	return pattern
 }
 
+// PrintDeploySpec is the main method for the `get spec` cli command
 func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	if len(args) > 2 || len(args) < 1 {
 		return cmd.Usage()
 	}
 
-	fileNames, err := DefaultApiClient.GetFileNames()
+	fileNames, err := DefaultAPIClient.GetFileNames()
 	if err != nil {
 		return err
 	}
@@ -229,7 +235,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	split := strings.Split(matches[0], "/")
 
 	if !flagJSON {
-		spec, err := DefaultApiClient.GetAuroraDeploySpecFormatted(split[0], split[1], !flagNoDefaults)
+		spec, err := DefaultAPIClient.GetAuroraDeploySpecFormatted(split[0], split[1], !flagNoDefaults)
 		if err != nil {
 			return err
 		}
@@ -237,7 +243,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	spec, err := DefaultApiClient.GetAuroraDeploySpec(matches, !flagNoDefaults)
+	spec, err := DefaultAPIClient.GetAuroraDeploySpec(matches, !flagNoDefaults)
 	if err != nil {
 		return err
 	}
@@ -251,8 +257,9 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// PrintFile is the main method for the `get file` cli command
 func PrintFile(cmd *cobra.Command, args []string) error {
-	fileNames, err := DefaultApiClient.GetFileNames()
+	fileNames, err := DefaultAPIClient.GetFileNames()
 	if err != nil {
 		return err
 	}
@@ -275,7 +282,7 @@ func PrintFile(cmd *cobra.Command, args []string) error {
 		return errors.Errorf("Search matched more than one file. Search must be more specific.\n%v", matches)
 	}
 
-	auroraConfigFile, _, err := DefaultApiClient.GetAuroraConfigFile(matches[0])
+	auroraConfigFile, _, err := DefaultAPIClient.GetAuroraConfigFile(matches[0])
 	if err != nil {
 		return err
 	}

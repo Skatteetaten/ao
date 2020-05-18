@@ -13,11 +13,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Checkout performs a git clone of a repo (an aurora config repo)
 func Checkout(url string, outputPath string) error {
 	cmd := exec.Command("git", "clone", url, outputPath)
 	return cmd.Run()
 }
 
+// CreateGitValidateHook creates a git validate
 func CreateGitValidateHook(gitPath, hookType, auroraConfig string) error {
 	hookScript := "#!/bin/bash\nexec ao validate -a " + auroraConfig
 	gitHookFile := fmt.Sprintf("%s/.git/hooks/%s", gitPath, hookType)
@@ -29,16 +31,18 @@ func CreateGitValidateHook(gitPath, hookType, auroraConfig string) error {
 	return nil
 }
 
-func GetGitUrl(affiliation, user, gitUrlPattern string) string {
-	if !strings.Contains(gitUrlPattern, "https://") {
-		return fmt.Sprintf(gitUrlPattern, affiliation)
+// GetGitURL gets git URL for an affiliation
+func GetGitURL(affiliation, user, gitURLPattern string) string {
+	if !strings.Contains(gitURLPattern, "https://") {
+		return fmt.Sprintf(gitURLPattern, affiliation)
 	}
 
-	host := strings.TrimPrefix(gitUrlPattern, "https://")
+	host := strings.TrimPrefix(gitURLPattern, "https://")
 	newPattern := fmt.Sprintf("https://%s@%s", user, host)
 	return fmt.Sprintf(newPattern, affiliation)
 }
 
+// FindGitPath searches for a valid git path in a given path
 func FindGitPath(path string) (string, error) {
 	separator := string(filepath.Separator)
 	current := filepath.Join(path, ".git")
@@ -56,6 +60,7 @@ func FindGitPath(path string) (string, error) {
 	return FindGitPath(next)
 }
 
+// CollectAuroraConfigFilesInRepo finds complete AuroraConfig for an affiliation
 func CollectAuroraConfigFilesInRepo(affiliation, gitRoot string) (*auroraconfig.AuroraConfig, error) {
 	ac := &auroraconfig.AuroraConfig{
 		Name: affiliation,
@@ -74,7 +79,7 @@ func CollectAuroraConfigFilesInRepo(affiliation, gitRoot string) (*auroraconfig.
 			return errors.Wrap(err, "Could not read file "+fileName)
 		}
 
-		ac.Files = append(ac.Files, auroraconfig.AuroraConfigFile{
+		ac.Files = append(ac.Files, auroraconfig.File{
 			Name:     fileName,
 			Contents: string(file),
 		})
@@ -82,6 +87,7 @@ func CollectAuroraConfigFilesInRepo(affiliation, gitRoot string) (*auroraconfig.
 	})
 }
 
+// HasOneOfExtension checks text for an array of suffixes
 func HasOneOfExtension(text string, items []string) bool {
 	for _, item := range items {
 		if ok := strings.HasSuffix(text, item); ok {

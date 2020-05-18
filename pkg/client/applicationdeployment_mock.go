@@ -26,7 +26,7 @@ func (api *ApplicationDeploymentClientMock) Delete(deletePayload *DeletePayload)
 
 	results := make([]DeleteResult, len(deletePayload.ApplicationRefs))
 
-	for i, _ := range deletePayload.ApplicationRefs {
+	for i := range deletePayload.ApplicationRefs {
 		results[i] = DeleteResult{Success: true, Reason: "OK", ApplicationRef: ApplicationRef{}}
 	}
 
@@ -39,7 +39,7 @@ func (api *ApplicationDeploymentClientMock) Exists(existsPayload *ExistsPayload)
 
 	results := make([]ExistsResult, len(existsPayload.ApplicationDeploymentRefs))
 
-	for i, _ := range existsPayload.ApplicationDeploymentRefs {
+	for i := range existsPayload.ApplicationDeploymentRefs {
 		results[i] = ExistsResult{Success: true, Message: "OK", Exists: true, ApplicationRef: ApplicationRef{}}
 	}
 

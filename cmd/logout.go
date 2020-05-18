@@ -15,6 +15,7 @@ func init() {
 	RootCmd.AddCommand(logoutCmd)
 }
 
+// Logout performs the `logout` cli command
 func Logout(cmd *cobra.Command, args []string) error {
 	AO.Localhost = false
 	AO.Affiliation = ""

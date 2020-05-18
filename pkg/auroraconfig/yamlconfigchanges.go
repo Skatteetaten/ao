@@ -7,7 +7,7 @@ import (
 )
 
 // RemoveEntry removes a value in an AuroraConfigFile on specified path
-func yamlRemoveEntry(auroraConfigFile *AuroraConfigFile, pathParts []string) error {
+func yamlRemoveEntry(auroraConfigFile *File, pathParts []string) error {
 
 	var yamlcontent map[interface{}]interface{}
 	// Unmarshal content from configfile
@@ -51,7 +51,7 @@ func yamlRemoveEntryRecursive(yamlContent *map[interface{}]interface{}, pathPart
 	return nil
 }
 
-func yamlSetValue(auroraConfigFile *AuroraConfigFile, pathParts []string, value string) error {
+func yamlSetValue(auroraConfigFile *File, pathParts []string, value string) error {
 
 	var yamlcontent map[interface{}]interface{}
 	// Unmarshal content from file
@@ -106,7 +106,7 @@ func yamlSetFoundValue(content *map[interface{}]interface{}, key string, value s
 	return nil
 }
 
-func unmarshalYamlFile(auroraConfigFile *AuroraConfigFile, content *map[interface{}]interface{}) error {
+func unmarshalYamlFile(auroraConfigFile *File, content *map[interface{}]interface{}) error {
 	if err := yaml.Unmarshal([]byte(auroraConfigFile.Contents), &content); err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func unmarshalYamlFile(auroraConfigFile *AuroraConfigFile, content *map[interfac
 	return nil
 }
 
-func marshalYamlFile(auroraConfigFile *AuroraConfigFile, content *map[interface{}]interface{}) error {
+func marshalYamlFile(auroraConfigFile *File, content *map[interface{}]interface{}) error {
 	const yamlFileDashes = "---\n"
 	prettyfile, err := yaml.Marshal(content)
 	if err != nil {

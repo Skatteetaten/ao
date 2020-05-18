@@ -64,7 +64,7 @@ func Test_readPermissionFile(t *testing.T) {
 
 		groups, err := readPermissionFile(tmp.Name())
 
-		assert.EqualError(t, err, ErrEmptyGroups.Error())
+		assert.EqualError(t, err, errEmptyGroups.Error())
 		assert.Empty(t, groups)
 	})
 

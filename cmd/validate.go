@@ -24,6 +24,7 @@ func init() {
 	validateCmd.Flags().BoolVarP(&flagRemoteValidation, "remote", "r", false, "Validate remote AuroraConfig instead of local files")
 }
 
+// Validate is the entry point of the `validate` cli command
 func Validate(cmd *cobra.Command, args []string) error {
 
 	wd, err := os.Getwd()
@@ -37,23 +38,23 @@ func Validate(cmd *cobra.Command, args []string) error {
 	}
 
 	if flagAuroraConfig != "" {
-		DefaultApiClient.Affiliation = flagAuroraConfig
+		DefaultAPIClient.Affiliation = flagAuroraConfig
 	}
 
 	var warnings string
 	if flagRemoteValidation {
-		cmd.Printf("Validating remote AuroraConfig=%s@%s fullValidation=%t\n", DefaultApiClient.Affiliation, DefaultApiClient.RefName, flagFullValidation)
-		warnings, err = DefaultApiClient.ValidateRemoteAuroraConfig(flagFullValidation)
+		cmd.Printf("Validating remote AuroraConfig=%s@%s fullValidation=%t\n", DefaultAPIClient.Affiliation, DefaultAPIClient.RefName, flagFullValidation)
+		warnings, err = DefaultAPIClient.ValidateRemoteAuroraConfig(flagFullValidation)
 		if err != nil {
 			return err
 		}
 	} else {
-		ac, err := versioncontrol.CollectAuroraConfigFilesInRepo(DefaultApiClient.Affiliation, gitRoot)
+		ac, err := versioncontrol.CollectAuroraConfigFilesInRepo(DefaultAPIClient.Affiliation, gitRoot)
 		if err != nil {
 			return err
 		}
-		cmd.Printf("Validating AuroraConfig=%s gitRoot=%s fullValidation=%t\n", DefaultApiClient.Affiliation, gitRoot, flagFullValidation)
-		warnings, err = DefaultApiClient.ValidateAuroraConfig(ac, flagFullValidation)
+		cmd.Printf("Validating AuroraConfig=%s gitRoot=%s fullValidation=%t\n", DefaultAPIClient.Affiliation, gitRoot, flagFullValidation)
+		warnings, err = DefaultAPIClient.ValidateAuroraConfig(ac, flagFullValidation)
 		if err != nil {
 			return err
 		}

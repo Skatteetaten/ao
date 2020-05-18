@@ -9,13 +9,16 @@ import (
 	"github.com/skatteetaten/ao/pkg/collections"
 )
 
+// FilterMode is a numeric filtering parameter
 type FilterMode uint
 
+// Filters for fuzzy matching
 const (
-	APP_FILTER FilterMode = iota
-	ENV_FILTER
+	AppFilter FilterMode = iota
+	EnvFilter
 )
 
+// FindMatches finds filenames by fuzzy matching
 func FindMatches(search string, fileNames []string, withSuffix bool) []string {
 	files := FileNames(fileNames)
 	matches := fuzzy.RankFind(strings.TrimSuffix(search, filepath.Ext(search)), files.WithoutExtension())
@@ -46,16 +49,18 @@ func FindMatches(search string, fileNames []string, withSuffix bool) []string {
 	return options
 }
 
+// SearchForFile finds filenames by fuzzy matching
 func SearchForFile(search string, files []string) []string {
 	return FindMatches(search, files, true)
 }
 
+// SearchForApplications finds application deployments by fuzzy matching
 func SearchForApplications(search string, files []string) []string {
 	var options []string
 	if !strings.Contains(search, "/") {
-		options = FindAllDeploysFor(APP_FILTER, search, files)
+		options = FindAllDeploysFor(AppFilter, search, files)
 		if len(options) == 0 {
-			options = FindAllDeploysFor(ENV_FILTER, search, files)
+			options = FindAllDeploysFor(EnvFilter, search, files)
 		}
 	}
 
@@ -66,24 +71,22 @@ func SearchForApplications(search string, files []string) []string {
 	return options
 }
 
-/*
-	Search string must match either environment or application exact
-*/
+// FindAllDeploysFor finds deployments by FilterMode and a search string  Search string must match either environment or application exact
 func FindAllDeploysFor(mode FilterMode, search string, files []string) []string {
 	search = strings.TrimSuffix(search, filepath.Ext(search))
 	deploys := make(map[string]*collections.StringSet)
 
 	for _, file := range files {
-		appId := strings.Split(file, "/")
-		if len(appId) != 2 {
+		appID := strings.Split(file, "/")
+		if len(appID) != 2 {
 			continue
 		}
 
 		// Key = env, value = app
-		key, value := appId[0], appId[1]
-		if mode == APP_FILTER {
+		key, value := appID[0], appID[1]
+		if mode == AppFilter {
 			// Key = app, value = env
-			key, value = appId[1], appId[0]
+			key, value = appID[1], appID[0]
 		}
 
 		if _, found := deploys[key]; !found {
@@ -113,7 +116,7 @@ func FindAllDeploysFor(mode FilterMode, search string, files []string) []string 
 	var allDeploys []string
 	for _, k := range keys {
 		id := search + "/" + k
-		if mode == APP_FILTER {
+		if mode == AppFilter {
 			id = k + "/" + search
 		}
 

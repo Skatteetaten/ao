@@ -5,6 +5,7 @@ import (
 	"github.com/skatteetaten/ao/pkg/deploymentspec"
 )
 
+// GetFilteredDeploymentSpecs gets a filtered array of deployment specifications
 func GetFilteredDeploymentSpecs(apiClient client.DeploySpecClient, applications []string, overrideCluster string) ([]deploymentspec.DeploymentSpec, error) {
 	deploySpecs, err := apiClient.GetAuroraDeploySpec(applications, true)
 	if err != nil {

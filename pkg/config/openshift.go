@@ -12,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const authenticationUrlSuffix = "/oauth/authorize?client_id=openshift-challenging-client&response_type=token"
+const authenticationURLSuffix = "/oauth/authorize?client_id=openshift-challenging-client&response_type=token"
 
 var (
 	transport = http.Transport{
@@ -31,24 +31,26 @@ var (
 	}
 )
 
+// Cluster holds information of Openshift cluster
 type Cluster struct {
 	Name      string `json:"name"`
-	Url       string `json:"url"`
+	URL       string `json:"url"`
 	Token     string `json:"token"`
 	Reachable bool   `json:"reachable"`
-	BooberUrl string `json:"booberUrl"`
-	GoboUrl   string `json:"goboUrl"`
+	BooberURL string `json:"booberUrl"`
+	GoboURL   string `json:"goboUrl"`
 }
 
+// InitClusters initializes Cluster objects for AOConfig
 func (ao *AOConfig) InitClusters() {
 	ao.Clusters = make(map[string]*Cluster)
 	ch := make(chan *Cluster)
 
 	for _, cluster := range ao.AvailableClusters {
 		name := cluster
-		booberURL := fmt.Sprintf(ao.BooberUrlPattern, name)
-		clusterURL := fmt.Sprintf(ao.ClusterUrlPattern, name)
-		goboUrl := fmt.Sprintf(ao.GoboUrlPattern, name)
+		booberURL := fmt.Sprintf(ao.BooberURLPattern, name)
+		clusterURL := fmt.Sprintf(ao.ClusterURLPattern, name)
+		goboURL := fmt.Sprintf(ao.GoboURLPattern, name)
 		go func() {
 			reachable := false
 			resp, err := client.Get(booberURL)
@@ -62,10 +64,10 @@ func (ao *AOConfig) InitClusters() {
 			logrus.WithField("reachable", reachable).Info(booberURL)
 			ch <- &Cluster{
 				Name:      name,
-				Url:       fmt.Sprintf(ao.ClusterUrlPattern, name),
+				URL:       fmt.Sprintf(ao.ClusterURLPattern, name),
 				Reachable: reachable,
-				BooberUrl: booberURL,
-				GoboUrl:   goboUrl,
+				BooberURL: booberURL,
+				GoboURL:   goboURL,
 			}
 		}()
 	}
@@ -81,19 +83,20 @@ func (ao *AOConfig) InitClusters() {
 	}
 }
 
+// HasValidToken performs a test call to verify validity of token
 func (c *Cluster) HasValidToken() bool {
 	if c.Token == "" {
 		return false
 	}
 
-	clusterUrl := fmt.Sprintf("%s/%s", c.Url, "oapi")
-	req, err := http.NewRequest("GET", clusterUrl, nil)
+	clusterURL := fmt.Sprintf("%s/%s", c.URL, "oapi")
+	req, err := http.NewRequest("GET", clusterURL, nil)
 	if err != nil {
 		return false
 	}
 
 	req.Header.Add("Authorization", "Bearer "+c.Token)
-	logrus.WithField("url", clusterUrl).Debug("Check for valid token")
+	logrus.WithField("url", clusterURL).Debug("Check for valid token")
 	resp, err := client.Do(req)
 	if err != nil {
 		return false
@@ -105,17 +108,18 @@ func (c *Cluster) HasValidToken() bool {
 	return true
 }
 
+// GetToken gets a token for a host
 func GetToken(host string, username string, password string) (string, error) {
-	clusterUrl := host + authenticationUrlSuffix
-	resp, err := getBasicAuth(clusterUrl, username, password)
+	clusterURL := host + authenticationURLSuffix
+	resp, err := getBasicAuth(clusterURL, username, password)
 	if err != nil {
 		return "", err
 	}
 	if resp.StatusCode == http.StatusUnauthorized {
 		return "", errors.New("Not authorized")
 	}
-	redirectUrl := resp.Header.Get("Location")
-	token, err := oauthAuthorizeResult(redirectUrl)
+	redirectURL := resp.Header.Get("Location")
+	token, err := oauthAuthorizeResult(redirectURL)
 	if err != nil {
 		return "", err
 	}

@@ -59,7 +59,7 @@ func TestApiClient_Do(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
 		api.Do(http.MethodGet, "/hello", nil)
 	})
 
@@ -75,7 +75,7 @@ func TestApiClient_Do(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
 		res, err := api.Do(http.MethodGet, "/", nil)
 
 		assert.NoError(t, err)
@@ -87,7 +87,7 @@ func TestApiClient_Do(t *testing.T) {
 	})
 
 	t.Run("Should fail when trying to connect to non existing host", func(t *testing.T) {
-		api := NewApiClientDefaultRef("http://notvalid:8080", "", "")
+		api := NewAPIClientDefaultRef("http://notvalid:8080", "", "")
 		_, err := api.Do(http.MethodGet, "/", nil)
 		assert.Error(t, err)
 	})
@@ -115,7 +115,7 @@ func TestApiClient_Do(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewApiClientDefaultRef(ts.URL, "", "")
+		api := NewAPIClientDefaultRef(ts.URL, "", "")
 		_, err = api.Do(http.MethodPut, "/", payload)
 		assert.NoError(t, err)
 	})
@@ -143,7 +143,7 @@ func TestApiClient_Do(t *testing.T) {
 			}))
 			testServers = append(testServers, ts)
 
-			api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
+			api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
 			_, err := api.Do(http.MethodGet, test.Path, nil)
 
 			assert.Error(t, err)
@@ -176,10 +176,10 @@ func Test_handleForbiddenError(t *testing.T) {
 		{
 			name: "Should return user has no permission error",
 			args: args{
-				body: []byte(`{"message":"You (user) do not have required permissions ([admin]) to operate on this vault (top-secret)."}`),
+				body: []byte(`{"message":"You (user) do not have required permissions ([admin]) to operate on this vault (top-secret)"}`),
 				host: "localhost",
 			},
-			wantErr: errors.New("Forbidden: You (user) do not have required permissions ([admin]) to operate on this vault (top-secret)."),
+			wantErr: errors.New("Forbidden: You (user) do not have required permissions ([admin]) to operate on this vault (top-secret)"),
 		},
 	}
 	for _, tt := range tests {

@@ -33,6 +33,7 @@ const (
 	aoCurrentVersionPath  = "/assets/version.json"
 )
 
+// AOVersion holds version info for ao
 type AOVersion struct {
 	Version    string `json:"version"`
 	Branch     string `json:"branch"`
@@ -40,6 +41,7 @@ type AOVersion struct {
 	BuildStamp string `json:"buildStamp"`
 }
 
+// IsNewVersion checks if version is new
 func (v *AOVersion) IsNewVersion() bool {
 	// No new version if current version is dirty
 	if strings.Contains(Version, "-dirty") {
@@ -49,6 +51,7 @@ func (v *AOVersion) IsNewVersion() bool {
 	return v.Version != Version
 }
 
+// GetCurrentVersionFromServer gets current (latest release) version from server
 func GetCurrentVersionFromServer(url string) (*AOVersion, error) {
 	data, err := fetchFromUpdateServer(url, aoCurrentVersionPath, "application/json")
 	if err != nil {
@@ -64,6 +67,7 @@ func GetCurrentVersionFromServer(url string) (*AOVersion, error) {
 	return &aoVersion, nil
 }
 
+// GetNewAOClient downloads a new ao client from update server
 func GetNewAOClient(url string) ([]byte, error) {
 	var downloadPath string
 	downloadPath = aoDownloadPath

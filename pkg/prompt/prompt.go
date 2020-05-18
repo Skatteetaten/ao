@@ -5,6 +5,7 @@ import (
 	"gopkg.in/AlecAivazis/survey.v1"
 )
 
+// Password prompts user for password
 func Password() string {
 	p := &survey.Password{
 		Message: "Password:",
@@ -19,6 +20,7 @@ func Password() string {
 	return string(pass[:])
 }
 
+// Confirm prompts user for confirmation
 func Confirm(message string, defaultAnswer bool) bool {
 	p := &survey.Confirm{
 		Message: message,

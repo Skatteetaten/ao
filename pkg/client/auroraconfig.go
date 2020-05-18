@@ -9,15 +9,16 @@ import (
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 )
 
+// AuroraConfigClient is a an internal client facade for external aurora configuration API calls
 type AuroraConfigClient interface {
 	Doer
 	GetFileNames() (auroraconfig.FileNames, error)
 	GetAuroraConfig() (*auroraconfig.AuroraConfig, error)
-	GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, error)
+	GetAuroraConfigNames() (*auroraconfig.Names, error)
 	PutAuroraConfig(endpoint string, payload []byte) (string, error)
 	ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) (string, error)
-	GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error)
-	PutAuroraConfigFile(file *auroraconfig.AuroraConfigFile, eTag string) error
+	GetAuroraConfigFile(fileName string) (*auroraconfig.File, string, error)
+	PutAuroraConfigFile(file *auroraconfig.File, eTag string) error
 }
 
 type (
@@ -26,7 +27,8 @@ type (
 	}
 )
 
-func (api *ApiClient) GetFileNames() (auroraconfig.FileNames, error) {
+// GetFileNames gets file names via API calls
+func (api *APIClient) GetFileNames() (auroraconfig.FileNames, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/filenames", api.Affiliation)
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
@@ -43,7 +45,8 @@ func (api *ApiClient) GetFileNames() (auroraconfig.FileNames, error) {
 	return fileNames, nil
 }
 
-func (api *ApiClient) GetAuroraConfig() (*auroraconfig.AuroraConfig, error) {
+// GetAuroraConfig gets an aurora config via API calls
+func (api *APIClient) GetAuroraConfig() (*auroraconfig.AuroraConfig, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s", api.Affiliation)
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)
@@ -60,7 +63,8 @@ func (api *ApiClient) GetAuroraConfig() (*auroraconfig.AuroraConfig, error) {
 	return &ac, nil
 }
 
-func (api *ApiClient) GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, error) {
+// GetAuroraConfigNames gets Aurora configuration names via API calls
+func (api *APIClient) GetAuroraConfigNames() (*auroraconfig.Names, error) {
 	// Deprecated: Remove when it is fully replaced by graphql
 	endpoint := fmt.Sprintf("/auroraconfignames")
 
@@ -69,7 +73,7 @@ func (api *ApiClient) GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, e
 		return nil, err
 	}
 
-	var acn auroraconfig.AuroraConfigNames
+	var acn auroraconfig.Names
 	err = response.ParseItems(&acn)
 	if err != nil {
 		return nil, errors.Wrap(err, "aurora config names")
@@ -77,7 +81,8 @@ func (api *ApiClient) GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, e
 	return &acn, nil
 }
 
-func (api *ApiClient) PutAuroraConfig(endpoint string, payload []byte) (string, error) {
+// PutAuroraConfig sets aurora configuration via API calls
+func (api *APIClient) PutAuroraConfig(endpoint string, payload []byte) (string, error) {
 
 	response, err := api.Do(http.MethodPut, endpoint, payload)
 	if err != nil {
@@ -102,7 +107,8 @@ func (api *ApiClient) PutAuroraConfig(endpoint string, payload []byte) (string, 
 
 }
 
-func (api *ApiClient) ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) (string, error) {
+// ValidateAuroraConfig validates an aurora configuration via API calls
+func (api *APIClient) ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) (string, error) {
 	resourceValidation := "false"
 	if fullValidation {
 		resourceValidation = "true"
@@ -117,7 +123,8 @@ func (api *ApiClient) ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullVa
 
 }
 
-func (api *ApiClient) ValidateRemoteAuroraConfig(fullValidation bool) (string, error) {
+// ValidateRemoteAuroraConfig validates a remote aurora configuration via API calls
+func (api *APIClient) ValidateRemoteAuroraConfig(fullValidation bool) (string, error) {
 	resourceValidation := "false"
 	if fullValidation {
 		resourceValidation = "true"
@@ -141,7 +148,8 @@ func formatWarnings(warnings []string) string {
 	return status
 }
 
-func (api *ApiClient) GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error) {
+// GetAuroraConfigFile gets an aurora configuration via API calls
+func (api *APIClient) GetAuroraConfigFile(fileName string) (*auroraconfig.File, string, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, fileName)
 
 	bundle, err := api.DoWithHeader(http.MethodGet, endpoint, nil, nil)
@@ -153,18 +161,19 @@ func (api *ApiClient) GetAuroraConfigFile(fileName string) (*auroraconfig.Aurora
 		return nil, "", errors.New("Failed getting file " + fileName)
 	}
 
-	var file auroraconfig.AuroraConfigFile
+	var file auroraconfig.File
 	err = bundle.BooberResponse.ParseFirstItem(&file)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "aurora config file")
 	}
 
-	eTag := bundle.HttpResponse.Header.Get("ETag")
+	eTag := bundle.HTTPResponse.Header.Get("ETag")
 
 	return &file, eTag, nil
 }
 
-func (api *ApiClient) PutAuroraConfigFile(file *auroraconfig.AuroraConfigFile, eTag string) error {
+// PutAuroraConfigFile sets aurora configuration file via API calls
+func (api *APIClient) PutAuroraConfigFile(file *auroraconfig.File, eTag string) error {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, file.Name)
 
 	payload := auroraConfigFilePayload{

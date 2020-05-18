@@ -15,6 +15,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
+// Install installs on windows
 func Install(installdir string, cli bool) error {
 	var message string
 

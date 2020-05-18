@@ -33,10 +33,10 @@ var testSpecs = [...]deploymentspec.DeploymentSpec{
 func newTestCluster(name string, reachable bool) *config.Cluster {
 	return &config.Cluster{
 		Name:      name,
-		Url:       name + ".url",
+		URL:       name + ".url",
 		Token:     name + ".token",
 		Reachable: reachable,
-		BooberUrl: name + "boober.url",
+		BooberURL: name + "boober.url",
 	}
 }
 

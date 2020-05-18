@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"runtime"
 
+	// blank import that is needed for side effects at initialization
 	_ "go/token"
 	"os"
 
@@ -37,6 +38,7 @@ func init() {
 	}
 }
 
+// Checkout is the main method for the `checkout` cli command
 func Checkout(cmd *cobra.Command, args []string) error {
 	affiliation := AO.Affiliation
 	if flagCheckoutAffiliation != "" {
@@ -49,11 +51,11 @@ func Checkout(cmd *cobra.Command, args []string) error {
 		path = flagCheckoutPath
 	}
 
-	clientConfig, err := DefaultApiClient.GetClientConfig()
+	clientConfig, err := DefaultAPIClient.GetClientConfig()
 	if err != nil {
 		return err
 	}
-	url := versioncontrol.GetGitUrl(affiliation, flagCheckoutUser, clientConfig.GitUrlPattern)
+	url := versioncontrol.GetGitURL(affiliation, flagCheckoutUser, clientConfig.GitURLPattern)
 
 	fmt.Printf("Cloning AuroraConfig %s\n", affiliation)
 	fmt.Printf("From: %s\n\n", url)

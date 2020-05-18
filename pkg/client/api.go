@@ -12,23 +12,27 @@ import (
 	"github.com/skatteetaten/ao/pkg/config"
 )
 
+// Constants for API access to boober/gobo
 const (
-	BooberApiVersion    = "/v1"
+	BooberAPIVersion    = "/v1"
 	ErrAccessDenied     = "Access Denied"
 	ErrfTokenHasExpired = "Token has expired for (%s). Please login: ao login <affiliation>"
 )
 
+// Doer is an internal access API (facade) to external services
 type Doer interface {
 	Do(method string, endpoint string, payload []byte) (*BooberResponse, error)
 	DoWithHeader(method string, endpoint string, header map[string]string, payload []byte) (*ResponseBundle, error)
 }
 
+// ResponseBundle structures responses from external services
 type ResponseBundle struct {
 	BooberResponse *BooberResponse
-	HttpResponse   *http.Response
+	HTTPResponse   *http.Response
 }
 
-type ApiClient struct {
+// APIClient is a client for accessing external service APIs
+type APIClient struct {
 	Host        string
 	GoboHost    string
 	Token       string
@@ -36,12 +40,14 @@ type ApiClient struct {
 	RefName     string
 }
 
-func NewApiClientDefaultRef(host, token, affiliation string) *ApiClient {
-	return NewApiClient(host, token, affiliation, "master")
+// NewAPIClientDefaultRef creates a new, default APIClient
+func NewAPIClientDefaultRef(host, token, affiliation string) *APIClient {
+	return NewAPIClient(host, token, affiliation, "master")
 }
 
-func NewApiClient(host, token, affiliation, refName string) *ApiClient {
-	return &ApiClient{
+// NewAPIClient creates a new APIClient
+func NewAPIClient(host, token, affiliation, refName string) *APIClient {
+	return &APIClient{
 		Host:        host,
 		GoboHost:    host,
 		Token:       token,
@@ -50,7 +56,8 @@ func NewApiClient(host, token, affiliation, refName string) *ApiClient {
 	}
 }
 
-func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*BooberResponse, error) {
+// Do performs an API call to an external endpoint
+func (api *APIClient) Do(method string, endpoint string, payload []byte) (*BooberResponse, error) {
 	bundle, err := api.DoWithHeader(method, endpoint, nil, payload)
 	if bundle == nil {
 		return nil, err
@@ -58,9 +65,10 @@ func (api *ApiClient) Do(method string, endpoint string, payload []byte) (*Boobe
 	return bundle.BooberResponse, nil
 }
 
-func (api *ApiClient) DoWithHeader(method string, endpoint string, header map[string]string, payload []byte) (*ResponseBundle, error) {
+// DoWithHeader performs an API call to an external endpoint with specific headers
+func (api *APIClient) DoWithHeader(method string, endpoint string, header map[string]string, payload []byte) (*ResponseBundle, error) {
 
-	url := api.Host + BooberApiVersion + endpoint
+	url := api.Host + BooberAPIVersion + endpoint
 	logrus.WithFields(logrus.Fields{
 		"method": method,
 		"url":    url,
@@ -112,7 +120,7 @@ func (api *ApiClient) DoWithHeader(method string, endpoint string, header map[st
 
 	switch res.StatusCode {
 	case http.StatusNotFound:
-		return nil, errors.Errorf("Resource %s not found", BooberApiVersion+endpoint)
+		return nil, errors.Errorf("Resource %s not found", BooberAPIVersion+endpoint)
 	case http.StatusForbidden:
 		return nil, handleForbiddenError(body, api.Host)
 	case http.StatusInternalServerError:
@@ -143,7 +151,7 @@ func (api *ApiClient) DoWithHeader(method string, endpoint string, header map[st
 
 	return &ResponseBundle{
 		BooberResponse: &booberRes,
-		HttpResponse:   res,
+		HTTPResponse:   res,
 	}, nil
 }
 

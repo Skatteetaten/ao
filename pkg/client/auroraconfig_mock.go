@@ -27,7 +27,7 @@ func (api *AuroraConfigClientMock) GetAuroraConfig() (*auroraconfig.AuroraConfig
 }
 
 // GetAuroraConfigNames default mock implementation
-func (api *AuroraConfigClientMock) GetAuroraConfigNames() (*auroraconfig.AuroraConfigNames, error) {
+func (api *AuroraConfigClientMock) GetAuroraConfigNames() (*auroraconfig.Names, error) {
 	return nil, errors.New("Not implemented")
 }
 
@@ -42,11 +42,11 @@ func (api *AuroraConfigClientMock) ValidateAuroraConfig(ac *auroraconfig.AuroraC
 }
 
 // GetAuroraConfigFile default mock implementation
-func (api *AuroraConfigClientMock) GetAuroraConfigFile(fileName string) (*auroraconfig.AuroraConfigFile, string, error) {
+func (api *AuroraConfigClientMock) GetAuroraConfigFile(fileName string) (*auroraconfig.File, string, error) {
 	return nil, "", errors.New("Not implemented")
 }
 
 // PutAuroraConfigFile default mock implementation
-func (api *AuroraConfigClientMock) PutAuroraConfigFile(file *auroraconfig.AuroraConfigFile, eTag string) error {
+func (api *AuroraConfigClientMock) PutAuroraConfigFile(file *auroraconfig.File, eTag string) error {
 	return errors.New("Not implemented")
 }

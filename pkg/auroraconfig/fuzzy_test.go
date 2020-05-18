@@ -105,12 +105,12 @@ func TestFindAllFor(t *testing.T) {
 		Mode     FilterMode
 		Expected []string
 	}{
-		{"utv", ENV_FILTER, []string{"utv/boober", "utv/console"}},
-		{"console", APP_FILTER, []string{"test/console", "utv/console"}},
-		{"test", ENV_FILTER, []string{"test/boober", "test/console"}},
-		{"test-r", ENV_FILTER, []string{}},
-		{"boober", APP_FILTER, []string{"test/boober", "test-relay/boober", "utv/boober", "utv-relay/boober"}},
-		{"boo", APP_FILTER, []string{}},
+		{"utv", EnvFilter, []string{"utv/boober", "utv/console"}},
+		{"console", AppFilter, []string{"test/console", "utv/console"}},
+		{"test", EnvFilter, []string{"test/boober", "test/console"}},
+		{"test-r", EnvFilter, []string{}},
+		{"boober", AppFilter, []string{"test/boober", "test-relay/boober", "utv/boober", "utv-relay/boober"}},
+		{"boo", AppFilter, []string{}},
 	}
 
 	filteredFiles := fileNames.GetApplicationDeploymentRefs()

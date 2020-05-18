@@ -47,7 +47,7 @@ func TestAOConfig_SelectApiCluster(t *testing.T) {
 			}
 		}
 
-		aoConfig.SelectApiCluster()
+		aoConfig.SelectAPICluster()
 		assert.Equal(t, test.Expected, aoConfig.APICluster)
 		assert.Len(t, aoConfig.Clusters, len(test.Clusters))
 	}
@@ -58,7 +58,7 @@ func TestAOConfig_SelectApiCluster(t *testing.T) {
 		Reachable: true,
 	}
 
-	aoConfig.SelectApiCluster()
+	aoConfig.SelectAPICluster()
 	assert.Equal(t, "test", aoConfig.APICluster, "Should not override APICluster when set")
 }
 
@@ -69,15 +69,15 @@ func TestAOConfig_Update(t *testing.T) {
 	defer ts.Close()
 
 	aoConfig := &AOConfig{
-		ClusterUrlPattern:       "%s",
-		UpdateUrlPattern:        "%s",
-		BooberUrlPattern:        "%s",
+		ClusterURLPattern:       "%s",
+		UpdateURLPattern:        "%s",
+		BooberURLPattern:        "%s",
 		AvailableClusters:       []string{ts.URL},
 		AvailableUpdateClusters: []string{ts.URL},
 	}
 
 	aoConfig.InitClusters()
-	aoConfig.SelectApiCluster()
+	aoConfig.SelectAPICluster()
 
-	assert.Equal(t, ts.URL, aoConfig.getUpdateUrl())
+	assert.Equal(t, ts.URL, aoConfig.getUpdateURL())
 }

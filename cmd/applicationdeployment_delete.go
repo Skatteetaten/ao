@@ -29,6 +29,7 @@ var (
 	}
 )
 
+// DeploymentPartition structures information about a deployment partition
 type DeploymentPartition struct {
 	Partition
 	DeploymentInfos []DeploymentInfo

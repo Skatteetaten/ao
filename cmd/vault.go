@@ -21,8 +21,8 @@ import (
 var (
 	flagOnlyVaults bool
 
-	ErrEmptyGroups            = errors.New("Cannot find groups in permissions")
-	ErrNotValidSecretArgument = errors.New("not a valid argument, must be <vaultname/secret>")
+	errEmptyGroups            = errors.New("Cannot find groups in permissions")
+	errNotValidSecretArgument = errors.New("not a valid argument, must be <vaultname/secret>")
 )
 
 var (
@@ -117,17 +117,18 @@ func init() {
 	vaultGetCmd.Flags().BoolVarP(&flagOnlyVaults, "only-vaults", "", false, "print vaults as a list")
 }
 
+// GetSecret is the entry point of the `vault get-secret` cli command
 func GetSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return cmd.Usage()
 	}
 	split := strings.Split(args[0], "/")
 	if len(split) != 2 {
-		return ErrNotValidSecretArgument
+		return errNotValidSecretArgument
 	}
 	vaultName, secretName := split[0], split[1]
 
-	vault, err := DefaultApiClient.GetVault(vaultName)
+	vault, err := DefaultAPIClient.GetVault(vaultName)
 	if err != nil {
 		return err
 	}
@@ -140,12 +141,13 @@ func GetSecret(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// AddSecret is the entry point of the `vault add-secret` cli command
 func AddSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
 		return cmd.Usage()
 	}
 
-	vault, err := DefaultApiClient.GetVault(args[0])
+	vault, err := DefaultAPIClient.GetVault(args[0])
 	if err != nil {
 		return err
 	}
@@ -155,7 +157,7 @@ func AddSecret(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = DefaultApiClient.SaveVault(*vault)
+	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
 	}
@@ -164,6 +166,7 @@ func AddSecret(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// RenameSecret is the entry point of the `vault rename-secret` cli command
 func RenameSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
 		return cmd.Usage()
@@ -171,12 +174,12 @@ func RenameSecret(cmd *cobra.Command, args []string) error {
 
 	split := strings.Split(args[0], "/")
 	if len(split) != 2 {
-		return ErrNotValidSecretArgument
+		return errNotValidSecretArgument
 	}
 
 	newSecretName := args[1]
 	vaultName, secretName := split[0], split[1]
-	vault, err := DefaultApiClient.GetVault(vaultName)
+	vault, err := DefaultAPIClient.GetVault(vaultName)
 	if err != nil {
 		return err
 	}
@@ -194,7 +197,7 @@ func RenameSecret(cmd *cobra.Command, args []string) error {
 	vault.Secrets[newSecretName] = vault.Secrets[secretName]
 	vault.Secrets.RemoveSecret(secretName)
 
-	err = DefaultApiClient.SaveVault(*vault)
+	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
 	}
@@ -203,29 +206,30 @@ func RenameSecret(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// RenameVault is the entry point of the `vault rename` cli command
 func RenameVault(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
 		return cmd.Usage()
 	}
 
-	vault, err := DefaultApiClient.GetVault(args[1])
+	vault, err := DefaultAPIClient.GetVault(args[1])
 	if vault != nil {
 		return errors.Errorf("Can't rename vault. %s already exists", args[1])
 	}
 
-	vault, err = DefaultApiClient.GetVault(args[0])
+	vault, err = DefaultAPIClient.GetVault(args[0])
 	if err != nil {
 		return err
 	}
 
 	vault.Name = args[1]
 
-	err = DefaultApiClient.SaveVault(*vault)
+	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
 	}
 
-	err = DefaultApiClient.DeleteVault(args[0])
+	err = DefaultAPIClient.DeleteVault(args[0])
 	if err != nil {
 		return err
 	}
@@ -234,12 +238,13 @@ func RenameVault(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// CreateVault is the entry point of the `vault create` cli command
 func CreateVault(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
 		return cmd.Usage()
 	}
 
-	v, _ := DefaultApiClient.GetVault(args[0])
+	v, _ := DefaultAPIClient.GetVault(args[0])
 	if v != nil {
 		return errors.Errorf("vault %s already exists", args[0])
 	}
@@ -251,7 +256,7 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = DefaultApiClient.SaveVault(*vault)
+	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
 	}
@@ -260,6 +265,7 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// EditSecret is the entry point of the `vault edit-secret` cli command
 func EditSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return cmd.Usage()
@@ -267,17 +273,17 @@ func EditSecret(cmd *cobra.Command, args []string) error {
 
 	split := strings.Split(args[0], "/")
 	if len(split) != 2 {
-		return ErrNotValidSecretArgument
+		return errNotValidSecretArgument
 	}
 
 	vaultName, secretName := split[0], split[1]
-	contentToEdit, eTag, err := DefaultApiClient.GetSecretFile(vaultName, secretName)
+	contentToEdit, eTag, err := DefaultAPIClient.GetSecretFile(vaultName, secretName)
 	if err != nil {
 		return err
 	}
 
 	secretEditor := editor.NewEditor(func(modifiedContent string) error {
-		return DefaultApiClient.UpdateSecretFile(vaultName, secretName, eTag, []byte(modifiedContent))
+		return DefaultAPIClient.UpdateSecretFile(vaultName, secretName, eTag, []byte(modifiedContent))
 	})
 
 	err = secretEditor.Edit(contentToEdit, args[0])
@@ -289,6 +295,7 @@ func EditSecret(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// DeleteSecret is the entry point of the `vault delete-secret` cli command
 func DeleteSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return cmd.Usage()
@@ -296,11 +303,11 @@ func DeleteSecret(cmd *cobra.Command, args []string) error {
 
 	split := strings.Split(args[0], "/")
 	if len(split) != 2 {
-		return ErrNotValidSecretArgument
+		return errNotValidSecretArgument
 	}
 
 	vaultName, secret := split[0], split[1]
-	vault, err := DefaultApiClient.GetVault(vaultName)
+	vault, err := DefaultAPIClient.GetVault(vaultName)
 	if err != nil {
 		return err
 	}
@@ -313,7 +320,7 @@ func DeleteSecret(cmd *cobra.Command, args []string) error {
 
 	vault.Secrets.RemoveSecret(secret)
 
-	err = DefaultApiClient.SaveVault(*vault)
+	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
 	}
@@ -322,6 +329,7 @@ func DeleteSecret(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// DeleteVault is the entry point of the `vault delete` cli command
 func DeleteVault(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return cmd.Usage()
@@ -333,7 +341,7 @@ func DeleteVault(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	err := DefaultApiClient.DeleteVault(args[0])
+	err := DefaultAPIClient.DeleteVault(args[0])
 	if err != nil {
 		return err
 	}
@@ -342,12 +350,13 @@ func DeleteVault(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// ListVaults is the entry point of the `vault get` cli command
 func ListVaults(cmd *cobra.Command, args []string) error {
 	if len(args) > 1 {
 		return cmd.Usage()
 	}
 
-	vaults, err := DefaultApiClient.GetVaults()
+	vaults, err := DefaultAPIClient.GetVaults()
 	if err != nil {
 		return err
 	}
@@ -381,16 +390,19 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// VaultAddPermissions is the entry point of the `vault add-permissions` cli command
 func VaultAddPermissions(cmd *cobra.Command, args []string) error {
 	return changeVaultPermissions(ADD, cmd, args)
 }
 
+// VaultRemovePermissions is the entry point of the `vault remove-permissions` cli command
 func VaultRemovePermissions(cmd *cobra.Command, args []string) error {
 	return changeVaultPermissions(DELETE, cmd, args)
 }
 
 type permissionAction uint64
 
+// ADD and DELETE holds values for permission operations
 const (
 	ADD    permissionAction = 0
 	DELETE permissionAction = 1
@@ -401,7 +413,7 @@ func changeVaultPermissions(action permissionAction, cmd *cobra.Command, args []
 		return cmd.Usage()
 	}
 
-	vault, err := DefaultApiClient.GetVault(args[0])
+	vault, err := DefaultAPIClient.GetVault(args[0])
 	if err != nil {
 		return err
 	}
@@ -411,7 +423,7 @@ func changeVaultPermissions(action permissionAction, cmd *cobra.Command, args []
 		return err
 	}
 
-	err = DefaultApiClient.SaveVault(*vault)
+	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
 	}
@@ -525,7 +537,7 @@ func readPermissionFile(path string) ([]string, error) {
 		return nil, err
 	}
 	if permissions.Groups == nil {
-		return nil, ErrEmptyGroups
+		return nil, errEmptyGroups
 	}
 
 	return permissions.Groups, nil

@@ -48,14 +48,14 @@ func AddGraphql(cmd *cobra.Command, args []string) error {
 
 	createAuroraConfigFileRequest := graphql.NewRequest(createAuroraConfigFileRequestString)
 	newAuroraConfigFileInput := NewAuroraConfigFileInput{
-		AuroraConfigName: DefaultApiClient.Affiliation,
+		AuroraConfigName: DefaultAPIClient.Affiliation,
 		FileName:         fileName,
 		Contents:         string(data),
 	}
 	createAuroraConfigFileRequest.Var("newAuroraConfigFileInput", newAuroraConfigFileInput)
 
 	var createAuroraConfigFileResponse CreateAuroraConfigFileResponse
-	if err := DefaultApiClient.RunGraphQlMutation(createAuroraConfigFileRequest, &createAuroraConfigFileResponse); err != nil {
+	if err := DefaultAPIClient.RunGraphQlMutation(createAuroraConfigFileRequest, &createAuroraConfigFileResponse); err != nil {
 		return err
 	}
 

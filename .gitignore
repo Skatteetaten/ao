@@ -30,3 +30,6 @@ buildnumber.txt
 bin/
 .vscode/
 *.iml
+
+TEST-junit.xml
+test/

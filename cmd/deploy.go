@@ -231,7 +231,7 @@ func errorDeployResults(reason string, partition DeploySpecPartition) client.Dep
 		applicationDeploymentRef := client.NewApplicationDeploymentRef(spec.GetString("applicationDeploymentRef"))
 
 		result := new(client.DeployResult)
-		result.DeployId = "-"
+		result.DeployID = "-"
 		result.Ignored = false
 		result.Success = false
 		result.Reason = reason
@@ -297,7 +297,7 @@ func getWarningTable(deploys []client.DeployResult) (string, []string) {
 		name := item.DeploymentSpec.Name()
 		pattern := "%s\t%s\t%s\t%s\t%s"
 		for _, warning := range item.Warnings {
-			result := fmt.Sprintf(pattern, cluster, environment, name, item.DeployId, warning)
+			result := fmt.Sprintf(pattern, cluster, environment, name, item.DeployID, warning)
 			rows = append(rows, result)
 		}
 	}
@@ -321,7 +321,7 @@ func getDeployResultTable(deploys []client.DeployResult) (string, []string) {
 		if !item.Success {
 			status = "\x1b[31mFailed\x1b[0m"
 		}
-		result := fmt.Sprintf(pattern, status, cluster, environment, name, version, item.DeployId, item.Reason)
+		result := fmt.Sprintf(pattern, status, cluster, environment, name, version, item.DeployID, item.Reason)
 		rows = append(rows, result)
 	}
 

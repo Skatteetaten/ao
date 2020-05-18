@@ -33,7 +33,7 @@ func TestApiClient_Deploy(t *testing.T) {
 
 		applications := []string{"boober-utv/reference"}
 
-		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
 		deployPayload := NewDeployPayload(applications, make(map[string]string))
 		deploys, err := api.Deploy(deployPayload)
 
@@ -64,7 +64,7 @@ func TestApiClient_Delete(t *testing.T) {
 
 		applications := []ApplicationRef{*NewApplicationRef("foo-dev", "bar")}
 
-		api := NewApiClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
 		deletePayload := NewDeletePayload(applications)
 		deletes, err := api.Delete(deletePayload)
 

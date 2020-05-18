@@ -7,7 +7,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (api *ApiClient) RunGraphQl(graphQlRequest string, response interface{}) error {
+// RunGraphQl performs a GraphQl based API call
+func (api *APIClient) RunGraphQl(graphQlRequest string, response interface{}) error {
 	client := api.getGraphQlClient()
 	req := api.newRequest(graphQlRequest)
 	ctx := context.Background()
@@ -18,7 +19,7 @@ func (api *ApiClient) RunGraphQl(graphQlRequest string, response interface{}) er
 	return nil
 }
 
-func (api *ApiClient) RunGraphQlMutation(graphQlRequest *graphql.Request, response interface{}) error {
+func (api *APIClient) RunGraphQlMutation(graphQlRequest *graphql.Request, response interface{}) error {
 	client := api.getGraphQlClient()
 	ctx := context.Background()
 	graphQlRequest.Header.Set("Cache-Control", "no-cache")
@@ -30,14 +31,14 @@ func (api *ApiClient) RunGraphQlMutation(graphQlRequest *graphql.Request, respon
 	return nil
 }
 
-func (api *ApiClient) getGraphQlClient() *graphql.Client {
+func (api *APIClient) getGraphQlClient() *graphql.Client {
 	endpoint := fmt.Sprintf("%s/graphql", api.GoboHost)
 	client := graphql.NewClient(endpoint)
 	client.Log = func(logEntry string) { logrus.Debug(logEntry) }
 	return client
 }
 
-func (api *ApiClient) newRequest(graphqlRequest string) *graphql.Request {
+func (api *APIClient) newRequest(graphqlRequest string) *graphql.Request {
 	req := graphql.NewRequest(graphqlRequest)
 	req.Header.Set("Cache-Control", "no-cache")
 	return req

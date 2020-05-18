@@ -16,7 +16,6 @@ import (
 )
 
 const (
-	invalidJson   = "Invalid JSON format"
 	cancelMessage = "Edit cancelled, no changes made."
 
 	editPattern = `## Name: %s
@@ -28,14 +27,17 @@ const (
 )
 
 type (
+	// OnSaveFunc is called on save from editor
 	OnSaveFunc func(modifiedContent string) error
 
+	// Editor specifies editor functions
 	Editor struct {
 		OpenEditor func(string) error
 		OnSave     OnSaveFunc
 	}
 )
 
+// NewEditor opens a new editor
 func NewEditor(saveFunc OnSaveFunc) *Editor {
 	return &Editor{
 		OpenEditor: openEditor,
@@ -43,6 +45,7 @@ func NewEditor(saveFunc OnSaveFunc) *Editor {
 	}
 }
 
+// Edit updates content during editing
 func (e Editor) Edit(content string, name string) error {
 
 	tempFilePath, err := createTempFile()

@@ -39,12 +39,13 @@ func init() {
 	RootCmd.AddCommand(editCmd)
 }
 
+// EditFile is the main method for the `edit` cli command
 func EditFile(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return cmd.Usage()
 	}
 
-	fileNames, err := DefaultApiClient.GetFileNames()
+	fileNames, err := DefaultAPIClient.GetFileNames()
 	if err != nil {
 		return err
 	}
@@ -62,14 +63,14 @@ func EditFile(cmd *cobra.Command, args []string) error {
 	}
 
 	fileName := matches[0]
-	file, eTag, err := DefaultApiClient.GetAuroraConfigFile(fileName)
+	file, eTag, err := DefaultAPIClient.GetAuroraConfigFile(fileName)
 	if err != nil {
 		return err
 	}
 
 	fileEditor := editor.NewEditor(func(modified string) error {
 		file.Contents = modified
-		return DefaultApiClient.PutAuroraConfigFile(file, eTag)
+		return DefaultAPIClient.PutAuroraConfigFile(file, eTag)
 	})
 
 	err = fileEditor.Edit(string(file.Contents), file.Name)
