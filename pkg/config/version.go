@@ -43,8 +43,8 @@ type AOVersion struct {
 
 // IsNewVersion checks if version is new
 func (v *AOVersion) IsNewVersion() bool {
-	// No new version if current version is dirty
-	if strings.Contains(Version, "-dirty") {
+	// No new version if current version from server is dirty
+	if strings.Contains(v.Version, "-dirty") {
 		return false
 	}
 	// TODO: Should do better check then this
