@@ -17,7 +17,7 @@ import (
 )
 
 const deployLong = `Deploys applications from the current AuroraConfig.
-For use in CI environments use --no-prompt to disable interactivity.
+For use in CI environments use -y or --yes to disable interactivity and accept deployment.
 `
 
 const exampleDeploy = `  Given the following AuroraConfig:
@@ -61,11 +61,13 @@ func init() {
 
 	deployCmd.Flags().StringVarP(&flagAuroraConfig, "auroraconfig", "a", "", "Overrides the logged in AuroraConfig")
 	deployCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Limit deploy to given cluster name")
-	deployCmd.Flags().BoolVarP(&flagNoPrompt, "no-prompt", "", false, "Suppress prompts")
+	deployCmd.Flags().BoolVarP(&flagNoPrompt, "yes", "y", false, "Suppress prompts and accept deployment(s)")
 	deployCmd.Flags().StringArrayVarP(&flagOverrides, "overrides", "o", []string{}, "Override in the form '[env/]file:{<json override>}'")
 	deployCmd.Flags().StringArrayVarP(&flagExcludes, "exclude", "e", []string{}, "Select applications or environments to exclude from deploy")
 	deployCmd.Flags().StringVarP(&flagVersion, "version", "v", "", "Set the given version in AuroraConfig before deploy")
 
+	deployCmd.Flags().BoolVarP(&flagNoPrompt, "no-prompt", "", false, "Suppress prompts")
+	deployCmd.Flags().MarkHidden("no-prompt")
 	deployCmd.Flags().BoolVarP(&flagNoPrompt, "force", "f", false, "Suppress prompts")
 	deployCmd.Flags().MarkHidden("force")
 	deployCmd.Flags().StringVarP(&flagAuroraConfig, "affiliation", "", "", "Overrides the logged in affiliation")
