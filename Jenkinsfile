@@ -13,8 +13,7 @@ def overrides = [
     applicationType: "nodejs",
     versionStrategy: [
       [ branch: 'master', versionHint: '2' ]
-    ],
-    debug: true
+    ]
 ]
 
 def git
