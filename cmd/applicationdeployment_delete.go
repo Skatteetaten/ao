@@ -63,10 +63,9 @@ func init() {
 	applicationDeploymentCmd.AddCommand(applicationDeploymentDeleteCmd)
 	applicationDeploymentDeleteCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Limit deletion to given cluster name")
 	applicationDeploymentDeleteCmd.Flags().BoolVarP(&flagNoPrompt, "yes", "y", false, "Suppress prompts and accept deletion")
+	applicationDeploymentDeleteCmd.Flags().BoolVarP(&flagNoPrompt, "no-prompt", "", false, "Suppress prompts and accept deletion")
 	applicationDeploymentDeleteCmd.Flags().StringArrayVarP(&flagExcludes, "exclude", "e", []string{}, "Select applications or environments to exclude from deletion")
 
-	applicationDeploymentDeleteCmd.Flags().BoolVarP(&flagNoPrompt, "no-prompt", "", false, "Suppress prompts")
-	applicationDeploymentDeleteCmd.Flags().MarkHidden("no-prompt")
 	applicationDeploymentDeleteCmd.Flags().BoolVarP(&flagNoPrompt, "force", "f", false, "Suppress prompts")
 	applicationDeploymentDeleteCmd.Flags().MarkHidden("force")
 	applicationDeploymentDeleteCmd.Flags().StringVarP(&flagAuroraConfig, "affiliation", "", "", "Overrides the logged in affiliation")
