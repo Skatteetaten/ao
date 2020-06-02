@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
 def overrides = [
-    scriptVersion  : 'v7',
+    scriptVersion  : 'fikser-for-ao',
     pipelineScript: 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
     credentialsId: "github",
     checkstyle : false,
@@ -80,7 +80,7 @@ timestamps {
       }
 
       stage('Build, Test & coverage') {
-        go.buildGoWithJenkinsSh("Go 1.13")
+        go.buildGoWithJenkinsWithGlobalToolsSh("go-1.14")
       }
 
       stage('Copy ao to assets') {
