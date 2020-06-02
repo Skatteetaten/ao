@@ -62,7 +62,8 @@ func init() {
 	RootCmd.AddCommand(applicationDeploymentCmd)
 	applicationDeploymentCmd.AddCommand(applicationDeploymentDeleteCmd)
 	applicationDeploymentDeleteCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Limit deletion to given cluster name")
-	applicationDeploymentDeleteCmd.Flags().BoolVarP(&flagNoPrompt, "no-prompt", "", false, "Suppress prompts")
+	applicationDeploymentDeleteCmd.Flags().BoolVarP(&flagNoPrompt, "yes", "y", false, "Suppress prompts and accept deletion")
+	applicationDeploymentDeleteCmd.Flags().BoolVarP(&flagNoPrompt, "no-prompt", "", false, "Suppress prompts and accept deletion")
 	applicationDeploymentDeleteCmd.Flags().StringArrayVarP(&flagExcludes, "exclude", "e", []string{}, "Select applications or environments to exclude from deletion")
 
 	applicationDeploymentDeleteCmd.Flags().BoolVarP(&flagNoPrompt, "force", "f", false, "Suppress prompts")
