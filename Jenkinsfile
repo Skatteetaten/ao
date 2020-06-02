@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
 def overrides = [
-    scriptVersion  : 'fikser-for-ao',
+    scriptVersion  : 'v7',
     pipelineScript: 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
     credentialsId: "github",
     checkstyle : false,
