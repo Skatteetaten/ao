@@ -80,7 +80,7 @@ timestamps {
       }
 
       stage('Build, Test & coverage') {
-        go.buildGoWithJenkinsSh("Go 1.13")
+        go.buildGoWithJenkinsShUsingGlobalTools("go-1.14")
       }
 
       stage('Copy ao to assets') {
