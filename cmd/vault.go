@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 
 	"strings"
 
@@ -266,7 +267,8 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		return errNoPermissionsSpecified
 	}
 	if createVaultHasGroupArguments(args) {
-		vault.Permissions, err = handlePermissionAction(ADD, vault.Permissions, args[:2])
+		logrus.Debugf("Command line permission groups: %v\n", args[2:])
+		vault.Permissions, err = handlePermissionAction(ADD, vault.Permissions, args[2:])
 		if err != nil {
 			return err
 		}
