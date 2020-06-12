@@ -266,7 +266,10 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		return errNoPermissionsSpecified
 	}
 	if createVaultHasGroupArguments(args) {
-		vault.Permissions = append(vault.Permissions, args[:2]...)
+		vault.Permissions, err = handlePermissionAction(ADD, vault.Permissions, args[:2])
+		if err != nil {
+			return err
+		}
 	}
 
 	err = DefaultAPIClient.SaveVault(*vault)

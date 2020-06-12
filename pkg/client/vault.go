@@ -96,6 +96,10 @@ func (api *APIClient) DeleteVault(vaultName string) error {
 
 // SaveVault saves an aurora secret vault via API calls
 func (api *APIClient) SaveVault(vault AuroraSecretVault) error {
+	if len(vault.Permissions) == 0 {
+		return errors.New("Aborted: Vault can not be saved without permissions")
+	}
+
 	endpoint := fmt.Sprintf("/vault/%s", api.Affiliation)
 
 	data, err := json.Marshal(vault)
