@@ -115,6 +115,7 @@ func (api *APIClient) DoWithHeader(method string, endpoint string, header map[st
 	}
 
 	if res.StatusCode > 399 {
+		logrus.Debugf("Got res.StatusCode: %v", res.StatusCode)
 		logrus.WithFields(fields).Error("Request Error")
 	}
 

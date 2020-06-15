@@ -251,14 +251,17 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	v, _ := DefaultAPIClient.GetVault(args[0])
+	v, err := DefaultAPIClient.GetVault(args[0])
+	if err != nil {
+		return errors.Errorf("error when checking vault %s: %v \nmaybe the vault already exists", args[0], err)
+	}
 	if v != nil {
 		return errors.Errorf("vault %s already exists", args[0])
 	}
 
 	vault := client.NewAuroraSecretVault(args[0])
 
-	err := collectSecrets(args[1], vault, true)
+	err = collectSecrets(args[1], vault, true)
 	if err != nil {
 		return err
 	}
@@ -266,6 +269,7 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 	if noPermissionsSpecifiedInCreateVault(args, vault) {
 		return errNoPermissionsSpecified
 	}
+
 	if createVaultHasGroupArguments(args) {
 		logrus.Debugf("Command line permission groups: %v\n", args[2:])
 		vault.Permissions, err = handlePermissionAction(ADD, vault.Permissions, args[2:])
