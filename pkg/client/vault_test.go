@@ -66,9 +66,26 @@ func TestApiClient_DeleteVault(t *testing.T) {
 }
 
 func TestApiClient_SaveVault(t *testing.T) {
+	t.Run("Should not save vault with no permissions", func(t *testing.T) {
+
+		vault := NewAuroraSecretVault("foo")
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"success":true}`))
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
+		err := api.SaveVault(*vault)
+		assert.Error(t, err, "SaveVault should return error when there are no permissions")
+	})
+
 	t.Run("Should save vault", func(t *testing.T) {
 
 		vault := NewAuroraSecretVault("foo")
+		vault.Permissions = append(vault.Permissions, "someTestGroup")
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			w.Header().Set("Content-Type", "application/json")

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 
 	"strings"
 
@@ -21,9 +22,14 @@ import (
 var (
 	flagOnlyVaults bool
 
+	errNoPermissionsSpecified = errors.New("No permission groups was specified")
 	errEmptyGroups            = errors.New("Cannot find groups in permissions")
 	errNotValidSecretArgument = errors.New("not a valid argument, must be <vaultname/secret>")
 )
+
+const createVaultLong = `Create a vault for storing secrets. A vault requires permissions for one or more groups. 
+These permissions are necessary to access the vault. 
+`
 
 var (
 	vaultCmd = &cobra.Command{
@@ -39,8 +45,9 @@ var (
 	}
 
 	vaultCreateCmd = &cobra.Command{
-		Use:   "create <vaultname> <folder/file>",
-		Short: "Create a new vault with secrets",
+		Use:   "create <vaultname> <folder/file> <group(s)>",
+		Short: "Create a new vault with secrets with permissions for one or more group(s)",
+		Long:  createVaultLong,
 		RunE:  CreateVault,
 	}
 
@@ -240,7 +247,7 @@ func RenameVault(cmd *cobra.Command, args []string) error {
 
 // CreateVault is the entry point of the `vault create` cli command
 func CreateVault(cmd *cobra.Command, args []string) error {
-	if len(args) != 2 {
+	if len(args) < 2 {
 		return cmd.Usage()
 	}
 
@@ -256,6 +263,17 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if noPermissionsSpecifiedInCreateVault(args, vault) {
+		return errNoPermissionsSpecified
+	}
+	if createVaultHasGroupArguments(args) {
+		logrus.Debugf("Command line permission groups: %v\n", args[2:])
+		vault.Permissions, err = handlePermissionAction(ADD, vault.Permissions, args[2:])
+		if err != nil {
+			return err
+		}
+	}
+
 	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
@@ -263,6 +281,14 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 
 	fmt.Println("Vault", args[0], "created")
 	return nil
+}
+
+func createVaultHasGroupArguments(args []string) bool {
+	return len(args) > 2
+}
+
+func noPermissionsSpecifiedInCreateVault(args []string, vault *client.AuroraSecretVault) bool {
+	return len(args) < 3 && len(vault.Permissions) == 0
 }
 
 // EditSecret is the entry point of the `vault edit-secret` cli command
