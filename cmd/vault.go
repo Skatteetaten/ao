@@ -251,17 +251,13 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	v, err := DefaultAPIClient.GetVault(args[0])
-	if err != nil {
-		return errors.Errorf("error when checking vault %s: %v \nmaybe the vault already exists", args[0], err)
-	}
-	if v != nil {
-		return errors.Errorf("vault %s already exists", args[0])
+	if err := verifyVaultDoesNotExist(args[0]); err != nil {
+		return err
 	}
 
 	vault := client.NewAuroraSecretVault(args[0])
 
-	err = collectSecrets(args[1], vault, true)
+	err := collectSecrets(args[1], vault, true)
 	if err != nil {
 		return err
 	}
@@ -284,6 +280,17 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Println("Vault", args[0], "created")
+	return nil
+}
+
+func verifyVaultDoesNotExist(vaultname string) error {
+	v, err := DefaultAPIClient.GetVault(vaultname)
+	if err != nil && !strings.Contains(err.Error(), "Vault not found") {
+		return errors.Errorf("error when checking vault %s: %v \nmaybe the vault already exists", vaultname, err)
+	}
+	if v != nil {
+		return errors.Errorf("vault %s already exists", vaultname)
+	}
 	return nil
 }
 
