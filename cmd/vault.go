@@ -285,7 +285,7 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 func verifyVaultDoesNotExist(vaultname string) error {
 	v, err := DefaultAPIClient.GetVault(vaultname)
 	if err != nil && err.Error() != client.ErrorVaultNotFound {
-		return errors.Errorf("error when checking vault %s: %v \nmaybe the vault already exists", vaultname, err)
+		return errors.Errorf("error when checking existence of vault %s: %v", vaultname, err)
 	}
 	if v != nil {
 		return errors.Errorf("vault %s already exists", vaultname)
