@@ -4,9 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/http"
-
 	"github.com/pkg/errors"
+	"net/http"
+	"strings"
 )
 
 type (
@@ -33,6 +33,8 @@ type (
 		Contents string `json:"contents"`
 	}
 )
+
+const ErrorVaultNotFound = "Vault not found"
 
 // NewAuroraSecretVault creates a new AuroraSecretVault
 func NewAuroraSecretVault(name string) *AuroraSecretVault {
@@ -69,6 +71,11 @@ func (api *APIClient) GetVault(vaultName string) (*AuroraSecretVault, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if response != nil && !response.Success && strings.Contains(response.Message, "Vault not found") {
+		return nil, errors.New(ErrorVaultNotFound)
+	}
+
 	var vault AuroraSecretVault
 	err = response.ParseFirstItem(&vault)
 	if err != nil {

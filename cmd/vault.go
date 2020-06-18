@@ -219,12 +219,11 @@ func RenameVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	vault, err := DefaultAPIClient.GetVault(args[1])
-	if vault != nil {
+	if err := verifyVaultDoesNotExist(args[1]); err != nil {
 		return errors.Errorf("Can't rename vault. %s already exists", args[1])
 	}
 
-	vault, err = DefaultAPIClient.GetVault(args[0])
+	vault, err := DefaultAPIClient.GetVault(args[0])
 	if err != nil {
 		return err
 	}
@@ -251,9 +250,8 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	v, _ := DefaultAPIClient.GetVault(args[0])
-	if v != nil {
-		return errors.Errorf("vault %s already exists", args[0])
+	if err := verifyVaultDoesNotExist(args[0]); err != nil {
+		return err
 	}
 
 	vault := client.NewAuroraSecretVault(args[0])
@@ -266,6 +264,7 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 	if noPermissionsSpecifiedInCreateVault(args, vault) {
 		return errNoPermissionsSpecified
 	}
+
 	if createVaultHasGroupArguments(args) {
 		logrus.Debugf("Command line permission groups: %v\n", args[2:])
 		vault.Permissions, err = handlePermissionAction(ADD, vault.Permissions, args[2:])
@@ -280,6 +279,17 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Println("Vault", args[0], "created")
+	return nil
+}
+
+func verifyVaultDoesNotExist(vaultname string) error {
+	v, err := DefaultAPIClient.GetVault(vaultname)
+	if err != nil && err.Error() != client.ErrorVaultNotFound {
+		return errors.Errorf("error when checking existence of vault %s: %v", vaultname, err)
+	}
+	if v != nil {
+		return errors.Errorf("vault %s already exists", vaultname)
+	}
 	return nil
 }
 
