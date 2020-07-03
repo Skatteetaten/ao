@@ -1,0 +1,6 @@
+{
+  "artifactId": "aotest",
+  "groupId": "no.skatteetaten.aurora",
+  "readiness": false,
+  "version": "1"
+}

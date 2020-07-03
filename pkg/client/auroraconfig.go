@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -168,6 +169,7 @@ func (api *APIClient) GetAuroraConfigFile(fileName string) (*auroraconfig.File, 
 	}
 
 	eTag := bundle.HTTPResponse.Header.Get("ETag")
+	logrus.Debugf("GetAuroraConfigFile: Got ETag: %s", eTag)
 
 	return &file, eTag, nil
 }
@@ -175,7 +177,7 @@ func (api *APIClient) GetAuroraConfigFile(fileName string) (*auroraconfig.File, 
 // PutAuroraConfigFile sets aurora configuration file via API calls
 func (api *APIClient) PutAuroraConfigFile(file *auroraconfig.File, eTag string) error {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, file.Name)
-
+	logrus.Debugf("PutAuroraConfigFile: ETag: %s", eTag)
 	payload := auroraConfigFilePayload{
 		Content: string(file.Contents),
 	}
