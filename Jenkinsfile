@@ -73,14 +73,14 @@ timestamps {
         }
       }
 
+      stage('Build, Test & coverage') {
+        go.buildGoWithJenkinsShUsingGlobalTools("go-1.14")
+      }
+
       if (props.isReleaseBuild && !props.tagExists) {
         stage("Tag") {
           git.tagAndPush(props.credentialsId, "v$props.version")
         }
-      }
-
-      stage('Build, Test & coverage') {
-        go.buildGoWithJenkinsShUsingGlobalTools("go-1.14")
       }
 
       stage('Copy ao to assets') {
