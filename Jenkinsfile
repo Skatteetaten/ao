@@ -9,7 +9,7 @@ def overrides = [
     chatRoom: "#aos-notifications",
     iq: false,
     sonarQube: false,
-    nodeVersion: "10",
+    nodeVersion: "12",
     applicationType: "nodejs",
     versionStrategy: [
       [ branch: 'master', versionHint: '2' ]
@@ -73,14 +73,14 @@ timestamps {
         }
       }
 
+      stage('Build, Test & coverage') {
+        go.buildGoWithJenkinsShUsingGlobalTools("go-1.14")
+      }
+
       if (props.isReleaseBuild && !props.tagExists) {
         stage("Tag") {
           git.tagAndPush(props.credentialsId, "v$props.version")
         }
-      }
-
-      stage('Build, Test & coverage') {
-        go.buildGoWithJenkinsShUsingGlobalTools("go-1.14")
       }
 
       stage('Copy ao to assets') {
