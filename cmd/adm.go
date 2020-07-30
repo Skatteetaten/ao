@@ -157,17 +157,31 @@ func RecreateConfig(cmd *cobra.Command, args []string) error {
 	} else if len(flagAddCluster) > 0 {
 		conf.AvailableClusters = append(conf.AvailableClusters, flagAddCluster...)
 	} else if flagBetaMultipleClusterTypes {
-		conf.AvailableClusters = append(conf.AvailableClusters, "utv03")
-		conf.ClusterType = map[string]string{
-			"utv":        "ocp3",
-			"utv-relay":  "ocp3",
-			"test":       "ocp3",
-			"test-relay": "ocp3",
-			"prod":       "ocp3",
-			"prod-relay": "ocp3",
-			"utv03":      "ocp4",
+		conf.AvailableClusters = append(conf.AvailableClusters, "utv03", "ske-l3-aks")
+		conf.ClusterConfig = map[string]*config.ClusterConfig{
+			"utv": {
+				Type: "ocp3",
+			},
+			"utv-relay": {
+				Type: "ocp3",
+			},
+			"test": {
+				Type: "ocp3",
+			},
+			"test-relay": {
+				Type: "ocp3",
+			},
+			"prod": {
+				Type: "ocp3",
+			},
+			"prod-relay": {
+				Type: "ocp3",
+			},
+			"utv03": {
+				Type: "ocp4",
+			}
 		}
-		conf.ClusterURLPatterns = map[string]*config.ServiceURLPatterns{
+		conf.ServiceURLPatterns = map[string]*config.ServiceURLPatterns{
 			"ocp3": {
 				ClusterURLPattern: "https://%s-master.paas.skead.no:8443",
 				BooberURLPattern:  "http://boober-aurora.%s.paas.skead.no",
@@ -175,10 +189,11 @@ func RecreateConfig(cmd *cobra.Command, args []string) error {
 				GoboURLPattern:    "http://gobo.aurora.%s.paas.skead.no",
 			},
 			"ocp4": {
-				ClusterURLPattern: "https://oauth-openshift.apps.%s.paas.skead.no",
-				BooberURLPattern:  "http://boober.aurora.apps.%s.paas.skead.no",
-				UpdateURLPattern:  "http://ao-aurora-tools.%s.paas.skead.no",
-				GoboURLPattern:    "http://gobo.aurora.apps.%s.paas.skead.no",
+				ClusterURLPattern:      "https://api.%s.paas.skead.no:6443",
+				ClusterLoginURLPattern: "https://oauth-openshift.apps.%s.paas.skead.no",
+				BooberURLPattern:       "http://boober.aurora.apps.%s.paas.skead.no",
+				UpdateURLPattern:       "http://ao-aurora-tools.%s.paas.skead.no",
+				GoboURLPattern:         "http://gobo.aurora.apps.%s.paas.skead.no",
 			},
 		}
 	}

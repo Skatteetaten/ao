@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"runtime"
+	"strings"
 
 	"path/filepath"
 
@@ -22,8 +23,8 @@ type AOConfig struct {
 	Localhost   bool                `json:"localhost"`
 	Clusters    map[string]*Cluster `json:"clusters"`
 
-	ClusterURLPatterns map[string]*ServiceURLPatterns `json:"clusterURLPatterns"`
-	ClusterType        map[string]string              `json:"clusterType"`
+	ServiceURLPatterns map[string]*ServiceURLPatterns `json:"serviceURLPatterns"`
+	ClusterConfig      map[string]*ClusterConfig      `json:"clusterConfig"`
 
 	AvailableClusters       []string `json:"availableClusters"`
 	PreferredAPIClusters    []string `json:"preferredApiClusters"`
@@ -47,22 +48,56 @@ var DefaultAOConfig = AOConfig{
 	GoboURLPattern:          "http://gobo.aurora.%s.paas.skead.no",
 }
 
-func (ao *AOConfig) GetServiceURLPatterns(clusterName string) (*ServiceURLPatterns, error) {
-	if len(ao.ClusterURLPatterns) == 0 {
-		return &ServiceURLPatterns{
-			BooberURLPattern:  ao.BooberURLPattern,
-			ClusterURLPattern: ao.ClusterURLPattern,
-			UpdateURLPattern:  ao.UpdateURLPattern,
-			GoboURLPattern:    ao.GoboURLPattern,
+type ServiceURLs struct {
+	BooberURL       string
+	ClusterURL      string
+	ClusterLoginURL string
+	UpdateURL       string
+	GoboURL         string
+}
+
+func (ao *AOConfig) GetServiceURLs(clusterName string) (*ServiceURLs, error) {
+	if len(ao.ServiceURLPatterns) == 0 {
+		return &ServiceURLs{
+			BooberURL:       fmt.Sprintf(ao.BooberURLPattern, clusterName),
+			ClusterURL:      fmt.Sprintf(ao.ClusterURLPattern, clusterName),
+			ClusterLoginURL: fmt.Sprintf(ao.ClusterURLPattern, clusterName),
+			UpdateURL:       fmt.Sprintf(ao.UpdateURLPattern, clusterName),
+			GoboURL:         fmt.Sprintf(ao.GoboURLPattern, clusterName),
 		}, nil
 	}
 
-	clusterType := ao.ClusterType[clusterName]
-	if clusterType == "" {
+	clusterConfig := ao.ClusterConfig[clusterName]
+	if clusterConfig == nil {
 		return nil, errors.Errorf("Missing cluster type for cluster %s", clusterName)
 	}
 
-	return ao.ClusterURLPatterns[clusterType], nil
+	patterns := ao.ServiceURLPatterns[clusterConfig.Type]
+	clusterPrefix := clusterName
+	if clusterConfig.ClusterURLPrefix != "" {
+		clusterPrefix = clusterConfig.ClusterURLPrefix
+	}
+
+	clusterLoginURLPattern := patterns.ClusterURLPattern
+	if patterns.ClusterLoginURLPattern != "" {
+		clusterLoginURLPattern = patterns.ClusterLoginURLPattern
+	}
+
+	return &ServiceURLs{
+		BooberURL:       formatNonLocalhostPattern(patterns.BooberURLPattern, clusterName),
+		ClusterURL:      formatNonLocalhostPattern(patterns.ClusterURLPattern, clusterPrefix),
+		ClusterLoginURL: formatNonLocalhostPattern(clusterLoginURLPattern, clusterPrefix),
+		UpdateURL:       formatNonLocalhostPattern(patterns.UpdateURLPattern, clusterName),
+		GoboURL:         formatNonLocalhostPattern(patterns.GoboURLPattern, clusterName),
+	}, nil
+}
+
+func formatNonLocalhostPattern(pattern string, a ...interface{}) string {
+	if strings.Contains(pattern, "localhost") {
+		return pattern
+	}
+
+	return fmt.Sprintf(pattern, a...)
 }
 
 // LoadConfigFile loads an AOConfig file from file system

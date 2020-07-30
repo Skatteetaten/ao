@@ -35,6 +35,7 @@ var (
 type Cluster struct {
 	Name      string `json:"name"`
 	URL       string `json:"url"`
+	LoginURL  string `json:"loginUrl"`
 	Token     string `json:"token"`
 	Reachable bool   `json:"reachable"`
 	BooberURL string `json:"booberUrl"`
@@ -49,7 +50,7 @@ func (ao *AOConfig) InitClusters() {
 
 	for _, cluster := range ao.AvailableClusters {
 		name := cluster
-		urls, err := ao.GetServiceURLPatterns(name)
+		urls, err := ao.GetServiceURLs(name)
 		if err != nil {
 			fmt.Println(err)
 			fmt.Printf("Skipping config generation for cluster %s\n", name)
@@ -57,26 +58,24 @@ func (ao *AOConfig) InitClusters() {
 		}
 
 		configuredClusters++
-		booberURL := fmt.Sprintf(urls.BooberURLPattern, name)
-		clusterURL := fmt.Sprintf(urls.ClusterURLPattern, name)
-		goboURL := fmt.Sprintf(urls.GoboURLPattern, name)
 		go func() {
 			reachable := false
-			resp, err := client.Get(booberURL)
+			resp, err := client.Get(urls.BooberURL)
 			if err == nil && resp != nil && resp.StatusCode < 500 {
-				resp, err = client.Get(clusterURL)
+				resp, err = client.Get(urls.ClusterURL)
 				if err == nil && resp != nil && resp.StatusCode < 500 {
 					reachable = true
 				}
 			}
 
-			logrus.WithField("reachable", reachable).Info(booberURL)
+			logrus.WithField("reachable", reachable).Info(urls.BooberURL)
 			ch <- &Cluster{
 				Name:      name,
-				URL:       clusterURL,
+				URL:       urls.ClusterURL,
+				LoginURL:  urls.ClusterLoginURL,
 				Reachable: reachable,
-				BooberURL: booberURL,
-				GoboURL:   goboURL,
+				BooberURL: urls.BooberURL,
+				GoboURL:   urls.GoboURL,
 			}
 		}()
 	}
@@ -98,7 +97,7 @@ func (c *Cluster) HasValidToken() bool {
 		return false
 	}
 
-	clusterURL := fmt.Sprintf("%s/%s", c.URL, "oapi")
+	clusterURL := fmt.Sprintf("%s/%s", c.URL, "api")
 	req, err := http.NewRequest("GET", clusterURL, nil)
 	if err != nil {
 		return false
