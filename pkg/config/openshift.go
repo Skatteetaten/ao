@@ -62,9 +62,12 @@ func (ao *AOConfig) InitClusters() {
 			reachable := false
 			resp, err := client.Get(urls.BooberURL)
 			if err == nil && resp != nil && resp.StatusCode < 500 {
-				resp, err = client.Get(urls.ClusterURL)
+				resp, err := client.Get(urls.GoboURL)
 				if err == nil && resp != nil && resp.StatusCode < 500 {
-					reachable = true
+					resp, err = client.Get(urls.ClusterLoginURL)
+					if err == nil && resp != nil && resp.StatusCode < 500 {
+						reachable = true
+					}
 				}
 			}
 

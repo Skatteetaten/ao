@@ -179,7 +179,7 @@ func RecreateConfig(cmd *cobra.Command, args []string) error {
 			},
 			"utv03": {
 				Type: "ocp4",
-			}
+			},
 		}
 		conf.ServiceURLPatterns = map[string]*config.ServiceURLPatterns{
 			"ocp3": {
