@@ -92,6 +92,7 @@ func TestAOConfig_InitClusters(t *testing.T) {
 	ao := DefaultAOConfig
 	ao.ClusterURLPattern = "%s"
 	ao.BooberURLPattern = "%s"
+	ao.GoboURLPattern = "%s"
 	ao.AvailableClusters = []string{}
 	ao.PreferredAPIClusters = []string{}
 
