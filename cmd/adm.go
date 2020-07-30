@@ -12,6 +12,7 @@ import (
 
 var flagShowAll bool
 var flagAddCluster []string
+var flagBetaMultipleClusterTypes bool
 
 var admCmd = &cobra.Command{
 	Use:   "adm",
@@ -79,6 +80,7 @@ func init() {
 	admCmd.AddCommand(updateRefCmd)
 
 	getClusterCmd.Flags().BoolVarP(&flagShowAll, "all", "a", false, "Show all clusters, not just the reachable ones")
+	recreateConfigCmd.Flags().BoolVarP(&flagBetaMultipleClusterTypes, "beta-multiple-cluster-types", "", false, "Generate new config for multiple cluster types. Eks ocp3, ocp4")
 	recreateConfigCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Recreate config with one cluster")
 	recreateConfigCmd.Flags().StringArrayVarP(&flagAddCluster, "add-cluster", "a", []string{}, "Add cluster to available clusters")
 	updateHookCmd.Flags().StringVarP(&flagGitHookType, "git-hook", "g", "pre-push", "Change git hook to validate AuroraConfig")
@@ -154,6 +156,31 @@ func RecreateConfig(cmd *cobra.Command, args []string) error {
 		conf.PreferredAPIClusters = []string{flagCluster}
 	} else if len(flagAddCluster) > 0 {
 		conf.AvailableClusters = append(conf.AvailableClusters, flagAddCluster...)
+	} else if flagBetaMultipleClusterTypes {
+		conf.AvailableClusters = append(conf.AvailableClusters, "utv03")
+		conf.ClusterType = map[string]string{
+			"utv":        "ocp3",
+			"utv-relay":  "ocp3",
+			"test":       "ocp3",
+			"test-relay": "ocp3",
+			"prod":       "ocp3",
+			"prod-relay": "ocp3",
+			"utv03":      "ocp4",
+		}
+		conf.ClusterURLPatterns = map[string]*config.ServiceURLPatterns{
+			"ocp3": {
+				ClusterURLPattern: "https://%s-master.paas.skead.no:8443",
+				BooberURLPattern:  "http://boober-aurora.%s.paas.skead.no",
+				UpdateURLPattern:  "http://ao-aurora-tools.%s.paas.skead.no",
+				GoboURLPattern:    "http://gobo.aurora.%s.paas.skead.no",
+			},
+			"ocp4": {
+				ClusterURLPattern: "https://oauth-openshift.apps.%s.paas.skead.no",
+				BooberURLPattern:  "http://boober.aurora.apps.%s.paas.skead.no",
+				UpdateURLPattern:  "http://ao-aurora-tools.%s.paas.skead.no",
+				GoboURLPattern:    "http://gobo.aurora.apps.%s.paas.skead.no",
+			},
+		}
 	}
 
 	conf.InitClusters()

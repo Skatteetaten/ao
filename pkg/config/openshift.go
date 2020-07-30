@@ -45,12 +45,21 @@ type Cluster struct {
 func (ao *AOConfig) InitClusters() {
 	ao.Clusters = make(map[string]*Cluster)
 	ch := make(chan *Cluster)
+	configuredClusters := 0
 
 	for _, cluster := range ao.AvailableClusters {
 		name := cluster
-		booberURL := fmt.Sprintf(ao.BooberURLPattern, name)
-		clusterURL := fmt.Sprintf(ao.ClusterURLPattern, name)
-		goboURL := fmt.Sprintf(ao.GoboURLPattern, name)
+		urls, err := ao.GetServiceURLPatterns(name)
+		if err != nil {
+			fmt.Println(err)
+			fmt.Printf("Skipping config generation for cluster %s\n", name)
+			continue
+		}
+
+		configuredClusters++
+		booberURL := fmt.Sprintf(urls.BooberURLPattern, name)
+		clusterURL := fmt.Sprintf(urls.ClusterURLPattern, name)
+		goboURL := fmt.Sprintf(urls.GoboURLPattern, name)
 		go func() {
 			reachable := false
 			resp, err := client.Get(booberURL)
@@ -64,7 +73,7 @@ func (ao *AOConfig) InitClusters() {
 			logrus.WithField("reachable", reachable).Info(booberURL)
 			ch <- &Cluster{
 				Name:      name,
-				URL:       fmt.Sprintf(ao.ClusterURLPattern, name),
+				URL:       clusterURL,
 				Reachable: reachable,
 				BooberURL: booberURL,
 				GoboURL:   goboURL,
@@ -76,7 +85,7 @@ func (ao *AOConfig) InitClusters() {
 		select {
 		case c := <-ch:
 			ao.Clusters[c.Name] = c
-			if len(ao.Clusters) == len(ao.AvailableClusters) {
+			if len(ao.Clusters) == configuredClusters {
 				return
 			}
 		}

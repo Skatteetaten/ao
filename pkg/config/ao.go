@@ -22,6 +22,9 @@ type AOConfig struct {
 	Localhost   bool                `json:"localhost"`
 	Clusters    map[string]*Cluster `json:"clusters"`
 
+	ClusterURLPatterns map[string]*ServiceURLPatterns `json:"clusterURLPatterns"`
+	ClusterType        map[string]string              `json:"clusterType"`
+
 	AvailableClusters       []string `json:"availableClusters"`
 	PreferredAPIClusters    []string `json:"preferredApiClusters"`
 	AvailableUpdateClusters []string `json:"availableUpdateClusters"`
@@ -42,6 +45,24 @@ var DefaultAOConfig = AOConfig{
 	BooberURLPattern:        "http://boober-aurora.%s.paas.skead.no",
 	UpdateURLPattern:        "http://ao-aurora-tools.%s.paas.skead.no",
 	GoboURLPattern:          "http://gobo.aurora.%s.paas.skead.no",
+}
+
+func (ao *AOConfig) GetServiceURLPatterns(clusterName string) (*ServiceURLPatterns, error) {
+	if len(ao.ClusterURLPatterns) == 0 {
+		return &ServiceURLPatterns{
+			BooberURLPattern:  ao.BooberURLPattern,
+			ClusterURLPattern: ao.ClusterURLPattern,
+			UpdateURLPattern:  ao.UpdateURLPattern,
+			GoboURLPattern:    ao.GoboURLPattern,
+		}, nil
+	}
+
+	clusterType := ao.ClusterType[clusterName]
+	if clusterType == "" {
+		return nil, errors.Errorf("Missing cluster type for cluster %s", clusterName)
+	}
+
+	return ao.ClusterURLPatterns[clusterType], nil
 }
 
 // LoadConfigFile loads an AOConfig file from file system
