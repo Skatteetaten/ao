@@ -15,6 +15,21 @@ import (
 	"github.com/skatteetaten/ao/pkg/prompt"
 )
 
+var ocp3URLPatterns = &ServiceURLPatterns{
+	ClusterURLPattern: "https://%s-master.paas.skead.no:8443",
+	BooberURLPattern:  "http://boober-aurora.%s.paas.skead.no",
+	UpdateURLPattern:  "http://ao-aurora-tools.%s.paas.skead.no",
+	GoboURLPattern:    "http://gobo.aurora.%s.paas.skead.no",
+}
+
+var ocp4URLPatterns = &ServiceURLPatterns{
+	ClusterURLPattern:      "https://api.%s.paas.skead.no:6443",
+	ClusterLoginURLPattern: "https://oauth-openshift.apps.%s.paas.skead.no",
+	BooberURLPattern:       "http://boober.aurora.apps.%s.paas.skead.no",
+	UpdateURLPattern:       "http://ao-aurora-tools.%s.paas.skead.no",
+	GoboURLPattern:         "http://gobo.aurora.apps.%s.paas.skead.no",
+}
+
 // ClusterConfig information about features and configuration for a cluster.
 type ClusterConfig struct {
 	Type             string `json:"type"`
@@ -70,10 +85,10 @@ var DefaultAOConfig = AOConfig{
 	AvailableClusters:       []string{"utv", "utv-relay", "test", "test-relay", "prod", "prod-relay"},
 	PreferredAPIClusters:    []string{"utv", "test"},
 	AvailableUpdateClusters: []string{"utv", "test"},
-	ClusterURLPattern:       "https://%s-master.paas.skead.no:8443",
-	BooberURLPattern:        "http://boober-aurora.%s.paas.skead.no",
-	UpdateURLPattern:        "http://ao-aurora-tools.%s.paas.skead.no",
-	GoboURLPattern:          "http://gobo.aurora.%s.paas.skead.no",
+	ClusterURLPattern:       ocp3URLPatterns.ClusterURLPattern,
+	BooberURLPattern:        ocp3URLPatterns.BooberURLPattern,
+	UpdateURLPattern:        ocp3URLPatterns.UpdateURLPattern,
+	GoboURLPattern:          ocp3URLPatterns.GoboURLPattern,
 }
 
 // GetServiceURLs returns old config if ServiceURLPatterns is empty, else ServiceURLs for a given cluster type
@@ -140,19 +155,8 @@ func (ao *AOConfig) AddMultipleClusterConfig() {
 		},
 	}
 	ao.ServiceURLPatterns = map[string]*ServiceURLPatterns{
-		"ocp3": {
-			ClusterURLPattern: "https://%s-master.paas.skead.no:8443",
-			BooberURLPattern:  "http://boober-aurora.%s.paas.skead.no",
-			UpdateURLPattern:  "http://ao-aurora-tools.%s.paas.skead.no",
-			GoboURLPattern:    "http://gobo.aurora.%s.paas.skead.no",
-		},
-		"ocp4": {
-			ClusterURLPattern:      "https://api.%s.paas.skead.no:6443",
-			ClusterLoginURLPattern: "https://oauth-openshift.apps.%s.paas.skead.no",
-			BooberURLPattern:       "http://boober.aurora.apps.%s.paas.skead.no",
-			UpdateURLPattern:       "http://ao-aurora-tools.%s.paas.skead.no",
-			GoboURLPattern:         "http://gobo.aurora.apps.%s.paas.skead.no",
-		},
+		"ocp3": ocp3URLPatterns,
+		"ocp4": ocp4URLPatterns,
 	}
 }
 
