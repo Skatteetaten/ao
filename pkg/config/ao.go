@@ -15,6 +15,34 @@ import (
 	"github.com/skatteetaten/ao/pkg/prompt"
 )
 
+// ClusterConfig information about features and configuration for a cluster.
+type ClusterConfig struct {
+	Type             string `json:"type"`
+	IsAPICluster     bool   `json:"isApiCluster"`
+	IsUpdateCluster  bool   `json:"isUpdateCluster"`
+	ClusterURLPrefix string `json:"clusterUrlPrefix"`
+}
+
+// ServiceURLPatterns contains url patterns for all integrations made with AO.
+// %s will be replaced with cluster name. If ClusterURLPrefix in ClusterConfig is specified
+// it will be used for ClusterURLPattern and ClusterLoginURLPattern insted of cluster name.
+type ServiceURLPatterns struct {
+	ClusterURLPattern      string `json:"clusterUrlPattern"`
+	ClusterLoginURLPattern string `json:"clusterLoginUrlPattern"`
+	BooberURLPattern       string `json:"booberUrlPattern"`
+	UpdateURLPattern       string `json:"updateUrlPattern"`
+	GoboURLPattern         string `json:"goboUrlPattern"`
+}
+
+// ServiceURLs contains all the necessary URLs for integrations made with AO.
+type ServiceURLs struct {
+	BooberURL       string
+	ClusterURL      string
+	ClusterLoginURL string
+	UpdateURL       string
+	GoboURL         string
+}
+
 // AOConfig is a structure of the configuration of ao
 type AOConfig struct {
 	RefName     string              `json:"refName"`
@@ -48,14 +76,7 @@ var DefaultAOConfig = AOConfig{
 	GoboURLPattern:          "http://gobo.aurora.%s.paas.skead.no",
 }
 
-type ServiceURLs struct {
-	BooberURL       string
-	ClusterURL      string
-	ClusterLoginURL string
-	UpdateURL       string
-	GoboURL         string
-}
-
+// GetServiceURLs returns old config if ServiceURLPatterns is empty, else ServiceURLs for a given cluster type
 func (ao *AOConfig) GetServiceURLs(clusterName string) (*ServiceURLs, error) {
 	if len(ao.ServiceURLPatterns) == 0 {
 		return &ServiceURLs{
@@ -90,6 +111,49 @@ func (ao *AOConfig) GetServiceURLs(clusterName string) (*ServiceURLs, error) {
 		UpdateURL:       formatNonLocalhostPattern(patterns.UpdateURLPattern, clusterName),
 		GoboURL:         formatNonLocalhostPattern(patterns.GoboURLPattern, clusterName),
 	}, nil
+}
+
+// AddMultipleClusterConfig adds a richer cluster configuration for multiple cluster types.
+func (ao *AOConfig) AddMultipleClusterConfig() {
+	ao.AvailableClusters = append(ao.AvailableClusters, "utv03")
+	ao.ClusterConfig = map[string]*ClusterConfig{
+		"utv": {
+			Type: "ocp3",
+		},
+		"utv-relay": {
+			Type: "ocp3",
+		},
+		"test": {
+			Type: "ocp3",
+		},
+		"test-relay": {
+			Type: "ocp3",
+		},
+		"prod": {
+			Type: "ocp3",
+		},
+		"prod-relay": {
+			Type: "ocp3",
+		},
+		"utv03": {
+			Type: "ocp4",
+		},
+	}
+	ao.ServiceURLPatterns = map[string]*ServiceURLPatterns{
+		"ocp3": {
+			ClusterURLPattern: "https://%s-master.paas.skead.no:8443",
+			BooberURLPattern:  "http://boober-aurora.%s.paas.skead.no",
+			UpdateURLPattern:  "http://ao-aurora-tools.%s.paas.skead.no",
+			GoboURLPattern:    "http://gobo.aurora.%s.paas.skead.no",
+		},
+		"ocp4": {
+			ClusterURLPattern:      "https://api.%s.paas.skead.no:6443",
+			ClusterLoginURLPattern: "https://oauth-openshift.apps.%s.paas.skead.no",
+			BooberURLPattern:       "http://boober.aurora.apps.%s.paas.skead.no",
+			UpdateURLPattern:       "http://ao-aurora-tools.%s.paas.skead.no",
+			GoboURLPattern:         "http://gobo.aurora.apps.%s.paas.skead.no",
+		},
+	}
 }
 
 func formatNonLocalhostPattern(pattern string, a ...interface{}) string {

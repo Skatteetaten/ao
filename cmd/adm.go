@@ -156,46 +156,10 @@ func RecreateConfig(cmd *cobra.Command, args []string) error {
 		conf.PreferredAPIClusters = []string{flagCluster}
 	} else if len(flagAddCluster) > 0 {
 		conf.AvailableClusters = append(conf.AvailableClusters, flagAddCluster...)
-	} else if flagBetaMultipleClusterTypes {
-		conf.AvailableClusters = append(conf.AvailableClusters, "utv03", "ske-l3-aks")
-		conf.ClusterConfig = map[string]*config.ClusterConfig{
-			"utv": {
-				Type: "ocp3",
-			},
-			"utv-relay": {
-				Type: "ocp3",
-			},
-			"test": {
-				Type: "ocp3",
-			},
-			"test-relay": {
-				Type: "ocp3",
-			},
-			"prod": {
-				Type: "ocp3",
-			},
-			"prod-relay": {
-				Type: "ocp3",
-			},
-			"utv03": {
-				Type: "ocp4",
-			},
-		}
-		conf.ServiceURLPatterns = map[string]*config.ServiceURLPatterns{
-			"ocp3": {
-				ClusterURLPattern: "https://%s-master.paas.skead.no:8443",
-				BooberURLPattern:  "http://boober-aurora.%s.paas.skead.no",
-				UpdateURLPattern:  "http://ao-aurora-tools.%s.paas.skead.no",
-				GoboURLPattern:    "http://gobo.aurora.%s.paas.skead.no",
-			},
-			"ocp4": {
-				ClusterURLPattern:      "https://api.%s.paas.skead.no:6443",
-				ClusterLoginURLPattern: "https://oauth-openshift.apps.%s.paas.skead.no",
-				BooberURLPattern:       "http://boober.aurora.apps.%s.paas.skead.no",
-				UpdateURLPattern:       "http://ao-aurora-tools.%s.paas.skead.no",
-				GoboURLPattern:         "http://gobo.aurora.apps.%s.paas.skead.no",
-			},
-		}
+	}
+
+	if flagBetaMultipleClusterTypes {
+		conf.AddMultipleClusterConfig()
 	}
 
 	conf.InitClusters()
