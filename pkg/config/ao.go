@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"runtime"
+	"strings"
 
 	"path/filepath"
 
@@ -14,6 +15,49 @@ import (
 	"github.com/skatteetaten/ao/pkg/prompt"
 )
 
+var ocp3URLPatterns = &ServiceURLPatterns{
+	ClusterURLPattern: "https://%s-master.paas.skead.no:8443",
+	BooberURLPattern:  "http://boober-aurora.%s.paas.skead.no",
+	UpdateURLPattern:  "http://ao-aurora-tools.%s.paas.skead.no",
+	GoboURLPattern:    "http://gobo.aurora.%s.paas.skead.no",
+}
+
+var ocp4URLPatterns = &ServiceURLPatterns{
+	ClusterURLPattern:      "https://api.%s.paas.skead.no:6443",
+	ClusterLoginURLPattern: "https://oauth-openshift.apps.%s.paas.skead.no",
+	BooberURLPattern:       "http://boober.aurora.apps.%s.paas.skead.no",
+	UpdateURLPattern:       "http://ao-aurora-tools.%s.paas.skead.no",
+	GoboURLPattern:         "http://gobo.aurora.apps.%s.paas.skead.no",
+}
+
+// ClusterConfig information about features and configuration for a cluster.
+type ClusterConfig struct {
+	Type             string `json:"type"`
+	IsAPICluster     bool   `json:"isApiCluster"`
+	IsUpdateCluster  bool   `json:"isUpdateCluster"`
+	ClusterURLPrefix string `json:"clusterUrlPrefix"`
+}
+
+// ServiceURLPatterns contains url patterns for all integrations made with AO.
+// %s will be replaced with cluster name. If ClusterURLPrefix in ClusterConfig is specified
+// it will be used for ClusterURLPattern and ClusterLoginURLPattern insted of cluster name.
+type ServiceURLPatterns struct {
+	ClusterURLPattern      string `json:"clusterUrlPattern"`
+	ClusterLoginURLPattern string `json:"clusterLoginUrlPattern"`
+	BooberURLPattern       string `json:"booberUrlPattern"`
+	UpdateURLPattern       string `json:"updateUrlPattern"`
+	GoboURLPattern         string `json:"goboUrlPattern"`
+}
+
+// ServiceURLs contains all the necessary URLs for integrations made with AO.
+type ServiceURLs struct {
+	BooberURL       string
+	ClusterURL      string
+	ClusterLoginURL string
+	UpdateURL       string
+	GoboURL         string
+}
+
 // AOConfig is a structure of the configuration of ao
 type AOConfig struct {
 	RefName     string              `json:"refName"`
@@ -21,6 +65,9 @@ type AOConfig struct {
 	Affiliation string              `json:"affiliation"`
 	Localhost   bool                `json:"localhost"`
 	Clusters    map[string]*Cluster `json:"clusters"`
+
+	ServiceURLPatterns map[string]*ServiceURLPatterns `json:"serviceURLPatterns"`
+	ClusterConfig      map[string]*ClusterConfig      `json:"clusterConfig"`
 
 	AvailableClusters       []string `json:"availableClusters"`
 	PreferredAPIClusters    []string `json:"preferredApiClusters"`
@@ -38,10 +85,87 @@ var DefaultAOConfig = AOConfig{
 	AvailableClusters:       []string{"utv", "utv-relay", "test", "test-relay", "prod", "prod-relay"},
 	PreferredAPIClusters:    []string{"utv", "test"},
 	AvailableUpdateClusters: []string{"utv", "test"},
-	ClusterURLPattern:       "https://%s-master.paas.skead.no:8443",
-	BooberURLPattern:        "http://boober-aurora.%s.paas.skead.no",
-	UpdateURLPattern:        "http://ao-aurora-tools.%s.paas.skead.no",
-	GoboURLPattern:          "http://gobo.aurora.%s.paas.skead.no",
+	ClusterURLPattern:       ocp3URLPatterns.ClusterURLPattern,
+	BooberURLPattern:        ocp3URLPatterns.BooberURLPattern,
+	UpdateURLPattern:        ocp3URLPatterns.UpdateURLPattern,
+	GoboURLPattern:          ocp3URLPatterns.GoboURLPattern,
+}
+
+// GetServiceURLs returns old config if ServiceURLPatterns is empty, else ServiceURLs for a given cluster type
+func (ao *AOConfig) GetServiceURLs(clusterName string) (*ServiceURLs, error) {
+	if len(ao.ServiceURLPatterns) == 0 {
+		return &ServiceURLs{
+			BooberURL:       fmt.Sprintf(ao.BooberURLPattern, clusterName),
+			ClusterURL:      fmt.Sprintf(ao.ClusterURLPattern, clusterName),
+			ClusterLoginURL: fmt.Sprintf(ao.ClusterURLPattern, clusterName),
+			UpdateURL:       fmt.Sprintf(ao.UpdateURLPattern, clusterName),
+			GoboURL:         fmt.Sprintf(ao.GoboURLPattern, clusterName),
+		}, nil
+	}
+
+	clusterConfig := ao.ClusterConfig[clusterName]
+	if clusterConfig == nil {
+		return nil, errors.Errorf("Missing cluster type for cluster %s", clusterName)
+	}
+
+	patterns := ao.ServiceURLPatterns[clusterConfig.Type]
+	clusterPrefix := clusterName
+	if clusterConfig.ClusterURLPrefix != "" {
+		clusterPrefix = clusterConfig.ClusterURLPrefix
+	}
+
+	clusterLoginURLPattern := patterns.ClusterURLPattern
+	if patterns.ClusterLoginURLPattern != "" {
+		clusterLoginURLPattern = patterns.ClusterLoginURLPattern
+	}
+
+	return &ServiceURLs{
+		BooberURL:       formatNonLocalhostPattern(patterns.BooberURLPattern, clusterName),
+		ClusterURL:      formatNonLocalhostPattern(patterns.ClusterURLPattern, clusterPrefix),
+		ClusterLoginURL: formatNonLocalhostPattern(clusterLoginURLPattern, clusterPrefix),
+		UpdateURL:       formatNonLocalhostPattern(patterns.UpdateURLPattern, clusterName),
+		GoboURL:         formatNonLocalhostPattern(patterns.GoboURLPattern, clusterName),
+	}, nil
+}
+
+// AddMultipleClusterConfig adds a richer cluster configuration for multiple cluster types.
+func (ao *AOConfig) AddMultipleClusterConfig() {
+	ao.AvailableClusters = append(ao.AvailableClusters, "utv03")
+	ao.ClusterConfig = map[string]*ClusterConfig{
+		"utv": {
+			Type: "ocp3",
+		},
+		"utv-relay": {
+			Type: "ocp3",
+		},
+		"test": {
+			Type: "ocp3",
+		},
+		"test-relay": {
+			Type: "ocp3",
+		},
+		"prod": {
+			Type: "ocp3",
+		},
+		"prod-relay": {
+			Type: "ocp3",
+		},
+		"utv03": {
+			Type: "ocp4",
+		},
+	}
+	ao.ServiceURLPatterns = map[string]*ServiceURLPatterns{
+		"ocp3": ocp3URLPatterns,
+		"ocp4": ocp4URLPatterns,
+	}
+}
+
+func formatNonLocalhostPattern(pattern string, a ...interface{}) string {
+	if strings.Contains(pattern, "localhost") {
+		return pattern
+	}
+
+	return fmt.Sprintf(pattern, a...)
 }
 
 // LoadConfigFile loads an AOConfig file from file system

@@ -72,6 +72,7 @@ func TestAOConfig_Update(t *testing.T) {
 		ClusterURLPattern:       "%s",
 		UpdateURLPattern:        "%s",
 		BooberURLPattern:        "%s",
+		GoboURLPattern:          "%s",
 		AvailableClusters:       []string{ts.URL},
 		AvailableUpdateClusters: []string{ts.URL},
 	}
