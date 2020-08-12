@@ -16,11 +16,13 @@ import (
 
 // AOConfig is a structure of the configuration of ao
 type AOConfig struct {
-	RefName     string              `json:"refName"`
-	APICluster  string              `json:"apiCluster"`
-	Affiliation string              `json:"affiliation"`
-	Localhost   bool                `json:"localhost"`
-	Clusters    map[string]*Cluster `json:"clusters"`
+	RefName       string              `json:"refName"`
+	APICluster    string              `json:"apiCluster"`
+	Affiliation   string              `json:"affiliation"`
+	Localhost     bool                `json:"localhost"`
+	Clusters      map[string]*Cluster `json:"clusters"`
+	AzureClientID string              `json:"azureClientId"`
+	AzureTenantID string              `json:"azureTenantId"`
 
 	AvailableClusters       []string `json:"availableClusters"`
 	PreferredAPIClusters    []string `json:"preferredApiClusters"`

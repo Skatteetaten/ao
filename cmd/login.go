@@ -78,7 +78,13 @@ func PreLogin(cmd *cobra.Command, args []string) error {
 		if password == "" {
 			password = prompt.Password()
 		}
-		token, err := config.GetToken(c.URL, flagUserName, password)
+		var token string
+		var err error
+		if strings.Contains(c.Name, "aks") {
+			token, err = AO.GetAzureToken()
+		} else {
+			token, err = config.GetToken(c.URL, flagUserName, password)
+		}
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
 				"url":      c.URL,
