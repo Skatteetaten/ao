@@ -181,7 +181,7 @@ func getDeployConfirmation(force bool, filteredDeploymentSpecs []deploymentspec.
 	shouldDeploy := true
 	if !force {
 		defaultAnswer := len(rows) == 1
-		message := fmt.Sprintf("Do you want to deploy %d application(s)?", len(rows))
+		message := fmt.Sprintf("Do you want to deploy %d application(s) in affiliation %s?", len(rows), AO.Affiliation)
 		shouldDeploy = prompt.Confirm(message, defaultAnswer)
 	}
 

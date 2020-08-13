@@ -302,7 +302,7 @@ func getDeleteConfirmation(force bool, deployInfos []DeploymentInfo, out io.Writ
 	shouldDeploy := true
 	if !force {
 		defaultAnswer := len(rows) == 1
-		message := fmt.Sprintf("Do you want to delete %d application(s)?", len(rows))
+		message := fmt.Sprintf("Do you want to delete %d application(s) in affiliation %s?", len(rows), AO.Affiliation)
 		shouldDeploy = prompt.Confirm(message, defaultAnswer)
 	}
 
