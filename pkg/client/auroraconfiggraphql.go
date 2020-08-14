@@ -40,7 +40,7 @@ type CreateAuroraConfigFileResponse struct {
 }
 
 // CreateAuroraConfigFile creates an Aurora config file via API call (graphql)
-func (api *APIClient) CreateAuroraConfigFile(fileName string, data []byte) (CreateAuroraConfigFileResponse, error) {
+func (api *APIClient) CreateAuroraConfigFile(fileName string, data []byte) (*CreateAuroraConfigFileResponse, error) {
 	createAuroraConfigFileRequest := graphql.NewRequest(createAuroraConfigFileRequestString)
 	newAuroraConfigFileInput := NewAuroraConfigFileInput{
 		AuroraConfigName: api.Affiliation,
@@ -51,9 +51,9 @@ func (api *APIClient) CreateAuroraConfigFile(fileName string, data []byte) (Crea
 
 	var createAuroraConfigFileResponse CreateAuroraConfigFileResponse
 	if err := api.RunGraphQlMutation(createAuroraConfigFileRequest, &createAuroraConfigFileResponse); err != nil {
-		return CreateAuroraConfigFileResponse{}, err
+		return nil, err
 	}
-	return createAuroraConfigFileResponse, nil
+	return &createAuroraConfigFileResponse, nil
 }
 
 const updateAuroraConfigFileRequestString = `mutation updateAuroraConfigFile($updateAuroraConfigFileInput: UpdateAuroraConfigFileInput!){
