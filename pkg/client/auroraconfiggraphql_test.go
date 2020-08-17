@@ -27,11 +27,30 @@ func TestApiClient_CreateAuroraConfigFile(t *testing.T) {
 		defer ts.Close()
 
 		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
-		createAuroraConfigFileResponse, err := api.CreateAuroraConfigFile(acf)
+		err := api.CreateAuroraConfigFile(acf)
 		assert.NoError(t, err)
-		assert.NotNil(t, createAuroraConfigFileResponse)
-		assert.True(t, createAuroraConfigFileResponse.CreateAuroraConfigFile.Success)
-		assert.Equal(t, "File successfully added", createAuroraConfigFileResponse.CreateAuroraConfigFile.Message)
+	})
+	t.Run("Should fail to create a new aurora config file", func(t *testing.T) {
+		fileName := "basic_auroraconfig"
+		filecontent := ReadTestFile(fileName)
+		acf := &auroraconfig.File{
+			Name:     "testconfig.json",
+			Contents: string(filecontent),
+		}
+		responseFileName := "createauroraconfigfile_error_response"
+		response := ReadTestFile(responseFileName)
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
+		err := api.CreateAuroraConfigFile(acf)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Could not add file")
 	})
 }
 func TestApiClient_UpdateAuroraConfigFile(t *testing.T) {
@@ -54,10 +73,30 @@ func TestApiClient_UpdateAuroraConfigFile(t *testing.T) {
 		defer ts.Close()
 
 		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
-		updateAuroraConfigFileResponse, err := api.UpdateAuroraConfigFile(acf, etag)
+		err := api.UpdateAuroraConfigFile(acf, etag)
 		assert.NoError(t, err)
-		assert.NotNil(t, updateAuroraConfigFileResponse)
-		assert.True(t, updateAuroraConfigFileResponse.UpdateAuroraConfigFile.Success)
-		assert.Equal(t, "File successfully updated", updateAuroraConfigFileResponse.UpdateAuroraConfigFile.Message)
+	})
+	t.Run("Should fail to update a aurora config file", func(t *testing.T) {
+		fileName := "basic_auroraconfig"
+		filecontent := ReadTestFile(fileName)
+		acf := &auroraconfig.File{
+			Name:     "testconfig.json",
+			Contents: string(filecontent),
+		}
+		etag := "ETag"
+		responseFileName := "updateauroraconfigfile_error_response"
+		response := ReadTestFile(responseFileName)
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
+		err := api.UpdateAuroraConfigFile(acf, etag)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Could not update file")
 	})
 }

@@ -354,7 +354,7 @@ func updateVersion(apiClient client.AuroraConfigClient, applications []string, v
 	}
 
 	// Save config file (Gobo)
-	if _, err = DefaultAPIClient.UpdateAuroraConfigFile(auroraConfigFile, eTag); err != nil {
+	if err = DefaultAPIClient.UpdateAuroraConfigFile(auroraConfigFile, eTag); err != nil {
 		return err
 	}
 

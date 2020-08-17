@@ -3,14 +3,15 @@ package client
 import (
 	"encoding/json"
 	"github.com/machinebox/graphql"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 )
 
 // AuroraConfigClientGraphql is a an internal client facade for external aurora configuration API calls using graphql
 type AuroraConfigClientGraphql interface {
-	CreateAuroraConfigFile(file *auroraconfig.File) (CreateAuroraConfigFileResponse, error)
-	UpdateAuroraConfigFile(file *auroraconfig.File, eTag string) (UpdateAuroraConfigFileResponse, error)
+	CreateAuroraConfigFile(file *auroraconfig.File) error
+	UpdateAuroraConfigFile(file *auroraconfig.File, eTag string) error
 }
 
 // AuroraConfigFileValidationResponse is core of response from the graphql "createAuroraConfigFile" and "updateAuroraConfigFile"
@@ -40,7 +41,7 @@ type CreateAuroraConfigFileResponse struct {
 }
 
 // CreateAuroraConfigFile creates an Aurora config file via API call (graphql)
-func (api *APIClient) CreateAuroraConfigFile(file *auroraconfig.File) (*CreateAuroraConfigFileResponse, error) {
+func (api *APIClient) CreateAuroraConfigFile(file *auroraconfig.File) error {
 	createAuroraConfigFileRequest := graphql.NewRequest(createAuroraConfigFileRequestString)
 	newAuroraConfigFileInput := NewAuroraConfigFileInput{
 		AuroraConfigName: api.Affiliation,
@@ -51,9 +52,13 @@ func (api *APIClient) CreateAuroraConfigFile(file *auroraconfig.File) (*CreateAu
 
 	var createAuroraConfigFileResponse CreateAuroraConfigFileResponse
 	if err := api.RunGraphQlMutation(createAuroraConfigFileRequest, &createAuroraConfigFileResponse); err != nil {
-		return nil, err
+		return err
 	}
-	return &createAuroraConfigFileResponse, nil
+	if !createAuroraConfigFileResponse.CreateAuroraConfigFile.Success {
+		return errors.Errorf("Remote error: %s\n", createAuroraConfigFileResponse.CreateAuroraConfigFile.Message)
+	}
+
+	return nil
 }
 
 const updateAuroraConfigFileRequestString = `mutation updateAuroraConfigFile($updateAuroraConfigFileInput: UpdateAuroraConfigFileInput!){
@@ -78,12 +83,12 @@ type UpdateAuroraConfigFileResponse struct {
 }
 
 // UpdateAuroraConfigFile updates an Aurora config file via API call (graphql)
-func (api *APIClient) UpdateAuroraConfigFile(file *auroraconfig.File, eTag string) (UpdateAuroraConfigFileResponse, error) {
+func (api *APIClient) UpdateAuroraConfigFile(file *auroraconfig.File, eTag string) error {
 	logrus.Debugf("UpdateAuroraConfigFile: ETag: %s", eTag)
 	updateAuroraConfigFileRequest := graphql.NewRequest(updateAuroraConfigFileRequestString)
 
 	if err := validateFileContentIsJSON(file); err != nil {
-		return UpdateAuroraConfigFileResponse{}, err
+		return err
 	}
 
 	updateAuroraConfigFileInput := UpdateAuroraConfigFileInput{
@@ -100,9 +105,13 @@ func (api *APIClient) UpdateAuroraConfigFile(file *auroraconfig.File, eTag strin
 
 	var updateAuroraConfigFileResponse UpdateAuroraConfigFileResponse
 	if err := api.RunGraphQlMutation(updateAuroraConfigFileRequest, &updateAuroraConfigFileResponse); err != nil {
-		return UpdateAuroraConfigFileResponse{}, err
+		return err
 	}
-	return updateAuroraConfigFileResponse, nil
+	if !updateAuroraConfigFileResponse.UpdateAuroraConfigFile.Success {
+		return errors.Errorf("Remote error: %s\n", updateAuroraConfigFileResponse.UpdateAuroraConfigFile.Message)
+	}
+
+	return nil
 }
 
 func validateFileContentIsJSON(file *auroraconfig.File) error {

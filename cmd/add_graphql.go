@@ -24,13 +24,9 @@ func AddGraphql(cmd *cobra.Command, args []string) error {
 		Contents: string(data),
 	}
 
-	createAuroraConfigFileResponse, err := DefaultAPIClient.CreateAuroraConfigFile(acf)
+	err = DefaultAPIClient.CreateAuroraConfigFile(acf)
 	if err != nil {
 		return err
-	}
-
-	if !createAuroraConfigFileResponse.CreateAuroraConfigFile.Success {
-		return errors.Errorf("Remote error: %s\n", createAuroraConfigFileResponse.CreateAuroraConfigFile.Message)
 	}
 
 	cmd.Printf("%s has been added\n", fileName)

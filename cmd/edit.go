@@ -72,7 +72,7 @@ func EditFile(cmd *cobra.Command, args []string) error {
 		file.Contents = modified
 
 		// Save config file (Gobo)
-		if _, err = DefaultAPIClient.UpdateAuroraConfigFile(file, eTag); err != nil {
+		if err = DefaultAPIClient.UpdateAuroraConfigFile(file, eTag); err != nil {
 			return err
 		}
 		return nil
