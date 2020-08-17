@@ -21,12 +21,6 @@ type AuroraConfigClient interface {
 	GetAuroraConfigFile(fileName string) (*auroraconfig.File, string, error)
 }
 
-type (
-	auroraConfigFilePayload struct {
-		Content string `json:"content"`
-	}
-)
-
 // GetFileNames gets file names via API calls
 func (api *APIClient) GetFileNames() (auroraconfig.FileNames, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s/filenames", api.Affiliation)

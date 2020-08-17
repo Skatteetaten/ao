@@ -106,10 +106,7 @@ func (api *APIClient) UpdateAuroraConfigFile(file *auroraconfig.File, eTag strin
 }
 
 func validateFileContentIsJSON(file *auroraconfig.File) error {
-	payload := auroraConfigFilePayload{
-		Content: string(file.Contents),
-	}
-	_, err := json.Marshal(payload)
+	_, err := json.Marshal(file.Contents)
 	if err != nil {
 		return err
 	}
