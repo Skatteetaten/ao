@@ -9,7 +9,7 @@ import (
 
 // AuroraConfigClientGraphql is a an internal client facade for external aurora configuration API calls using graphql
 type AuroraConfigClientGraphql interface {
-	CreateAuroraConfigFile(fileName string, data []byte) (CreateAuroraConfigFileResponse, error)
+	CreateAuroraConfigFile(file *auroraconfig.File) (CreateAuroraConfigFileResponse, error)
 	UpdateAuroraConfigFile(file *auroraconfig.File, eTag string) (UpdateAuroraConfigFileResponse, error)
 }
 
@@ -40,12 +40,12 @@ type CreateAuroraConfigFileResponse struct {
 }
 
 // CreateAuroraConfigFile creates an Aurora config file via API call (graphql)
-func (api *APIClient) CreateAuroraConfigFile(fileName string, data []byte) (*CreateAuroraConfigFileResponse, error) {
+func (api *APIClient) CreateAuroraConfigFile(file *auroraconfig.File) (*CreateAuroraConfigFileResponse, error) {
 	createAuroraConfigFileRequest := graphql.NewRequest(createAuroraConfigFileRequestString)
 	newAuroraConfigFileInput := NewAuroraConfigFileInput{
 		AuroraConfigName: api.Affiliation,
-		FileName:         fileName,
-		Contents:         string(data),
+		FileName:         file.Name,
+		Contents:         file.Contents,
 	}
 	createAuroraConfigFileRequest.Var("newAuroraConfigFileInput", newAuroraConfigFileInput)
 

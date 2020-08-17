@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
@@ -18,8 +19,12 @@ func AddGraphql(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	acf := &auroraconfig.File{
+		Name:     fileName,
+		Contents: string(data),
+	}
 
-	createAuroraConfigFileResponse, err := DefaultAPIClient.CreateAuroraConfigFile(fileName, data)
+	createAuroraConfigFileResponse, err := DefaultAPIClient.CreateAuroraConfigFile(acf)
 	if err != nil {
 		return err
 	}

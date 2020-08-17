@@ -12,6 +12,10 @@ func TestApiClient_CreateAuroraConfigFile(t *testing.T) {
 	t.Run("Should create a new aurora config file", func(t *testing.T) {
 		fileName := "basic_auroraconfig"
 		filecontent := ReadTestFile(fileName)
+		acf := &auroraconfig.File{
+			Name:     "testconfig.json",
+			Contents: string(filecontent),
+		}
 		responseFileName := "createauroraconfigfile_success_response"
 		response := ReadTestFile(responseFileName)
 
@@ -23,7 +27,7 @@ func TestApiClient_CreateAuroraConfigFile(t *testing.T) {
 		defer ts.Close()
 
 		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
-		createAuroraConfigFileResponse, err := api.CreateAuroraConfigFile("testconfig.json", filecontent)
+		createAuroraConfigFileResponse, err := api.CreateAuroraConfigFile(acf)
 		assert.NoError(t, err)
 		assert.NotNil(t, createAuroraConfigFileResponse)
 		assert.True(t, createAuroraConfigFileResponse.CreateAuroraConfigFile.Success)
