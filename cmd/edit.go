@@ -70,7 +70,12 @@ func EditFile(cmd *cobra.Command, args []string) error {
 
 	fileEditor := editor.NewEditor(func(modified string) error {
 		file.Contents = modified
-		return DefaultAPIClient.PutAuroraConfigFile(file, eTag)
+
+		// Save config file (Gobo)
+		if err = DefaultAPIClient.UpdateAuroraConfigFile(file, eTag); err != nil {
+			return err
+		}
+		return nil
 	})
 
 	err = fileEditor.Edit(string(file.Contents), file.Name)

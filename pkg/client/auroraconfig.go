@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -18,14 +19,7 @@ type AuroraConfigClient interface {
 	PutAuroraConfig(endpoint string, payload []byte) (string, error)
 	ValidateAuroraConfig(ac *auroraconfig.AuroraConfig, fullValidation bool) (string, error)
 	GetAuroraConfigFile(fileName string) (*auroraconfig.File, string, error)
-	PutAuroraConfigFile(file *auroraconfig.File, eTag string) error
 }
-
-type (
-	auroraConfigFilePayload struct {
-		Content string `json:"content"`
-	}
-)
 
 // GetFileNames gets file names via API calls
 func (api *APIClient) GetFileNames() (auroraconfig.FileNames, error) {
@@ -168,38 +162,7 @@ func (api *APIClient) GetAuroraConfigFile(fileName string) (*auroraconfig.File, 
 	}
 
 	eTag := bundle.HTTPResponse.Header.Get("ETag")
+	logrus.Debugf("GetAuroraConfigFile: Got ETag: %s", eTag)
 
 	return &file, eTag, nil
-}
-
-// PutAuroraConfigFile sets aurora configuration file via API calls
-func (api *APIClient) PutAuroraConfigFile(file *auroraconfig.File, eTag string) error {
-	endpoint := fmt.Sprintf("/auroraconfig/%s/%s", api.Affiliation, file.Name)
-
-	payload := auroraConfigFilePayload{
-		Content: string(file.Contents),
-	}
-
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-
-	var header map[string]string
-	if eTag != "" {
-		header = map[string]string{
-			"If-Match": eTag,
-		}
-	}
-
-	bundle, err := api.DoWithHeader(http.MethodPut, endpoint, header, data)
-	if err != nil || bundle == nil {
-		return err
-	}
-
-	if !bundle.BooberResponse.Success {
-		return bundle.BooberResponse.Error()
-	}
-
-	return nil
 }
