@@ -1,6 +1,7 @@
 package config
 
 import (
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -188,9 +189,17 @@ func LoadConfigFile(configLocation string) (*AOConfig, error) {
 func WriteConfig(ao AOConfig, configLocation string) error {
 	data, err := json.MarshalIndent(ao, "", "  ")
 	if err != nil {
-		return err
+		return fmt.Errorf("While marshaling ao config: %w", err)
 	}
-	return ioutil.WriteFile(configLocation, data, 0644)
+	if err := ioutil.WriteFile(configLocation, data, 0644); err != nil {
+		return fmt.Errorf("While writing ao config to file: %w", err)
+	}
+	hash := getHash(data)
+	configHashLocation := getConfigHashLocation(configLocation)
+	if err = ioutil.WriteFile(configHashLocation, hash, 0644); err != nil {
+		return fmt.Errorf("While writing ao config hash to file: %w", err)
+	}
+	return nil
 }
 
 // SelectAPICluster returns specified APICluster or makes a priority based selection of an APICluster
@@ -303,4 +312,16 @@ func (ao *AOConfig) getUpdateURL() string {
 	}
 
 	return fmt.Sprintf(ao.UpdateURLPattern, updateCluster)
+}
+
+func getConfigHashLocation(configLocation string) string {
+	return configLocation + ".hash"
+}
+
+func getHash(data []byte) []byte {
+	hasher := sha1.New()
+	hasher.Write(data)
+	hashValue := hasher.Sum(nil)
+	logrus.Debugf("Got hash: %x", hashValue)
+	return hashValue
 }
