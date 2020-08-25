@@ -158,7 +158,7 @@ func Login(cmd *cobra.Command, args []string) error {
 
 func indicateAoAdmRecreateConfig(err error) {
 	if strings.Contains(err.Error(), "unsupported") || strings.Contains(err.Error(), "protocol") {
-		fmt.Printf("Possible unsupported protocol.  Try executing `ao adm recreate-config`")
+		fmt.Printf("\nPossible unsupported protocol.  Try running command \"ao adm recreate-config\".\n")
 	}
 }
 

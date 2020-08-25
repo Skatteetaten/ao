@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/skatteetaten/ao/pkg/prompt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -123,6 +125,19 @@ func initialize(cmd *cobra.Command, args []string) error {
 		err = config.WriteConfig(*aoConfig, ConfigLocation)
 		if err != nil {
 			return err
+		}
+	} else if aoConfig.FileAOVersion != config.Version {
+		logrus.Debugf("ao config is saved with another versjon. AO-version: %s, saved version: %s", config.Version, aoConfig.FileAOVersion)
+		fmt.Printf("\nThe current ao config is made with an older version of ao.\n")
+		message := "Do you want to recreate the ao config with default values (recommended)?"
+		update := prompt.Confirm(message, true)
+		if update {
+			RecreateConfig(cmd, args)
+			if aoConfig, err = config.LoadConfigFile(ConfigLocation); err != nil {
+				logrus.Error(fmt.Errorf("Could not load config after recreate: %w", err))
+			}
+		} else {
+			fmt.Printf("\nNB: Using the older config may cause errors. \nIf you experience this, try running command \"ao adm recreate-config\".\n\n")
 		}
 	}
 

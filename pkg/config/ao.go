@@ -1,7 +1,6 @@
 package config
 
 import (
-	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -77,6 +76,8 @@ type AOConfig struct {
 	BooberURLPattern        string   `json:"booberUrlPattern"`
 	UpdateURLPattern        string   `json:"updateUrlPattern"`
 	GoboURLPattern          string   `json:"goboUrlPattern"`
+
+	FileAOVersion string `json:"aoVersion"` // For detecting possible changes to saved file
 }
 
 // DefaultAOConfig is an AOConfig with default values
@@ -90,6 +91,7 @@ var DefaultAOConfig = AOConfig{
 	BooberURLPattern:        ocp3URLPatterns.BooberURLPattern,
 	UpdateURLPattern:        ocp3URLPatterns.UpdateURLPattern,
 	GoboURLPattern:          ocp3URLPatterns.GoboURLPattern,
+	FileAOVersion:           Version,
 }
 
 // GetServiceURLs returns old config if ServiceURLPatterns is empty, else ServiceURLs for a given cluster type
@@ -194,11 +196,7 @@ func WriteConfig(ao AOConfig, configLocation string) error {
 	if err := ioutil.WriteFile(configLocation, data, 0644); err != nil {
 		return fmt.Errorf("While writing ao config to file: %w", err)
 	}
-	hash := getHash(data)
-	configHashLocation := getConfigHashLocation(configLocation)
-	if err = ioutil.WriteFile(configHashLocation, hash, 0644); err != nil {
-		return fmt.Errorf("While writing ao config hash to file: %w", err)
-	}
+
 	return nil
 }
 
@@ -312,16 +310,4 @@ func (ao *AOConfig) getUpdateURL() string {
 	}
 
 	return fmt.Sprintf(ao.UpdateURLPattern, updateCluster)
-}
-
-func getConfigHashLocation(configLocation string) string {
-	return configLocation + ".hash"
-}
-
-func getHash(data []byte) []byte {
-	hasher := sha1.New()
-	hasher.Write(data)
-	hashValue := hasher.Sum(nil)
-	logrus.Debugf("Got hash: %x", hashValue)
-	return hashValue
 }
