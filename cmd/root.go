@@ -137,9 +137,13 @@ func initialize(cmd *cobra.Command, args []string) error {
 			if aoConfig, err = config.LoadConfigFile(ConfigLocation); err != nil {
 				logrus.Error(fmt.Errorf("Could not load config after recreate: %w", err))
 			}
-			fmt.Printf("\nThe ao configuration settings file was updated to match the current ao version.\n\n")
+			if pFlagAnswerRecreateConfig == "" {
+				fmt.Printf("\nThe ao configuration settings file was updated to match the current ao version.\n\n")
+			}
 		} else {
-			fmt.Printf("\nNB: Using the ao configuration settings file created for another ao version may cause errors. \nIf you experience errors, try running command \"ao adm recreate-config\".\n\n")
+			if pFlagAnswerRecreateConfig == "" {
+				fmt.Printf("\nNB: Using the ao configuration settings file created for another ao version may cause errors. \nIf you experience errors, try running command \"ao adm recreate-config\".\n\n")
+			}
 		}
 	}
 
