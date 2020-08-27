@@ -76,6 +76,8 @@ type AOConfig struct {
 	BooberURLPattern        string   `json:"booberUrlPattern"`
 	UpdateURLPattern        string   `json:"updateUrlPattern"`
 	GoboURLPattern          string   `json:"goboUrlPattern"`
+
+	FileAOVersion string `json:"aoVersion"` // For detecting possible changes to saved file
 }
 
 // DefaultAOConfig is an AOConfig with default values
@@ -89,6 +91,7 @@ var DefaultAOConfig = AOConfig{
 	BooberURLPattern:        ocp3URLPatterns.BooberURLPattern,
 	UpdateURLPattern:        ocp3URLPatterns.UpdateURLPattern,
 	GoboURLPattern:          ocp3URLPatterns.GoboURLPattern,
+	FileAOVersion:           Version,
 }
 
 // GetServiceURLs returns old config if ServiceURLPatterns is empty, else ServiceURLs for a given cluster type
@@ -188,9 +191,13 @@ func LoadConfigFile(configLocation string) (*AOConfig, error) {
 func WriteConfig(ao AOConfig, configLocation string) error {
 	data, err := json.MarshalIndent(ao, "", "  ")
 	if err != nil {
-		return err
+		return fmt.Errorf("While marshaling ao config: %w", err)
 	}
-	return ioutil.WriteFile(configLocation, data, 0644)
+	if err := ioutil.WriteFile(configLocation, data, 0644); err != nil {
+		return fmt.Errorf("While writing ao config to file: %w", err)
+	}
+
+	return nil
 }
 
 // SelectAPICluster returns specified APICluster or makes a priority based selection of an APICluster

@@ -118,7 +118,8 @@ func Login(cmd *cobra.Command, args []string) error {
 
 	acn, err := DefaultAPIClient.GetAuroraConfigNames()
 	if err != nil {
-		return err
+		indicateAoAdmRecreateConfig(err)
+		return fmt.Errorf("While loading aurora config names: %w", err)
 	}
 	var found bool
 	for _, affiliation := range *acn {
@@ -135,7 +136,8 @@ func Login(cmd *cobra.Command, args []string) error {
 	var apiVersion int
 	clientConfig, err := DefaultAPIClient.GetClientConfig()
 	if err != nil {
-		return err
+		indicateAoAdmRecreateConfig(err)
+		return fmt.Errorf("While getting client config: %w", err)
 	}
 
 	apiVersion = clientConfig.APIVersion
@@ -152,6 +154,12 @@ func Login(cmd *cobra.Command, args []string) error {
 
 	AO.Update(false)
 	return config.WriteConfig(*AO, ConfigLocation)
+}
+
+func indicateAoAdmRecreateConfig(err error) {
+	if strings.Contains(err.Error(), "unsupported") || strings.Contains(err.Error(), "protocol") {
+		fmt.Printf("\nPossible unsupported protocol.  Try running command \"ao adm recreate-config\".\n")
+	}
 }
 
 // PostLogin shows results at the end of performing the `login` cli command

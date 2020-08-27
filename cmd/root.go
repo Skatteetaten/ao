@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/skatteetaten/ao/pkg/prompt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -56,11 +58,12 @@ const rootLong = `A command line interface for the Boober API.
   * Manage vaults and secrets`
 
 var (
-	pFlagLogLevel  string
-	pFlagPrettyLog bool
-	pFlagToken     string
-	pFlagRefName   string
-	pFlagNoHeader  bool
+	pFlagLogLevel             string
+	pFlagPrettyLog            bool
+	pFlagToken                string
+	pFlagRefName              string
+	pFlagNoHeader             bool
+	pFlagAnswerRecreateConfig string
 
 	// DefaultAPIClient will use APICluster from ao config as default values
 	// if persistent token and/or server api url is specified these will override default values
@@ -85,9 +88,11 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&pFlagLogLevel, "log", "l", "fatal", "Set log level. Valid log levels are [info, debug, warning, error, fatal]")
 	RootCmd.PersistentFlags().BoolVarP(&pFlagPrettyLog, "pretty", "p", false, "Pretty print json output for log")
 	RootCmd.PersistentFlags().StringVarP(&pFlagToken, "token", "t", "", "OpenShift authorization token to use for remote commands, overrides login")
-	RootCmd.PersistentFlags().StringVarP(&pFlagRefName, "ref", "", "", "Set git ref name, does not affect vaults")
-	RootCmd.PersistentFlags().BoolVarP(&pFlagNoHeader, "no-headers", "", false, "Print tables without headers")
+	RootCmd.PersistentFlags().StringVar(&pFlagRefName, "ref", "", "Set git ref name, does not affect vaults")
+	RootCmd.PersistentFlags().BoolVar(&pFlagNoHeader, "no-headers", false, "Print tables without headers")
 	RootCmd.PersistentFlags().MarkHidden("no-headers")
+	RootCmd.PersistentFlags().StringVar(&pFlagAnswerRecreateConfig, "autoanswer-recreate-config", "", "Set automatic response for ao config question [y, n]")
+	RootCmd.PersistentFlags().MarkHidden("autoanswer-recreate-config")
 }
 
 func initialize(cmd *cobra.Command, args []string) error {
@@ -123,6 +128,18 @@ func initialize(cmd *cobra.Command, args []string) error {
 		err = config.WriteConfig(*aoConfig, ConfigLocation)
 		if err != nil {
 			return err
+		}
+	} else if aoConfig.FileAOVersion != config.Version {
+		logrus.Debugf("ao config file is saved with another versjon. AO-version: %s, saved version: %s", config.Version, aoConfig.FileAOVersion)
+
+		if update() {
+			RecreateConfig(cmd, args)
+			if aoConfig, err = config.LoadConfigFile(ConfigLocation); err != nil {
+				logrus.Error(fmt.Errorf("Could not load config after recreate: %w", err))
+			}
+			fmt.Printf("\nThe ao configuration settings file was updated to match the current ao version.\n\n")
+		} else {
+			fmt.Printf("\nNB: Using the ao configuration settings file created for another ao version may cause errors. \nIf you experience errors, try running command \"ao adm recreate-config\".\n\n")
 		}
 	}
 
@@ -166,6 +183,19 @@ func initialize(cmd *cobra.Command, args []string) error {
 	AO, DefaultAPIClient = aoConfig, api
 
 	return nil
+}
+
+func update() bool {
+	// ask for update if none of the flags "token" or "autoanswer-recreate-config" are set
+	ask := pFlagToken == "" && pFlagAnswerRecreateConfig == ""
+
+	if ask {
+		fmt.Printf("\nIt looks like ao have been updated to another version.\n")
+		message := "Do you want to recreate the ao configuration settings file with default values (recommended)?"
+		return prompt.Confirm(message, true)
+	}
+
+	return strings.ToLower(pFlagAnswerRecreateConfig) != "n"
 }
 
 func containsNone(value string, list []string) bool {
