@@ -80,6 +80,7 @@ func PreLogin(cmd *cobra.Command, args []string) error {
 		}
 		token, err := config.GetToken(c.LoginURL, flagUserName, password)
 		if err != nil {
+			indicateAoAdmRecreateConfig(err)
 			logrus.WithFields(logrus.Fields{
 				"url":      c.URL,
 				"userName": flagUserName,
