@@ -25,9 +25,9 @@ var ocp3URLPatterns = &ServiceURLPatterns{
 var ocp4URLPatterns = &ServiceURLPatterns{
 	ClusterURLPattern:      "https://api.%s.paas.skead.no:6443",
 	ClusterLoginURLPattern: "https://oauth-openshift.apps.%s.paas.skead.no",
-	BooberURLPattern:       "http://boober.aurora.apps.%s.paas.skead.no",
-	UpdateURLPattern:       "http://ao-aurora-tools.%s.paas.skead.no",
-	GoboURLPattern:         "http://gobo.aurora.apps.%s.paas.skead.no",
+	BooberURLPattern:       "https://boober-aup.apps.%s.paas.skead.no",
+	UpdateURLPattern:       "http://ao-aup-tools.apps.%s.paas.skead.no",
+	GoboURLPattern:         "https://gobo-aup.apps.%s.paas.skead.no",
 }
 
 // ClusterConfig information about features and configuration for a cluster.
@@ -133,7 +133,7 @@ func (ao *AOConfig) GetServiceURLs(clusterName string) (*ServiceURLs, error) {
 
 // AddMultipleClusterConfig adds a richer cluster configuration for multiple cluster types.
 func (ao *AOConfig) AddMultipleClusterConfig() {
-	ao.AvailableClusters = append(ao.AvailableClusters, "utv03")
+	ao.AvailableClusters = append(ao.AvailableClusters, "utv04")
 	ao.ClusterConfig = map[string]*ClusterConfig{
 		"utv": {
 			Type: "ocp3",
@@ -153,7 +153,7 @@ func (ao *AOConfig) AddMultipleClusterConfig() {
 		"prod-relay": {
 			Type: "ocp3",
 		},
-		"utv03": {
+		"utv04": {
 			Type: "ocp4",
 		},
 	}
