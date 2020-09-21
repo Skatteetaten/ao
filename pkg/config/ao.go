@@ -134,6 +134,7 @@ func (ao *AOConfig) GetServiceURLs(clusterName string) (*ServiceURLs, error) {
 // AddMultipleClusterConfig adds a richer cluster configuration for multiple cluster types.
 func (ao *AOConfig) AddMultipleClusterConfig() {
 	ao.AvailableClusters = append(ao.AvailableClusters, "utv04")
+	ao.AvailableUpdateClusters = append([]string{"utv04"}, ao.AvailableUpdateClusters...)
 	ao.ClusterConfig = map[string]*ClusterConfig{
 		"utv": {
 			Type: "ocp3",
