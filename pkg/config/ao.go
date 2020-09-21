@@ -26,7 +26,7 @@ var ocp4URLPatterns = &ServiceURLPatterns{
 	ClusterURLPattern:      "https://api.%s.paas.skead.no:6443",
 	ClusterLoginURLPattern: "https://oauth-openshift.apps.%s.paas.skead.no",
 	BooberURLPattern:       "https://boober-aup.apps.%s.paas.skead.no",
-	UpdateURLPattern:       "http://ao-aup-tools.apps.%s.paas.skead.no",
+	UpdateURLPattern:       "https://ao-aup-tools.apps.%s.paas.skead.no",
 	GoboURLPattern:         "https://gobo-aup.apps.%s.paas.skead.no",
 }
 
