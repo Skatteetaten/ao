@@ -107,7 +107,7 @@ func (ao *AOConfig) GetServiceURLs(clusterName string) (*ServiceURLs, error) {
 	}
 
 	clusterConfig := ao.ClusterConfig[clusterName]
-	if clusterConfig == nil {
+	if clusterConfig == nil || clusterConfig.Type == "" {
 		return nil, errors.Errorf("Missing cluster type for cluster %s", clusterName)
 	}
 
@@ -300,12 +300,15 @@ func (ao *AOConfig) getUpdateURL() (string, error) {
 	for _, c := range ao.AvailableUpdateClusters {
 		available, found := ao.Clusters[c]
 		logrus.WithField("exists", found).Info("update server", c)
+
 		if !found || (found && !available.Reachable) {
 			continue
 		}
+
 		serviceURLs, err := ao.GetServiceURLs(c)
 		if err != nil {
-			return "", err
+			logrus.WithField("cluster", available.Name).Warn(err)
+			continue
 		}
 
 		return serviceURLs.UpdateURL, nil
