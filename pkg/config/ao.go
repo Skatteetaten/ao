@@ -26,7 +26,7 @@ var ocp4URLPatterns = &ServiceURLPatterns{
 	ClusterURLPattern:      "https://api.%s.paas.skead.no:6443",
 	ClusterLoginURLPattern: "https://oauth-openshift.apps.%s.paas.skead.no",
 	BooberURLPattern:       "https://boober-aup.apps.%s.paas.skead.no",
-	UpdateURLPattern:       "https://ao-aup-tools.apps.%s.paas.skead.no",
+	UpdateURLPattern:       "https://ao-aup.apps.%s.paas.skead.no",
 	GoboURLPattern:         "https://gobo-aup.apps.%s.paas.skead.no",
 }
 
@@ -229,10 +229,11 @@ func (ao *AOConfig) SelectAPICluster() {
 
 // Update checks for a new version of ao and performs update with an optional interactive confirmation
 func (ao *AOConfig) Update(noPrompt bool) error {
-	url := ao.getUpdateURL()
-	if url == "" {
-		return errors.New("No update server is available, check config")
+	url, err := ao.getUpdateURL()
+	if err != nil {
+		return err
 	}
+
 	serverVersion, err := GetCurrentVersionFromServer(url)
 	if err != nil {
 		return err
@@ -295,20 +296,20 @@ func (ao *AOConfig) replaceAO(data []byte) error {
 	return nil
 }
 
-func (ao *AOConfig) getUpdateURL() string {
-	var updateCluster string
+func (ao *AOConfig) getUpdateURL() (string, error) {
 	for _, c := range ao.AvailableUpdateClusters {
 		available, found := ao.Clusters[c]
 		logrus.WithField("exists", found).Info("update server", c)
-		if found && available.Reachable {
-			updateCluster = c
-			break
+		if !found || (found && !available.Reachable) {
+			continue
 		}
+		serviceURLs, err := ao.GetServiceURLs(c)
+		if err != nil {
+			return "", err
+		}
+
+		return serviceURLs.UpdateURL, nil
 	}
 
-	if updateCluster == "" {
-		return ""
-	}
-
-	return fmt.Sprintf(ao.UpdateURLPattern, updateCluster)
+	return "", errors.New("could not find any available update servers")
 }
