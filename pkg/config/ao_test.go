@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -70,7 +71,7 @@ func TestAOConfig_Update(t *testing.T) {
 
 	aoConfig := &AOConfig{
 		ClusterURLPattern:       "%s",
-		UpdateURLPattern:        "%s",
+		UpdateURLPattern:        "%s/update",
 		BooberURLPattern:        "%s",
 		GoboURLPattern:          "%s",
 		AvailableClusters:       []string{ts.URL},
@@ -80,5 +81,63 @@ func TestAOConfig_Update(t *testing.T) {
 	aoConfig.InitClusters()
 	aoConfig.SelectAPICluster()
 
-	assert.Equal(t, ts.URL, aoConfig.getUpdateURL())
+	url, err := aoConfig.getUpdateURL()
+
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf("%s/update", ts.URL), url)
+}
+
+func TestAOConfig_UpdateWithBetaConfig(t *testing.T) {
+	ocp3 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	ocp4 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	defer ocp3.Close()
+	defer ocp4.Close()
+
+	ao := &AOConfig{
+		ClusterURLPattern: "%s/old",
+		UpdateURLPattern:  "%s/old-update",
+		BooberURLPattern:  "%s/old",
+		GoboURLPattern:    "%s/old",
+		ClusterConfig: map[string]*ClusterConfig{
+			ocp3.URL: {
+				Type: "ocp3",
+			},
+			ocp4.URL: {
+				Type: "ocp4",
+			},
+		},
+		ServiceURLPatterns: map[string]*ServiceURLPatterns{
+			"ocp3": {
+				ClusterURLPattern:      "%s/ocp3",
+				UpdateURLPattern:       "%s/ocp3-update",
+				BooberURLPattern:       "%s/ocp3",
+				GoboURLPattern:         "%s/ocp3",
+				ClusterLoginURLPattern: "%s/ocp3",
+			},
+			"ocp4": {
+				ClusterURLPattern:      "%s/ocp4",
+				UpdateURLPattern:       "%s/ocp4-update",
+				BooberURLPattern:       "%s/ocp4",
+				GoboURLPattern:         "%s/ocp4",
+				ClusterLoginURLPattern: "%s/ocp4",
+			},
+		},
+		AvailableClusters:       []string{ocp4.URL, ocp3.URL},
+		AvailableUpdateClusters: []string{ocp4.URL, ocp3.URL},
+	}
+
+	// Making both test servers (ocp3, ocp4) reachable
+	ao.InitClusters()
+
+	// Should get update URL for ocp4 test server
+	url, err := ao.getUpdateURL()
+
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf("%s/ocp4-update", ocp4.URL), url)
 }
