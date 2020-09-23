@@ -25,9 +25,9 @@ var ocp3URLPatterns = &ServiceURLPatterns{
 var ocp4URLPatterns = &ServiceURLPatterns{
 	ClusterURLPattern:      "https://api.%s.paas.skead.no:6443",
 	ClusterLoginURLPattern: "https://oauth-openshift.apps.%s.paas.skead.no",
-	BooberURLPattern:       "http://boober.aurora.apps.%s.paas.skead.no",
-	UpdateURLPattern:       "http://ao-aurora-tools.%s.paas.skead.no",
-	GoboURLPattern:         "http://gobo.aurora.apps.%s.paas.skead.no",
+	BooberURLPattern:       "https://boober-aup.apps.%s.paas.skead.no",
+	UpdateURLPattern:       "https://ao-aup.apps.%s.paas.skead.no",
+	GoboURLPattern:         "https://gobo-aup.apps.%s.paas.skead.no",
 }
 
 // ClusterConfig information about features and configuration for a cluster.
@@ -54,7 +54,6 @@ type ServiceURLs struct {
 	BooberURL       string
 	ClusterURL      string
 	ClusterLoginURL string
-	UpdateURL       string
 	GoboURL         string
 }
 
@@ -101,17 +100,20 @@ func (ao *AOConfig) GetServiceURLs(clusterName string) (*ServiceURLs, error) {
 			BooberURL:       fmt.Sprintf(ao.BooberURLPattern, clusterName),
 			ClusterURL:      fmt.Sprintf(ao.ClusterURLPattern, clusterName),
 			ClusterLoginURL: fmt.Sprintf(ao.ClusterURLPattern, clusterName),
-			UpdateURL:       fmt.Sprintf(ao.UpdateURLPattern, clusterName),
 			GoboURL:         fmt.Sprintf(ao.GoboURLPattern, clusterName),
 		}, nil
 	}
 
 	clusterConfig := ao.ClusterConfig[clusterName]
-	if clusterConfig == nil {
-		return nil, errors.Errorf("Missing cluster type for cluster %s", clusterName)
+	if clusterConfig == nil || clusterConfig.Type == "" {
+		return nil, errors.Errorf("missing cluster type for cluster %s", clusterName)
 	}
 
 	patterns := ao.ServiceURLPatterns[clusterConfig.Type]
+	if patterns == nil {
+		return nil, errors.Errorf("missing serviceUrlPatterns for cluster type %s", clusterConfig.Type)
+	}
+
 	clusterPrefix := clusterName
 	if clusterConfig.ClusterURLPrefix != "" {
 		clusterPrefix = clusterConfig.ClusterURLPrefix
@@ -126,14 +128,15 @@ func (ao *AOConfig) GetServiceURLs(clusterName string) (*ServiceURLs, error) {
 		BooberURL:       formatNonLocalhostPattern(patterns.BooberURLPattern, clusterName),
 		ClusterURL:      formatNonLocalhostPattern(patterns.ClusterURLPattern, clusterPrefix),
 		ClusterLoginURL: formatNonLocalhostPattern(clusterLoginURLPattern, clusterPrefix),
-		UpdateURL:       formatNonLocalhostPattern(patterns.UpdateURLPattern, clusterName),
 		GoboURL:         formatNonLocalhostPattern(patterns.GoboURLPattern, clusterName),
 	}, nil
 }
 
 // AddMultipleClusterConfig adds a richer cluster configuration for multiple cluster types.
 func (ao *AOConfig) AddMultipleClusterConfig() {
-	ao.AvailableClusters = append(ao.AvailableClusters, "utv03")
+	newCluster := "utv04"
+	ao.AvailableClusters = append(ao.AvailableClusters, newCluster)
+	ao.AvailableUpdateClusters = append([]string{newCluster}, ao.AvailableUpdateClusters...)
 	ao.ClusterConfig = map[string]*ClusterConfig{
 		"utv": {
 			Type: "ocp3",
@@ -153,7 +156,7 @@ func (ao *AOConfig) AddMultipleClusterConfig() {
 		"prod-relay": {
 			Type: "ocp3",
 		},
-		"utv03": {
+		newCluster: {
 			Type: "ocp4",
 		},
 	}
@@ -228,10 +231,11 @@ func (ao *AOConfig) SelectAPICluster() {
 
 // Update checks for a new version of ao and performs update with an optional interactive confirmation
 func (ao *AOConfig) Update(noPrompt bool) error {
-	url := ao.getUpdateURL()
-	if url == "" {
-		return errors.New("No update server is available, check config")
+	url, err := ao.getUpdateURL()
+	if err != nil {
+		return err
 	}
+
 	serverVersion, err := GetCurrentVersionFromServer(url)
 	if err != nil {
 		return err
@@ -294,20 +298,41 @@ func (ao *AOConfig) replaceAO(data []byte) error {
 	return nil
 }
 
-func (ao *AOConfig) getUpdateURL() string {
-	var updateCluster string
-	for _, c := range ao.AvailableUpdateClusters {
-		available, found := ao.Clusters[c]
-		logrus.WithField("exists", found).Info("update server", c)
-		if found && available.Reachable {
-			updateCluster = c
-			break
+func (ao *AOConfig) getUpdateURL() (string, error) {
+	for _, cluster := range ao.AvailableUpdateClusters {
+		available, found := ao.Clusters[cluster]
+		logrus.WithField("exists", found).Info("update server", cluster)
+
+		if !found || (found && !available.Reachable) {
+			continue
 		}
+
+		updateURL, err := ao.resolveUpdateURLPattern(cluster)
+		if err != nil {
+			logrus.WithField("cluster", available.Name).Warn(err)
+			continue
+		}
+
+		return updateURL, nil
 	}
 
-	if updateCluster == "" {
-		return ""
+	return "", errors.New("could not find any available update servers")
+}
+
+func (ao *AOConfig) resolveUpdateURLPattern(clusterName string) (string, error) {
+	if len(ao.ServiceURLPatterns) == 0 {
+		return fmt.Sprintf(ao.UpdateURLPattern, clusterName), nil
 	}
 
-	return fmt.Sprintf(ao.UpdateURLPattern, updateCluster)
+	clusterConfig := ao.ClusterConfig[clusterName]
+	if clusterConfig == nil || clusterConfig.Type == "" {
+		return "", errors.Errorf("missing cluster type for cluster %s", clusterName)
+	}
+
+	patterns := ao.ServiceURLPatterns[clusterConfig.Type]
+	if patterns == nil {
+		return "", errors.Errorf("missing serviceUrlPatterns for cluster type %s", clusterConfig.Type)
+	}
+
+	return formatNonLocalhostPattern(patterns.UpdateURLPattern, clusterName), nil
 }
