@@ -108,10 +108,14 @@ func (ao *AOConfig) GetServiceURLs(clusterName string) (*ServiceURLs, error) {
 
 	clusterConfig := ao.ClusterConfig[clusterName]
 	if clusterConfig == nil || clusterConfig.Type == "" {
-		return nil, errors.Errorf("Missing cluster type for cluster %s", clusterName)
+		return nil, errors.Errorf("missing cluster type for cluster %s", clusterName)
 	}
 
 	patterns := ao.ServiceURLPatterns[clusterConfig.Type]
+	if patterns == nil {
+		return nil, errors.Errorf("missing serviceUrlPatterns for cluster type %s", clusterConfig.Type)
+	}
+
 	clusterPrefix := clusterName
 	if clusterConfig.ClusterURLPrefix != "" {
 		clusterPrefix = clusterConfig.ClusterURLPrefix
