@@ -88,16 +88,19 @@ func TestAOConfig_Update(t *testing.T) {
 }
 
 func TestAOConfig_UpdateWithBetaConfig(t *testing.T) {
-	ocp3 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	ocp3Server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	ocp4 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	ocp4Server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	defer ocp3.Close()
-	defer ocp4.Close()
+	defer ocp3Server.Close()
+	defer ocp4Server.Close()
+
+	ocp3 := ocp3Server.URL
+	ocp4 := ocp4Server.URL
 
 	ao := &AOConfig{
 		ClusterURLPattern: "%s/old",
@@ -105,10 +108,10 @@ func TestAOConfig_UpdateWithBetaConfig(t *testing.T) {
 		BooberURLPattern:  "%s/old",
 		GoboURLPattern:    "%s/old",
 		ClusterConfig: map[string]*ClusterConfig{
-			ocp3.URL: {
+			ocp3Server.URL: {
 				Type: "ocp3",
 			},
-			ocp4.URL: {
+			ocp4Server.URL: {
 				Type: "ocp4",
 			},
 		},
@@ -128,16 +131,47 @@ func TestAOConfig_UpdateWithBetaConfig(t *testing.T) {
 				ClusterLoginURLPattern: "%s/ocp4",
 			},
 		},
-		AvailableClusters:       []string{ocp4.URL, ocp3.URL},
-		AvailableUpdateClusters: []string{ocp4.URL, ocp3.URL},
+		AvailableClusters:       []string{ocp4, ocp3},
+		AvailableUpdateClusters: []string{ocp4, ocp3},
 	}
 
-	// Making both test servers (ocp3, ocp4) reachable
-	ao.InitClusters()
+	tests := []struct {
+		AvailableUpdateClusters []string
+		NonReachableClusters    []string
+		Expected                string
+	}{
+		{
+			AvailableUpdateClusters: []string{ocp4, ocp3},
+			NonReachableClusters:    []string{},
+			Expected:                fmt.Sprintf("%s/ocp4-update", ocp4),
+		},
+		{
+			AvailableUpdateClusters: []string{ocp3, ocp4},
+			NonReachableClusters:    []string{},
+			Expected:                fmt.Sprintf("%s/ocp3-update", ocp3),
+		},
+		{
+			AvailableUpdateClusters: []string{ocp4, ocp3},
+			NonReachableClusters:    []string{ocp4},
+			Expected:                fmt.Sprintf("%s/ocp3-update", ocp3),
+		},
+	}
 
-	// Should get update URL for ocp4 test server
-	url, err := ao.getUpdateURL()
+	for _, test := range tests {
+		// Making both test servers (ocp3, ocp4) reachable
+		ao.InitClusters()
 
-	assert.NoError(t, err)
-	assert.Equal(t, fmt.Sprintf("%s/ocp4-update", ocp4.URL), url)
+		ao.AvailableUpdateClusters = test.AvailableUpdateClusters
+
+		for _, cluster := range test.NonReachableClusters {
+			ao.Clusters[cluster].Reachable = false
+		}
+
+		// Should get update URL for ocp4 test server
+		url, err := ao.getUpdateURL()
+
+		assert.NoError(t, err)
+		assert.Equal(t, test.Expected, url)
+	}
+
 }

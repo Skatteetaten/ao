@@ -133,8 +133,9 @@ func (ao *AOConfig) GetServiceURLs(clusterName string) (*ServiceURLs, error) {
 
 // AddMultipleClusterConfig adds a richer cluster configuration for multiple cluster types.
 func (ao *AOConfig) AddMultipleClusterConfig() {
-	ao.AvailableClusters = append(ao.AvailableClusters, "utv04")
-	ao.AvailableUpdateClusters = append([]string{"utv04"}, ao.AvailableUpdateClusters...)
+	newCluster := "utv04"
+	ao.AvailableClusters = append(ao.AvailableClusters, newCluster)
+	ao.AvailableUpdateClusters = append([]string{newCluster}, ao.AvailableUpdateClusters...)
 	ao.ClusterConfig = map[string]*ClusterConfig{
 		"utv": {
 			Type: "ocp3",
@@ -154,7 +155,7 @@ func (ao *AOConfig) AddMultipleClusterConfig() {
 		"prod-relay": {
 			Type: "ocp3",
 		},
-		"utv04": {
+		newCluster: {
 			Type: "ocp4",
 		},
 	}
