@@ -54,7 +54,6 @@ type ServiceURLs struct {
 	BooberURL       string
 	ClusterURL      string
 	ClusterLoginURL string
-	UpdateURL       string
 	GoboURL         string
 }
 
@@ -101,7 +100,6 @@ func (ao *AOConfig) GetServiceURLs(clusterName string) (*ServiceURLs, error) {
 			BooberURL:       fmt.Sprintf(ao.BooberURLPattern, clusterName),
 			ClusterURL:      fmt.Sprintf(ao.ClusterURLPattern, clusterName),
 			ClusterLoginURL: fmt.Sprintf(ao.ClusterURLPattern, clusterName),
-			UpdateURL:       fmt.Sprintf(ao.UpdateURLPattern, clusterName),
 			GoboURL:         fmt.Sprintf(ao.GoboURLPattern, clusterName),
 		}, nil
 	}
@@ -130,7 +128,6 @@ func (ao *AOConfig) GetServiceURLs(clusterName string) (*ServiceURLs, error) {
 		BooberURL:       formatNonLocalhostPattern(patterns.BooberURLPattern, clusterName),
 		ClusterURL:      formatNonLocalhostPattern(patterns.ClusterURLPattern, clusterPrefix),
 		ClusterLoginURL: formatNonLocalhostPattern(clusterLoginURLPattern, clusterPrefix),
-		UpdateURL:       formatNonLocalhostPattern(patterns.UpdateURLPattern, clusterName),
 		GoboURL:         formatNonLocalhostPattern(patterns.GoboURLPattern, clusterName),
 	}, nil
 }
@@ -302,22 +299,40 @@ func (ao *AOConfig) replaceAO(data []byte) error {
 }
 
 func (ao *AOConfig) getUpdateURL() (string, error) {
-	for _, c := range ao.AvailableUpdateClusters {
-		available, found := ao.Clusters[c]
-		logrus.WithField("exists", found).Info("update server", c)
+	for _, cluster := range ao.AvailableUpdateClusters {
+		available, found := ao.Clusters[cluster]
+		logrus.WithField("exists", found).Info("update server", cluster)
 
 		if !found || (found && !available.Reachable) {
 			continue
 		}
 
-		serviceURLs, err := ao.GetServiceURLs(c)
+		updateURL, err := ao.resolveUpdateURLPattern(cluster)
 		if err != nil {
 			logrus.WithField("cluster", available.Name).Warn(err)
 			continue
 		}
 
-		return serviceURLs.UpdateURL, nil
+		return updateURL, nil
 	}
 
 	return "", errors.New("could not find any available update servers")
+}
+
+func (ao *AOConfig) resolveUpdateURLPattern(clusterName string) (string, error) {
+	if len(ao.ServiceURLPatterns) == 0 {
+		return fmt.Sprintf(ao.UpdateURLPattern, clusterName), nil
+	}
+
+	clusterConfig := ao.ClusterConfig[clusterName]
+	if clusterConfig == nil || clusterConfig.Type == "" {
+		return "", errors.Errorf("missing cluster type for cluster %s", clusterName)
+	}
+
+	patterns := ao.ServiceURLPatterns[clusterConfig.Type]
+	if patterns == nil {
+		return "", errors.Errorf("missing serviceUrlPatterns for cluster type %s", clusterConfig.Type)
+	}
+
+	return formatNonLocalhostPattern(patterns.UpdateURLPattern, clusterName), nil
 }
