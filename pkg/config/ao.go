@@ -321,7 +321,7 @@ func (ao *AOConfig) getUpdateURL() (string, error) {
 
 func (ao *AOConfig) resolveUpdateURLPattern(clusterName string) (string, error) {
 	if len(ao.ServiceURLPatterns) == 0 {
-		return fmt.Sprintf(ao.ClusterURLPattern, clusterName), nil
+		return fmt.Sprintf(ao.UpdateURLPattern, clusterName), nil
 	}
 
 	clusterConfig := ao.ClusterConfig[clusterName]
