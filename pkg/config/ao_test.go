@@ -108,10 +108,10 @@ func TestAOConfig_UpdateWithBetaConfig(t *testing.T) {
 		BooberURLPattern:  "%s/old",
 		GoboURLPattern:    "%s/old",
 		ClusterConfig: map[string]*ClusterConfig{
-			ocp3Server.URL: {
+			ocp3: {
 				Type: "ocp3",
 			},
-			ocp4Server.URL: {
+			ocp4: {
 				Type: "ocp4",
 			},
 		},
