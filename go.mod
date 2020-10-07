@@ -11,7 +11,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/renstrom/fuzzysearch v1.0.1
 	github.com/sirupsen/logrus v1.5.0
-	github.com/skatteetaten/graphql v0.2.2
+	github.com/skatteetaten/graphql v0.2.3-0.20201007134738-b71177470e90
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/sys v0.0.0-20190530182044-ad28b68e88f1
 	golang.org/x/text v0.3.2
