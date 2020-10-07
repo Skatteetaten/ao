@@ -2,10 +2,10 @@ package client
 
 import (
 	"encoding/json"
-	"github.com/machinebox/graphql"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
+	"github.com/skatteetaten/graphql"
 )
 
 // AuroraConfigClientGraphql is a an internal client facade for external aurora configuration API calls using graphql

@@ -3,8 +3,8 @@ package client
 import (
 	"context"
 	"fmt"
-	"github.com/machinebox/graphql"
 	"github.com/sirupsen/logrus"
+	"github.com/skatteetaten/graphql"
 )
 
 // RunGraphQl performs a GraphQl based API call
