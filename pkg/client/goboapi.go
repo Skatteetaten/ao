@@ -64,3 +64,25 @@ func extractGraphqlErrorMsg(err error) error {
 		return errors.New("extractGraphqlErrorMsg got no error")
 	}
 }
+
+// Extension extends the standard GraphQl error structure with more application specific details
+type Extensions struct {
+	Code           string
+	ErrorMessage   string
+	SourceSystem   string
+	Message        string
+	ExtErrors      []ExtError `json:"errors"`
+	Classification string
+}
+
+type ExtError struct {
+	Application string
+	Environment string
+	Details     []Detail
+	Type        string
+}
+
+type Detail struct {
+	Type    string
+	Message string
+}
