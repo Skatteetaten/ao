@@ -2,10 +2,12 @@ package client
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/graphql"
+	"strings"
 )
 
 // RunGraphQl performs a GraphQl based API call
@@ -15,7 +17,7 @@ func (api *APIClient) RunGraphQl(graphQlRequest string, response interface{}) er
 	ctx := context.Background()
 
 	if err := client.Run(ctx, req, response); err != nil {
-		extractederr := extractGraphqlErrorMsg(err)
+		extractederr := extractGraphqlErrorMsgs(err)
 		return extractederr
 	}
 	return nil
@@ -28,7 +30,7 @@ func (api *APIClient) RunGraphQlMutation(graphQlRequest *graphql.Request, respon
 	graphQlRequest.Header.Add("Authorization", "Bearer "+api.Token)
 
 	if err := client.Run(ctx, graphQlRequest, response); err != nil {
-		extractederr := extractGraphqlErrorMsg(err)
+		extractederr := extractGraphqlErrorMsgs(err)
 		return extractederr
 	}
 	return nil
@@ -47,42 +49,94 @@ func (api *APIClient) newRequest(graphqlRequest string) *graphql.Request {
 	return req
 }
 
-func extractGraphqlErrorMsg(err error) error {
-	if err != nil {
-		if graphqlErrors, ok := err.(graphql.Errors); ok {
+func extractGraphqlErrorMsgs(errorsInput error) error {
+	if errorsInput != nil {
+		if graphqlErrors, ok := errorsInput.(graphql.Errors); ok {
 			logrus.Debugf("extractGraphqlErrorMsg got %+v", graphqlErrors)
-			// TODO
-			// for _, e := range graphqlErrors {
-			// extract message from each error
-			// }
-			return errors.New(fmt.Sprintf("errors: %+v", graphqlErrors))
+			errorMsgs := make([]string, len(graphqlErrors))
+			for i, e := range graphqlErrors {
+				errorMsgs[i] = getPrioritizedErrMsg(e)
+			}
+			return errors.New(strings.Join(errorMsgs, "; "))
 		} else {
-			logrus.Warnf("extractGraphqlErrorMsg got ordinary error (deprececated): %s", err)
-			return err
+			logrus.Warnf("extractGraphqlErrorMsg got ordinary error (deprececated): %s", errorsInput)
+			return errorsInput
 		}
 	} else {
 		return errors.New("extractGraphqlErrorMsg got no error")
 	}
 }
 
+// Extract message from error by prioritised level
+// 1. error.extensions.errors[...].details[...].message
+// 2. error.extensions.errorMessage
+// 3. error.message (default)
+func getPrioritizedErrMsg(graphqlErr graphql.Error) string {
+	extensions, err := parseExtensions(graphqlErr.Extensions)
+	if err == nil && extensions != nil {
+		// 1. error.extensions.errors[...].details[...].message
+		if extensions.ExtErrors != nil && len(extensions.ExtErrors) > 0 {
+			detailMsgs := make([]string, 0)
+			for _, extError := range extensions.ExtErrors {
+				if extError.Details != nil && len(extError.Details) > 0 {
+					for _, detail := range extError.Details {
+						if detail.Message != "" {
+							detailMsgs = append(detailMsgs, detail.Message)
+						}
+					}
+				}
+			}
+			if len(detailMsgs) > 0 {
+				return strings.Join(detailMsgs, "; ")
+			}
+		}
+		// 2. error.extensions.errorMessage
+		if extensions.ErrorMessage != "" {
+			return extensions.ErrorMessage
+		}
+	}
+	// 3. error.message (default)
+	if graphqlErr.Message == "" {
+		return "got unspecified error"
+	}
+	return graphqlErr.Message
+}
+
+func parseExtensions(unparsedExtensions map[string]interface{}) (*extensions, error) {
+	extensions := extensions{}
+	if unparsedExtensions != nil {
+		jsonExtensions, err := json.Marshal(unparsedExtensions)
+		if err != nil {
+			logrus.Warnf("Could not get json from %+v", unparsedExtensions)
+			return nil, err
+		}
+		if err := json.Unmarshal(jsonExtensions, &extensions); err != nil {
+			logrus.Warnf("Could not parse extensions from %s", jsonExtensions)
+			return nil, err
+		}
+		return &extensions, nil
+	}
+	return nil, nil
+}
+
 // Extension extends the standard GraphQl error structure with more application specific details
-type Extensions struct {
+type extensions struct {
 	Code           string
 	ErrorMessage   string
 	SourceSystem   string
 	Message        string
-	ExtErrors      []ExtError `json:"errors"`
+	ExtErrors      []extError `json:"errors"`
 	Classification string
 }
 
-type ExtError struct {
+type extError struct {
 	Application string
 	Environment string
-	Details     []Detail
+	Details     []detail
 	Type        string
 }
 
-type Detail struct {
+type detail struct {
 	Type    string
 	Message string
 }
