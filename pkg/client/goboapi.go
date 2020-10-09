@@ -72,8 +72,8 @@ func extractGraphqlErrorMsgs(errorsInput error) error {
 // 2. error.extensions.errorMessage
 // 3. error.message (default)
 func getPrioritizedErrMsg(graphqlErr graphql.Error) string {
-	extensions, err := parseExtensions(graphqlErr.Extensions)
-	if err == nil && extensions != nil {
+	extensions, parseError := parseExtensions(graphqlErr.Extensions)
+	if parseError == nil && extensions != nil {
 		// 1. error.extensions.errors[...].details[...].message
 		if extensions.ExtErrors != nil && len(extensions.ExtErrors) > 0 {
 			detailMsgs := make([]string, 0)
@@ -97,14 +97,17 @@ func getPrioritizedErrMsg(graphqlErr graphql.Error) string {
 	}
 	// 3. error.message (default)
 	if graphqlErr.Message == "" {
+		if parseError != nil {
+			return "got unparseable extended error response from server"
+		}
 		return "got unspecified error"
 	}
 	return graphqlErr.Message
 }
 
 func parseExtensions(unparsedExtensions map[string]interface{}) (*extensions, error) {
-	extensions := extensions{}
 	if unparsedExtensions != nil {
+		extensions := extensions{}
 		jsonExtensions, err := json.Marshal(unparsedExtensions)
 		if err != nil {
 			logrus.Warnf("Could not get json from %+v", unparsedExtensions)
