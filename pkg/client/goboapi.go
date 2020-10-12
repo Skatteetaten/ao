@@ -74,25 +74,9 @@ func extractGraphqlErrorMsgs(errorsInput error) error {
 func getPrioritizedErrMsg(graphqlErr graphql.Error) string {
 	extensions, parseError := parseExtensions(graphqlErr.Extensions)
 	if parseError == nil && extensions != nil {
-		// 1. error.extensions.errors[...].details[...].message
-		if extensions.ExtErrors != nil && len(extensions.ExtErrors) > 0 {
-			detailMsgs := make([]string, 0)
-			for _, extError := range extensions.ExtErrors {
-				if extError.Details != nil && len(extError.Details) > 0 {
-					for _, detail := range extError.Details {
-						if detail.Message != "" {
-							detailMsgs = append(detailMsgs, detail.Message)
-						}
-					}
-				}
-			}
-			if len(detailMsgs) > 0 {
-				return strings.Join(detailMsgs, "; ")
-			}
-		}
-		// 2. error.extensions.errorMessage
-		if extensions.ErrorMessage != "" {
-			return extensions.ErrorMessage
+		extErrorMsg := extensions.getErrorMessage()
+		if extErrorMsg != "" {
+			return extErrorMsg
 		}
 	}
 	// 3. error.message (default)
@@ -132,6 +116,29 @@ type extensions struct {
 	Classification string
 }
 
+func (ext extensions) getErrorMessage() string {
+	// 1. error.extensions.errors[...].details[...].message
+	if ext.ExtErrors != nil && len(ext.ExtErrors) > 0 {
+		detailMsgs := ext.getDetailsErrorMessages()
+		if len(detailMsgs) > 0 {
+			return strings.Join(detailMsgs, "; ")
+		}
+	}
+	// 2. error.extensions.errorMessage
+	if ext.ErrorMessage != "" {
+		return ext.ErrorMessage
+	}
+	return ""
+}
+
+func (ext extensions) getDetailsErrorMessages() []string {
+	detailMsgs := make([]string, 0)
+	for _, extError := range ext.ExtErrors {
+		detailMsgs = extError.appendDetailsMessages(detailMsgs)
+	}
+	return detailMsgs
+}
+
 type extError struct {
 	Application string
 	Environment string
@@ -139,7 +146,23 @@ type extError struct {
 	Type        string
 }
 
+func (extError extError) appendDetailsMessages(detailMsgs []string) []string {
+	if extError.Details != nil && len(extError.Details) > 0 {
+		for _, detail := range extError.Details {
+			detailMsgs = detail.appendMessage(detailMsgs)
+		}
+	}
+	return detailMsgs
+}
+
 type detail struct {
 	Type    string
 	Message string
+}
+
+func (detail detail) appendMessage(detailMsgs []string) []string {
+	if detail.Message != "" {
+		detailMsgs = append(detailMsgs, detail.Message)
+	}
+	return detailMsgs
 }
