@@ -62,9 +62,8 @@ func extractGraphqlErrorMsgs(errorsInput error) error {
 			logrus.Warnf("extractGraphqlErrorMsg got ordinary error (deprececated): %s", errorsInput)
 			return errorsInput
 		}
-	} else {
-		return errors.New("extractGraphqlErrorMsg got no error")
 	}
+	return nil
 }
 
 // Extract message from error by prioritised level
