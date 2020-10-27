@@ -39,7 +39,7 @@ func TestApi_GetAuroraConfig(t *testing.T) {
 		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(t, fileName))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "", "", affiliation, "")
 		ac, errResponse := api.GetAuroraConfig()
 
 		assert.Empty(t, errResponse)
@@ -54,7 +54,7 @@ func TestApiClient_GetFileNames(t *testing.T) {
 		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(t, fileName))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "", "", affiliation, "")
 		fileNames, err := api.GetFileNames()
 
 		assert.NoError(t, err)
@@ -68,7 +68,7 @@ func TestApiClient_ValidateAuroraConfig(t *testing.T) {
 		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(t, fileName))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "", "", affiliation, "")
 
 		data := ReadTestFile("auroraconfig_paas_success_validation_request")
 		var ac auroraconfig.AuroraConfig
@@ -86,7 +86,7 @@ func TestApiClient_ValidateAuroraConfig(t *testing.T) {
 		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(t, fileName))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "", "", affiliation, "")
 
 		data := ReadTestFile("auroraconfig_paas_warning_validation_request")
 		var ac auroraconfig.AuroraConfig
@@ -104,7 +104,7 @@ func TestApiClient_ValidateAuroraConfig(t *testing.T) {
 		ts := httptest.NewServer(AuroraConfigFailedResponseHandler(t, fileName, http.StatusBadRequest))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "", "", affiliation, "")
 		data := ReadTestFile("auroraconfig_paas_fail_validation_request")
 		var ac auroraconfig.AuroraConfig
 		err := json.Unmarshal(data, &ac)
@@ -124,7 +124,7 @@ func TestApiClient_GetAuroraConfigFile(t *testing.T) {
 		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(t, fileName))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "", "paas")
+		api := NewAPIClientDefaultRef(ts.URL, "", "", "paas", "")
 		// TODO: Test ETag
 		file, _, err := api.GetAuroraConfigFile("about.json")
 		if err != nil {
@@ -144,7 +144,7 @@ func TestApiClient_GetAuroraConfigFile(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "", "")
+		api := NewAPIClientDefaultRef(ts.URL, "", "", "", "")
 
 		// TODO: Test ETag
 		file, _, err := api.GetAuroraConfigFile("about.json")
@@ -184,7 +184,7 @@ func TestApiClient_ValidateRemoteAuroraConfig(t *testing.T) {
 		ts := httptest.NewServer(AuroraConfigSuccessResponseHandler(t, fileName))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "", "", affiliation, "")
 
 		warnings, err := api.ValidateRemoteAuroraConfig(false)
 		assert.NoError(t, err)
@@ -197,7 +197,7 @@ func TestApiClient_ValidateRemoteAuroraConfig(t *testing.T) {
 		ts := httptest.NewServer(AuroraConfigFailedResponseHandler(t, fileName, http.StatusBadRequest))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "", "", affiliation, "")
 
 		warnings, err := api.ValidateRemoteAuroraConfig(false)
 		assert.Error(t, err)

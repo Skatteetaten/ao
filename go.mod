@@ -6,6 +6,7 @@ require github.com/spf13/cobra v1.0.0
 
 require (
 	github.com/andybalholm/crlf v0.0.0-20171020200849-670099aa064f
+	github.com/google/uuid v1.1.2
 	github.com/matryer/is v1.3.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.9.1

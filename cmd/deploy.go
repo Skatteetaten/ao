@@ -278,7 +278,7 @@ func printDeployResult(result []client.DeployResults, out io.Writer) error {
 	warningHeader, warningRows := getWarningTable(results)
 	if len(warningRows) != 0 {
 		fmt.Println("")
-		fmt.Println("Some warnings where found:")
+		fmt.Println("Some warnings were found:")
 		DefaultTablePrinter(warningHeader, warningRows, out)
 	}
 	for _, deploy := range results {

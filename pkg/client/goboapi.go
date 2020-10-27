@@ -18,7 +18,7 @@ func (api *APIClient) RunGraphQl(graphQlRequest string, response interface{}) er
 
 	if err := client.Run(ctx, req, response); err != nil {
 		extractederr := extractGraphqlErrorMsgs(err)
-		return extractederr
+		return fmt.Errorf("%w\nKorrelasjonsid: %s\n", extractederr, api.Korrelasjonsid)
 	}
 	return nil
 }
@@ -28,10 +28,12 @@ func (api *APIClient) RunGraphQlMutation(graphQlRequest *graphql.Request, respon
 	ctx := context.Background()
 	graphQlRequest.Header.Set("Cache-Control", "no-cache")
 	graphQlRequest.Header.Add("Authorization", "Bearer "+api.Token)
+	graphQlRequest.Header.Add("Korrelasjonsid", api.Korrelasjonsid)
+	graphQlRequest.Header.Add("Klientid", "ao")
 
 	if err := client.Run(ctx, graphQlRequest, response); err != nil {
 		extractederr := extractGraphqlErrorMsgs(err)
-		return extractederr
+		return fmt.Errorf("%w\nKorrelasjonsid: %s\n", extractederr, api.Korrelasjonsid)
 	}
 	return nil
 }
@@ -46,6 +48,8 @@ func (api *APIClient) getGraphQlClient() *graphql.Client {
 func (api *APIClient) newRequest(graphqlRequest string) *graphql.Request {
 	req := graphql.NewRequest(graphqlRequest)
 	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Add("Korrelasjonsid", api.Korrelasjonsid)
+	req.Header.Add("Klientid", "ao")
 	return req
 }
 

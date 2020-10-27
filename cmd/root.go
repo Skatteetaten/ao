@@ -161,13 +161,7 @@ func initialize(cmd *cobra.Command, args []string) error {
 		apiCluster = &config.Cluster{}
 	}
 
-	api := &client.APIClient{
-		Affiliation: aoConfig.Affiliation,
-		Host:        apiCluster.BooberURL,
-		GoboHost:    apiCluster.GoboURL,
-		Token:       apiCluster.Token,
-		RefName:     aoConfig.RefName,
-	}
+	api := client.NewAPIClient(apiCluster.BooberURL, apiCluster.GoboURL, apiCluster.Token, aoConfig.Affiliation, aoConfig.RefName, client.CreateUUID().String())
 
 	if aoConfig.Localhost {
 		// TODO: Move to config?

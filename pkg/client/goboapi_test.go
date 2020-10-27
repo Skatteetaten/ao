@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"github.com/skatteetaten/graphql"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -34,7 +35,7 @@ func TestGoboApi(t *testing.T) {
 			}
 		}
 		var someResponse SomeResponse
-		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
 		err := api.RunGraphQl(graphQlRequest, &someResponse)
 
 		assert.NoError(t, err)
@@ -69,11 +70,12 @@ func TestGoboApi(t *testing.T) {
 			}
 		}
 		var someResponse SomeResponse
-		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
 		err := api.RunGraphQl(graphQlRequest, &someResponse)
 
 		assert.Error(t, err)
-		assert.Equal(t, "errors.message returned for first error; extensions.errorMessage returned for second error; extensions.errorMessage.errors.details.message returned for third error; twice; three times", err.Error())
+		expected := fmt.Sprintf("errors.message returned for first error; extensions.errorMessage returned for second error; extensions.errorMessage.errors.details.message returned for third error; twice; three times\nKorrelasjonsid: %s\n", api.Korrelasjonsid)
+		assert.Equal(t, expected, err.Error())
 	})
 
 	t.Run("Should work on normal graphql mutation", func(t *testing.T) {
@@ -102,7 +104,7 @@ func TestGoboApi(t *testing.T) {
 		}
 
 		var someResponse SomeResponse
-		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
 		err := api.RunGraphQlMutation(createStuffRequest, &someResponse)
 
 		assert.NoError(t, err)

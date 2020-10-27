@@ -26,7 +26,7 @@ func TestApiClient_GetApplyResult(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "", "test", affiliation, "")
 		result, err := api.GetApplyResult(deployID)
 		if err != nil {
 			t.Fatal(err)
