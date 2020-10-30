@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/ao/pkg/deploymentspec"
 
@@ -241,6 +240,9 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		if flagIgnoreErrors {
+			cmd.Println("NB: The following spec may be incomplete, since the ignore-errors flag was set.")
+		}
 		cmd.Println(spec)
 		return nil
 	}
@@ -255,6 +257,9 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if flagIgnoreErrors {
+		cmd.Println("NB: The following spec may be incomplete, since the ignore-errors flag was set.")
+	}
 	cmd.Println(string(data))
 	return nil
 }
