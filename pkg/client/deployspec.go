@@ -11,14 +11,14 @@ import (
 // DeploySpecClient is an internal client facade for external deployment specification API calls
 type DeploySpecClient interface {
 	Doer
-	GetAuroraDeploySpec(applications []string, defaults bool) ([]deploymentspec.DeploymentSpec, error)
-	GetAuroraDeploySpecFormatted(environment, application string, defaults bool) (string, error)
+	GetAuroraDeploySpec(applications []string, defaults bool, ignoreErrors bool) ([]deploymentspec.DeploymentSpec, error)
+	GetAuroraDeploySpecFormatted(environment, application string, defaults bool, ignoreErrors bool) (string, error)
 }
 
 // GetAuroraDeploySpec gets an Aurora deployment specification via API calls
-func (api *APIClient) GetAuroraDeploySpec(applications []string, defaults bool) ([]deploymentspec.DeploymentSpec, error) {
+func (api *APIClient) GetAuroraDeploySpec(applications []string, defaults bool, ignoreErrors bool) ([]deploymentspec.DeploymentSpec, error) {
 	endpoint := fmt.Sprintf("/auroradeployspec/%s/?", api.Affiliation)
-	queries := buildDeploySpecQueries(applications, defaults)
+	queries := buildDeploySpecQueries(applications, defaults, ignoreErrors)
 
 	adsCh := make(chan []deploymentspec.DeploymentSpec)
 	errCh := make(chan error)
@@ -60,7 +60,7 @@ func (api *APIClient) GetAuroraDeploySpec(applications []string, defaults bool) 
 	return deploySpecs, nil
 }
 
-func buildDeploySpecQueries(applications []string, defaults bool) []string {
+func buildDeploySpecQueries(applications []string, defaults bool, ignoreErrors bool) []string {
 	const maxQueryLength = 3500
 	var queries []string
 
@@ -71,6 +71,9 @@ func buildDeploySpecQueries(applications []string, defaults bool) []string {
 			if !defaults {
 				v.Add("includeDefaults", "false")
 			}
+			if ignoreErrors {
+				v.Add("errorsAsWarnings", "true")
+			}
 			queries = append(queries, v.Encode())
 			v = url.Values{}
 		}
@@ -78,15 +81,23 @@ func buildDeploySpecQueries(applications []string, defaults bool) []string {
 	if !defaults {
 		v.Add("includeDefaults", "false")
 	}
+	if ignoreErrors {
+		v.Add("errorsAsWarnings", "true")
+	}
 
 	return append(queries, v.Encode())
 }
 
 // GetAuroraDeploySpecFormatted gets a formatted Aurora deployment specification via API calls
-func (api *APIClient) GetAuroraDeploySpecFormatted(environment, application string, defaults bool) (string, error) {
+func (api *APIClient) GetAuroraDeploySpecFormatted(environment, application string, defaults bool, ignoreErrors bool) (string, error) {
 	endpoint := fmt.Sprintf("/auroradeployspec/%s/%s/%s/formatted", api.Affiliation, environment, application)
 	if !defaults {
 		endpoint += "?includeDefaults=false"
+		if ignoreErrors {
+			endpoint += "&errorsAsWarnings=true"
+		}
+	} else if ignoreErrors {
+		endpoint += "?errorsAsWarnings=true"
 	}
 
 	response, err := api.Do(http.MethodGet, endpoint, nil)

@@ -7,7 +7,7 @@ import (
 
 // GetFilteredDeploymentSpecs gets a filtered array of deployment specifications
 func GetFilteredDeploymentSpecs(apiClient client.DeploySpecClient, applications []string, overrideCluster string) ([]deploymentspec.DeploymentSpec, error) {
-	deploySpecs, err := apiClient.GetAuroraDeploySpec(applications, true)
+	deploySpecs, err := apiClient.GetAuroraDeploySpec(applications, true, false)
 	if err != nil {
 		return nil, err
 	}

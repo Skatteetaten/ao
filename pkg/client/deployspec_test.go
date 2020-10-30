@@ -24,7 +24,7 @@ func TestApiClient_GetAuroraDeploySpec(t *testing.T) {
 		defer ts.Close()
 
 		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
-		spec, err := api.GetAuroraDeploySpec([]string{"aotest/redis"}, true)
+		spec, err := api.GetAuroraDeploySpec([]string{"aotest/redis"}, true, false)
 		assert.NoError(t, err)
 
 		assert.Len(t, spec, 1)
@@ -48,7 +48,7 @@ func TestApiClient_GetAuroraDeploySpecFormatted(t *testing.T) {
 		defer ts.Close()
 
 		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
-		spec, err := api.GetAuroraDeploySpecFormatted("aotest", "redis", true)
+		spec, err := api.GetAuroraDeploySpecFormatted("aotest", "redis", true, false)
 		assert.NoError(t, err)
 
 		assert.Equal(t, string(expected), spec)
@@ -84,7 +84,7 @@ func Test_buildDeploySpecQueries(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := buildDeploySpecQueries(tt.applications, tt.defaults); !reflect.DeepEqual(len(got), tt.want) {
+			if got := buildDeploySpecQueries(tt.applications, tt.defaults, false); !reflect.DeepEqual(len(got), tt.want) {
 				t.Errorf("buildDeploySpecQueries() = %v, want %v", got, tt.want)
 			}
 		})

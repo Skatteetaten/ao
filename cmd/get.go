@@ -15,9 +15,10 @@ import (
 )
 
 var (
-	flagJSON       bool
-	flagAsList     bool
-	flagNoDefaults bool
+	flagJSON         bool
+	flagAsList       bool
+	flagNoDefaults   bool
+	flagIgnoreErrors bool
 )
 
 var (
@@ -69,9 +70,10 @@ func init() {
 	getCmd.AddCommand(getDeploymentsCmd)
 	getCmd.AddCommand(getSpecCmd)
 
-	getSpecCmd.Flags().BoolVarP(&flagNoDefaults, "no-defaults", "", false, "exclude default values from output")
-	getSpecCmd.Flags().BoolVarP(&flagJSON, "json", "", false, "print deploy spec as json")
-	getDeploymentsCmd.Flags().BoolVarP(&flagAsList, "list", "", false, "print ApplicationDeploymentRefs as a list")
+	getSpecCmd.Flags().BoolVar(&flagNoDefaults, "no-defaults", false, "exclude default values from output")
+	getSpecCmd.Flags().BoolVar(&flagJSON, "json", false, "print deploy spec as json")
+	getSpecCmd.Flags().BoolVar(&flagIgnoreErrors, "ignore-errors", false, "suppresses errors from spec assembly. NB: may return incomplete deploy spec, use with care")
+	getDeploymentsCmd.Flags().BoolVar(&flagAsList, "list", false, "print ApplicationDeploymentRefs as a list")
 }
 
 // PrintAll is the main method for the `get all` cli command
@@ -147,7 +149,7 @@ func PrintDeploySpecTable(args []string, filter auroraconfig.FilterMode, cmd *co
 		}
 		selected = append(selected, matches...)
 	}
-	specs, err := DefaultAPIClient.GetAuroraDeploySpec(selected, true)
+	specs, err := DefaultAPIClient.GetAuroraDeploySpec(selected, true, false)
 	if err != nil {
 		return err
 	}
@@ -235,7 +237,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 	split := strings.Split(matches[0], "/")
 
 	if !flagJSON {
-		spec, err := DefaultAPIClient.GetAuroraDeploySpecFormatted(split[0], split[1], !flagNoDefaults)
+		spec, err := DefaultAPIClient.GetAuroraDeploySpecFormatted(split[0], split[1], !flagNoDefaults, flagIgnoreErrors)
 		if err != nil {
 			return err
 		}
@@ -243,7 +245,7 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	spec, err := DefaultAPIClient.GetAuroraDeploySpec(matches, !flagNoDefaults)
+	spec, err := DefaultAPIClient.GetAuroraDeploySpec(matches, !flagNoDefaults, flagIgnoreErrors)
 	if err != nil {
 		return err
 	}
