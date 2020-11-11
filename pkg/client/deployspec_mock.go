@@ -14,11 +14,11 @@ func NewDeploySpecClientMock(deploySpecs []deploymentspec.DeploymentSpec) *Deplo
 }
 
 // GetAuroraDeploySpec default mock implementation
-func (api *DeploySpecClientMock) GetAuroraDeploySpec(applications []string, defaults bool) ([]deploymentspec.DeploymentSpec, error) {
+func (api *DeploySpecClientMock) GetAuroraDeploySpec(applications []string, defaults bool, ignoreErrors bool) ([]deploymentspec.DeploymentSpec, error) {
 	return api.deploySpecs, nil
 }
 
 // GetAuroraDeploySpecFormatted default mock implementation
-func (api *DeploySpecClientMock) GetAuroraDeploySpecFormatted(environment, application string, defaults bool) (string, error) {
+func (api *DeploySpecClientMock) GetAuroraDeploySpecFormatted(environment, application string, defaults bool, ignoreErrors bool) (string, error) {
 	return "", nil
 }

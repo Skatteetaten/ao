@@ -92,7 +92,6 @@ func init() {
 	RootCmd.PersistentFlags().BoolVar(&pFlagNoHeader, "no-headers", false, "Print tables without headers")
 	RootCmd.PersistentFlags().MarkHidden("no-headers")
 	RootCmd.PersistentFlags().StringVar(&pFlagAnswerRecreateConfig, "autoanswer-recreate-config", "", "Set automatic response for ao config question [y, n]")
-	RootCmd.PersistentFlags().MarkHidden("autoanswer-recreate-config")
 }
 
 func initialize(cmd *cobra.Command, args []string) error {
