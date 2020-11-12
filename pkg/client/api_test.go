@@ -30,6 +30,7 @@ func ReadTestFile(name string) []byte {
 }
 
 const affiliation = "paas"
+const korrelasjonsid = "12345678-1234-1234-1234-123456789012"
 
 func TestApiClient_Do(t *testing.T) {
 
@@ -38,7 +39,7 @@ func TestApiClient_Do(t *testing.T) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 
-			assert.Len(t, req.Header, 6)
+			assert.Len(t, req.Header, 7)
 
 			agent := req.Header.Get("User-Agent")
 			assert.Equal(t, "Go-http-client/1.1 ao/", agent)
@@ -59,7 +60,7 @@ func TestApiClient_Do(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "", "test", affiliation, "")
 		api.Do(http.MethodGet, "/hello", nil)
 	})
 
@@ -75,7 +76,7 @@ func TestApiClient_Do(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef(ts.URL, "", "test", affiliation, "")
 		res, err := api.Do(http.MethodGet, "/", nil)
 
 		assert.NoError(t, err)
@@ -87,7 +88,7 @@ func TestApiClient_Do(t *testing.T) {
 	})
 
 	t.Run("Should fail when trying to connect to non existing host", func(t *testing.T) {
-		api := NewAPIClientDefaultRef("http://notvalid:8080", "", "")
+		api := NewAPIClientDefaultRef("http://notvalid:8080", "", "", "", "")
 		_, err := api.Do(http.MethodGet, "/", nil)
 		assert.Error(t, err)
 	})
@@ -115,7 +116,7 @@ func TestApiClient_Do(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "", "")
+		api := NewAPIClientDefaultRef(ts.URL, "", "", "", "")
 		_, err = api.Do(http.MethodPut, "/", payload)
 		assert.NoError(t, err)
 	})
@@ -143,7 +144,7 @@ func TestApiClient_Do(t *testing.T) {
 			}))
 			testServers = append(testServers, ts)
 
-			api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
+			api := NewAPIClientDefaultRef(ts.URL, "", "test", affiliation, "")
 			_, err := api.Do(http.MethodGet, test.Path, nil)
 
 			assert.Error(t, err)
@@ -179,12 +180,12 @@ func Test_handleForbiddenError(t *testing.T) {
 				body: []byte(`{"message":"You (user) do not have required permissions ([admin]) to operate on this vault (top-secret)"}`),
 				host: "localhost",
 			},
-			wantErr: errors.New("Forbidden: You (user) do not have required permissions ([admin]) to operate on this vault (top-secret)"),
+			wantErr: errors.New("Forbidden: You (user) do not have required permissions ([admin]) to operate on this vault (top-secret)\nKorrelasjonsid: 12345678-1234-1234-1234-123456789012"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := handleForbiddenError(tt.args.body, tt.args.host); err.Error() != tt.wantErr.Error() {
+			if err := handleForbiddenError(tt.args.body, tt.args.host, korrelasjonsid); err.Error() != tt.wantErr.Error() {
 				t.Errorf("handleForbiddenError() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

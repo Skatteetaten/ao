@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"io/ioutil"
 	"net/http"
 
@@ -33,26 +34,34 @@ type ResponseBundle struct {
 
 // APIClient is a client for accessing external service APIs
 type APIClient struct {
-	Host        string
-	GoboHost    string
-	Token       string
-	Affiliation string
-	RefName     string
+	Host           string
+	GoboHost       string
+	Token          string
+	Affiliation    string
+	RefName        string
+	Korrelasjonsid string
 }
 
 // NewAPIClientDefaultRef creates a new, default APIClient
-func NewAPIClientDefaultRef(host, token, affiliation string) *APIClient {
-	return NewAPIClient(host, token, affiliation, "master")
+func NewAPIClientDefaultRef(booberhost, gobohost, token, affiliation, korrelasjonsid string) *APIClient {
+	return NewAPIClient(booberhost, gobohost, token, affiliation, "master", korrelasjonsid)
 }
 
 // NewAPIClient creates a new APIClient
-func NewAPIClient(host, token, affiliation, refName string) *APIClient {
+func NewAPIClient(booberhost, gobohost, token, affiliation, refName, korrelasjonsid string) *APIClient {
+	// if no valid korrelasjonsid, one is created
+	validKorrId := korrelasjonsid
+	if _, err := uuid.Parse(korrelasjonsid); err != nil {
+		validKorrId = CreateUUID().String()
+	}
+
 	return &APIClient{
-		Host:        host,
-		GoboHost:    host,
-		Token:       token,
-		Affiliation: affiliation,
-		RefName:     refName,
+		Host:           booberhost,
+		GoboHost:       gobohost,
+		Token:          token,
+		Affiliation:    affiliation,
+		RefName:        refName,
+		Korrelasjonsid: validKorrId,
 	}
 }
 
@@ -91,6 +100,7 @@ func (api *APIClient) DoWithHeader(method string, endpoint string, header map[st
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+api.Token)
 	req.Header.Set("Ref-Name", api.RefName)
+	req.Header.Set("Korrelasjonsid", api.Korrelasjonsid)
 
 	for key, value := range header {
 		req.Header.Set(key, value)
@@ -105,7 +115,7 @@ func (api *APIClient) DoWithHeader(method string, endpoint string, header map[st
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w\nKorrelasjonsid: %s", err, api.Korrelasjonsid)
 	}
 
 	var fields logrus.Fields
@@ -120,15 +130,15 @@ func (api *APIClient) DoWithHeader(method string, endpoint string, header map[st
 
 	switch res.StatusCode {
 	case http.StatusNotFound:
-		return nil, errors.Errorf("Resource %s not found", BooberAPIVersion+endpoint)
+		return nil, errors.Errorf("Resource %s not found, korrelasjonsid: %s", BooberAPIVersion+endpoint, api.Korrelasjonsid)
 	case http.StatusForbidden:
-		return nil, handleForbiddenError(body, api.Host)
+		return nil, handleForbiddenError(body, api.Host, api.Korrelasjonsid)
 	case http.StatusInternalServerError:
-		return nil, handleInternalServerError(body, url)
+		return nil, handleInternalServerError(body, url, api.Korrelasjonsid)
 	case http.StatusServiceUnavailable:
-		return nil, errors.Errorf("Service unavailable %s", api.Host)
+		return nil, errors.Errorf("Service unavailable %s\nKorrelasjonsid: %s", api.Host, api.Korrelasjonsid)
 	case http.StatusPreconditionFailed:
-		return nil, errors.Errorf("File has changed since edit")
+		return nil, errors.Errorf("File has changed since edit\nKorrelasjonsid: %s", api.Korrelasjonsid)
 	}
 
 	var booberRes BooberResponse
@@ -155,7 +165,7 @@ func (api *APIClient) DoWithHeader(method string, endpoint string, header map[st
 	}, nil
 }
 
-func handleInternalServerError(body []byte, url string) error {
+func handleInternalServerError(body []byte, url string, korrelasjonsid string) error {
 	internalError := struct {
 		Message   string `json:"message"`
 		Exception string `json:"exception"`
@@ -165,21 +175,27 @@ func handleInternalServerError(body []byte, url string) error {
 		return err
 	}
 
-	return errors.Errorf("Unexpected error from %s\nMessage: %s\nException: %s", url, internalError.Message, internalError.Exception)
+	return errors.Errorf("Unexpected error from %s\nMessage: %s\nException: %s\nKorrelasjonsid: %s", url, internalError.Message, internalError.Exception, korrelasjonsid)
 }
 
-func handleForbiddenError(body []byte, host string) error {
+func handleForbiddenError(body []byte, host string, korrelasjonsid string) error {
 	forbiddenError := struct {
 		Message string `json:"message"`
 	}{}
 	err := json.Unmarshal(body, &forbiddenError)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w\nKorrelasjonsid: %s", err, korrelasjonsid)
 	}
 
 	if forbiddenError.Message == ErrAccessDenied {
 		return errors.Errorf(ErrfTokenHasExpired, host)
 	}
 
-	return errors.Errorf("Forbidden: %s", forbiddenError.Message)
+	return errors.Errorf("Forbidden: %s\nKorrelasjonsid: %s", forbiddenError.Message, korrelasjonsid)
+}
+
+func CreateUUID() uuid.UUID {
+	uuidWithHyphen := uuid.New()
+	logrus.Debugf("Korrelasjonsid: %s", uuidWithHyphen)
+	return uuidWithHyphen
 }

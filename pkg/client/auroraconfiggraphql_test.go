@@ -26,7 +26,7 @@ func TestApiClient_CreateAuroraConfigFile(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
 		err := api.CreateAuroraConfigFile(acf)
 		assert.NoError(t, err)
 	})
@@ -47,7 +47,7 @@ func TestApiClient_CreateAuroraConfigFile(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
 		err := api.CreateAuroraConfigFile(acf)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Could not add file")
@@ -72,7 +72,7 @@ func TestApiClient_UpdateAuroraConfigFile(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
 		err := api.UpdateAuroraConfigFile(acf, etag)
 		assert.NoError(t, err)
 	})
@@ -94,7 +94,7 @@ func TestApiClient_UpdateAuroraConfigFile(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "test", affiliation)
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
 		err := api.UpdateAuroraConfigFile(acf, etag)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Could not update file")
