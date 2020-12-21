@@ -7,6 +7,9 @@
 _obj
 _test
 
+# Mac system files
+.DS_Store
+
 # Architecture specific extensions/prefixes
 *.[568vq]
 [568vq].out

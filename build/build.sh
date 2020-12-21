@@ -50,25 +50,20 @@ export CGO_ENABLED=0
 export GOARCH="${ARCH}"
 export GOOS="${OS}"
 
-#
-# We have a lot of dependencies. If we use ./... we need to import the whole world.
-# So for now, we filter on our own dependencies
-#
-
 # Need to unset GOBIN to support cross-compiled binaries
 unset GOBIN
-
-PACKAGES=$(go list ./... | grep "ao/pkg\|ao$\|ao/cmd" | xargs echo)
-go install                                                         \
+export GOOUT="${GOPATH}/bin/${OS}_${ARCH}"
+go build                                                         \
     -ldflags "-X \"${PKG}/pkg/config.Version=${VERSION}\" -X \"${PKG}/pkg/config.Branch=${BRANCH}\" -X \"${PKG}/pkg/config.BuildStamp=${BUILDSTAMP}\" -X \"${PKG}/pkg/config.GitHash=${GITHASH}\"" \
     -gcflags='-B -l' \
     -pkgdir=${GOPATH}/pkg \
-    ${PACKAGES}
+    -o=${GOOUT} \
+    .
+
 if [ "${OS}" == "darwin" ]; then
     cp .go/bin/darwin_amd64/ao bin/darwin_amd64/ao
 elif [ "${OS}" == "windows" ]; then
     cp .go/bin/windows_amd64/ao.exe bin/windows_amd64/ao.exe
 else
-    cp .go/bin/ao bin/amd64/ao
+    cp .go/bin/linux_amd64/ao bin/amd64/ao
 fi
-

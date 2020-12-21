@@ -18,6 +18,9 @@ BIN := ao
 # This repo's root import path (under GOPATH).
 PKG := github.com/skatteetaten/ao
 
+#  Build OS detection
+OS_NAME := $(shell uname -s | tr A-Z a-z)
+
 # Which architecture to build - see $(ALL_ARCH) for options.
 ARCH ?= amd64
 
@@ -27,16 +30,11 @@ ARCH ?= amd64
 
 SRC_DIRS := cmd pkg # directories which hold app source (not vendored)
 
-#ARCH := amd64
 ARCH := amd64
 
 GOPATH := $(shell pwd)/.go
 
 GOSRC := $(shell pwd)/.go/src
-
-# GOBIN := $(shell pwd)/bin/$(ARCH)
-# GOBIN-LINUX := $(shell pwd)/bin/linux-$(ARCH)
-# GOBIN-DARWIN := $(shell pwd)/bin/darwin-$(ARCH)
 
 VERSION := $(shell git describe --tags --always --dirty)
 
@@ -68,7 +66,6 @@ bin-file-linux:
 	        GITHASH=$(GITHASH)                                             \
 	        ./build/build.sh                                               \
 	    "
-
 
 bin-file-darwin:
 	@echo "Building for Darwin with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
@@ -115,13 +112,18 @@ build-dirs: .go/src/$(PKG)
 	@mkdir -p bin/amd64
 	@mkdir -p bin/darwin_amd64
 	@mkdir -p bin/windows_amd64
-	@mkdir -p .go/pkg .go/bin .go/std/linux-$(ARCH) .go/std/darwin_$(ARCH) .go/std/windows_$(ARCH)
+	@mkdir -p .go/pkg .go/bin .go/bin/linux_$(ARCH) .go/bin/darwin_$(ARCH) .go/bin/windows_$(ARCH)
 
 .go/src/$(PKG):
 	@mkdir -p .go/src/$(PKG)
 	@rmdir .go/src/$(PKG)
+	@echo "OS_NAME: $(OS_NAME)"
+	@echo ".go/src/$(PKG)"
+ifeq ($(OS_NAME),darwin)
+	@ln -s ../../../../ .go/src/$(PKG)
+else
 	@ln -s -r . .go/src/$(PKG)
-
+endif
 
 clean:
 	rm -rf .go bin
