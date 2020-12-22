@@ -19,7 +19,7 @@ BIN := ao
 PKG := github.com/skatteetaten/ao
 
 #  Build OS detection
-OS_NAME := $(shell uname -s | tr A-Z a-z)
+BUILD_OS := $(shell uname -s | tr A-Z a-z)
 
 # Which architecture to build - see $(ALL_ARCH) for options.
 ARCH ?= amd64
@@ -117,9 +117,8 @@ build-dirs: .go/src/$(PKG)
 .go/src/$(PKG):
 	@mkdir -p .go/src/$(PKG)
 	@rmdir .go/src/$(PKG)
-	@echo "OS_NAME: $(OS_NAME)"
-	@echo ".go/src/$(PKG)"
-ifeq ($(OS_NAME),darwin)
+	@echo "Build OS: $(BUILD_OS)"
+ifeq ($(BUILD_OS),darwin)
 	@ln -s ../../../../ .go/src/$(PKG)
 else
 	@ln -s -r . .go/src/$(PKG)
