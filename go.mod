@@ -2,7 +2,7 @@ module github.com/skatteetaten/ao
 
 go 1.14
 
-require github.com/spf13/cobra v1.0.0
+require github.com/spf13/cobra v1.1.1
 
 require (
 	github.com/andybalholm/crlf v0.0.0-20171020200849-670099aa064f
@@ -15,7 +15,7 @@ require (
 	github.com/skatteetaten/graphql v0.2.3-0.20201009105426-b4ccc063e40d
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/sys v0.0.0-20190530182044-ad28b68e88f1
+	golang.org/x/sys v0.0.0-20190624142023-c5567b49c5d0
 	golang.org/x/text v0.3.2
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/yaml.v2 v2.2.8
