@@ -59,7 +59,7 @@ func TestFindGitPath(t *testing.T) {
 
 	wd, _ := os.Getwd()
 	path, err := FindGitPath(wd)
-	if err != nil || path != RepoPath {
+	if err != nil || !strings.HasSuffix(path, RepoPath) {
 		t.Error("Expected git repo to be found")
 	}
 }
