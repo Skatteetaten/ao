@@ -62,7 +62,7 @@ $ source ao.bash
 
 # To load completions for each session, execute once:
 
-$ cp ao.bash /etc/bash_completion.d/ao
+$ sudo cp ao.bash /etc/bash_completion.d/ao
 `
 	zshcompletionhelp = `
 # If shell completion is not already enabled in your environment you will need
