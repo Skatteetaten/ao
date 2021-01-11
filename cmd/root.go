@@ -67,6 +67,11 @@ func initialize(cmd *cobra.Command, args []string) error {
 	// Disable print usage when an error occurs
 	cmd.SilenceUsage = true
 
+	if strings.Contains(cmd.Name(), cobra.ShellCompRequestCmd) {
+		// cmd is an auto completion call
+		return nil
+	}
+
 	home, err := homedir.Dir()
 	if err != nil {
 		return err
@@ -112,7 +117,7 @@ func initialize(cmd *cobra.Command, args []string) error {
 
 	if flagAuroraConfig == "" && flagCheckoutAffiliation == "" {
 		commandsWithoutAffiliation := []string{"version", "login", "logout", "adm", "update"}
-		if !strings.Contains(cmd.Name(), cobra.ShellCompRequestCmd) && containsNone(cmd.CommandPath(), commandsWithoutAffiliation) && aoConfig.Affiliation == "" {
+		if containsNone(cmd.CommandPath(), commandsWithoutAffiliation) && aoConfig.Affiliation == "" {
 			return errors.New("no affiliations is set, please login")
 		}
 	}
