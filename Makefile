@@ -55,6 +55,7 @@ bin-file-linux:
 	@echo "Building for Linux with GoPath: $(GOPATH) , GoSrc: $(GOSRC) , Version: $(VERSION)"
 ifneq (,$(findstring dirty,$(VERSION)))
 	@/bin/sh -c "git status"
+	@/bin/sh -c "git diff"
 endif
 	@/bin/sh -c "                                                          \
 	        cd .go/src/$(PKG);                                             \
