@@ -52,7 +52,7 @@ all: build
 build: build-dirs bin-file-linux bin-file-darwin bin-file-windows
 
 bin-file-linux:
-	@echo "Building for Linux with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
+	@echo "Building for Linux with GoPath: $(GOPATH) , GoSrc: $(GOSRC) , Version: $(VERSION)"
 	@/bin/sh -c "                                                          \
 	        cd .go/src/$(PKG);                                             \
 	        GOPATH=$(GOPATH)                                               \
@@ -68,7 +68,7 @@ bin-file-linux:
 	    "
 
 bin-file-darwin:
-	@echo "Building for Darwin with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
+	@echo "Building for Darwin with GoPath: $(GOPATH) , GoSrc: $(GOSRC) , Version: $(VERSION)"
 	@/bin/sh -c "                                                          \
 	        cd .go/src/$(PKG);                                             \
 	        GOPATH=$(GOPATH)                                               \
@@ -84,7 +84,7 @@ bin-file-darwin:
 	    "
 
 bin-file-windows:
-	@echo "Building for Windows with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
+	@echo "Building for Windows with GoPath: $(GOPATH) , GoSrc: $(GOSRC) , Version: $(VERSION)"
 	@/bin/sh -c "                                                          \
 	        cd .go/src/$(PKG);                                             \
 	        GOPATH=$(GOPATH)                                               \
