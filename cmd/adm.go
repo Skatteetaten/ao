@@ -56,17 +56,53 @@ var updateRefCmd = &cobra.Command{
 	RunE:  SetRefName,
 }
 
+const (
+	bashcompletionhelp = `
+$ source ao.bash
+
+# To load completions for each session, execute once:
+
+$ sudo cp ao.bash /etc/bash_completion.d/ao
+`
+	zshcompletionhelp = `
+# If shell completion is not already enabled in your environment you will need
+# to enable it.  You can execute the following once:
+
+$ echo "autoload -U compinit; compinit -u" >> ~/.zshrc
+
+# To load completions for each session, execute once:
+
+$ sudo cp ao.zsh "${fpath[1]}/_ao"
+
+# You will need to start a new shell for this setup to take effect.
+`
+	fishcompletionhelp = `
+$ source ao.fish
+
+# To load completions for each session, execute once:
+$ cp ao.fish ~/.config/fish/completions/ao.fish
+`
+)
+
 var completionCmd = &cobra.Command{
-	Use:   "completion",
-	Short: "Generates bash completion file",
-	Long: `This command generates a bash script file that provides bash completion.
-Bash completion allows you to press the Tab key to complete keywords.
-After running this command, a file called ao.sh will exist in your home directory.
-By typing
-	source ./ao.sh
-you will have bash completion in ao
-To persist this across login sessions, please update your .bashrc file.`,
-	RunE: BashCompletion,
+	Use:   "completion [bash|zsh|fish]",
+	Short: "Generates completion file for bash, zsh or fish. Default is bash",
+	Long: `This command generates a shell script file that provides scripted completion for the specified shell.
+Completion allows you to press the Tab key to complete keywords.
+After running this command, a script file will exist in your directory.
+To load completions:
+
+Bash:
+` + bashcompletionhelp +
+		`
+Zsh:
+` + zshcompletionhelp +
+		`
+Fish:
+` + fishcompletionhelp + `
+`,
+	RunE:      Completion,
+	ValidArgs: []string{"bash", "zsh", "fish"},
 }
 
 func init() {
@@ -167,22 +203,45 @@ func RecreateConfig(cmd *cobra.Command, args []string) error {
 	return config.WriteConfig(*conf, ConfigLocation)
 }
 
-// BashCompletion is the entry point for the `adm completion` cli command
-func BashCompletion(cmd *cobra.Command, args []string) error {
-	err := RootCmd.GenBashCompletionFile("ao.sh")
+// Completion is the entry point for the `adm completion` cli command
+func Completion(cmd *cobra.Command, args []string) error {
+	shell := "bash"
+	if len(args) > 1 {
+		return cmd.Usage()
+	} else if len(args) == 1 {
+		shell = args[0]
+	}
+	var err error
+	filename := ""
+	helpfulInfo := ""
+	switch shell {
+	case "bash":
+		filename = "ao.bash"
+		err = RootCmd.GenBashCompletionFile(filename)
+		helpfulInfo = bashcompletionhelp
+	case "zsh":
+		filename = "ao.zsh"
+		err = RootCmd.GenZshCompletionFile(filename)
+		helpfulInfo = zshcompletionhelp
+	case "fish":
+		filename = "ao.fish"
+		err = RootCmd.GenFishCompletionFile(filename, true)
+		helpfulInfo = fishcompletionhelp
+	default:
+		return cmd.Usage()
+	}
+
 	if err != nil {
 		return err
 	}
 	wd, _ := os.Getwd()
-	fmt.Println("Bash completion file created at", wd+"/ao.sh")
+	fmt.Println("Completion file created at", wd+"/"+filename)
+	fmt.Println("To load completions:\n", helpfulInfo)
 	return nil
 }
 
 // UpdateGitHook is the entry point for the `adm update-hook` cli command
 func UpdateGitHook(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return cmd.Usage()
-	}
 
 	wd, _ := os.Getwd()
 	gitPath, err := versioncontrol.FindGitPath(wd)

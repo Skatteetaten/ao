@@ -16,41 +16,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	bashCompletionFunc = `__ao_parse()
-{
-    local ao_output out
-    if ao_output=$(ao $@ --no-headers 2>/dev/null); then
-        out=($(echo "${ao_output}" | awk '{print $1}'))
-        COMPREPLY=( $( compgen -W "${out[*]}" -- "$cur" ) )
-    fi
-}
-
-__custom_func() {
-    case ${last_command} in
-        ao_edit | ao_get_file | ao_delete_file | ao_set | ao_unset)
-            __ao_parse get files
-            return
-            ;;
-        ao_deploy | ao_get_spec)
-            __ao_parse get all --list
-            return
-            ;;
-        ao_vault_edit | ao_vault_delete-secret | ao_vault_rename-secret)
-            __ao_parse vault get --list
-            return
-            ;;
-        ao_vault_delete | ao_vault_rename | ao_vault_permissions)
-            __ao_parse vault get --only-vaults
-            return
-            ;;
-        *)
-            ;;
-    esac
-}
-`
-)
-
 const rootLong = `A command line interface for the Boober API.
   * Deploy one or more ApplicationDeploymentRef (environment/application) to one or more clusters
   * Manage AuroraConfig remotely
@@ -76,11 +41,9 @@ var (
 
 // RootCmd is the root of the entire `ao` cli command structure
 var RootCmd = &cobra.Command{
-	Use:   "ao",
-	Short: "Aurora OpenShift CLI",
-	Long:  rootLong,
-	// Cannot use custom bash completion until https://github.com/spf13/cobra/pull/520 has been merged
-	// BashCompletionFunction: bashCompletionFunc,
+	Use:               "ao command",
+	Short:             "Aurora OpenShift CLI",
+	Long:              rootLong,
 	PersistentPreRunE: initialize,
 }
 
@@ -97,11 +60,17 @@ func init() {
 func initialize(cmd *cobra.Command, args []string) error {
 
 	// Setting output for cmd.Print methods
-	cmd.SetOutput(os.Stdout)
+	cmd.SetOut(os.Stdout)
+	cmd.SetErr(os.Stderr)
 	// Errors will be printed from main
 	cmd.SilenceErrors = true
 	// Disable print usage when an error occurs
 	cmd.SilenceUsage = true
+
+	if strings.Contains(cmd.Name(), cobra.ShellCompRequestCmd) {
+		// cmd is an auto completion call
+		return nil
+	}
 
 	home, err := homedir.Dir()
 	if err != nil {
