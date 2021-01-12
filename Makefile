@@ -49,10 +49,10 @@ GITHASH := $(shell git rev-parse HEAD)
 # If you want to build AND push all containers, see the 'all-push' rule.
 all: build
 
-build: build-dirs bin-file-linux bin-file-darwin bin-file-windows
+build: build-dirs dirty-check bin-file-linux bin-file-darwin bin-file-windows
 
 bin-file-linux:
-	@echo "Building for Linux with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
+	@echo "Building for Linux with GoPath: $(GOPATH) , GoSrc: $(GOSRC) , Version: $(VERSION)"
 	@/bin/sh -c "                                                          \
 	        cd .go/src/$(PKG);                                             \
 	        GOPATH=$(GOPATH)                                               \
@@ -68,7 +68,7 @@ bin-file-linux:
 	    "
 
 bin-file-darwin:
-	@echo "Building for Darwin with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
+	@echo "Building for Darwin with GoPath: $(GOPATH) , GoSrc: $(GOSRC) , Version: $(VERSION)"
 	@/bin/sh -c "                                                          \
 	        cd .go/src/$(PKG);                                             \
 	        GOPATH=$(GOPATH)                                               \
@@ -84,7 +84,7 @@ bin-file-darwin:
 	    "
 
 bin-file-windows:
-	@echo "Building for Windows with GoPath : $(GOPATH) and GoSrc $(GOSRC)"
+	@echo "Building for Windows with GoPath: $(GOPATH) , GoSrc: $(GOSRC) , Version: $(VERSION)"
 	@/bin/sh -c "                                                          \
 	        cd .go/src/$(PKG);                                             \
 	        GOPATH=$(GOPATH)                                               \
@@ -113,6 +113,14 @@ build-dirs: .go/src/$(PKG)
 	@mkdir -p bin/darwin_amd64
 	@mkdir -p bin/windows_amd64
 	@mkdir -p .go/pkg .go/bin .go/bin/linux_$(ARCH) .go/bin/darwin_$(ARCH) .go/bin/windows_$(ARCH)
+
+dirty-check:
+ifneq (,$(findstring dirty,$(VERSION)))
+	@echo "--- DEBUG START (Detected dirty version)"
+	@/bin/sh -c "git status"
+	@/bin/sh -c "git diff"
+	@echo "--- DEBUG END"
+endif
 
 .go/src/$(PKG):
 	@mkdir -p .go/src/$(PKG)
