@@ -34,6 +34,26 @@ type (
 	}
 )
 
+const queryGetVaults = `
+	query ($affiliation: String!) {
+			 affiliations(name: $affiliation) {
+    			edges {
+      				node {
+        				name
+        				vaults {
+          					name
+          					permissions
+							hasAccess
+          					secrets {
+            					name
+          					}
+        				}
+      				}
+				}
+			 }
+		}
+`
+
 const ErrorVaultNotFound = "Vault not found"
 
 // NewAuroraSecretVault creates a new AuroraSecretVault
@@ -69,32 +89,13 @@ func (api *APIClient) GetVault(vaultName string) (*AuroraSecretVault, error) {
 
 func (api *APIClient) GetVaults() ([]Vault, error) {
 
-	query := `
-		query ($affiliation: String!) {
-			 affiliations(name: $affiliation) {
-    			edges {
-      				node {
-        				name
-        				vaults {
-          					name
-          					permissions
-							hasAccess
-          					secrets {
-            					name
-          					}
-        				}
-      				}
-				}
-			 }
-		}
-	`
-	var respData Response
+	var respData AffiliationsResponse
 
 	vars := map[string]interface{}{
 		"affiliation": api.Affiliation,
 	}
 
-	if err := api.RunGraphQl(query, vars, &respData); err != nil {
+	if err := api.RunGraphQl(queryGetVaults, vars, &respData); err != nil {
 		return nil, errors.Wrap(err, "Failed to get vaults.")
 	}
 

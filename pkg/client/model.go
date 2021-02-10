@@ -1,6 +1,6 @@
 package client
 
-type Response struct {
+type AffiliationsResponse struct {
 	Affiliations Affiliation `json:"affiliations"`
 }
 
@@ -29,7 +29,7 @@ type Affiliation struct {
 	Edges []Edge  `json:"edges"`
 }
 
-func (api *Response) Vaults(affiliation string) []Vault {
+func (api *AffiliationsResponse) Vaults(affiliation string) []Vault {
 	for _, edge := range api.Affiliations.Edges {
 		if (edge.Node.Name == affiliation) {
 			return edge.Node.Vaults
