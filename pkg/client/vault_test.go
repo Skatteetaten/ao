@@ -20,11 +20,11 @@ func TestApiClient_GetVaults(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "", "test", affiliation, "")
+		api := NewAPIClientDefaultRef("", ts.URL, "test", "sales", "")
 		vaults, err := api.GetVaults()
-		assert.NoError(t, err)
 
-		assert.Len(t, vaults, 7)
+		assert.NoError(t, err)
+		assert.Len(t, vaults, 4)
 	})
 }
 

@@ -5,7 +5,7 @@ type AffiliationsResponse struct {
 }
 
 type Secret struct {
-	Name string `json:"name"`
+	Name          string `json:"name"`
 	Base64Content string `json:"base64Content"`
 }
 
@@ -19,15 +19,15 @@ func NewVault(name string) *Vault {
 }
 
 type Vault struct {
-	Name        string    `json:"name"`
-	Permissions []string  `json:"permissions"`
-	HasAccess   bool      `json:"hasAccess"`
-	Secrets     []Secret  `json:"secrets"`
+	Name        string   `json:"name"`
+	Permissions []string `json:"permissions"`
+	HasAccess   bool     `json:"hasAccess"`
+	Secrets     []Secret `json:"secrets"`
 }
 
 type Node struct {
-	Name   string   `json:"name"`
-	Vaults []Vault  `json:"vaults"`
+	Name   string  `json:"name"`
+	Vaults []Vault `json:"vaults"`
 }
 
 type Edge struct {
@@ -35,12 +35,12 @@ type Edge struct {
 }
 
 type Affiliation struct {
-	Edges []Edge  `json:"edges"`
+	Edges []Edge `json:"edges"`
 }
 
 func (api *AffiliationsResponse) Vaults(affiliation string) []Vault {
 	for _, edge := range api.Affiliations.Edges {
-		if (edge.Node.Name == affiliation) {
+		if edge.Node.Name == affiliation {
 			return edge.Node.Vaults
 		}
 	}
