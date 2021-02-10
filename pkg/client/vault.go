@@ -45,24 +45,6 @@ func NewAuroraSecretVault(name string) *AuroraSecretVault {
 	}
 }
 
-// GetVaults gets aurora vault information via API calls
-func (api *APIClient) GetVaults() ([]*AuroraVaultInfo, error) {
-	endpoint := fmt.Sprintf("/vault/%s", api.Affiliation)
-
-	response, err := api.Do(http.MethodGet, endpoint, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var vaults []*AuroraVaultInfo
-	err = response.ParseItems(&vaults)
-	if err != nil {
-		return nil, err
-	}
-
-	return vaults, nil
-}
-
 // GetVault gets an aurora secret vault via API calls
 func (api *APIClient) GetVault(vaultName string) (*AuroraSecretVault, error) {
 	endpoint := fmt.Sprintf("/vault/%s/%s", api.Affiliation, vaultName)
@@ -83,6 +65,40 @@ func (api *APIClient) GetVault(vaultName string) (*AuroraSecretVault, error) {
 	}
 
 	return &vault, nil
+}
+
+func (api *APIClient) GetVaults() ([]Vault, error) {
+
+	query := `
+		query ($affiliation: String!) {
+			 affiliations(name: $affiliation) {
+    			edges {
+      				node {
+        				name
+        				vaults {
+          					name
+          					permissions
+							hasAccess
+          					secrets {
+            					name
+          					}
+        				}
+      				}
+				}
+			 }
+		}
+	`
+	var respData Response
+
+	vars := map[string]interface{}{
+		"affiliation": api.Affiliation,
+	}
+
+	if err := api.RunGraphQl(query, vars, &respData); err != nil {
+		return nil, errors.Wrap(err, "Failed to get vaults.")
+	}
+
+	return respData.Vaults(api.Affiliation), nil
 }
 
 // DeleteVault deletes an aurora secret vault via API calls
