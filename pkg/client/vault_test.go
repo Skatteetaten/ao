@@ -65,6 +65,34 @@ func TestApiClient_DeleteVault(t *testing.T) {
 	})
 }
 
+func TestAPIClient_CreateVault(t *testing.T) {
+	t.Run("Should create vault", func(t *testing.T) {
+		responseFileName := "createvault_success_response"
+		response := ReadTestFile(responseFileName)
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		vault, err := api.CreateVault(Vault{
+			Name:        "test-vault",
+			Permissions: []string{"utv"},
+			HasAccess:   true,
+			Secrets: []Secret{{
+				Name:          "latest.properties",
+				Base64Content: "YWJjMTIz",
+			}},
+		})
+
+		assert.NoError(t, err)
+		assert.Equal(t, "test-vault", vault.Name)
+	})
+}
+
 func TestApiClient_SaveVault(t *testing.T) {
 	t.Run("Should not save vault with no permissions", func(t *testing.T) {
 

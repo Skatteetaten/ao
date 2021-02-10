@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/graphql"
 	"net/http"
 	"strings"
 )
@@ -116,6 +117,49 @@ func (api *APIClient) DeleteVault(vaultName string) error {
 	}
 
 	return nil
+}
+
+type CreateVaultInput struct {
+	AffiliationName string   `json:"affiliationName"`
+	VaultName       string   `json:"vaultName"`
+	Permissions     []string `json:"permissions"`
+	Secrets         []Secret `json:"secrets"`
+}
+
+type CreateVaultResponse struct {
+	CreateVault Vault `json:"createVault"`
+}
+
+func (api *APIClient) CreateVault(vault Vault) (*Vault, error) {
+	if len(vault.Permissions) == 0 {
+		return nil, errors.New("Aborted: Vault can not be created without permissions")
+	}
+
+	createVaultMutation := `
+		mutation createVault($input: CreateVaultInput!) {
+  			createVault(input: $input) {
+				name
+			}
+		}
+	`
+
+	createVaultInput := CreateVaultInput{
+		AffiliationName: api.Affiliation,
+		VaultName:       vault.Name,
+		Permissions:     vault.Permissions,
+		Secrets:         vault.Secrets,
+	}
+
+	createVaultRequest := graphql.NewRequest(createVaultMutation)
+	createVaultRequest.Var("input", createVaultInput)
+
+	var createVaultResponse CreateVaultResponse
+
+	if err := api.RunGraphQlMutation(createVaultRequest, &createVaultResponse); err != nil {
+		return nil, errors.Wrap(err, "")
+	}
+
+	return &createVaultResponse.CreateVault, nil
 }
 
 // SaveVault saves an aurora secret vault via API calls

@@ -9,6 +9,15 @@ type Secret struct {
 	Base64Content string `json:"base64Content"`
 }
 
+// NewAuroraSecretVault creates a new AuroraSecretVault
+func NewVault(name string) *Vault {
+	return &Vault{
+		Name:        name,
+		Secrets:     []Secret{},
+		Permissions: []string{},
+	}
+}
+
 type Vault struct {
 	Name        string    `json:"name"`
 	Permissions []string  `json:"permissions"`
