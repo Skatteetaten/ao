@@ -39,6 +39,54 @@ func (api *APIClient) GetFileNames() (auroraconfig.FileNames, error) {
 	return fileNames, nil
 }
 
+const getFileNamesGraphqlRequestString = `query getAffiliation($name: String!) {
+  affiliations(name: $name) {
+    items {
+      auroraConfig {
+        files {
+          name
+        }
+      }
+    }
+  }
+}`
+
+// GetFileNames gets file names via API calls
+func (api *APIClient) GetFileNamesGraphql() (auroraconfig.FileNames, error) {
+
+	//auroraConfigFilenamesGraphqlRequest := graphql.NewRequest(getFileNamesGraphqlRequestString)
+
+	type ConfigFileNamesResponse struct {
+		AuroraAPIMetadata struct {
+			ConfigNames []string
+		}
+	}
+
+	// TODO Complete coding
+
+	//auroraConfigFilenamesGraphqlRequest.Var("newAuroraConfigFileInput", newAuroraConfigFileInput)
+
+	//var configFileNamesResponse ConfigFileNamesResponse
+	//if err := api.RunGraphQl(auroraConfigFilenamesGraphqlRequest, &configFileNamesResponse); err != nil {
+	//	return err
+	//}
+
+	endpoint := fmt.Sprintf("/auroraconfig/%s/filenames", api.Affiliation)
+
+	response, err := api.Do(http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var fileNames auroraconfig.FileNames
+	err = response.ParseItems(&fileNames)
+	if err != nil {
+		return nil, err
+	}
+
+	return fileNames, nil
+}
+
 // GetAuroraConfig gets an aurora config via API calls
 func (api *APIClient) GetAuroraConfig() (*auroraconfig.AuroraConfig, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s", api.Affiliation)
