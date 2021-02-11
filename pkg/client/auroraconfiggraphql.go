@@ -30,9 +30,10 @@ const createAuroraConfigFileRequestString = `mutation createAuroraConfigFile($ne
 
 // NewAuroraConfigFileInput is input to the graphql createAuroraConfigFile interface
 type NewAuroraConfigFileInput struct {
-	AuroraConfigName string `json:"auroraConfigName"`
-	FileName         string `json:"fileName"`
-	Contents         string `json:"contents"`
+	AuroraConfigName      string `json:"auroraConfigName"`
+	AuroraConfigReference string `json:"auroraConfigReference"`
+	FileName              string `json:"fileName"`
+	Contents              string `json:"contents"`
 }
 
 // CreateAuroraConfigFileResponse is response from the named graphql mutation "createAuroraConfigFile"
@@ -44,9 +45,10 @@ type CreateAuroraConfigFileResponse struct {
 func (api *APIClient) CreateAuroraConfigFile(file *auroraconfig.File) error {
 	createAuroraConfigFileRequest := graphql.NewRequest(createAuroraConfigFileRequestString)
 	newAuroraConfigFileInput := NewAuroraConfigFileInput{
-		AuroraConfigName: api.Affiliation,
-		FileName:         file.Name,
-		Contents:         file.Contents,
+		AuroraConfigName:      api.Affiliation,
+		AuroraConfigReference: api.RefName,
+		FileName:              file.Name,
+		Contents:              file.Contents,
 	}
 	createAuroraConfigFileRequest.Var("newAuroraConfigFileInput", newAuroraConfigFileInput)
 
