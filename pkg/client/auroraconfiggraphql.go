@@ -71,10 +71,11 @@ const updateAuroraConfigFileRequestString = `mutation updateAuroraConfigFile($up
 
 // UpdateAuroraConfigFileInput is input to the graphql updateAuroraConfigFile interface
 type UpdateAuroraConfigFileInput struct {
-	AuroraConfigName string `json:"auroraConfigName"`
-	FileName         string `json:"fileName"`
-	Contents         string `json:"contents"`
-	ExistingHash     string `json:"existingHash"`
+	AuroraConfigName      string `json:"auroraConfigName"`
+	AuroraConfigReference string `json:"auroraConfigReference"`
+	FileName              string `json:"fileName"`
+	Contents              string `json:"contents"`
+	ExistingHash          string `json:"existingHash"`
 }
 
 // UpdateAuroraConfigFileResponse is response from the named graphql mutation "updateAuroraConfigFile"
@@ -92,10 +93,11 @@ func (api *APIClient) UpdateAuroraConfigFile(file *auroraconfig.File, eTag strin
 	}
 
 	updateAuroraConfigFileInput := UpdateAuroraConfigFileInput{
-		AuroraConfigName: api.Affiliation,
-		FileName:         file.Name,
-		Contents:         file.Contents,
-		ExistingHash:     "",
+		AuroraConfigName:      api.Affiliation,
+		AuroraConfigReference: api.RefName,
+		FileName:              file.Name,
+		Contents:              file.Contents,
+		ExistingHash:          "",
 	}
 	if eTag != "" {
 		updateAuroraConfigFileInput.ExistingHash = eTag
