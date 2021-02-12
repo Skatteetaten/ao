@@ -106,6 +106,8 @@ func (api *APIClient) DoWithHeader(method string, endpoint string, header map[st
 		req.Header.Set(key, value)
 	}
 
+	logrus.Debug("Header Ref-Name: ", req.Header.Get("Ref-Name"))
+
 	client := http.DefaultClient
 	res, err := client.Do(req)
 	if err != nil {
