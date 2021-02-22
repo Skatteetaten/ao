@@ -116,7 +116,7 @@ func TestApiClient_UpdateSecretFile(t *testing.T) {
 	})
 }
 
-func TestSecrets(t *testing.T) {
+func TestAddPermission(t *testing.T) {
 	secrets := Secrets{
 		"latest.properties": "Rk9PPVRFU1QK",
 	}
@@ -135,4 +135,68 @@ func TestSecrets(t *testing.T) {
 	secrets.RemoveSecret("latest.properties2")
 	_, err = secrets.GetSecret("latest.properties2")
 	assert.Error(t, err)
+}
+
+func TestAPIClient_AddPermissions(t *testing.T) {
+	t.Run("Should add a permission", func(t *testing.T) {
+		response := []byte("{\"data\":{\"addVaultPermissions\":{\"hasAccess\":true,\"name\":\"my_test_vault\",\"permissions\":[\"existingpermission\",\"permission\"]}}}")
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.AddPermissions("my_test_vault", []string{"permission"})
+		assert.NoError(t, err)
+	})
+	t.Run("Should fail to add a permission because it exist", func(t *testing.T) {
+		response := []byte("{\"errors\":[{\"message\":\"Permission [permission] already exists for vault with vault name my_test_vault.\",\"locations\":[{\"line\":2,\"column\":3}],\"path\":[\"addVaultPermissions\"],\"extensions\":{\"errorMessage\":\"Permission [permission] already exists for vault with vault name my_test_vault.\"}}]}")
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.AddPermissions("my_test_vault", []string{"permission"})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Permission [permission] already exists for vault with vault name my_test_vault.")
+		assert.Contains(t, err.Error(), api.Korrelasjonsid)
+	})
+}
+
+func TestAPIClient_RemovePermissions(t *testing.T) {
+	t.Run("Should remove a permission", func(t *testing.T) {
+		response := []byte("{\"data\":{\"removeVaultPermissions\":{\"hasAccess\":true,\"name\":\"my_test_vault\",\"permissions\":[\"existingpermission\"]}}}")
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.RemovePermissions("my_test_vault", []string{"permission"})
+		assert.NoError(t, err)
+	})
+	t.Run("Should fail to remove a permission because it is not found", func(t *testing.T) {
+		response := []byte("{\"errors\":[{\"message\":\"Permission [permission] does not exist on vault with vault name my_test_vault.\",\"locations\":[{\"line\":2,\"column\":3}],\"path\":[\"removeVaultPermissions\"],\"extensions\":{\"errorMessage\":\"Permission [permission] does not exist on vault with vault name my_test_vault.\"}}]}")
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.RemovePermissions("my_test_vault", []string{"permission"})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Permission [permission] does not exist on vault with vault name my_test_vault.")
+		assert.Contains(t, err.Error(), api.Korrelasjonsid)
+	})
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/graphql"
 	"net/http"
 	"strings"
 )
@@ -181,6 +182,75 @@ func (api *APIClient) UpdateSecretFile(vault, secret, eTag string, content []byt
 
 	if !bundle.BooberResponse.Success {
 		return errors.New(bundle.BooberResponse.Message)
+	}
+
+	return nil
+}
+
+// VaultResponse is core of response from the graphql "addVaultPermissions" and "removeVAultPermissions"
+type VaultResponse struct {
+	HasAccess   bool          `json:"hasAccess"`
+	Name        string        `json:"name"`
+	Permissions []string      `json:"permissions"`
+	Secrets     []interface{} `json:"secrets"`
+}
+
+const addVaultPermissionsRequestString = `mutation addVaultPermissions($addVaultPermissionsInput: AddVaultPermissionsInput!){
+  addVaultPermissions(input: $addVaultPermissionsInput)
+  {
+    hasAccess
+    name
+    permissions
+  }
+}`
+
+// VaultPermissionsInput is input to the graphql addVaultPermissions and removeVAultPermissions interfaces
+type VaultPermissionsInput struct {
+	AffiliationName string   `json:"affiliationName"`
+	Permissions     []string `json:"permissions"`
+	VaultName       string   `json:"vaultName"`
+}
+
+// AddPermissions adds permissions to vault via gobo
+func (api *APIClient) AddPermissions(vaultName string, permissions []string) error {
+	addVaultPermissionsRequest := graphql.NewRequest(addVaultPermissionsRequestString)
+	addVaultPermissionsInput := VaultPermissionsInput{
+		AffiliationName: api.Affiliation,
+		Permissions:     permissions,
+		VaultName:       vaultName,
+	}
+	addVaultPermissionsRequest.Var("addVaultPermissionsInput", addVaultPermissionsInput)
+
+	var addVaultPermissionsResponse VaultResponse
+	if err := api.RunGraphQlMutation(addVaultPermissionsRequest, &addVaultPermissionsResponse); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+const removeVaultPermissionsRequestString = `mutation removeVaultPermissions($removeVaultPermissionsInput: RemoveVaultPermissionsInput!){
+  removeVaultPermissions(input: $removeVaultPermissionsInput)
+  {
+    hasAccess
+    name
+    permissions
+  }
+}`
+
+// RemovePermissions removes permissions from vault via gobo
+func (api *APIClient) RemovePermissions(vaultName string, permissions []string) error {
+	removeVaultPermissionsRequest := graphql.NewRequest(removeVaultPermissionsRequestString)
+	removeVaultPermissionsInput := VaultPermissionsInput{
+		AffiliationName: api.Affiliation,
+		Permissions:     permissions,
+		VaultName:       vaultName,
+	}
+	removeVaultPermissionsRequest.Var("removeVaultPermissionsInput", removeVaultPermissionsInput)
+
+	var removeVaultPermissionsResponse VaultResponse
+	if err := api.RunGraphQlMutation(removeVaultPermissionsRequest, &removeVaultPermissionsResponse); err != nil {
+		return err
 	}
 
 	return nil
