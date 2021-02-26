@@ -36,6 +36,7 @@ type (
 )
 
 const ErrorVaultNotFound = "Vault not found"
+const FoundNoSecretsForVault = "Found no secrets for vault"
 
 // NewAuroraSecretVault creates a new AuroraSecretVault
 func NewAuroraSecretVault(name string) *AuroraSecretVault {
@@ -193,6 +194,65 @@ type VaultResponse struct {
 	Name        string        `json:"name"`
 	Permissions []string      `json:"permissions"`
 	Secrets     []interface{} `json:"secrets"`
+}
+
+const createVaultRequestString = `mutation createVault($createVaultInput: CreateVaultInput!){
+  createVault(input: $createVaultInput)
+  {
+    hasAccess
+    name
+    permissions
+  }
+}`
+
+// CreateVaultInput is input to the graphql createVault interface
+type CreateVaultInput struct {
+	AffiliationName string        `json:"affiliationName"`
+	Permissions     []string      `json:"permissions"`
+	Secrets         []SecretInput `json:"secrets"`
+	VaultName       string        `json:"vaultName"`
+}
+
+// CreateVaultInput is input to the graphql createVault interface
+type SecretInput struct {
+	Base64Content string `json:"base64Content"`
+	Name          string `json:"name"`
+}
+
+// AddPermissions adds permissions to vault via gobo
+func (api *APIClient) CreateVault(vault AuroraSecretVault) error {
+	if len(vault.Secrets) == 0 {
+		return errors.New(FoundNoSecretsForVault)
+	}
+
+	createVaultRequest := graphql.NewRequest(createVaultRequestString)
+	createVaultInput := getCreateVaultInput(vault, api.Affiliation)
+	createVaultRequest.Var("createVaultInput", createVaultInput)
+	var createVaultResponse VaultResponse
+	if err := api.RunGraphQlMutation(createVaultRequest, &createVaultResponse); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getCreateVaultInput(vault AuroraSecretVault, affiliation string) CreateVaultInput {
+	secrets := make([]SecretInput, len(vault.Secrets))
+	i := 0
+	for key, content := range vault.Secrets {
+		secrets[i] = SecretInput{
+			Base64Content: content,
+			Name:          key,
+		}
+		i++
+	}
+	createVaultInput := CreateVaultInput{
+		AffiliationName: affiliation,
+		Permissions:     vault.Permissions,
+		VaultName:       vault.Name,
+		Secrets:         secrets,
+	}
+	return createVaultInput
 }
 
 const addVaultPermissionsRequestString = `mutation addVaultPermissions($addVaultPermissionsInput: AddVaultPermissionsInput!){

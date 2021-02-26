@@ -75,9 +75,8 @@ func Test_readPermissionFile(t *testing.T) {
 	})
 }
 
-func Test_handlePermissionAction(t *testing.T) {
+func Test_aggregatePermissions(t *testing.T) {
 	type args struct {
-		action         permissionAction
 		existingGroups []string
 		groups         []string
 	}
@@ -90,7 +89,6 @@ func Test_handlePermissionAction(t *testing.T) {
 		{
 			name: "Should return an error when trying to add an group that already exists",
 			args: args{
-				action:         ADD,
 				existingGroups: []string{"devops"},
 				groups:         []string{"devops"},
 			},
@@ -100,43 +98,22 @@ func Test_handlePermissionAction(t *testing.T) {
 		{
 			name: "Should add a new group to existingGroups",
 			args: args{
-				action:         ADD,
 				existingGroups: []string{},
 				groups:         []string{"devops"},
 			},
 			want:    []string{"devops"},
 			wantErr: false,
 		},
-		{
-			name: "Should return an error when trying to delete a group that does not exist",
-			args: args{
-				action:         DELETE,
-				existingGroups: []string{"devops"},
-				groups:         []string{"users"},
-			},
-			want:    nil,
-			wantErr: true,
-		},
-		{
-			name: "Should delete a group fom existingGroups",
-			args: args{
-				action:         DELETE,
-				existingGroups: []string{"devops"},
-				groups:         []string{"devops"},
-			},
-			want:    []string{},
-			wantErr: false,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := handlePermissionAction(tt.args.action, tt.args.existingGroups, tt.args.groups)
+			got, err := aggregatePermissions(tt.args.existingGroups, tt.args.groups)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("handlePermissionAction() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("aggregatePermissions() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("handlePermissionAction() = %v, want %v", got, tt.want)
+				t.Errorf("aggregatePermissions() = %v, want %v", got, tt.want)
 			}
 		})
 	}

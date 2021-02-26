@@ -249,12 +249,7 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	if err := verifyVaultDoesNotExist(args[0]); err != nil {
-		return err
-	}
-
 	vault := client.NewAuroraSecretVault(args[0])
-
 	err := collectSecrets(args[1], vault, true)
 	if err != nil {
 		return err
@@ -266,13 +261,13 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 
 	if createVaultHasGroupArguments(args) {
 		logrus.Debugf("Command line permission groups: %v\n", args[2:])
-		vault.Permissions, err = handlePermissionAction(ADD, vault.Permissions, args[2:])
+		vault.Permissions, err = aggregatePermissions(vault.Permissions, args[2:])
 		if err != nil {
 			return err
 		}
 	}
 
-	err = DefaultAPIClient.SaveVault(*vault)
+	err = DefaultAPIClient.CreateVault(*vault)
 	if err != nil {
 		return err
 	}
@@ -457,50 +452,19 @@ func VaultRemovePermissions(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-type permissionAction uint64
-
-// ADD and DELETE holds values for permission operations
-const (
-	ADD    permissionAction = 0
-	DELETE permissionAction = 1
-)
-
-func handlePermissionAction(action permissionAction, existingGroups, groups []string) ([]string, error) {
+func aggregatePermissions(existingGroups, groups []string) ([]string, error) {
 
 	modifiedGroups := existingGroups
-	switch action {
-	case ADD:
-		{
-			for _, group := range groups {
-				for _, eg := range modifiedGroups {
-					if eg == group {
-						return nil, errors.Errorf("Group %s already exists", group)
-					}
-				}
-				modifiedGroups = append(modifiedGroups, group)
-			}
-			return modifiedGroups, nil
-		}
-	case DELETE:
-		{
-			var found bool
-			for _, group := range groups {
-				found = false
-				for i, g := range modifiedGroups {
-					if g == group {
-						modifiedGroups = append(modifiedGroups[:i], modifiedGroups[i+1:]...)
-						found = true
-					}
-				}
-				if !found {
-					return nil, errors.Errorf("Did not find group %s", group)
-				}
-			}
-			return modifiedGroups, nil
-		}
-	}
 
-	return nil, nil
+	for _, group := range groups {
+		for _, eg := range modifiedGroups {
+			if eg == group {
+				return nil, errors.Errorf("Group %s already exists", group)
+			}
+		}
+		modifiedGroups = append(modifiedGroups, group)
+	}
+	return modifiedGroups, nil
 }
 
 func collectSecrets(filePath string, vault *client.AuroraSecretVault, includePermissions bool) error {
