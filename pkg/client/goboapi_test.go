@@ -42,6 +42,37 @@ func TestGoboApi(t *testing.T) {
 		assert.Equal(t, "testdata", someResponse.SomeDataStructure.SomeData[0])
 	})
 
+	t.Run("Should work on normal graphql query with vars input", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+
+			response := `{"data": {"someDataStructure": {"someData": ["testdata"]}}}}`
+
+			data := []byte(response)
+			w.Write(data)
+		}))
+		defer ts.Close()
+
+		graphQlRequest := `query ($affiliation: String!, $testKey: String) {affiliations(name: $affiliation, test: $testKey) {{someDataStructure{someData}}`
+
+		type SomeResponse struct {
+			SomeDataStructure struct {
+				SomeData []string
+			}
+		}
+		var someResponse SomeResponse
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		vars := map[string]interface{}{
+			"affiliation": api.Affiliation,
+			"testKey":     "testValue",
+		}
+		err := api.RunGraphQl(graphQlRequest, vars, &someResponse)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "testdata", someResponse.SomeDataStructure.SomeData[0])
+	})
+
 	t.Run("Should handle complex error message", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			w.Header().Set("Content-Type", "application/json")

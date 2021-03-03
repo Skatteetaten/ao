@@ -36,7 +36,7 @@ type (
 )
 
 const queryGetVaults = `
-	query ($affiliation: String!) {
+	query getVaults ($affiliation: String!) {
 			 affiliations(name: $affiliation) {
     			edges {
       				node {
