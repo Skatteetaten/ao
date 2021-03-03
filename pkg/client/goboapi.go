@@ -11,9 +11,14 @@ import (
 )
 
 // RunGraphQl performs a GraphQl based API call
-func (api *APIClient) RunGraphQl(graphQlRequest string, response interface{}) error {
+func (api *APIClient) RunGraphQl(graphQlRequest string, vars map[string]interface{}, response interface{}) error {
 	client := api.getGraphQlClient()
 	req := api.newRequest(graphQlRequest)
+
+	for key, value := range vars {
+		req.Var(key, value)
+	}
+
 	ctx := context.Background()
 
 	if err := client.Run(ctx, req, response); err != nil {
@@ -50,6 +55,8 @@ func (api *APIClient) newRequest(graphqlRequest string) *graphql.Request {
 	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Add("Korrelasjonsid", api.Korrelasjonsid)
 	req.Header.Add("Klientid", "ao")
+	req.Header.Add("Authorization", "Bearer "+api.Token)
+
 	return req
 }
 

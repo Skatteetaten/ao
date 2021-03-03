@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/skatteetaten/graphql"
 	"net/http"
 	"strings"
 )
@@ -34,6 +35,26 @@ type (
 	}
 )
 
+const queryGetVaults = `
+	query getVaults ($affiliation: String!) {
+			 affiliations(name: $affiliation) {
+    			edges {
+      				node {
+        				name
+        				vaults {
+          					name
+          					permissions
+							hasAccess
+          					secrets {
+            					name
+          					}
+        				}
+      				}
+				}
+			 }
+		}
+`
+
 const ErrorVaultNotFound = "Vault not found"
 
 // NewAuroraSecretVault creates a new AuroraSecretVault
@@ -43,24 +64,6 @@ func NewAuroraSecretVault(name string) *AuroraSecretVault {
 		Secrets:     make(Secrets),
 		Permissions: []string{},
 	}
-}
-
-// GetVaults gets aurora vault information via API calls
-func (api *APIClient) GetVaults() ([]*AuroraVaultInfo, error) {
-	endpoint := fmt.Sprintf("/vault/%s", api.Affiliation)
-
-	response, err := api.Do(http.MethodGet, endpoint, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var vaults []*AuroraVaultInfo
-	err = response.ParseItems(&vaults)
-	if err != nil {
-		return nil, err
-	}
-
-	return vaults, nil
 }
 
 // GetVault gets an aurora secret vault via API calls
@@ -85,6 +88,21 @@ func (api *APIClient) GetVault(vaultName string) (*AuroraSecretVault, error) {
 	return &vault, nil
 }
 
+func (api *APIClient) GetVaults() ([]Vault, error) {
+
+	var respData AffiliationsResponse
+
+	vars := map[string]interface{}{
+		"affiliation": api.Affiliation,
+	}
+
+	if err := api.RunGraphQl(queryGetVaults, vars, &respData); err != nil {
+		return nil, errors.Wrap(err, "Failed to get vaults.")
+	}
+
+	return respData.Vaults(api.Affiliation), nil
+}
+
 // DeleteVault deletes an aurora secret vault via API calls
 func (api *APIClient) DeleteVault(vaultName string) error {
 	endpoint := fmt.Sprintf("/vault/%s/%s", api.Affiliation, vaultName)
@@ -99,6 +117,49 @@ func (api *APIClient) DeleteVault(vaultName string) error {
 	}
 
 	return nil
+}
+
+type CreateVaultInput struct {
+	AffiliationName string   `json:"affiliationName"`
+	VaultName       string   `json:"vaultName"`
+	Permissions     []string `json:"permissions"`
+	Secrets         []Secret `json:"secrets"`
+}
+
+type CreateVaultResponse struct {
+	CreateVault Vault `json:"createVault"`
+}
+
+func (api *APIClient) CreateVault(vault Vault) (*Vault, error) {
+	if len(vault.Permissions) == 0 {
+		return nil, errors.New("Aborted: Vault can not be created without permissions")
+	}
+
+	createVaultMutation := `
+		mutation createVault($input: CreateVaultInput!) {
+  			createVault(input: $input) {
+				name
+			}
+		}
+	`
+
+	createVaultInput := CreateVaultInput{
+		AffiliationName: api.Affiliation,
+		VaultName:       vault.Name,
+		Permissions:     vault.Permissions,
+		Secrets:         vault.Secrets,
+	}
+
+	createVaultRequest := graphql.NewRequest(createVaultMutation)
+	createVaultRequest.Var("input", createVaultInput)
+
+	var createVaultResponse CreateVaultResponse
+
+	if err := api.RunGraphQlMutation(createVaultRequest, &createVaultResponse); err != nil {
+		return nil, errors.Wrap(err, "")
+	}
+
+	return &createVaultResponse.CreateVault, nil
 }
 
 // SaveVault saves an aurora secret vault via API calls

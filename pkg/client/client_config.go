@@ -16,7 +16,7 @@ func (api *APIClient) GetClientConfig() (*Config, error) {
 	}
 
 	var clientConfigResponse ClientConfigResponse
-	if err := api.RunGraphQl(clientConfigGraphqlRequest, &clientConfigResponse); err != nil {
+	if err := api.RunGraphQl(clientConfigGraphqlRequest, nil, &clientConfigResponse); err != nil {
 		return nil, err
 	}
 	gc := clientConfigResponse.AuroraAPIMetadata.ClientConfig

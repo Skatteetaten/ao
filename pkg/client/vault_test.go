@@ -20,11 +20,11 @@ func TestApiClient_GetVaults(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "", "test", affiliation, "")
+		api := NewAPIClientDefaultRef("", ts.URL, "test", "sales", "")
 		vaults, err := api.GetVaults()
-		assert.NoError(t, err)
 
-		assert.Len(t, vaults, 7)
+		assert.NoError(t, err)
+		assert.Len(t, vaults, 4)
 	})
 }
 
@@ -62,6 +62,34 @@ func TestApiClient_DeleteVault(t *testing.T) {
 		api := NewAPIClientDefaultRef(ts.URL, "", "test", affiliation, "")
 		err := api.DeleteVault("console")
 		assert.NoError(t, err)
+	})
+}
+
+func TestAPIClient_CreateVault(t *testing.T) {
+	t.Run("Should create vault", func(t *testing.T) {
+		responseFileName := "createvault_success_response"
+		response := ReadTestFile(responseFileName)
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		vault, err := api.CreateVault(Vault{
+			Name:        "test-vault",
+			Permissions: []string{"utv"},
+			HasAccess:   true,
+			Secrets: []Secret{{
+				Name:          "latest.properties",
+				Base64Content: "YWJjMTIz",
+			}},
+		})
+
+		assert.NoError(t, err)
+		assert.Equal(t, "test-vault", vault.Name)
 	})
 }
 
