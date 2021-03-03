@@ -14,14 +14,6 @@ type (
 	// Secrets is a key-value map of secrets
 	Secrets map[string]string
 
-	// AuroraVaultInfo TODO: rename to response
-	AuroraVaultInfo struct {
-		Name        string   `json:"name"`
-		Permissions []string `json:"permissions"`
-		Secrets     Secrets  `json:"secrets"`
-		HasAccess   bool     `json:"hasAccess"`
-	}
-
 	// AuroraSecretVault TODO: rename to request
 	AuroraSecretVault struct {
 		Name        string   `json:"name"`
