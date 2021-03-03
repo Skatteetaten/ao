@@ -144,7 +144,7 @@ func TestApiClient_UpdateSecretFile(t *testing.T) {
 	})
 }
 
-func TestAddPermission(t *testing.T) {
+func TestSecrets(t *testing.T) {
 	secrets := Secrets{
 		"latest.properties": "Rk9PPVRFU1QK",
 	}
