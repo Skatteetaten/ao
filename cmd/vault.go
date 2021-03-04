@@ -218,23 +218,7 @@ func RenameVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	if err := verifyVaultDoesNotExist(args[1]); err != nil {
-		return errors.Errorf("Can't rename vault. %s already exists", args[1])
-	}
-
-	vault, err := DefaultAPIClient.GetVault(args[0])
-	if err != nil {
-		return err
-	}
-
-	vault.Name = args[1]
-
-	err = DefaultAPIClient.SaveVault(*vault)
-	if err != nil {
-		return err
-	}
-
-	err = DefaultAPIClient.DeleteVault(args[0])
+	err := DefaultAPIClient.RenameVault(args[0], args[1])
 	if err != nil {
 		return err
 	}
@@ -273,17 +257,6 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Println("Vault", args[0], "created")
-	return nil
-}
-
-func verifyVaultDoesNotExist(vaultname string) error {
-	v, err := DefaultAPIClient.GetVault(vaultname)
-	if err != nil && err.Error() != client.ErrorVaultNotFound {
-		return errors.Errorf("error when checking existence of vault %s: %v", vaultname, err)
-	}
-	if v != nil {
-		return errors.Errorf("vault %s already exists", vaultname)
-	}
 	return nil
 }
 

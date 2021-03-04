@@ -184,6 +184,55 @@ func TestApiClient_SaveVault(t *testing.T) {
 	})
 }
 
+func TestAPIClient_RenameVault(t *testing.T) {
+	t.Run("Should rename vault OK", func(t *testing.T) {
+		response := []byte(`{"data":{"renameVault":{"name":"newname"}}}`)
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.RenameVault("oldname", "newname")
+
+		assert.NoError(t, err)
+	})
+	t.Run("Should fail to rename vault that does not exist", func(t *testing.T) {
+		response := []byte(`{"errors":[{"message":"Vault not found name=nonexistingvaultname.","locations":[{"line":3,"column":6}],"path":["renameVault"],"extensions":{"errorMessage":"Vault not found name=nonexistingvaultname.","Korrelasjonsid":"0a3e68bd-8a59-4980-ab1a-c254d0f3f9cd"}}]}`)
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.RenameVault("nonexistingvaultname", "newname")
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Vault not found name=nonexistingvaultname")
+		assert.Contains(t, err.Error(), api.Korrelasjonsid)
+	})
+	t.Run("Should fail to rename vault to a name that already exists", func(t *testing.T) {
+		response := []byte(`{"errors":[{"message":"Vault with vault name existingvaultname already exists.","locations":[{"line":3,"column":6}],"path":["renameVault"],"extensions":{"errorMessage":"Vault with vault name existingvaultname already exists.","Korrelasjonsid":"6e20fe0c-c9de-4552-9332-cd47e4a7219a"}}]}`)
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.RenameVault("oldvaultname", "existingvaultname")
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Vault with vault name existingvaultname already exists")
+		assert.Contains(t, err.Error(), api.Korrelasjonsid)
+	})
+}
+
 func TestApiClient_UpdateSecretFile(t *testing.T) {
 	t.Run("Should update secret file", func(t *testing.T) {
 
