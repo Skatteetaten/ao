@@ -51,17 +51,33 @@ func TestApiClient_GetVault(t *testing.T) {
 
 func TestApiClient_DeleteVault(t *testing.T) {
 	t.Run("Should delete vault", func(t *testing.T) {
+		response := []byte("{\"data\":{\"deleteVault\":{\"affiliationName\":\"paas\",\"vaultName\":\"my_test_vault\"}}}")
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"success":true}`))
+			w.Write(response)
 		}))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef(ts.URL, "", "test", affiliation, "")
-		err := api.DeleteVault("console")
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.DeleteVault("my_test_vault")
 		assert.NoError(t, err)
+	})
+	t.Run("Should fail to delete vault because it does not exist", func(t *testing.T) {
+		response := []byte("{\"errors\":[{\"message\":\"Vault not found name=my_test_vault.\",\"locations\":[{\"line\":2,\"column\":3}],\"path\":[\"deleteVault\"],\"extensions\":{\"errorMessage\":\"Vault not found name=my_test_vault.\",\"Korrelasjonsid\":\"\"}}]}")
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.DeleteVault("my_test_vault")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Vault not found name=my_test_vault")
+		assert.Contains(t, err.Error(), api.Korrelasjonsid)
 	})
 }
 

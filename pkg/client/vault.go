@@ -96,22 +96,6 @@ func (api *APIClient) GetVaults() ([]Vault, error) {
 	return respData.Vaults(api.Affiliation), nil
 }
 
-// DeleteVault deletes an aurora secret vault via API calls
-func (api *APIClient) DeleteVault(vaultName string) error {
-	endpoint := fmt.Sprintf("/vault/%s/%s", api.Affiliation, vaultName)
-
-	response, err := api.Do(http.MethodDelete, endpoint, nil)
-	if err != nil {
-		return err
-	}
-
-	if !response.Success {
-		return errors.New(response.Message)
-	}
-
-	return nil
-}
-
 type CreateVaultInput struct {
 	AffiliationName string   `json:"affiliationName"`
 	VaultName       string   `json:"vaultName"`
@@ -329,12 +313,41 @@ func (api *APIClient) RemovePermissions(vaultName string, permissions []string) 
 	return nil
 }
 
-// VaultResponse is core of response from the graphql "addVaultPermissions" and "removeVAultPermissions"
-type VaultResponse struct {
-	HasAccess   bool          `json:"hasAccess"`
-	Name        string        `json:"name"`
-	Permissions []string      `json:"permissions"`
-	Secrets     []interface{} `json:"secrets"`
+const deleteVaultRequestString = `mutation deleteVault($deleteVaultInput: DeleteVaultInput!){
+  deleteVault(input: $deleteVaultInput)
+  {
+    affiliationName
+    vaultName
+  }
+}`
+
+// DeleteVaultInput is input to the graphql deleteVault interface
+type DeleteVaultInput struct {
+	AffiliationName string `json:"affiliationName"`
+	VaultName       string `json:"vaultName"`
+}
+
+// DeleteVaultResponse is the response from the graphql "deleteVault"
+type DeleteVaultResponse struct {
+	AffiliationName string `json:"affiliationName"`
+	VaultName       string `json:"vaultName"`
+}
+
+// DeleteVault deletes an aurora secret vault via API calls
+func (api *APIClient) DeleteVault(vaultName string) error {
+	deleteVaultRequest := graphql.NewRequest(deleteVaultRequestString)
+	deleteVaultInput := DeleteVaultInput{
+		AffiliationName: api.Affiliation,
+		VaultName:       vaultName,
+	}
+	deleteVaultRequest.Var("deleteVaultInput", deleteVaultInput)
+
+	var deleteVaultResponse DeleteVaultResponse
+	if err := api.RunGraphQlMutation(deleteVaultRequest, &deleteVaultResponse); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetSecret gets a secret by name
