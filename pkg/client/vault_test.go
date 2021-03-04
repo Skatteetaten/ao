@@ -77,19 +77,59 @@ func TestAPIClient_CreateVault(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
-		vault, err := api.CreateVault(Vault{
+		newVault := AuroraSecretVault{
 			Name:        "test-vault",
 			Permissions: []string{"utv"},
-			HasAccess:   true,
-			Secrets: []Secret{{
-				Name:          "latest.properties",
-				Base64Content: "YWJjMTIz",
-			}},
-		})
+			Secrets: Secrets{
+				"latest.properties": "YWJjMTIz",
+			},
+		}
+
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.CreateVault(newVault)
 
 		assert.NoError(t, err)
-		assert.Equal(t, "test-vault", vault.Name)
+	})
+	t.Run("Should create a vault successfully", func(t *testing.T) {
+		response := []byte("{\"data\":{\"createVault\":{\"hasAccess\":true,\"name\":\"my_test_vault\",\"permissions\":[\"APP_PaaS_utv\"]}}}")
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		newVault := NewAuroraSecretVault("my_test_vault")
+		newVault.Secrets = Secrets{
+			"latest.properties": "YWJjMTIz",
+		}
+		newVault.Permissions = []string{"utv_permission"}
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.CreateVault(*newVault)
+
+		assert.NoError(t, err)
+	})
+	t.Run("Should fail to create existing vault", func(t *testing.T) {
+		response := []byte("{\"errors\":[{\"message\":\"Vault with vault name my_test_vault already exists.\",\"locations\":[{\"line\":2,\"column\":3}],\"path\":[\"createVault\"],\"extensions\":{\"errorMessage\":\"Vault with vault name my_test_vault already exists.\"}}]}")
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		newVault := NewAuroraSecretVault("my_test_vault")
+		newVault.Secrets = Secrets{
+			"latest.properties": "YWJjMTIz",
+		}
+		newVault.Permissions = []string{"utv_permission"}
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.CreateVault(*newVault)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Vault with vault name my_test_vault already exists")
+		assert.Contains(t, err.Error(), api.Korrelasjonsid)
 	})
 }
 
@@ -144,7 +184,7 @@ func TestApiClient_UpdateSecretFile(t *testing.T) {
 	})
 }
 
-func TestSecrets(t *testing.T) {
+func TestAddPermission(t *testing.T) {
 	secrets := Secrets{
 		"latest.properties": "Rk9PPVRFU1QK",
 	}

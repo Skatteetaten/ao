@@ -9,15 +9,6 @@ type Secret struct {
 	Base64Content string `json:"base64Content"`
 }
 
-// NewAuroraSecretVault creates a new AuroraSecretVault
-func NewVault(name string) *Vault {
-	return &Vault{
-		Name:        name,
-		Secrets:     []Secret{},
-		Permissions: []string{},
-	}
-}
-
 type Vault struct {
 	Name        string   `json:"name"`
 	Permissions []string `json:"permissions"`
@@ -36,6 +27,15 @@ type Edge struct {
 
 type Affiliation struct {
 	Edges []Edge `json:"edges"`
+}
+
+// NewVault creates a new Vault (illegal, since it is missing both secrets and permissions)
+func NewVault(name string) *Vault {
+	return &Vault{
+		Name:        name,
+		Secrets:     []Secret{},
+		Permissions: []string{},
+	}
 }
 
 func (api *AffiliationsResponse) Vaults(affiliation string) []Vault {

@@ -14,7 +14,7 @@ type (
 	// Secrets is a key-value map of secrets
 	Secrets map[string]string
 
-	// AuroraSecretVault TODO: rename to request
+	// AuroraSecretVault TODO: Deprecated.  Replace with Vault when Boober code is gone
 	AuroraSecretVault struct {
 		Name        string   `json:"name"`
 		Permissions []string `json:"permissions"`
@@ -48,6 +48,7 @@ const queryGetVaults = `
 `
 
 const ErrorVaultNotFound = "Vault not found"
+const FoundNoSecretsForVault = "Found no secrets for vault"
 
 // NewAuroraSecretVault creates a new AuroraSecretVault
 func NewAuroraSecretVault(name string) *AuroraSecretVault {
@@ -122,9 +123,12 @@ type CreateVaultResponse struct {
 	CreateVault Vault `json:"createVault"`
 }
 
-func (api *APIClient) CreateVault(vault Vault) (*Vault, error) {
+func (api *APIClient) CreateVault(vault AuroraSecretVault) error {
 	if len(vault.Permissions) == 0 {
-		return nil, errors.New("Aborted: Vault can not be created without permissions")
+		return errors.New("Aborted: Vault can not be created without permissions")
+	}
+	if len(vault.Secrets) == 0 {
+		return errors.New(FoundNoSecretsForVault)
 	}
 
 	createVaultMutation := `
@@ -135,12 +139,7 @@ func (api *APIClient) CreateVault(vault Vault) (*Vault, error) {
 		}
 	`
 
-	createVaultInput := CreateVaultInput{
-		AffiliationName: api.Affiliation,
-		VaultName:       vault.Name,
-		Permissions:     vault.Permissions,
-		Secrets:         vault.Secrets,
-	}
+	createVaultInput := mapCreateVaultInput(vault, api.Affiliation)
 
 	createVaultRequest := graphql.NewRequest(createVaultMutation)
 	createVaultRequest.Var("input", createVaultInput)
@@ -148,10 +147,29 @@ func (api *APIClient) CreateVault(vault Vault) (*Vault, error) {
 	var createVaultResponse CreateVaultResponse
 
 	if err := api.RunGraphQlMutation(createVaultRequest, &createVaultResponse); err != nil {
-		return nil, errors.Wrap(err, "")
+		return errors.Wrap(err, "")
 	}
 
-	return &createVaultResponse.CreateVault, nil
+	return nil
+}
+
+func mapCreateVaultInput(vault AuroraSecretVault, affiliation string) CreateVaultInput {
+	secrets := make([]Secret, len(vault.Secrets))
+	i := 0
+	for key, content := range vault.Secrets {
+		secrets[i] = Secret{
+			Base64Content: content,
+			Name:          key,
+		}
+		i++
+	}
+	createVaultInput := CreateVaultInput{
+		AffiliationName: affiliation,
+		Permissions:     vault.Permissions,
+		VaultName:       vault.Name,
+		Secrets:         secrets,
+	}
+	return createVaultInput
 }
 
 // SaveVault saves an aurora secret vault via API calls
@@ -309,6 +327,14 @@ func (api *APIClient) RemovePermissions(vaultName string, permissions []string) 
 	}
 
 	return nil
+}
+
+// VaultResponse is core of response from the graphql "addVaultPermissions" and "removeVAultPermissions"
+type VaultResponse struct {
+	HasAccess   bool          `json:"hasAccess"`
+	Name        string        `json:"name"`
+	Permissions []string      `json:"permissions"`
+	Secrets     []interface{} `json:"secrets"`
 }
 
 // GetSecret gets a secret by name
