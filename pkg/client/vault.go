@@ -131,7 +131,7 @@ func (api *APIClient) CreateVault(vault AuroraSecretVault) error {
 	var createVaultResponse CreateVaultResponse
 
 	if err := api.RunGraphQlMutation(createVaultRequest, &createVaultResponse); err != nil {
-		return errors.Wrap(err, "")
+		return err
 	}
 
 	return nil
