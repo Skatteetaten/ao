@@ -1,72 +1,63 @@
 {
-  "count": 7,
-  "items": [
-    {
-      "hasAccess": false,
-      "name": "utvmote",
-      "permissions": [
-          "UTV_App_dev"
-      ],
-      "secrets": {
-        "latest.properties": ""
-      }
-    },
-    {
-      "hasAccess": true,
-      "name": "secret",
-      "secrets": {
-        "foobar.prop": "",
-        "latest.properties": "",
-        "vdi": ""
-      }
-    },
-    {
-      "hasAccess": true,
-      "name": "boober",
-      "permissions": [
-          "APP_PaaS_utv",
-          "APP_PaaS_drift"
-      ],
-      "secrets": {
-        "latest.properties": ""
-      }
-    },
-    {
-      "hasAccess": true,
-      "name": "foo",
-      "permissions": [
-          "APP_PaaS_utv"
-      ],
-      "secrets": {
-        "latest.properties": ""
-      }
-    },
-    {
-      "hasAccess": true,
-      "name": "console",
-      "secrets": {
-        "aurora-token": ""
-      }
-    },
-    {
-      "hasAccess": true,
-      "name": "flotus",
-      "permissions": [],
-      "secrets": {
-        "potus": ""
-      }
-    },
-    {
-      "hasAccess": false,
-      "name": "potus",
-      "permissions": [
-          "App_PaaS_UTV"
-      ],
-      "secrets": {
-        "potus.properties": ""
-      }
+  "data": {
+    "affiliations": {
+      "totalCount": 1,
+      "edges": [
+        {
+          "node": {
+            "name": "sales",
+            "vaults": [
+              {
+                "name": "credentials",
+                "permissions": [
+                  "user",
+                  "admin"
+                ],
+                "hasAccess": true,
+                "secrets": [
+                  {
+                    "name": "passwd.txt"
+                  }
+                ]
+              },
+              {
+                "name": "certificates",
+                "permissions": [
+                  "users",
+                  "manager"
+                ],
+                "hasAccess": true,
+                "secrets": [
+                  {
+                    "name": "cacerts",
+                    "name": "mycerts"
+                  }
+                ]
+              },
+              {
+                "name": "tokens",
+                "permissions": [
+                  "external"
+                ],
+                "hasAccess": true,
+                "secrets": [
+                  {
+                    "name": "tokens.txt"
+                  }
+                ]
+              },
+              {
+                "name": "config",
+                "permissions": null,
+                "hasAccess": false,
+                "secrets": null
+              }
+            ]
+          }
+        }
+      ]
     }
-  ],
-  "message": "OK",
-  "success": true
+  }
 }
+
+
