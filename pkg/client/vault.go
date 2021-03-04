@@ -14,15 +14,7 @@ type (
 	// Secrets is a key-value map of secrets
 	Secrets map[string]string
 
-	// AuroraVaultInfo TODO: rename to response
-	AuroraVaultInfo struct {
-		Name        string   `json:"name"`
-		Permissions []string `json:"permissions"`
-		Secrets     Secrets  `json:"secrets"`
-		HasAccess   bool     `json:"hasAccess"`
-	}
-
-	// AuroraSecretVault TODO: rename to request
+	// AuroraSecretVault TODO: Deprecated.  Replace with Vault when Boober code is gone
 	AuroraSecretVault struct {
 		Name        string   `json:"name"`
 		Permissions []string `json:"permissions"`
@@ -35,6 +27,26 @@ type (
 	}
 )
 
+const queryGetVaults = `
+	query getVaults ($affiliation: String!) {
+			 affiliations(name: $affiliation) {
+    			edges {
+      				node {
+        				name
+        				vaults {
+          					name
+          					permissions
+							hasAccess
+          					secrets {
+            					name
+          					}
+        				}
+      				}
+				}
+			 }
+		}
+`
+
 const ErrorVaultNotFound = "Vault not found"
 const FoundNoSecretsForVault = "Found no secrets for vault"
 
@@ -45,24 +57,6 @@ func NewAuroraSecretVault(name string) *AuroraSecretVault {
 		Secrets:     make(Secrets),
 		Permissions: []string{},
 	}
-}
-
-// GetVaults gets aurora vault information via API calls
-func (api *APIClient) GetVaults() ([]*AuroraVaultInfo, error) {
-	endpoint := fmt.Sprintf("/vault/%s", api.Affiliation)
-
-	response, err := api.Do(http.MethodGet, endpoint, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var vaults []*AuroraVaultInfo
-	err = response.ParseItems(&vaults)
-	if err != nil {
-		return nil, err
-	}
-
-	return vaults, nil
 }
 
 // GetVault gets an aurora secret vault via API calls
@@ -85,6 +79,81 @@ func (api *APIClient) GetVault(vaultName string) (*AuroraSecretVault, error) {
 	}
 
 	return &vault, nil
+}
+
+func (api *APIClient) GetVaults() ([]Vault, error) {
+
+	var respData AffiliationsResponse
+
+	vars := map[string]interface{}{
+		"affiliation": api.Affiliation,
+	}
+
+	if err := api.RunGraphQl(queryGetVaults, vars, &respData); err != nil {
+		return nil, errors.Wrap(err, "Failed to get vaults.")
+	}
+
+	return respData.Vaults(api.Affiliation), nil
+}
+
+type CreateVaultInput struct {
+	AffiliationName string   `json:"affiliationName"`
+	VaultName       string   `json:"vaultName"`
+	Permissions     []string `json:"permissions"`
+	Secrets         []Secret `json:"secrets"`
+}
+
+type CreateVaultResponse struct {
+	CreateVault Vault `json:"createVault"`
+}
+
+func (api *APIClient) CreateVault(vault AuroraSecretVault) error {
+	if len(vault.Permissions) == 0 {
+		return errors.New("Aborted: Vault can not be created without permissions")
+	}
+	if len(vault.Secrets) == 0 {
+		return errors.New(FoundNoSecretsForVault)
+	}
+
+	createVaultMutation := `
+		mutation createVault($input: CreateVaultInput!) {
+  			createVault(input: $input) {
+				name
+			}
+		}
+	`
+
+	createVaultInput := mapCreateVaultInput(vault, api.Affiliation)
+
+	createVaultRequest := graphql.NewRequest(createVaultMutation)
+	createVaultRequest.Var("input", createVaultInput)
+
+	var createVaultResponse CreateVaultResponse
+
+	if err := api.RunGraphQlMutation(createVaultRequest, &createVaultResponse); err != nil {
+		return errors.Wrap(err, "")
+	}
+
+	return nil
+}
+
+func mapCreateVaultInput(vault AuroraSecretVault, affiliation string) CreateVaultInput {
+	secrets := make([]Secret, len(vault.Secrets))
+	i := 0
+	for key, content := range vault.Secrets {
+		secrets[i] = Secret{
+			Base64Content: content,
+			Name:          key,
+		}
+		i++
+	}
+	createVaultInput := CreateVaultInput{
+		AffiliationName: affiliation,
+		Permissions:     vault.Permissions,
+		VaultName:       vault.Name,
+		Secrets:         secrets,
+	}
+	return createVaultInput
 }
 
 // SaveVault saves an aurora secret vault via API calls
@@ -172,72 +241,17 @@ func (api *APIClient) UpdateSecretFile(vault, secret, eTag string, content []byt
 	return nil
 }
 
-// VaultResponse is core of response from the graphql "addVaultPermissions" and "removeVAultPermissions"
-type VaultResponse struct {
-	HasAccess   bool          `json:"hasAccess"`
-	Name        string        `json:"name"`
-	Permissions []string      `json:"permissions"`
-	Secrets     []interface{} `json:"secrets"`
+type vaultPermissionsInput struct {
+	AffiliationName string   `json:"affiliationName"`
+	Permissions     []string `json:"permissions"`
+	VaultName       string   `json:"vaultName"`
 }
 
-const createVaultRequestString = `mutation createVault($createVaultInput: CreateVaultInput!){
-  createVault(input: $createVaultInput)
-  {
-    hasAccess
-    name
-    permissions
-  }
-}`
+// AddVaultPermissionsInput is input to the graphql addVaultPermissions mutation
+type AddVaultPermissionsInput = vaultPermissionsInput
 
-// CreateVaultInput is input to the graphql createVault interface
-type CreateVaultInput struct {
-	AffiliationName string        `json:"affiliationName"`
-	Permissions     []string      `json:"permissions"`
-	Secrets         []SecretInput `json:"secrets"`
-	VaultName       string        `json:"vaultName"`
-}
-
-// CreateVaultInput is input to the graphql createVault interface
-type SecretInput struct {
-	Base64Content string `json:"base64Content"`
-	Name          string `json:"name"`
-}
-
-// AddPermissions adds permissions to vault via gobo
-func (api *APIClient) CreateVault(vault AuroraSecretVault) error {
-	if len(vault.Secrets) == 0 {
-		return errors.New(FoundNoSecretsForVault)
-	}
-
-	createVaultRequest := graphql.NewRequest(createVaultRequestString)
-	createVaultInput := getCreateVaultInput(vault, api.Affiliation)
-	createVaultRequest.Var("createVaultInput", createVaultInput)
-	var createVaultResponse VaultResponse
-	if err := api.RunGraphQlMutation(createVaultRequest, &createVaultResponse); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func getCreateVaultInput(vault AuroraSecretVault, affiliation string) CreateVaultInput {
-	secrets := make([]SecretInput, len(vault.Secrets))
-	i := 0
-	for key, content := range vault.Secrets {
-		secrets[i] = SecretInput{
-			Base64Content: content,
-			Name:          key,
-		}
-		i++
-	}
-	createVaultInput := CreateVaultInput{
-		AffiliationName: affiliation,
-		Permissions:     vault.Permissions,
-		VaultName:       vault.Name,
-		Secrets:         secrets,
-	}
-	return createVaultInput
-}
+// AddVaultPermissionsResponse is core of response from graphql addVaultPermissions
+type AddVaultPermissionsResponse = Vault
 
 const addVaultPermissionsRequestString = `mutation addVaultPermissions($addVaultPermissionsInput: AddVaultPermissionsInput!){
   addVaultPermissions(input: $addVaultPermissionsInput)
@@ -265,13 +279,19 @@ func (api *APIClient) AddPermissions(vaultName string, permissions []string) err
 	}
 	addVaultPermissionsRequest.Var("addVaultPermissionsInput", addVaultPermissionsInput)
 
-	var addVaultPermissionsResponse VaultResponse
+	var addVaultPermissionsResponse AddVaultPermissionsResponse
 	if err := api.RunGraphQlMutation(addVaultPermissionsRequest, &addVaultPermissionsResponse); err != nil {
 		return err
 	}
 
 	return nil
 }
+
+// RemoveVaultPermissionsInput is input to the graphql addVaultPermissions mutation
+type RemoveVaultPermissionsInput = vaultPermissionsInput
+
+// RemoveVaultPermissionsResponse is core of response from the graphql removeVaultPermissions
+type RemoveVaultPermissionsResponse = Vault
 
 const removeVaultPermissionsRequestString = `mutation removeVaultPermissions($removeVaultPermissionsInput: RemoveVaultPermissionsInput!){
   removeVaultPermissions(input: $removeVaultPermissionsInput)
@@ -285,14 +305,14 @@ const removeVaultPermissionsRequestString = `mutation removeVaultPermissions($re
 // RemovePermissions removes permissions from vault via gobo
 func (api *APIClient) RemovePermissions(vaultName string, permissions []string) error {
 	removeVaultPermissionsRequest := graphql.NewRequest(removeVaultPermissionsRequestString)
-	removeVaultPermissionsInput := VaultPermissionsInput{
+	removeVaultPermissionsInput := RemoveVaultPermissionsInput{
 		AffiliationName: api.Affiliation,
 		Permissions:     permissions,
 		VaultName:       vaultName,
 	}
 	removeVaultPermissionsRequest.Var("removeVaultPermissionsInput", removeVaultPermissionsInput)
 
-	var removeVaultPermissionsResponse VaultResponse
+	var removeVaultPermissionsResponse RemoveVaultPermissionsResponse
 	if err := api.RunGraphQlMutation(removeVaultPermissionsRequest, &removeVaultPermissionsResponse); err != nil {
 		return err
 	}

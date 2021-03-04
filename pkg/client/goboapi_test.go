@@ -36,7 +36,38 @@ func TestGoboApi(t *testing.T) {
 		}
 		var someResponse SomeResponse
 		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
-		err := api.RunGraphQl(graphQlRequest, &someResponse)
+		err := api.RunGraphQl(graphQlRequest, nil, &someResponse)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "testdata", someResponse.SomeDataStructure.SomeData[0])
+	})
+
+	t.Run("Should work on normal graphql query with vars input", func(t *testing.T) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+
+			response := `{"data": {"someDataStructure": {"someData": ["testdata"]}}}}`
+
+			data := []byte(response)
+			w.Write(data)
+		}))
+		defer ts.Close()
+
+		graphQlRequest := `query ($affiliation: String!, $testKey: String) {affiliations(name: $affiliation, test: $testKey) {{someDataStructure{someData}}`
+
+		type SomeResponse struct {
+			SomeDataStructure struct {
+				SomeData []string
+			}
+		}
+		var someResponse SomeResponse
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		vars := map[string]interface{}{
+			"affiliation": api.Affiliation,
+			"testKey":     "testValue",
+		}
+		err := api.RunGraphQl(graphQlRequest, vars, &someResponse)
 
 		assert.NoError(t, err)
 		assert.Equal(t, "testdata", someResponse.SomeDataStructure.SomeData[0])
@@ -71,7 +102,7 @@ func TestGoboApi(t *testing.T) {
 		}
 		var someResponse SomeResponse
 		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
-		err := api.RunGraphQl(graphQlRequest, &someResponse)
+		err := api.RunGraphQl(graphQlRequest, nil, &someResponse)
 
 		assert.Error(t, err)
 		expected := fmt.Sprintf("errors.message returned for first error; extensions.errorMessage returned for second error; extensions.errorMessage.errors.details.message returned for third error; twice; three times\nKorrelasjonsid: %s\n", api.Korrelasjonsid)
