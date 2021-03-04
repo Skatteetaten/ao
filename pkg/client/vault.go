@@ -262,17 +262,10 @@ const addVaultPermissionsRequestString = `mutation addVaultPermissions($addVault
   }
 }`
 
-// VaultPermissionsInput is input to the graphql addVaultPermissions and removeVAultPermissions interfaces
-type VaultPermissionsInput struct {
-	AffiliationName string   `json:"affiliationName"`
-	Permissions     []string `json:"permissions"`
-	VaultName       string   `json:"vaultName"`
-}
-
 // AddPermissions adds permissions to vault via gobo
 func (api *APIClient) AddPermissions(vaultName string, permissions []string) error {
 	addVaultPermissionsRequest := graphql.NewRequest(addVaultPermissionsRequestString)
-	addVaultPermissionsInput := VaultPermissionsInput{
+	addVaultPermissionsInput := AddVaultPermissionsInput{
 		AffiliationName: api.Affiliation,
 		Permissions:     permissions,
 		VaultName:       vaultName,
