@@ -8,12 +8,6 @@ import (
 	"github.com/skatteetaten/graphql"
 )
 
-// AuroraConfigClientGraphql is a an internal client facade for external aurora configuration API calls using graphql
-type AuroraConfigClientGraphql interface {
-	CreateAuroraConfigFile(file *auroraconfig.File) error
-	UpdateAuroraConfigFile(file *auroraconfig.File, eTag string) error
-}
-
 // AuroraConfigFileValidationResponse is core of response from the graphql "createAuroraConfigFile" and "updateAuroraConfigFile"
 type AuroraConfigFileValidationResponse struct {
 	Message string `json:"message"`

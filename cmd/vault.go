@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
-
 	"strings"
 
 	"encoding/json"
@@ -428,12 +427,34 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 
 // VaultAddPermissions is the entry point of the `vault add-permissions` cli command
 func VaultAddPermissions(cmd *cobra.Command, args []string) error {
-	return changeVaultPermissions(ADD, cmd, args)
+	if len(args) < 2 {
+		return cmd.Usage()
+	}
+	vaultName := args[0]
+	permissions := args[1:]
+
+	if err := DefaultAPIClient.AddPermissions(vaultName, permissions); err != nil {
+		return err
+	}
+
+	cmd.Printf("Vault %s updated\n", args[0])
+	return nil
 }
 
 // VaultRemovePermissions is the entry point of the `vault remove-permissions` cli command
 func VaultRemovePermissions(cmd *cobra.Command, args []string) error {
-	return changeVaultPermissions(DELETE, cmd, args)
+	if len(args) < 2 {
+		return cmd.Usage()
+	}
+	vaultName := args[0]
+	permissions := args[1:]
+
+	if err := DefaultAPIClient.RemovePermissions(vaultName, permissions); err != nil {
+		return err
+	}
+
+	cmd.Printf("Vault %s updated\n", args[0])
+	return nil
 }
 
 type permissionAction uint64
@@ -443,30 +464,6 @@ const (
 	ADD    permissionAction = 0
 	DELETE permissionAction = 1
 )
-
-func changeVaultPermissions(action permissionAction, cmd *cobra.Command, args []string) error {
-	if len(args) < 2 {
-		return cmd.Usage()
-	}
-
-	vault, err := DefaultAPIClient.GetVault(args[0])
-	if err != nil {
-		return err
-	}
-
-	vault.Permissions, err = handlePermissionAction(action, vault.Permissions, args[1:])
-	if err != nil {
-		return err
-	}
-
-	err = DefaultAPIClient.SaveVault(*vault)
-	if err != nil {
-		return err
-	}
-
-	cmd.Printf("Vault %s updated\n", args[0])
-	return nil
-}
 
 func handlePermissionAction(action permissionAction, existingGroups, groups []string) ([]string, error) {
 
