@@ -156,6 +156,41 @@ func mapCreateVaultInput(vault AuroraSecretVault, affiliation string) CreateVaul
 	return createVaultInput
 }
 
+type RenameVaultInput struct {
+	AffiliationName string `json:"affiliationName"`
+	VaultName       string `json:"vaultName"`
+	NewVaultName    string `json:"newVaultName"`
+}
+
+type RenameVaultResponse struct {
+	CreateVault Vault `json:"createVault"`
+}
+
+func (api *APIClient) RenameVault(oldVaultName, newVaultName string) error {
+
+	renameVaultMutation := `
+		mutation renameVault($renameVaultInput: RenameVaultInput!) {
+  			renameVault(input: $renameVaultInput) {
+				name
+			}
+		}
+	`
+	renameVaultInput := RenameVaultInput{
+		AffiliationName: api.Affiliation,
+		VaultName:       oldVaultName,
+		NewVaultName:    newVaultName,
+	}
+	renameVaultRequest := graphql.NewRequest(renameVaultMutation)
+	renameVaultRequest.Var("renameVaultInput", renameVaultInput)
+	var createVaultResponse CreateVaultResponse
+
+	if err := api.RunGraphQlMutation(renameVaultRequest, &createVaultResponse); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // SaveVault saves an aurora secret vault via API calls
 func (api *APIClient) SaveVault(vault AuroraSecretVault) error {
 	if len(vault.Permissions) == 0 {
