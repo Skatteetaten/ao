@@ -66,6 +66,13 @@ func (api *AffiliationsResponse) Secret(affiliation, vaultname, secretname strin
 	return nil
 }
 
+func NewSecret(name, base64content string) Secret {
+	return Secret{
+		Name:          name,
+		Base64Content: base64content,
+	}
+}
+
 func (secret *Secret) DecodedSecret() (string, error) {
 	data, err := base64.StdEncoding.DecodeString(secret.Base64Content)
 	if err != nil {

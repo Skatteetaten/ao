@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"strings"
@@ -153,17 +154,13 @@ func AddSecret(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	vault, err := DefaultAPIClient.GetVault(args[0])
+	secrets, err := collectSecretsNew(args[1])
 	if err != nil {
 		return err
 	}
 
-	err = collectSecrets(args[1], vault, false)
-	if err != nil {
-		return err
-	}
+	err = DefaultAPIClient.AddSecrets(args[0], secrets)
 
-	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
 	}
@@ -438,6 +435,46 @@ func aggregatePermissions(existingGroups, groups []string) ([]string, error) {
 		modifiedGroups = append(modifiedGroups, group)
 	}
 	return modifiedGroups, nil
+}
+
+func collectSecretsNew(filePath string) ([]client.Secret, error) {
+	root, err := os.Stat(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var files []os.FileInfo
+	if root.IsDir() {
+		files, err = ioutil.ReadDir(filePath)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		files = append(files, root)
+	}
+
+	var secrets []client.Secret
+
+	for _, f := range files {
+		if f.IsDir() {
+			continue
+		}
+
+		currentFilePath := filePath
+		if root.IsDir() {
+			currentFilePath = path.Join(filePath, f.Name())
+		}
+
+		content, err := readSecretFile(currentFilePath)
+		if err != nil {
+			return nil, err
+		}
+		secret := client.NewSecret(f.Name(), base64.StdEncoding.EncodeToString([]byte(content)))
+
+		secrets = append(secrets, secret)
+	}
+
+	return secrets, nil
 }
 
 func collectSecrets(filePath string, vault *client.AuroraSecretVault, includePermissions bool) error {
