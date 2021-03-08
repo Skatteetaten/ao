@@ -27,6 +27,18 @@ type (
 	}
 )
 
+const ErrorVaultNotFound = "Vault not found"
+const FoundNoSecretsForVault = "Found no secrets for vault"
+
+// NewAuroraSecretVault creates a new AuroraSecretVault
+func NewAuroraSecretVault(name string) *AuroraSecretVault {
+	return &AuroraSecretVault{
+		Name:        name,
+		Secrets:     make(Secrets),
+		Permissions: []string{},
+	}
+}
+
 const queryGetVaults = `
 	query getVaults ($affiliation: String!) {
 			 affiliations(name: $affiliation) {
@@ -47,16 +59,60 @@ const queryGetVaults = `
 		}
 `
 
-const ErrorVaultNotFound = "Vault not found"
-const FoundNoSecretsForVault = "Found no secrets for vault"
+func (api *APIClient) GetVaults() ([]Vault, error) {
 
-// NewAuroraSecretVault creates a new AuroraSecretVault
-func NewAuroraSecretVault(name string) *AuroraSecretVault {
-	return &AuroraSecretVault{
-		Name:        name,
-		Secrets:     make(Secrets),
-		Permissions: []string{},
+	var respData AffiliationsResponse
+
+	vars := map[string]interface{}{
+		"affiliation": api.Affiliation,
 	}
+
+	if err := api.RunGraphQl(queryGetVaults, vars, &respData); err != nil {
+		return nil, errors.Wrap(err, "Failed to get vaults.")
+	}
+
+	return respData.Vaults(api.Affiliation), nil
+}
+
+const queryGetSecretQuery = `
+	query getVaults ($affiliation: String!, $vaultname: [String!]!, $secretname: [String!]!) {
+		affiliations(name: $affiliation) {
+			edges {
+				node {
+					name
+					vaults(names: $vaultname){
+						name
+						secrets(names: $secretname){
+							name
+							base64Content
+						}
+					}
+				}
+			}
+		}
+	}
+`
+
+func (api *APIClient) GetSecret(vaultname, secretname string) (*Secret, error) {
+
+	var respData AffiliationsResponse
+
+	vars := map[string]interface{}{
+		"affiliation": api.Affiliation,
+		"vaultname":   []string{vaultname},
+		"secretname":  []string{secretname},
+	}
+
+	if err := api.RunGraphQl(queryGetSecretQuery, vars, &respData); err != nil {
+		return nil, errors.Wrap(err, "Failed to get secret")
+	}
+
+	secret := respData.Secret(api.Affiliation, vaultname, secretname)
+	if secret == nil {
+		return nil, errors.Errorf("Failed to find secret %s", secretname)
+	}
+
+	return secret, nil
 }
 
 // GetVault gets an aurora secret vault via API calls
@@ -79,21 +135,6 @@ func (api *APIClient) GetVault(vaultName string) (*AuroraSecretVault, error) {
 	}
 
 	return &vault, nil
-}
-
-func (api *APIClient) GetVaults() ([]Vault, error) {
-
-	var respData AffiliationsResponse
-
-	vars := map[string]interface{}{
-		"affiliation": api.Affiliation,
-	}
-
-	if err := api.RunGraphQl(queryGetVaults, vars, &respData); err != nil {
-		return nil, errors.Wrap(err, "Failed to get vaults.")
-	}
-
-	return respData.Vaults(api.Affiliation), nil
 }
 
 type CreateVaultInput struct {

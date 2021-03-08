@@ -134,16 +134,16 @@ func GetSecret(cmd *cobra.Command, args []string) error {
 	}
 	vaultName, secretName := split[0], split[1]
 
-	vault, err := DefaultAPIClient.GetVault(vaultName)
+	secret, err := DefaultAPIClient.GetSecret(vaultName, secretName)
+	if err != nil {
+		return err
+	}
+	decodedSecret, err := secret.DecodedSecret()
 	if err != nil {
 		return err
 	}
 
-	secret, err := vault.Secrets.GetSecret(secretName)
-	if err != nil {
-		return err
-	}
-	cmd.Printf("%s", secret)
+	cmd.Printf("%s", decodedSecret)
 	return nil
 }
 
