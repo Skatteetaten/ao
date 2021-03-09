@@ -441,7 +441,6 @@ const addVaultSecretsRequestString = `mutation addVaultSecrets ($addVaultSecrets
     name
     secrets {
 		name
-		base64Content
 	}
   }
 }`
