@@ -40,6 +40,10 @@ func NewVault(name string) *Vault {
 	}
 }
 
+func (vault *Vault) AddSecret(secret Secret) {
+	vault.Secrets = append(vault.Secrets, secret)
+}
+
 func (api *AffiliationsResponse) Vaults(affiliation string) []Vault {
 	for _, edge := range api.Affiliations.Edges {
 		if edge.Node.Name == affiliation {

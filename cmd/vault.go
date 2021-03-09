@@ -154,7 +154,7 @@ func AddSecret(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	secrets, err := collectSecretsNew(args[1])
+	secrets, err := collectSecrets(args[1])
 	if err != nil {
 		return err
 	}
@@ -212,8 +212,8 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	vault := client.NewAuroraSecretVault(args[0])
-	err := collectSecrets(args[1], vault, true)
+	vault := client.NewVault(args[0])
+	err := collectVaultSecrets(args[1], vault, true)
 	if err != nil {
 		return err
 	}
@@ -243,7 +243,7 @@ func createVaultHasGroupArguments(args []string) bool {
 	return len(args) > 2
 }
 
-func noPermissionsSpecifiedInCreateVault(args []string, vault *client.AuroraSecretVault) bool {
+func noPermissionsSpecifiedInCreateVault(args []string, vault *client.Vault) bool {
 	return len(args) < 3 && len(vault.Permissions) == 0
 }
 
@@ -270,36 +270,6 @@ func EditSecret(cmd *cobra.Command, args []string) error {
 
 	secretEditor := editor.NewEditor(func(modifiedContent string) error {
 		return DefaultAPIClient.UpdateSecret(vaultName, secretName, modifiedContent)
-	})
-
-	err = secretEditor.Edit(contentToEdit, args[0])
-	if err != nil {
-		return err
-	}
-
-	cmd.Printf("Secret %s in vault %s edited\n", secretName, vaultName)
-	return nil
-}
-
-// EditSecret is the entry point of the `vault edit-secret` cli command
-func EditSecretOLD(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 {
-		return cmd.Usage()
-	}
-
-	split := strings.Split(args[0], "/")
-	if len(split) != 2 {
-		return errNotValidSecretArgument
-	}
-
-	vaultName, secretName := split[0], split[1]
-	contentToEdit, eTag, err := DefaultAPIClient.GetSecretFile(vaultName, secretName)
-	if err != nil {
-		return err
-	}
-
-	secretEditor := editor.NewEditor(func(modifiedContent string) error {
-		return DefaultAPIClient.UpdateSecretFile(vaultName, secretName, eTag, []byte(modifiedContent))
 	})
 
 	err = secretEditor.Edit(contentToEdit, args[0])
@@ -448,7 +418,7 @@ func aggregatePermissions(existingGroups, groups []string) ([]string, error) {
 	return modifiedGroups, nil
 }
 
-func collectSecretsNew(filePath string) ([]client.Secret, error) {
+func collectSecrets(filePath string) ([]client.Secret, error) {
 	root, err := os.Stat(filePath)
 	if err != nil {
 		return nil, err
@@ -488,7 +458,7 @@ func collectSecretsNew(filePath string) ([]client.Secret, error) {
 	return secrets, nil
 }
 
-func collectSecrets(filePath string, vault *client.AuroraSecretVault, includePermissions bool) error {
+func collectVaultSecrets(filePath string, vault *client.Vault, includePermissions bool) error {
 	root, err := os.Stat(filePath)
 	if err != nil {
 		return err
@@ -521,11 +491,12 @@ func collectSecrets(filePath string, vault *client.AuroraSecretVault, includePer
 			}
 			vault.Permissions = groups
 		} else {
-			secret, err := readSecretFile(currentFilePath)
+			content, err := readSecretFile(currentFilePath)
 			if err != nil {
 				return err
 			}
-			vault.Secrets.AddSecret(f.Name(), secret)
+			secret := client.NewSecret(f.Name(), base64.StdEncoding.EncodeToString([]byte(content)))
+			vault.AddSecret(secret)
 		}
 	}
 
