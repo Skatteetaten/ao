@@ -72,10 +72,7 @@ func TestAPIClient_CreateVault(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		secret := Secret{
-			Name:          "latest.properties",
-			Base64Content: "YWJjMTIz",
-		}
+		secret := NewSecret("latest.properties", "YWJjMTIz")
 		newVault := Vault{
 			Name:        "test-vault",
 			Permissions: []string{"utv"},
@@ -97,10 +94,7 @@ func TestAPIClient_CreateVault(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		secret := Secret{
-			Name:          "latest.properties",
-			Base64Content: "YWJjMTIz",
-		}
+		secret := NewSecret("latest.properties", "YWJjMTIz")
 		newVault := NewVault("my_test_vault")
 		newVault.Secrets = []Secret{secret}
 		newVault.Permissions = []string{"utv_permission"}
@@ -118,10 +112,7 @@ func TestAPIClient_CreateVault(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		secret := Secret{
-			Name:          "latest.properties",
-			Base64Content: "YWJjMTIz",
-		}
+		secret := NewSecret("latest.properties", "YWJjMTIz")
 		newVault := NewVault("my_test_vault")
 		newVault.Secrets = []Secret{secret}
 		newVault.Permissions = []string{"utv_permission"}
