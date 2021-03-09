@@ -54,7 +54,7 @@ func TestGoboApi(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		graphQlRequest := `query ($affiliation: String!, $testKey: String) {affiliations(name: $affiliation, test: $testKey) {{someDataStructure{someData}}`
+		graphQlRequest := `query ($affiliation: String!, $testKey: String) {affiliations(names: [$affiliation], test: $testKey) {{someDataStructure{someData}}`
 
 		type SomeResponse struct {
 			SomeDataStructure struct {

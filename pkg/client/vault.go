@@ -10,7 +10,7 @@ const FoundNoSecretsForVault = "Found no secrets for vault"
 
 const queryGetVaults = `
 	query getVaults ($affiliation: String!) {
-			 affiliations(name: $affiliation) {
+			 affiliations(names: [$affiliation]) {
     			edges {
       				node {
         				name
@@ -45,7 +45,7 @@ func (api *APIClient) GetVaults() ([]Vault, error) {
 
 const queryGetSecretQuery = `
 	query getVaults ($affiliation: String!, $vaultname: [String!]!, $secretname: [String!]!) {
-		affiliations(name: $affiliation) {
+		affiliations(names: [$affiliation]) {
 			edges {
 				node {
 					name
