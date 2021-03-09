@@ -307,10 +307,6 @@ func DeleteSecret(cmd *cobra.Command, args []string) error {
 	}
 
 	vaultName, secret := split[0], split[1]
-	vault, err := DefaultAPIClient.GetVault(vaultName)
-	if err != nil {
-		return err
-	}
 
 	message := fmt.Sprintf("Do you want to delete secret %s in affiliation %s?", args[0], AO.Affiliation)
 	shouldDelete := prompt.Confirm(message, false)
@@ -318,9 +314,8 @@ func DeleteSecret(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	vault.Secrets.RemoveSecret(secret)
-
-	err = DefaultAPIClient.SaveVault(*vault)
+	secretNames := []string{secret}
+	err := DefaultAPIClient.RemoveSecrets(vaultName, secretNames)
 	if err != nil {
 		return err
 	}

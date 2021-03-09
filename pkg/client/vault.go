@@ -463,6 +463,43 @@ func (api *APIClient) AddSecrets(vaultName string, secrets []Secret) error {
 	return nil
 }
 
+type RemoveVaultSecretsInput struct {
+	AffiliationName string   `json:"affiliationName"`
+	SecretNames     []string `json:"secretNames"`
+	VaultName       string   `json:"vaultName"`
+}
+
+// RemoveVaultSecretsResponse is core of response from graphql removeVaultSecrets
+type RemoveVaultSecretsResponse = Vault
+
+const removeVaultSecretsRequestString = `mutation removeVaultSecrets ($removeVaultSecretsInput: RemoveVaultSecretsInput!){
+  removeVaultSecrets(input: $removeVaultSecretsInput)
+  {
+    name
+    secrets {
+		name
+	}
+  }
+}`
+
+// AddPermissions adds permissions to vault via gobo
+func (api *APIClient) RemoveSecrets(vaultName string, secretNames []string) error {
+	removeVaultSecretsRequest := graphql.NewRequest(removeVaultSecretsRequestString)
+	removeVaultSecretsInput := RemoveVaultSecretsInput{
+		AffiliationName: api.Affiliation,
+		SecretNames:     secretNames,
+		VaultName:       vaultName,
+	}
+	removeVaultSecretsRequest.Var("removeVaultSecretsInput", removeVaultSecretsInput)
+
+	var removeVaultSecretsResponse RemoveVaultSecretsResponse
+	if err := api.RunGraphQlMutation(removeVaultSecretsRequest, &removeVaultSecretsResponse); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetSecret gets a secret by name
 func (s Secrets) GetSecret(name string) (string, error) {
 	secret, found := s[name]

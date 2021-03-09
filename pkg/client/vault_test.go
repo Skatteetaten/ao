@@ -369,3 +369,37 @@ func TestAPIClient_AddSecrets(t *testing.T) {
 		assert.Contains(t, err.Error(), api.Korrelasjonsid)
 	})
 }
+
+func TestAPIClient_RemoveSecrets(t *testing.T) {
+	t.Run("Should remove a secret", func(t *testing.T) {
+		response := []byte(`{"data":{"removeVaultSecrets":{"name":"my_test_vault","secrets":[{"name":"latest.properties"}]}}}`)
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		secretNames := []string{"secret.txt"}
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.RemoveSecrets("my_test_vault", secretNames)
+		assert.NoError(t, err)
+	})
+	t.Run("Should fail to remove a secret because it does not exist", func(t *testing.T) {
+		response := []byte(`{"errors":[{"message":"Secret [secret.txt] does not exist on vault with vault name my_test_vault.","locations":[{"line":2,"column":3}],"path":["removeVaultSecrets"],"extensions":{"errorMessage":"Secret [secret.txt] does not exist on vault with vault name my_test_vault."}}]}`)
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		secretNames := []string{"secret.txt"}
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.RemoveSecrets("my_test_vault", secretNames)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Secret [secret.txt] does not exist on vault with vault name my_test_vault")
+		assert.Contains(t, err.Error(), api.Korrelasjonsid)
+	})
+}
