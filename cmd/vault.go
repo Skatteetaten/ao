@@ -259,6 +259,40 @@ func EditSecret(cmd *cobra.Command, args []string) error {
 	}
 
 	vaultName, secretName := split[0], split[1]
+	secret, err := DefaultAPIClient.GetSecret(vaultName, secretName)
+	if err != nil {
+		return err
+	}
+	contentToEdit, err := secret.DecodedSecret()
+	if err != nil {
+		return err
+	}
+
+	secretEditor := editor.NewEditor(func(modifiedContent string) error {
+		return DefaultAPIClient.UpdateSecret(vaultName, secretName, modifiedContent)
+	})
+
+	err = secretEditor.Edit(contentToEdit, args[0])
+	if err != nil {
+		return err
+	}
+
+	cmd.Printf("Secret %s in vault %s edited\n", secretName, vaultName)
+	return nil
+}
+
+// EditSecret is the entry point of the `vault edit-secret` cli command
+func EditSecretOLD(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return cmd.Usage()
+	}
+
+	split := strings.Split(args[0], "/")
+	if len(split) != 2 {
+		return errNotValidSecretArgument
+	}
+
+	vaultName, secretName := split[0], split[1]
 	contentToEdit, eTag, err := DefaultAPIClient.GetSecretFile(vaultName, secretName)
 	if err != nil {
 		return err

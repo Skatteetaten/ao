@@ -435,3 +435,20 @@ func TestAPIClient_RenameSecret(t *testing.T) {
 		assert.Contains(t, err.Error(), api.Korrelasjonsid)
 	})
 }
+
+func TestAPIClient_UpdateSecret(t *testing.T) {
+	t.Run("Should update a secret", func(t *testing.T) {
+		response := []byte(`{"data":{"updateVaultSecret":{"name":"my_test_vault","secrets":[{"name":"secret.txt"}]}}}`)
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.UpdateSecret("my_test_vault", "secret.txt", "newcontent")
+		assert.NoError(t, err)
+	})
+}

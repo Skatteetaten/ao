@@ -531,8 +531,47 @@ func (api *APIClient) RenameSecret(vaultName, oldSecretName, newSecretName strin
 	}
 	renameVaultSecretRequest.Var("renameVaultSecretInput", renameVaultSecretInput)
 
-	var removeVaultSecretsResponse RemoveVaultSecretsResponse
+	var removeVaultSecretsResponse RenameVaultSecretResponse
 	if err := api.RunGraphQlMutation(renameVaultSecretRequest, &removeVaultSecretsResponse); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type UpdateVaultSecretInput struct {
+	AffiliationName string `json:"affiliationName"`
+	Base64Content   string `json:"base64Content"`
+	SecretName      string `json:"secretName"`
+	VaultName       string `json:"vaultName"`
+}
+
+// UpdateVaultSecretResponse is core of response from graphql updateVaultSecret
+type UpdateVaultSecretResponse = Vault
+
+const updateVaultSecretRequestString = `mutation updateVaultSecret ($updateVaultSecretInput: UpdateVaultSecretInput!){
+  updateVaultSecret(input: $updateVaultSecretInput)
+  {
+    name
+    secrets {
+		name
+	}
+  }
+}`
+
+// UpdateSecret updates a secret in vault via gobo
+func (api *APIClient) UpdateSecret(vaultName, secretName, modifiedContent string) error {
+	updateVaultSecretRequest := graphql.NewRequest(updateVaultSecretRequestString)
+	updateVaultSecretInput := UpdateVaultSecretInput{
+		AffiliationName: api.Affiliation,
+		Base64Content:   base64.StdEncoding.EncodeToString([]byte(modifiedContent)),
+		SecretName:      secretName,
+		VaultName:       vaultName,
+	}
+	updateVaultSecretRequest.Var("updateVaultSecretInput", updateVaultSecretInput)
+
+	var updateVaultSecretsResponse UpdateVaultSecretResponse
+	if err := api.RunGraphQlMutation(updateVaultSecretRequest, &updateVaultSecretsResponse); err != nil {
 		return err
 	}
 
