@@ -174,7 +174,6 @@ func RenameSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
 		return cmd.Usage()
 	}
-
 	split := strings.Split(args[0], "/")
 	if len(split) != 2 {
 		return errNotValidSecretArgument
@@ -182,25 +181,8 @@ func RenameSecret(cmd *cobra.Command, args []string) error {
 
 	newSecretName := args[1]
 	vaultName, secretName := split[0], split[1]
-	vault, err := DefaultAPIClient.GetVault(vaultName)
-	if err != nil {
-		return err
-	}
 
-	_, err = vault.Secrets.GetSecret(secretName)
-	if err != nil {
-		return err
-	}
-
-	_, ok := vault.Secrets[newSecretName]
-	if ok {
-		return errors.Errorf("Secret %s already exists\n", newSecretName)
-	}
-
-	vault.Secrets[newSecretName] = vault.Secrets[secretName]
-	vault.Secrets.RemoveSecret(secretName)
-
-	err = DefaultAPIClient.SaveVault(*vault)
+	err := DefaultAPIClient.RenameSecret(vaultName, secretName, newSecretName)
 	if err != nil {
 		return err
 	}

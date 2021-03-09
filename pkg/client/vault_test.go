@@ -403,3 +403,35 @@ func TestAPIClient_RemoveSecrets(t *testing.T) {
 		assert.Contains(t, err.Error(), api.Korrelasjonsid)
 	})
 }
+
+func TestAPIClient_RenameSecret(t *testing.T) {
+	t.Run("Should rename a secret", func(t *testing.T) {
+		response := []byte(`{"data":{"renameVaultSecret":{"name":"my_test_vault","secrets":[{"name":"latest.properties"},{"name":"newsecret.txt"}]}}}`)
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.RenameSecret("my_test_vault", "secret.txt", "newsecret.txt")
+		assert.NoError(t, err)
+	})
+	t.Run("Should fail to rename a secret because a secret with new name exists", func(t *testing.T) {
+		response := []byte(`{"errors":[{"message":"The secret newsecret.txt already exists for the vault with name my_test_vault.","locations":[{"line":2,"column":3}],"path":["renameVaultSecret"],"extensions":{"errorMessage":"The secret newsecret.txt already exists for the vault with name my_test_vault."}}]}`)
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(response)
+		}))
+		defer ts.Close()
+
+		api := NewAPIClientDefaultRef("", ts.URL, "test", affiliation, "")
+		err := api.RenameSecret("my_test_vault", "secret.txt", "newsecret.txt")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "The secret newsecret.txt already exists for the vault with name my_test_vault.")
+		assert.Contains(t, err.Error(), api.Korrelasjonsid)
+	})
+}

@@ -445,7 +445,7 @@ const addVaultSecretsRequestString = `mutation addVaultSecrets ($addVaultSecrets
   }
 }`
 
-// AddPermissions adds permissions to vault via gobo
+// AddSecrets adds secrets to vault via gobo
 func (api *APIClient) AddSecrets(vaultName string, secrets []Secret) error {
 	addVaultSecretsRequest := graphql.NewRequest(addVaultSecretsRequestString)
 	addVaultSecretsInput := AddVaultSecretsInput{
@@ -482,7 +482,7 @@ const removeVaultSecretsRequestString = `mutation removeVaultSecrets ($removeVau
   }
 }`
 
-// AddPermissions adds permissions to vault via gobo
+// RemoveSecrets removes secrets from vault via gobo
 func (api *APIClient) RemoveSecrets(vaultName string, secretNames []string) error {
 	removeVaultSecretsRequest := graphql.NewRequest(removeVaultSecretsRequestString)
 	removeVaultSecretsInput := RemoveVaultSecretsInput{
@@ -494,6 +494,45 @@ func (api *APIClient) RemoveSecrets(vaultName string, secretNames []string) erro
 
 	var removeVaultSecretsResponse RemoveVaultSecretsResponse
 	if err := api.RunGraphQlMutation(removeVaultSecretsRequest, &removeVaultSecretsResponse); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type RenameVaultSecretInput struct {
+	AffiliationName string `json:"affiliationName"`
+	NewSecretName   string `json:"newSecretName"`
+	SecretName      string `json:"secretName"`
+	VaultName       string `json:"vaultName"`
+}
+
+// RenameVaultSecretResponse is core of response from graphql renameVaultSecret
+type RenameVaultSecretResponse = Vault
+
+const renameVaultSecretRequestString = `mutation renameVaultSecret ($renameVaultSecretInput: RenameVaultSecretInput!){
+  renameVaultSecret(input: $renameVaultSecretInput)
+  {
+    name
+    secrets {
+		name
+	}
+  }
+}`
+
+// RenameSecret renames a secret in vault via gobo
+func (api *APIClient) RenameSecret(vaultName, oldSecretName, newSecretName string) error {
+	renameVaultSecretRequest := graphql.NewRequest(renameVaultSecretRequestString)
+	renameVaultSecretInput := RenameVaultSecretInput{
+		AffiliationName: api.Affiliation,
+		NewSecretName:   newSecretName,
+		SecretName:      oldSecretName,
+		VaultName:       vaultName,
+	}
+	renameVaultSecretRequest.Var("renameVaultSecretInput", renameVaultSecretInput)
+
+	var removeVaultSecretsResponse RemoveVaultSecretsResponse
+	if err := api.RunGraphQlMutation(renameVaultSecretRequest, &removeVaultSecretsResponse); err != nil {
 		return err
 	}
 
