@@ -21,25 +21,28 @@ func Test_collectSecrets(t *testing.T) {
 	secret := path.Join(vaultTestFolder, secretFile)
 
 	t.Run("should add secret latest.properties from given file to vault 'test'", func(t *testing.T) {
-		vault := client.NewAuroraSecretVault("test")
+		vault := client.NewVault("test")
 
-		err := collectSecrets(secret, vault, true)
+		err := collectVaultSecrets(secret, vault, true)
 		assert.NoError(t, err)
-
-		secret, err := vault.Secrets.GetSecret(secretFile)
+		assert.True(t, len(vault.Secrets) == 1)
+		secret := vault.Secrets[0]
+		decodedSecret, err := secret.DecodedSecret()
 		assert.NoError(t, err)
-		assert.Equal(t, "FOO=BAR\nBAZ=FOOBAR", secret)
+		assert.Equal(t, "FOO=BAR\nBAZ=FOOBAR", decodedSecret)
 	})
 
 	t.Run("should add secret and permission from given folder to vault 'test'", func(t *testing.T) {
-		vault := client.NewAuroraSecretVault("test")
+		vault := client.NewVault("test")
 
-		err := collectSecrets(vaultTestFolder, vault, true)
+		err := collectVaultSecrets(vaultTestFolder, vault, true)
 		assert.NoError(t, err)
 
-		secret, err := vault.Secrets.GetSecret(secretFile)
+		assert.True(t, len(vault.Secrets) == 1)
+		secret := vault.Secrets[0]
+		decodedSecret, err := secret.DecodedSecret()
 		assert.NoError(t, err)
-		assert.Equal(t, "FOO=BAR\nBAZ=FOOBAR", secret)
+		assert.Equal(t, "FOO=BAR\nBAZ=FOOBAR", decodedSecret)
 		assert.Equal(t, []string{"test_group"}, vault.Permissions)
 	})
 }
