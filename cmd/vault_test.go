@@ -21,25 +21,28 @@ func Test_collectSecrets(t *testing.T) {
 	secret := path.Join(vaultTestFolder, secretFile)
 
 	t.Run("should add secret latest.properties from given file to vault 'test'", func(t *testing.T) {
-		vault := client.NewAuroraSecretVault("test")
+		vault := client.NewVault("test")
 
-		err := collectSecrets(secret, vault, true)
+		err := collectVaultSecrets(secret, vault, true)
 		assert.NoError(t, err)
-
-		secret, err := vault.Secrets.GetSecret(secretFile)
+		assert.True(t, len(vault.Secrets) == 1)
+		secret := vault.Secrets[0]
+		decodedSecret, err := secret.DecodedSecret()
 		assert.NoError(t, err)
-		assert.Equal(t, "FOO=BAR\nBAZ=FOOBAR", secret)
+		assert.Equal(t, "FOO=BAR\nBAZ=FOOBAR", decodedSecret)
 	})
 
 	t.Run("should add secret and permission from given folder to vault 'test'", func(t *testing.T) {
-		vault := client.NewAuroraSecretVault("test")
+		vault := client.NewVault("test")
 
-		err := collectSecrets(vaultTestFolder, vault, true)
+		err := collectVaultSecrets(vaultTestFolder, vault, true)
 		assert.NoError(t, err)
 
-		secret, err := vault.Secrets.GetSecret(secretFile)
+		assert.True(t, len(vault.Secrets) == 1)
+		secret := vault.Secrets[0]
+		decodedSecret, err := secret.DecodedSecret()
 		assert.NoError(t, err)
-		assert.Equal(t, "FOO=BAR\nBAZ=FOOBAR", secret)
+		assert.Equal(t, "FOO=BAR\nBAZ=FOOBAR", decodedSecret)
 		assert.Equal(t, []string{"test_group"}, vault.Permissions)
 	})
 }
@@ -75,9 +78,8 @@ func Test_readPermissionFile(t *testing.T) {
 	})
 }
 
-func Test_handlePermissionAction(t *testing.T) {
+func Test_aggregatePermissions(t *testing.T) {
 	type args struct {
-		action         permissionAction
 		existingGroups []string
 		groups         []string
 	}
@@ -90,7 +92,6 @@ func Test_handlePermissionAction(t *testing.T) {
 		{
 			name: "Should return an error when trying to add an group that already exists",
 			args: args{
-				action:         ADD,
 				existingGroups: []string{"devops"},
 				groups:         []string{"devops"},
 			},
@@ -100,43 +101,22 @@ func Test_handlePermissionAction(t *testing.T) {
 		{
 			name: "Should add a new group to existingGroups",
 			args: args{
-				action:         ADD,
 				existingGroups: []string{},
 				groups:         []string{"devops"},
 			},
 			want:    []string{"devops"},
 			wantErr: false,
 		},
-		{
-			name: "Should return an error when trying to delete a group that does not exist",
-			args: args{
-				action:         DELETE,
-				existingGroups: []string{"devops"},
-				groups:         []string{"users"},
-			},
-			want:    nil,
-			wantErr: true,
-		},
-		{
-			name: "Should delete a group fom existingGroups",
-			args: args{
-				action:         DELETE,
-				existingGroups: []string{"devops"},
-				groups:         []string{"devops"},
-			},
-			want:    []string{},
-			wantErr: false,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := handlePermissionAction(tt.args.action, tt.args.existingGroups, tt.args.groups)
+			got, err := aggregatePermissions(tt.args.existingGroups, tt.args.groups)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("handlePermissionAction() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("aggregatePermissions() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("handlePermissionAction() = %v, want %v", got, tt.want)
+				t.Errorf("aggregatePermissions() = %v, want %v", got, tt.want)
 			}
 		})
 	}

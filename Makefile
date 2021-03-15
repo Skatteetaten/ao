@@ -118,7 +118,7 @@ dirty-check:
 ifneq (,$(findstring dirty,$(VERSION)))
 	@echo "--- DEBUG START (Detected dirty version)"
 	@/bin/sh -c "git status"
-	@/bin/sh -c "git diff"
+	@/bin/sh -c "git --no-pager diff"
 	@echo "--- DEBUG END"
 endif
 

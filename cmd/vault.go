@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/sirupsen/logrus"
-
 	"strings"
 
 	"encoding/json"
@@ -135,16 +135,16 @@ func GetSecret(cmd *cobra.Command, args []string) error {
 	}
 	vaultName, secretName := split[0], split[1]
 
-	vault, err := DefaultAPIClient.GetVault(vaultName)
+	secret, err := DefaultAPIClient.GetSecret(vaultName, secretName)
+	if err != nil {
+		return err
+	}
+	decodedSecret, err := secret.DecodedSecret()
 	if err != nil {
 		return err
 	}
 
-	secret, err := vault.Secrets.GetSecret(secretName)
-	if err != nil {
-		return err
-	}
-	cmd.Printf("%s", secret)
+	cmd.Printf("%s", decodedSecret)
 	return nil
 }
 
@@ -154,17 +154,13 @@ func AddSecret(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	vault, err := DefaultAPIClient.GetVault(args[0])
+	secrets, err := collectSecrets(args[1])
 	if err != nil {
 		return err
 	}
 
-	err = collectSecrets(args[1], vault, false)
-	if err != nil {
-		return err
-	}
+	err = DefaultAPIClient.AddSecrets(args[0], secrets)
 
-	err = DefaultAPIClient.SaveVault(*vault)
 	if err != nil {
 		return err
 	}
@@ -178,7 +174,6 @@ func RenameSecret(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
 		return cmd.Usage()
 	}
-
 	split := strings.Split(args[0], "/")
 	if len(split) != 2 {
 		return errNotValidSecretArgument
@@ -186,25 +181,8 @@ func RenameSecret(cmd *cobra.Command, args []string) error {
 
 	newSecretName := args[1]
 	vaultName, secretName := split[0], split[1]
-	vault, err := DefaultAPIClient.GetVault(vaultName)
-	if err != nil {
-		return err
-	}
 
-	_, err = vault.Secrets.GetSecret(secretName)
-	if err != nil {
-		return err
-	}
-
-	_, ok := vault.Secrets[newSecretName]
-	if ok {
-		return errors.Errorf("Secret %s already exists\n", newSecretName)
-	}
-
-	vault.Secrets[newSecretName] = vault.Secrets[secretName]
-	vault.Secrets.RemoveSecret(secretName)
-
-	err = DefaultAPIClient.SaveVault(*vault)
+	err := DefaultAPIClient.RenameSecret(vaultName, secretName, newSecretName)
 	if err != nil {
 		return err
 	}
@@ -219,23 +197,7 @@ func RenameVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	if err := verifyVaultDoesNotExist(args[1]); err != nil {
-		return errors.Errorf("Can't rename vault. %s already exists", args[1])
-	}
-
-	vault, err := DefaultAPIClient.GetVault(args[0])
-	if err != nil {
-		return err
-	}
-
-	vault.Name = args[1]
-
-	err = DefaultAPIClient.SaveVault(*vault)
-	if err != nil {
-		return err
-	}
-
-	err = DefaultAPIClient.DeleteVault(args[0])
+	err := DefaultAPIClient.RenameVault(args[0], args[1])
 	if err != nil {
 		return err
 	}
@@ -250,13 +212,8 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	if err := verifyVaultDoesNotExist(args[0]); err != nil {
-		return err
-	}
-
-	vault := client.NewAuroraSecretVault(args[0])
-
-	err := collectSecrets(args[1], vault, true)
+	vault := client.NewVault(args[0])
+	err := collectVaultSecrets(args[1], vault, true)
 	if err != nil {
 		return err
 	}
@@ -267,13 +224,13 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 
 	if createVaultHasGroupArguments(args) {
 		logrus.Debugf("Command line permission groups: %v\n", args[2:])
-		vault.Permissions, err = handlePermissionAction(ADD, vault.Permissions, args[2:])
+		vault.Permissions, err = aggregatePermissions(vault.Permissions, args[2:])
 		if err != nil {
 			return err
 		}
 	}
 
-	err = DefaultAPIClient.SaveVault(*vault)
+	err = DefaultAPIClient.CreateVault(*vault)
 	if err != nil {
 		return err
 	}
@@ -282,22 +239,11 @@ func CreateVault(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func verifyVaultDoesNotExist(vaultname string) error {
-	v, err := DefaultAPIClient.GetVault(vaultname)
-	if err != nil && err.Error() != client.ErrorVaultNotFound {
-		return errors.Errorf("error when checking existence of vault %s: %v", vaultname, err)
-	}
-	if v != nil {
-		return errors.Errorf("vault %s already exists", vaultname)
-	}
-	return nil
-}
-
 func createVaultHasGroupArguments(args []string) bool {
 	return len(args) > 2
 }
 
-func noPermissionsSpecifiedInCreateVault(args []string, vault *client.AuroraSecretVault) bool {
+func noPermissionsSpecifiedInCreateVault(args []string, vault *client.Vault) bool {
 	return len(args) < 3 && len(vault.Permissions) == 0
 }
 
@@ -313,13 +259,17 @@ func EditSecret(cmd *cobra.Command, args []string) error {
 	}
 
 	vaultName, secretName := split[0], split[1]
-	contentToEdit, eTag, err := DefaultAPIClient.GetSecretFile(vaultName, secretName)
+	secret, err := DefaultAPIClient.GetSecret(vaultName, secretName)
+	if err != nil {
+		return err
+	}
+	contentToEdit, err := secret.DecodedSecret()
 	if err != nil {
 		return err
 	}
 
 	secretEditor := editor.NewEditor(func(modifiedContent string) error {
-		return DefaultAPIClient.UpdateSecretFile(vaultName, secretName, eTag, []byte(modifiedContent))
+		return DefaultAPIClient.UpdateSecret(vaultName, secretName, modifiedContent)
 	})
 
 	err = secretEditor.Edit(contentToEdit, args[0])
@@ -343,10 +293,6 @@ func DeleteSecret(cmd *cobra.Command, args []string) error {
 	}
 
 	vaultName, secret := split[0], split[1]
-	vault, err := DefaultAPIClient.GetVault(vaultName)
-	if err != nil {
-		return err
-	}
 
 	message := fmt.Sprintf("Do you want to delete secret %s in affiliation %s?", args[0], AO.Affiliation)
 	shouldDelete := prompt.Confirm(message, false)
@@ -354,9 +300,8 @@ func DeleteSecret(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	vault.Secrets.RemoveSecret(secret)
-
-	err = DefaultAPIClient.SaveVault(*vault)
+	secretNames := []string{secret}
+	err := DefaultAPIClient.RemoveSecrets(vaultName, secretNames)
 	if err != nil {
 		return err
 	}
@@ -402,8 +347,8 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 	if flagAsList {
 		header = "VAULT/SECRET"
 		for _, vault := range vaults {
-			for secretName := range vault.Secrets {
-				name := vault.Name + "/" + secretName
+			for _, secret := range vault.Secrets {
+				name := vault.Name + "/" + secret.Name
 				rows = append(rows, name)
 			}
 		}
@@ -428,39 +373,13 @@ func ListVaults(cmd *cobra.Command, args []string) error {
 
 // VaultAddPermissions is the entry point of the `vault add-permissions` cli command
 func VaultAddPermissions(cmd *cobra.Command, args []string) error {
-	return changeVaultPermissions(ADD, cmd, args)
-}
-
-// VaultRemovePermissions is the entry point of the `vault remove-permissions` cli command
-func VaultRemovePermissions(cmd *cobra.Command, args []string) error {
-	return changeVaultPermissions(DELETE, cmd, args)
-}
-
-type permissionAction uint64
-
-// ADD and DELETE holds values for permission operations
-const (
-	ADD    permissionAction = 0
-	DELETE permissionAction = 1
-)
-
-func changeVaultPermissions(action permissionAction, cmd *cobra.Command, args []string) error {
 	if len(args) < 2 {
 		return cmd.Usage()
 	}
+	vaultName := args[0]
+	permissions := args[1:]
 
-	vault, err := DefaultAPIClient.GetVault(args[0])
-	if err != nil {
-		return err
-	}
-
-	vault.Permissions, err = handlePermissionAction(action, vault.Permissions, args[1:])
-	if err != nil {
-		return err
-	}
-
-	err = DefaultAPIClient.SaveVault(*vault)
-	if err != nil {
+	if err := DefaultAPIClient.AddPermissions(vaultName, permissions); err != nil {
 		return err
 	}
 
@@ -468,45 +387,78 @@ func changeVaultPermissions(action permissionAction, cmd *cobra.Command, args []
 	return nil
 }
 
-func handlePermissionAction(action permissionAction, existingGroups, groups []string) ([]string, error) {
+// VaultRemovePermissions is the entry point of the `vault remove-permissions` cli command
+func VaultRemovePermissions(cmd *cobra.Command, args []string) error {
+	if len(args) < 2 {
+		return cmd.Usage()
+	}
+	vaultName := args[0]
+	permissions := args[1:]
 
-	modifiedGroups := existingGroups
-	switch action {
-	case ADD:
-		{
-			for _, group := range groups {
-				for _, eg := range modifiedGroups {
-					if eg == group {
-						return nil, errors.Errorf("Group %s already exists", group)
-					}
-				}
-				modifiedGroups = append(modifiedGroups, group)
-			}
-			return modifiedGroups, nil
-		}
-	case DELETE:
-		{
-			var found bool
-			for _, group := range groups {
-				found = false
-				for i, g := range modifiedGroups {
-					if g == group {
-						modifiedGroups = append(modifiedGroups[:i], modifiedGroups[i+1:]...)
-						found = true
-					}
-				}
-				if !found {
-					return nil, errors.Errorf("Did not find group %s", group)
-				}
-			}
-			return modifiedGroups, nil
-		}
+	if err := DefaultAPIClient.RemovePermissions(vaultName, permissions); err != nil {
+		return err
 	}
 
-	return nil, nil
+	cmd.Printf("Vault %s updated\n", args[0])
+	return nil
 }
 
-func collectSecrets(filePath string, vault *client.AuroraSecretVault, includePermissions bool) error {
+func aggregatePermissions(existingGroups, groups []string) ([]string, error) {
+
+	modifiedGroups := existingGroups
+
+	for _, group := range groups {
+		for _, eg := range modifiedGroups {
+			if eg == group {
+				return nil, errors.Errorf("Group %s already exists", group)
+			}
+		}
+		modifiedGroups = append(modifiedGroups, group)
+	}
+	return modifiedGroups, nil
+}
+
+func collectSecrets(filePath string) ([]client.Secret, error) {
+	root, err := os.Stat(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var files []os.FileInfo
+	if root.IsDir() {
+		files, err = ioutil.ReadDir(filePath)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		files = append(files, root)
+	}
+
+	var secrets []client.Secret
+
+	for _, f := range files {
+		if f.IsDir() {
+			continue
+		}
+
+		currentFilePath := filePath
+		if root.IsDir() {
+			currentFilePath = path.Join(filePath, f.Name())
+		}
+
+		content, err := readSecretFile(currentFilePath)
+		if err != nil {
+			return nil, err
+		}
+		secret := client.NewSecret(f.Name(), base64.StdEncoding.EncodeToString([]byte(content)))
+
+		secrets = append(secrets, secret)
+	}
+
+	return secrets, nil
+}
+
+func collectVaultSecrets(filePath string, vault *client.Vault, includePermissions bool) error {
 	root, err := os.Stat(filePath)
 	if err != nil {
 		return err
@@ -539,11 +491,12 @@ func collectSecrets(filePath string, vault *client.AuroraSecretVault, includePer
 			}
 			vault.Permissions = groups
 		} else {
-			secret, err := readSecretFile(currentFilePath)
+			content, err := readSecretFile(currentFilePath)
 			if err != nil {
 				return err
 			}
-			vault.Secrets.AddSecret(f.Name(), secret)
+			secret := client.NewSecret(f.Name(), base64.StdEncoding.EncodeToString([]byte(content)))
+			vault.AddSecret(secret)
 		}
 	}
 
@@ -579,7 +532,7 @@ func readPermissionFile(path string) ([]string, error) {
 	return permissions.Groups, nil
 }
 
-func getVaultTable(vaults []*client.AuroraVaultInfo) (string, []string) {
+func getVaultTable(vaults []client.Vault) (string, []string) {
 
 	sort.Slice(vaults, func(i, j int) bool {
 		return strings.Compare(vaults[i].Name, vaults[j].Name) < 1
@@ -594,8 +547,8 @@ func getVaultTable(vaults []*client.AuroraVaultInfo) (string, []string) {
 			line := fmt.Sprintf("%s\t%s\t%s\t%v", name, permissions, "", vault.HasAccess)
 			rows = append(rows, line)
 		} else {
-			for secretName := range vault.Secrets {
-				line := fmt.Sprintf("%s\t%s\t%s\t%v", name, permissions, secretName, vault.HasAccess)
+			for _, secret := range vault.Secrets {
+				line := fmt.Sprintf("%s\t%s\t%s\t%v", name, permissions, secret.Name, vault.HasAccess)
 				rows = append(rows, line)
 				name = " "
 			}
