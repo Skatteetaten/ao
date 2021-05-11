@@ -154,8 +154,7 @@ func (ao *AOConfig) AddMultipleClusterConfig() {
 			Type: "ocp3",
 		},
 	}
-
-	ocp4Clusters := []string{"prod01", "test01", "utv04", "utv-relay01", "test-relay01"}
+	ocp4Clusters := []string{"prod01", "test01", "utv04", "prod-relay01", "test-relay01", "utv-relay01"}
 	for _, cluster := range ocp4Clusters {
 		ao.AvailableClusters = append(ao.AvailableClusters, cluster)
 		ao.PreferredAPIClusters = append([]string{cluster}, ao.PreferredAPIClusters...)
