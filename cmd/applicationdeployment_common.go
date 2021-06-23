@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
@@ -17,6 +18,13 @@ var (
 	flagCluster      string
 	flagExcludes     []string
 )
+
+var applicationDeploymentCmd = &cobra.Command{
+	Use:         "applicationdeployment",
+	Aliases:     []string{"ad"},
+	Short:       "Perform operations on an application deployment",
+	Annotations: map[string]string{"type": "actions"},
+}
 
 // DeploymentInfo structures information about a deployment
 type DeploymentInfo struct {
@@ -36,6 +44,16 @@ type Partition struct {
 type DeploySpecPartition struct {
 	Partition
 	DeploySpecs []deploymentspec.DeploymentSpec
+}
+
+// DeploymentPartition structures information about a deployment partition
+type DeploymentPartition struct {
+	Partition
+	DeploymentInfos []DeploymentInfo
+}
+
+func init() {
+	RootCmd.AddCommand(applicationDeploymentCmd)
 }
 
 func newDeploymentInfo(namespace, name, cluster string) *DeploymentInfo {

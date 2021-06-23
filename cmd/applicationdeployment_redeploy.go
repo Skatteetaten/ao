@@ -14,15 +14,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var applicationDeploymentDeleteCmd = &cobra.Command{
-	Use:   "delete <applicationDeploymentRef>",
-	Short: "Delete application deployment with the given reference",
-	RunE:  deleteApplicationDeployment,
+var applicationDeploymentRedeployCmd = &cobra.Command{
+	Use:   "redeploy <applicationDeploymentRef>",
+	Short: "Redeploy running application deployment(s) with the given reference",
+	RunE:  redeployApplicationDeployment,
 }
 
-type partialDeleteResult struct {
+
+
+type partialRedeployResult struct {
 	partition     DeploymentPartition
-	deleteResults client.DeleteResults
+	redeployResults client.RedeployResults
 }
 
 func newDeploymentPartition(deploymentInfos []DeploymentInfo, cluster config.Cluster, auroraConfig string, overrideToken string) *DeploymentPartition {
@@ -36,33 +38,35 @@ func newDeploymentPartition(deploymentInfos []DeploymentInfo, cluster config.Clu
 	}
 }
 
-func newPartialDeleteResults(partition DeploymentPartition, deleteResults client.DeleteResults) partialDeleteResult {
-	return partialDeleteResult{
+func newPartialRedeployResults(partition DeploymentPartition, redeployResults client.RedeployResults) partialRedeployResult {
+	return partialRedeployResult{
 		partition:     partition,
-		deleteResults: deleteResults,
+		redeployResults: redeployResults,
 	}
 }
 
 func init() {
-	applicationDeploymentCmd.AddCommand(applicationDeploymentDeleteCmd)
-	applicationDeploymentDeleteCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Limit deletion to given cluster name")
-	applicationDeploymentDeleteCmd.Flags().BoolVarP(&flagNoPrompt, "yes", "y", false, "Suppress prompts and accept deletion")
-	applicationDeploymentDeleteCmd.Flags().BoolVarP(&flagNoPrompt, "no-prompt", "", false, "Suppress prompts and accept deletion")
-	applicationDeploymentDeleteCmd.Flags().StringArrayVarP(&flagExcludes, "exclude", "e", []string{}, "Select applications or environments to exclude from deletion")
+	applicationDeploymentCmd.AddCommand(applicationDeploymentRedeployCmd)
+	applicationDeploymentRedeployCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Limit redeploy to given cluster name")
+	applicationDeploymentRedeployCmd.Flags().BoolVarP(&flagNoPrompt, "yes", "y", false, "Suppress prompts and accept redeploy")
+	applicationDeploymentRedeployCmd.Flags().BoolVarP(&flagNoPrompt, "no-prompt", "", false, "Suppress prompts and accept redeploy")
+	applicationDeploymentRedeployCmd.Flags().StringArrayVarP(&flagExcludes, "exclude", "e", []string{}, "Select applications or environments to exclude from redeploy")
 
-	applicationDeploymentDeleteCmd.Flags().BoolVarP(&flagNoPrompt, "force", "f", false, "Suppress prompts")
-	applicationDeploymentDeleteCmd.Flags().MarkHidden("force")
-	applicationDeploymentDeleteCmd.Flags().StringVarP(&flagAuroraConfig, "affiliation", "", "", "Overrides the logged in affiliation")
-	applicationDeploymentDeleteCmd.Flags().MarkHidden("affiliation")
+	applicationDeploymentRedeployCmd.Flags().BoolVarP(&flagNoPrompt, "force", "f", false, "Suppress prompts")
+	applicationDeploymentRedeployCmd.Flags().MarkHidden("force")
+	applicationDeploymentRedeployCmd.Flags().StringVarP(&flagAuroraConfig, "affiliation", "", "", "Overrides the logged in affiliation")
+	applicationDeploymentRedeployCmd.Flags().MarkHidden("affiliation")
 }
 
-func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
+func redeployApplicationDeployment(cmd *cobra.Command, args []string) error {
+
+	// TODO: Adapt to redeploy
 
 	if len(args) > 2 || len(args) < 1 {
 		return cmd.Usage()
 	}
 
-	err := validateDeleteParams()
+	err := validateRedeployParams()
 	if err != nil {
 		return err
 	}
@@ -86,7 +90,7 @@ func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	} else if len(applications) == 0 {
-		return errors.New("No applications to delete")
+		return errors.New("No applications to redeploy")
 	}
 
 	filteredDeploymentSpecs, err := service.GetFilteredDeploymentSpecs(apiClient, applications, flagCluster)
@@ -98,7 +102,7 @@ func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	} else if len(deployInfos) == 0 {
-		return errors.New("No applications to delete")
+		return errors.New("No applications to redeploy")
 	}
 
 	partitions, err := createDeploymentPartitions(auroraConfigName, pFlagToken, AO.Clusters, deployInfos)
@@ -106,11 +110,11 @@ func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !getDeleteConfirmation(flagNoPrompt, deployInfos, cmd.OutOrStdout()) {
-		return errors.New("No applications to delete")
+	if !getRedeployConfirmation(flagNoPrompt, deployInfos, cmd.OutOrStdout()) {
+		return errors.New("No applications to redeploy")
 	}
 
-	fullResults, err := deleteFromReachableClusters(getApplicationDeploymentClient, partitions)
+	fullResults, err := redeployFromReachableClusters(getApplicationDeploymentClient, partitions)
 	if err != nil {
 		return err
 	}
@@ -118,15 +122,15 @@ func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
 	printFullResults(fullResults, cmd.OutOrStdout())
 
 	for _, result := range fullResults {
-		if !result.deleteResults.Success {
-			return errors.New("One or more delete operations failed")
+		if !result.redeployResults.Success {
+			return errors.New("One or more redeploy operations failed")
 		}
 	}
 
 	return nil
 }
 
-func validateDeleteParams() error {
+func validateRedeployParams() error {
 	if flagCluster != "" {
 		if _, exists := AO.Clusters[flagCluster]; !exists {
 			return errors.New(fmt.Sprintf("No such cluster %s", flagCluster))
@@ -172,14 +176,14 @@ func createDeploymentPartitions(auroraConfig, overrideToken string, clusters map
 	return partitions, nil
 }
 
-func deleteFromReachableClusters(getClient func(partition Partition) client.ApplicationDeploymentClient, partitions []DeploymentPartition) ([]partialDeleteResult, error) {
-	partitionResult := make(chan partialDeleteResult)
+func redeployFromReachableClusters(getClient func(partition Partition) client.ApplicationDeploymentClient, partitions []DeploymentPartition) ([]partialRedeployResult, error) {
+	partitionResult := make(chan partialRedeployResult)
 
 	for _, partition := range partitions {
-		go performDelete(getClient(partition.Partition), partition, partitionResult)
+		go performRedeploy(getClient(partition.Partition), partition, partitionResult)
 	}
 
-	var allResults []partialDeleteResult
+	var allResults []partialRedeployResult
 	for i := 0; i < len(partitions); i++ {
 		allResults = append(allResults, <-partitionResult)
 	}
@@ -187,9 +191,9 @@ func deleteFromReachableClusters(getClient func(partition Partition) client.Appl
 	return allResults, nil
 }
 
-func performDelete(deployClient client.ApplicationDeploymentClient, partition DeploymentPartition, partitionResult chan<- partialDeleteResult) {
+func performRedeploy(deployClient client.ApplicationDeploymentClient, partition DeploymentPartition, partitionResult chan<- partialRedeployResult) {
 	if !partition.Cluster.Reachable {
-		partitionResult <- getErrorDeleteResults("Cluster is not reachable", partition)
+		partitionResult <- getErrorRedeployResults("Cluster is not reachable", partition)
 		return
 	}
 
@@ -198,20 +202,20 @@ func performDelete(deployClient client.ApplicationDeploymentClient, partition De
 		applicationRefs = append(applicationRefs, *client.NewApplicationRef(info.Namespace, info.Name))
 	}
 
-	results, err := deployClient.Delete(client.NewDeletePayload(applicationRefs))
+	results, err := deployClient.Redeploy(client.NewRedeployPayload(applicationRefs))
 
 	if err != nil {
-		partitionResult <- getErrorDeleteResults(err.Error(), partition)
+		partitionResult <- getErrorRedeployResults(err.Error(), partition)
 	} else {
-		partitionResult <- newPartialDeleteResults(partition, *results)
+		partitionResult <- newPartialRedeployResults(partition, *results)
 	}
 }
 
-func getErrorDeleteResults(reason string, partition DeploymentPartition) partialDeleteResult {
-	var results []client.DeleteResult
+func getErrorRedeployResults(reason string, partition DeploymentPartition) partialRedeployResult {
+	var results []client.RedeployResult
 
 	for _, info := range partition.DeploymentInfos {
-		result := client.DeleteResult{
+		result := client.RedeployResult{
 			Success:        false,
 			Reason:         reason,
 			ApplicationRef: *client.NewApplicationRef(info.Namespace, info.Name),
@@ -220,21 +224,21 @@ func getErrorDeleteResults(reason string, partition DeploymentPartition) partial
 		results = append(results, result)
 	}
 
-	deleteResults := client.DeleteResults{
+	redeployResults := client.RedeployResults{
 		Message: reason,
 		Success: false,
 		Results: results,
 	}
 
-	return newPartialDeleteResults(partition, deleteResults)
+	return newPartialRedeployResults(partition, redeployResults)
 }
 
-func printFullResults(allResults []partialDeleteResult, out io.Writer) {
-	header, rows := getDeleteResultTableContent(allResults)
+func printFullResults(allResults []partialRedeployResult, out io.Writer) {
+	header, rows := getRedeployResultTableContent(allResults)
 	DefaultTablePrinter(header, rows, out)
 }
 
-func getDeleteResultTableContent(allResults []partialDeleteResult) (string, []string) {
+func getRedeployResultTableContent(allResults []partialRedeployResult) (string, []string) {
 	header := "\x1b[00mSTATUS\x1b[0m\tCLUSTER\tNAMESPACE\tAPPLICATION\tMESSAGE"
 
 	type viewItem struct {
@@ -245,13 +249,13 @@ func getDeleteResultTableContent(allResults []partialDeleteResult) (string, []st
 	var tableData []viewItem
 
 	for _, partitionResult := range allResults {
-		for _, deleteResult := range partitionResult.deleteResults.Results {
+		for _, redeployResult := range partitionResult.redeployResults.Results {
 			item := viewItem{
 				cluster:   partitionResult.partition.Cluster.Name,
-				namespace: deleteResult.ApplicationRef.Namespace,
-				name:      deleteResult.ApplicationRef.Name,
-				success:   deleteResult.Success,
-				reason:    deleteResult.Reason,
+				namespace: redeployResult.ApplicationRef.Namespace,
+				name:      redeployResult.ApplicationRef.Name,
+				success:   redeployResult.Success,
+				reason:    redeployResult.Reason,
 			}
 
 			tableData = append(tableData, item)
@@ -268,7 +272,7 @@ func getDeleteResultTableContent(allResults []partialDeleteResult) (string, []st
 	pattern := "%s\t%s\t%s\t%s\t%s"
 
 	for _, item := range tableData {
-		status := "\x1b[32mDeleted\x1b[0m"
+		status := "\x1b[32mRedeployd\x1b[0m"
 		if !item.success {
 			status = "\x1b[31mFailed\x1b[0m"
 		}
@@ -279,21 +283,21 @@ func getDeleteResultTableContent(allResults []partialDeleteResult) (string, []st
 	return header, rows
 }
 
-func getDeleteConfirmation(force bool, deployInfos []DeploymentInfo, out io.Writer) bool {
-	header, rows := getDeleteConfirmationTableContent(deployInfos)
+func getRedeployConfirmation(force bool, deployInfos []DeploymentInfo, out io.Writer) bool {
+	header, rows := getRedeployConfirmationTableContent(deployInfos)
 	DefaultTablePrinter(header, rows, out)
 
 	shouldDeploy := true
 	if !force {
 		defaultAnswer := len(rows) == 1
-		message := fmt.Sprintf("Do you want to delete %d application(s) in affiliation %s?", len(rows), AO.Affiliation)
+		message := fmt.Sprintf("Do you want to redeploy %d application(s) in affiliation %s?", len(rows), AO.Affiliation)
 		shouldDeploy = prompt.Confirm(message, defaultAnswer)
 	}
 
 	return shouldDeploy
 }
 
-func getDeleteConfirmationTableContent(infos []DeploymentInfo) (string, []string) {
+func getRedeployConfirmationTableContent(infos []DeploymentInfo) (string, []string) {
 	var rows []string
 	header := "CLUSTER\tNAMESPACE\tAPPLICATION"
 	pattern := "%v\t%v\t%v"

@@ -2,10 +2,12 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/graphql"
+	"net/http"
 )
 
 // AuroraConfigFileValidationResponse is core of response from the graphql "createAuroraConfigFile" and "updateAuroraConfigFile"
@@ -110,6 +112,39 @@ func (api *APIClient) UpdateAuroraConfigFile(file *auroraconfig.File, eTag strin
 	}
 
 	return nil
+}
+
+const getFileNamesRequest = `query auroraConfig($auroraConfigName: String!){
+    auroraConfig(name: $auroraConfigName) {
+    files {
+            name
+        }
+    }
+}`
+type getFileNamesResponse struct {
+	AuroraAPIMetadata struct {
+		ConfigNames []string
+	}
+}
+
+// GetFileNames gets file names via API calls
+func (api *APIClient) GetFileNames() (auroraconfig.FileNames, error) {
+	endpoint := fmt.Sprintf("/auroraconfig/%s/filenames", api.Affiliation)
+
+	api.RunGraphQl()
+
+		response, err := api.Do(http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var fileNames auroraconfig.FileNames
+	err = response.ParseItems(&fileNames)
+	if err != nil {
+		return nil, err
+	}
+
+	return fileNames, nil
 }
 
 func validateFileContentIsJSON(file *auroraconfig.File) error {
