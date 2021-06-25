@@ -2,12 +2,10 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"github.com/skatteetaten/graphql"
-	"net/http"
 )
 
 // AuroraConfigFileValidationResponse is core of response from the graphql "createAuroraConfigFile" and "updateAuroraConfigFile"
@@ -114,13 +112,7 @@ func (api *APIClient) UpdateAuroraConfigFile(file *auroraconfig.File, eTag strin
 	return nil
 }
 
-const getFileNamesRequest = `query auroraConfig($auroraConfigName: String!){
-    auroraConfig(name: $auroraConfigName) {
-    files {
-            name
-        }
-    }
-}`
+
 type getFileNamesResponse struct {
 	AuroraAPIMetadata struct {
 		ConfigNames []string
@@ -129,22 +121,31 @@ type getFileNamesResponse struct {
 
 // GetFileNames gets file names via API calls
 func (api *APIClient) GetFileNames() (auroraconfig.FileNames, error) {
-	endpoint := fmt.Sprintf("/auroraconfig/%s/filenames", api.Affiliation)
+	const getFileNamesRequest = `query auroraConfig($auroraConfigName: String!){auroraConfig(name: $auroraConfigName){files{name}}}`
+	type FileNamesResponse struct {
+		AuroraConfig struct {
+			Files [] struct{
+				Name string `json:"name"`
+			} `json:"files"`
+		} `json:"auroraConfig"`
+	}
+	vars := map[string]interface{}{"auroraConfigName": api.Affiliation,}
+	var fileNamesResponse FileNamesResponse
 
-	api.RunGraphQl()
-
-		response, err := api.Do(http.MethodGet, endpoint, nil)
-	if err != nil {
+	if err := api.RunGraphQl(getFileNamesRequest, vars, &fileNamesResponse); err != nil {
 		return nil, err
 	}
 
-	var fileNames auroraconfig.FileNames
-	err = response.ParseItems(&fileNames)
-	if err != nil {
-		return nil, err
-	}
+	if len(fileNamesResponse.AuroraConfig.Files) > 0 {
+		var fileNames auroraconfig.FileNames
 
-	return fileNames, nil
+		for _, file := range fileNamesResponse.AuroraConfig.Files {
+			fileNames = append(fileNames, file.Name)
+		}
+		return fileNames, nil
+	} else {
+		return nil, nil
+	}
 }
 
 func validateFileContentIsJSON(file *auroraconfig.File) error {

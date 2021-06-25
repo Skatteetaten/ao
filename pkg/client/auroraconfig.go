@@ -21,8 +21,6 @@ type AuroraConfigClient interface {
 	GetAuroraConfigFile(fileName string) (*auroraconfig.File, string, error)
 }
 
-
-
 // GetAuroraConfig gets an aurora config via API calls
 func (api *APIClient) GetAuroraConfig() (*auroraconfig.AuroraConfig, error) {
 	endpoint := fmt.Sprintf("/auroraconfig/%s", api.Affiliation)
