@@ -9,13 +9,13 @@ import (
 	"strings"
 
 	//	"io"
-//	"sort"
-//	"strings"
+	//	"sort"
+	//	"strings"
 
 	"github.com/pkg/errors"
-//	"github.com/skatteetaten/ao/pkg/client"
-//	"github.com/skatteetaten/ao/pkg/config"
-//	"github.com/skatteetaten/ao/pkg/prompt"
+	//	"github.com/skatteetaten/ao/pkg/client"
+	//	"github.com/skatteetaten/ao/pkg/config"
+	//	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/skatteetaten/ao/pkg/service"
 	"github.com/spf13/cobra"
 )
@@ -25,7 +25,6 @@ var applicationDeploymentRedeployCmd = &cobra.Command{
 	Short: "Redeploy running application deployment(s) with the given reference",
 	RunE:  redeployApplicationDeployment,
 }
-
 
 // TODO:
 //type partialRedeployResult struct {
@@ -137,7 +136,6 @@ func redeployApplicationDeployment(cmd *cobra.Command, args []string) error {
 
 	return nil
 }
-
 
 // TODO: Remove when redeploy is done - Only for reference
 //func performDeploy(deployClient client.ApplicationDeploymentClient, partition DeploySpecPartition, overrideConfig map[string]string, deployResults chan<- client.DeployResults) {

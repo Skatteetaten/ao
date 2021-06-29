@@ -112,7 +112,6 @@ func (api *APIClient) UpdateAuroraConfigFile(file *auroraconfig.File, eTag strin
 	return nil
 }
 
-
 type getFileNamesResponse struct {
 	AuroraAPIMetadata struct {
 		ConfigNames []string
@@ -124,12 +123,12 @@ func (api *APIClient) GetFileNames() (auroraconfig.FileNames, error) {
 	const getFileNamesRequest = `query auroraConfig($auroraConfigName: String!){auroraConfig(name: $auroraConfigName){files{name}}}`
 	type FileNamesResponse struct {
 		AuroraConfig struct {
-			Files [] struct{
+			Files []struct {
 				Name string `json:"name"`
 			} `json:"files"`
 		} `json:"auroraConfig"`
 	}
-	vars := map[string]interface{}{"auroraConfigName": api.Affiliation,}
+	vars := map[string]interface{}{"auroraConfigName": api.Affiliation}
 	var fileNamesResponse FileNamesResponse
 
 	if err := api.RunGraphQl(getFileNamesRequest, vars, &fileNamesResponse); err != nil {
