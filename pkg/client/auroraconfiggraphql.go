@@ -112,12 +112,6 @@ func (api *APIClient) UpdateAuroraConfigFile(file *auroraconfig.File, eTag strin
 	return nil
 }
 
-type getFileNamesResponse struct {
-	AuroraAPIMetadata struct {
-		ConfigNames []string
-	}
-}
-
 // GetFileNames gets file names via API calls
 func (api *APIClient) GetFileNames() (auroraconfig.FileNames, error) {
 	const getFileNamesRequest = `query auroraConfig($auroraConfigName: String!){auroraConfig(name: $auroraConfigName){files{name}}}`
@@ -135,16 +129,13 @@ func (api *APIClient) GetFileNames() (auroraconfig.FileNames, error) {
 		return nil, err
 	}
 
+	var fileNames auroraconfig.FileNames
 	if len(fileNamesResponse.AuroraConfig.Files) > 0 {
-		var fileNames auroraconfig.FileNames
-
 		for _, file := range fileNamesResponse.AuroraConfig.Files {
 			fileNames = append(fileNames, file.Name)
 		}
-		return fileNames, nil
-	} else {
-		return nil, nil
 	}
+	return fileNames, nil
 }
 
 func validateFileContentIsJSON(file *auroraconfig.File) error {
