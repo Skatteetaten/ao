@@ -8,7 +8,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/client"
-	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/skatteetaten/ao/pkg/service"
 	"github.com/spf13/cobra"
@@ -23,17 +22,6 @@ var applicationDeploymentDeleteCmd = &cobra.Command{
 type partialDeleteResult struct {
 	partition     DeploymentPartition
 	deleteResults client.DeleteResults
-}
-
-func newDeploymentPartition(deploymentInfos []DeploymentInfo, cluster config.Cluster, auroraConfig string, overrideToken string) *DeploymentPartition {
-	return &DeploymentPartition{
-		DeploymentInfos: deploymentInfos,
-		Partition: Partition{
-			Cluster:          cluster,
-			AuroraConfigName: auroraConfig,
-			OverrideToken:    overrideToken,
-		},
-	}
 }
 
 func newPartialDeleteResults(partition DeploymentPartition, deleteResults client.DeleteResults) partialDeleteResult {
@@ -115,7 +103,7 @@ func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	printFullResults(fullResults, cmd.OutOrStdout())
+	printFullDeleteResults(fullResults, cmd.OutOrStdout())
 
 	for _, result := range fullResults {
 		if !result.deleteResults.Success {
@@ -134,42 +122,6 @@ func validateDeleteParams() error {
 	}
 
 	return nil
-}
-
-func createDeploymentPartitions(auroraConfig, overrideToken string, clusters map[string]*config.Cluster, deployInfos []DeploymentInfo) ([]DeploymentPartition, error) {
-	type deploymentPartitionID struct {
-		namespace, clusterName string
-	}
-
-	partitionMap := make(map[deploymentPartitionID]*DeploymentPartition)
-
-	for _, info := range deployInfos {
-		clusterName := info.ClusterName
-		namespace := info.Namespace
-
-		partitionID := deploymentPartitionID{clusterName, namespace}
-
-		if _, exists := partitionMap[partitionID]; !exists {
-			if _, exists := clusters[clusterName]; !exists {
-				return nil, errors.New(fmt.Sprintf("No such cluster %s", clusterName))
-			}
-			cluster := clusters[clusterName]
-			partition := newDeploymentPartition([]DeploymentInfo{}, *cluster, auroraConfig, overrideToken)
-			partitionMap[partitionID] = partition
-		}
-
-		partitionMap[partitionID].DeploymentInfos = append(partitionMap[partitionID].DeploymentInfos, info)
-	}
-
-	partitions := make([]DeploymentPartition, len(partitionMap))
-
-	idx := 0
-	for _, partition := range partitionMap {
-		partitions[idx] = *partition
-		idx++
-	}
-
-	return partitions, nil
 }
 
 func deleteFromReachableClusters(getClient func(partition Partition) client.ApplicationDeploymentClient, partitions []DeploymentPartition) ([]partialDeleteResult, error) {
@@ -229,7 +181,7 @@ func getErrorDeleteResults(reason string, partition DeploymentPartition) partial
 	return newPartialDeleteResults(partition, deleteResults)
 }
 
-func printFullResults(allResults []partialDeleteResult, out io.Writer) {
+func printFullDeleteResults(allResults []partialDeleteResult, out io.Writer) {
 	header, rows := getDeleteResultTableContent(allResults)
 	DefaultTablePrinter(header, rows, out)
 }

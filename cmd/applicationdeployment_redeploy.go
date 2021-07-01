@@ -2,12 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
+	"github.com/skatteetaten/ao/pkg/deploymentspec"
 	"github.com/skatteetaten/ao/pkg/prompt"
 	"io"
-	"sort"
-	"strings"
-
 	//	"io"
 	//	"sort"
 	//	"strings"
@@ -25,30 +22,6 @@ var applicationDeploymentRedeployCmd = &cobra.Command{
 	Short: "Redeploy running application deployment(s) with the given reference",
 	RunE:  redeployApplicationDeployment,
 }
-
-// TODO:
-//type partialRedeployResult struct {
-//	partition     DeploymentPartition
-//	redeployResults client.RedeployResults
-//}
-//
-//func newDeploymentPartition(deploymentInfos []DeploymentInfo, cluster config.Cluster, auroraConfig string, overrideToken string) *DeploymentPartition {
-//	return &DeploymentPartition{
-//		DeploymentInfos: deploymentInfos,
-//		Partition: Partition{
-//			Cluster:          cluster,
-//			AuroraConfigName: auroraConfig,
-//			OverrideToken:    overrideToken,
-//		},
-//	}
-//}
-
-/*func newPartialRedeployResults(partition DeploymentPartition, redeployResults client.RedeployResults) partialRedeployResult {
-	return partialRedeployResult{
-		partition:     partition,
-		redeployResults: redeployResults,
-	}
-}*/
 
 func init() {
 	applicationDeploymentCmd.AddCommand(applicationDeploymentRedeployCmd)
@@ -103,61 +76,31 @@ func redeployApplicationDeployment(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deployInfos, err := getDeployedApplications(getApplicationDeploymentClient, filteredDeploymentSpecs, auroraConfigName, pFlagToken)
+	activeDeploymentSpecs, err := getDeployedDeploymentSpecs(getApplicationDeploymentClient, filteredDeploymentSpecs, auroraConfigName, pFlagToken)
 	if err != nil {
 		return err
-	} else if len(deployInfos) == 0 {
+	} else if len(activeDeploymentSpecs) == 0 {
 		return errors.New("No applications to redeploy")
 	}
 
-	partitions, err := createDeploymentPartitions(auroraConfigName, pFlagToken, AO.Clusters, deployInfos)
+	partitions, err := createDeploySpecPartitions(auroraConfigName, pFlagToken, AO.Clusters, activeDeploymentSpecs)
 	if err != nil {
 		return err
 	}
 
-	if !getRedeployConfirmation(flagNoPrompt, deployInfos, cmd.OutOrStdout()) {
+	if !getRedeployConfirmation(flagNoPrompt, activeDeploymentSpecs, cmd.OutOrStdout()) {
 		return errors.New("No applications to redeploy")
 	}
 
-	// TODO
-	logrus.Infof("got %v partitions", len(partitions))
-	//fullResults, err := redeployFromReachableClusters(getApplicationDeploymentClient, partitions)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//printFullResults(fullResults, cmd.OutOrStdout())
-	//
-	//for _, result := range fullResults {
-	//	if !result.redeployResults.Success {
-	//		return errors.New("One or more redeploy operations failed")
-	//	}
-	//}
+	result, err := deployToReachableClusters(getApplicationDeploymentClient, partitions, nil)
+	if err != nil {
+		return err
+	}
+
+	printDeployResult(result, cmd.OutOrStdout())
 
 	return nil
 }
-
-// TODO: Remove when redeploy is done - Only for reference
-//func performDeploy(deployClient client.ApplicationDeploymentClient, partition DeploySpecPartition, overrideConfig map[string]string, deployResults chan<- client.DeployResults) {
-//	if !partition.Cluster.Reachable {
-//		deployResults <- errorDeployResults("Cluster is not reachable", partition)
-//		return
-//	}
-//
-//	var applicationList []string
-//	for _, spec := range partition.DeploySpecs {
-//		applicationList = append(applicationList, spec.GetString("applicationDeploymentRef"))
-//	}
-//
-//	payload := client.NewDeployPayload(applicationList, overrideConfig)
-//
-//	result, err := deployClient.Deploy(payload)
-//	if err != nil {
-//		deployResults <- errorDeployResults(err.Error(), partition)
-//	} else {
-//		deployResults <- *result
-//	}
-//}
 
 func validateRedeployParams() error {
 	if flagCluster != "" {
@@ -169,152 +112,8 @@ func validateRedeployParams() error {
 	return nil
 }
 
-//func createDeploymentPartitions(auroraConfig, overrideToken string, clusters map[string]*config.Cluster, deployInfos []DeploymentInfo) ([]DeploymentPartition, error) {
-//	type deploymentPartitionID struct {
-//		namespace, clusterName string
-//	}
-//
-//	partitionMap := make(map[deploymentPartitionID]*DeploymentPartition)
-//
-//	for _, info := range deployInfos {
-//		clusterName := info.ClusterName
-//		namespace := info.Namespace
-//
-//		partitionID := deploymentPartitionID{clusterName, namespace}
-//
-//		if _, exists := partitionMap[partitionID]; !exists {
-//			if _, exists := clusters[clusterName]; !exists {
-//				return nil, errors.New(fmt.Sprintf("No such cluster %s", clusterName))
-//			}
-//			cluster := clusters[clusterName]
-//			partition := newDeploymentPartition([]DeploymentInfo{}, *cluster, auroraConfig, overrideToken)
-//			partitionMap[partitionID] = partition
-//		}
-//
-//		partitionMap[partitionID].DeploymentInfos = append(partitionMap[partitionID].DeploymentInfos, info)
-//	}
-//
-//	partitions := make([]DeploymentPartition, len(partitionMap))
-//
-//	idx := 0
-//	for _, partition := range partitionMap {
-//		partitions[idx] = *partition
-//		idx++
-//	}
-//
-//	return partitions, nil
-//}
-//
-//func redeployFromReachableClusters(getClient func(partition Partition) client.ApplicationDeploymentClient, partitions []DeploymentPartition) ([]partialRedeployResult, error) {
-//	partitionResult := make(chan partialRedeployResult)
-//
-//	for _, partition := range partitions {
-//		go performRedeploy(getClient(partition.Partition), partition, partitionResult)
-//	}
-//
-//	var allResults []partialRedeployResult
-//	for i := 0; i < len(partitions); i++ {
-//		allResults = append(allResults, <-partitionResult)
-//	}
-//
-//	return allResults, nil
-//}
-//
-//func performRedeploy(deployClient client.ApplicationDeploymentClient, partition DeploymentPartition, partitionResult chan<- partialRedeployResult) {
-//	if !partition.Cluster.Reachable {
-//		partitionResult <- getErrorRedeployResults("Cluster is not reachable", partition)
-//		return
-//	}
-//
-//	var applicationRefs []client.ApplicationRef
-//	for _, info := range partition.DeploymentInfos {
-//		applicationRefs = append(applicationRefs, *client.NewApplicationRef(info.Namespace, info.Name))
-//	}
-//
-//	results, err := deployClient.Redeploy(client.NewRedeployPayload(applicationRefs))
-//
-//	if err != nil {
-//		partitionResult <- getErrorRedeployResults(err.Error(), partition)
-//	} else {
-//		partitionResult <- newPartialRedeployResults(partition, *results)
-//	}
-//}
-//
-//func getErrorRedeployResults(reason string, partition DeploymentPartition) partialRedeployResult {
-//	var results []client.RedeployResult
-//
-//	for _, info := range partition.DeploymentInfos {
-//		result := client.RedeployResult{
-//			Success:        false,
-//			Reason:         reason,
-//			ApplicationRef: *client.NewApplicationRef(info.Namespace, info.Name),
-//		}
-//
-//		results = append(results, result)
-//	}
-//
-//	redeployResults := client.RedeployResults{
-//		Message: reason,
-//		Success: false,
-//		Results: results,
-//	}
-//
-//	return newPartialRedeployResults(partition, redeployResults)
-//}
-//
-//func printFullResults(allResults []partialRedeployResult, out io.Writer) {
-//	header, rows := getRedeployResultTableContent(allResults)
-//	DefaultTablePrinter(header, rows, out)
-//}
-//
-//func getRedeployResultTableContent(allResults []partialRedeployResult) (string, []string) {
-//	header := "\x1b[00mSTATUS\x1b[0m\tCLUSTER\tNAMESPACE\tAPPLICATION\tMESSAGE"
-//
-//	type viewItem struct {
-//		cluster, namespace, name, reason string
-//		success                          bool
-//	}
-//
-//	var tableData []viewItem
-//
-//	for _, partitionResult := range allResults {
-//		for _, redeployResult := range partitionResult.redeployResults.Results {
-//			item := viewItem{
-//				cluster:   partitionResult.partition.Cluster.Name,
-//				namespace: redeployResult.ApplicationRef.Namespace,
-//				name:      redeployResult.ApplicationRef.Name,
-//				success:   redeployResult.Success,
-//				reason:    redeployResult.Reason,
-//			}
-//
-//			tableData = append(tableData, item)
-//		}
-//	}
-//
-//	sort.Slice(tableData, func(i, j int) bool {
-//		nameA := tableData[i].name
-//		nameB := tableData[j].name
-//		return strings.Compare(nameA, nameB) < 1
-//	})
-//
-//	rows := []string{}
-//	pattern := "%s\t%s\t%s\t%s\t%s"
-//
-//	for _, item := range tableData {
-//		status := "\x1b[32mRedeployd\x1b[0m"
-//		if !item.success {
-//			status = "\x1b[31mFailed\x1b[0m"
-//		}
-//		result := fmt.Sprintf(pattern, status, item.cluster, item.namespace, item.name, item.reason)
-//		rows = append(rows, result)
-//	}
-//
-//	return header, rows
-//}
-//
-
-func getRedeployConfirmation(force bool, deployInfos []DeploymentInfo, out io.Writer) bool {
-	header, rows := getRedeployConfirmationTableContent(deployInfos)
+func getRedeployConfirmation(force bool, filteredDeploymentSpecs []deploymentspec.DeploymentSpec, out io.Writer) bool {
+	header, rows := GetDeploySpecTable(filteredDeploymentSpecs, "")
 	DefaultTablePrinter(header, rows, out)
 
 	shouldDeploy := true
@@ -325,23 +124,4 @@ func getRedeployConfirmation(force bool, deployInfos []DeploymentInfo, out io.Wr
 	}
 
 	return shouldDeploy
-}
-
-func getRedeployConfirmationTableContent(infos []DeploymentInfo) (string, []string) {
-	var rows []string
-	header := "CLUSTER\tNAMESPACE\tAPPLICATION"
-	pattern := "%v\t%v\t%v"
-	sort.Slice(infos, func(i, j int) bool {
-		return strings.Compare(infos[i].Name, infos[j].Name) != 1
-	})
-	for _, info := range infos {
-		row := fmt.Sprintf(
-			pattern,
-			info.ClusterName,
-			info.Namespace,
-			info.Name,
-		)
-		rows = append(rows, row)
-	}
-	return header, rows
 }
