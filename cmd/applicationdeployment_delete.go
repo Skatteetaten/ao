@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/skatteetaten/ao/pkg/config"
 	"io"
 	"sort"
 	"strings"
@@ -22,6 +23,12 @@ var applicationDeploymentDeleteCmd = &cobra.Command{
 type partialDeleteResult struct {
 	partition     DeploymentPartition
 	deleteResults client.DeleteResults
+}
+
+// DeploymentPartition structures information about a deployment partition
+type DeploymentPartition struct {
+	Partition
+	DeploymentInfos []DeploymentInfo
 }
 
 func newPartialDeleteResults(partition DeploymentPartition, deleteResults client.DeleteResults) partialDeleteResult {
@@ -262,4 +269,51 @@ func getDeleteConfirmationTableContent(infos []DeploymentInfo) (string, []string
 		rows = append(rows, row)
 	}
 	return header, rows
+}
+
+func createDeploymentPartitions(auroraConfig, overrideToken string, clusters map[string]*config.Cluster, deployInfos []DeploymentInfo) ([]DeploymentPartition, error) {
+	type deploymentPartitionID struct {
+		namespace, clusterName string
+	}
+
+	partitionMap := make(map[deploymentPartitionID]*DeploymentPartition)
+
+	for _, info := range deployInfos {
+		clusterName := info.ClusterName
+		namespace := info.Namespace
+
+		partitionID := deploymentPartitionID{clusterName, namespace}
+
+		if _, exists := partitionMap[partitionID]; !exists {
+			if _, exists := clusters[clusterName]; !exists {
+				return nil, errors.New(fmt.Sprintf("No such cluster %s", clusterName))
+			}
+			cluster := clusters[clusterName]
+			partition := newDeploymentPartition([]DeploymentInfo{}, *cluster, auroraConfig, overrideToken)
+			partitionMap[partitionID] = partition
+		}
+
+		partitionMap[partitionID].DeploymentInfos = append(partitionMap[partitionID].DeploymentInfos, info)
+	}
+
+	partitions := make([]DeploymentPartition, len(partitionMap))
+
+	idx := 0
+	for _, partition := range partitionMap {
+		partitions[idx] = *partition
+		idx++
+	}
+
+	return partitions, nil
+}
+
+func newDeploymentPartition(deploymentInfos []DeploymentInfo, cluster config.Cluster, auroraConfig string, overrideToken string) *DeploymentPartition {
+	return &DeploymentPartition{
+		DeploymentInfos: deploymentInfos,
+		Partition: Partition{
+			Cluster:          cluster,
+			AuroraConfigName: auroraConfig,
+			OverrideToken:    overrideToken,
+		},
+	}
 }

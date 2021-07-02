@@ -47,12 +47,6 @@ type DeploySpecPartition struct {
 	DeploySpecs []deploymentspec.DeploymentSpec
 }
 
-// DeploymentPartition structures information about a deployment partition
-type DeploymentPartition struct {
-	Partition
-	DeploymentInfos []DeploymentInfo
-}
-
 func init() {
 	RootCmd.AddCommand(applicationDeploymentCmd)
 }
@@ -127,51 +121,4 @@ func getApplicationDeploymentClient(partition Partition) client.ApplicationDeplo
 	}
 
 	return cli
-}
-
-func createDeploymentPartitions(auroraConfig, overrideToken string, clusters map[string]*config.Cluster, deployInfos []DeploymentInfo) ([]DeploymentPartition, error) {
-	type deploymentPartitionID struct {
-		namespace, clusterName string
-	}
-
-	partitionMap := make(map[deploymentPartitionID]*DeploymentPartition)
-
-	for _, info := range deployInfos {
-		clusterName := info.ClusterName
-		namespace := info.Namespace
-
-		partitionID := deploymentPartitionID{clusterName, namespace}
-
-		if _, exists := partitionMap[partitionID]; !exists {
-			if _, exists := clusters[clusterName]; !exists {
-				return nil, errors.New(fmt.Sprintf("No such cluster %s", clusterName))
-			}
-			cluster := clusters[clusterName]
-			partition := newDeploymentPartition([]DeploymentInfo{}, *cluster, auroraConfig, overrideToken)
-			partitionMap[partitionID] = partition
-		}
-
-		partitionMap[partitionID].DeploymentInfos = append(partitionMap[partitionID].DeploymentInfos, info)
-	}
-
-	partitions := make([]DeploymentPartition, len(partitionMap))
-
-	idx := 0
-	for _, partition := range partitionMap {
-		partitions[idx] = *partition
-		idx++
-	}
-
-	return partitions, nil
-}
-
-func newDeploymentPartition(deploymentInfos []DeploymentInfo, cluster config.Cluster, auroraConfig string, overrideToken string) *DeploymentPartition {
-	return &DeploymentPartition{
-		DeploymentInfos: deploymentInfos,
-		Partition: Partition{
-			Cluster:          cluster,
-			AuroraConfigName: auroraConfig,
-			OverrideToken:    overrideToken,
-		},
-	}
 }
