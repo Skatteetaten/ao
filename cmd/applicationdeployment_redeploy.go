@@ -38,8 +38,6 @@ func init() {
 
 func redeployApplicationDeployment(cmd *cobra.Command, args []string) error {
 
-	// TODO: Adapt to redeploy
-
 	if len(args) > 2 || len(args) < 1 {
 		return cmd.Usage()
 	}

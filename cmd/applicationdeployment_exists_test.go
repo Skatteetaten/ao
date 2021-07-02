@@ -28,6 +28,7 @@ func Test_checkExistence(t *testing.T) {
 			},
 			*newTestCluster("east", true),
 			auroraConfigName,
+			"dev",
 			overrideToken),
 		*newDeploySpecPartition(
 			[]deploymentspec.DeploymentSpec{
@@ -37,6 +38,7 @@ func Test_checkExistence(t *testing.T) {
 			},
 			*newTestCluster("west", true),
 			auroraConfigName,
+			"test-qa",
 			overrideToken),
 		*newDeploySpecPartition(
 			[]deploymentspec.DeploymentSpec{
@@ -47,6 +49,7 @@ func Test_checkExistence(t *testing.T) {
 			},
 			*newTestCluster("west", true),
 			auroraConfigName,
+			"test-st",
 			overrideToken),
 		*newDeploySpecPartition(
 			[]deploymentspec.DeploymentSpec{
@@ -55,6 +58,7 @@ func Test_checkExistence(t *testing.T) {
 			},
 			*newTestCluster("north", true),
 			auroraConfigName,
+			"prod",
 			overrideToken),
 	}
 
