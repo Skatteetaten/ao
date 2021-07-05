@@ -100,7 +100,7 @@ func getDeployedDeploymentSpecs(getClient func(partition Partition) client.Appli
 		return nil, err
 	}
 
-	var activeApplicationSpecs []deploymentspec.DeploymentSpec
+	var activeApplicationSpecs []deploymentspec.DeploymentSpec = make([]deploymentspec.DeploymentSpec, 0)
 	for _, partialResult := range partialResults {
 		if !partialResult.existsResults.Success {
 			return nil, errors.New("Failed to retrieve application deployment information from cluster")
