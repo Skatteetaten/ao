@@ -13,7 +13,6 @@ func Test_checkExistence(t *testing.T) {
 	auroraConfigName := "jupiter"
 	overrideToken := ""
 
-	// TODO: Adapt mock
 	applicationDeploymentClientMock := client.NewApplicationDeploymentClientMock()
 
 	getClient := func(partition Partition) client.ApplicationDeploymentClient {
@@ -98,14 +97,13 @@ func Test_getDeployedDeploymentSpecs(t *testing.T) {
 		return applicationDeploymentClientMock
 	}
 
-	applicationDeploymentClientMock.On("Exists", mock.Anything).Times(4)
+	applicationDeploymentClientMock.On("Exists", mock.Anything).Times(3)
 
 	deploymentsSpecs, err := getDeployedDeploymentSpecs(getClient, testDeploySpecs[:], auroraConfigName, overrideToken)
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	applicationDeploymentClientMock.AssertExpectations(t)
-	assert.Len(t, deploymentsSpecs, 3)
+	assert.Len(t, deploymentsSpecs, 11)
 }
