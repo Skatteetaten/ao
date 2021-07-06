@@ -74,12 +74,25 @@ func redeployApplicationDeployment(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	err = checkForDuplicateSpecs(filteredDeploymentSpecs)
+	if err != nil {
+		return err
+	}
+
+	println("filteredDeploymentSpecs")
+	header, rows := GetDeploySpecTable(filteredDeploymentSpecs, "")
+	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
+
 	activeDeploymentSpecs, err := getDeployedDeploymentSpecs(getApplicationDeploymentClient, filteredDeploymentSpecs, auroraConfigName, pFlagToken)
 	if err != nil {
 		return err
 	} else if len(activeDeploymentSpecs) == 0 {
 		return errors.New("No applications to redeploy")
 	}
+
+	println("activeDeploymentSpecs")
+	header, rows = GetDeploySpecTable(activeDeploymentSpecs, "")
+	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 
 	partitions, err := createDeploySpecPartitions(auroraConfigName, pFlagToken, AO.Clusters, activeDeploymentSpecs)
 	if err != nil {
@@ -97,6 +110,24 @@ func redeployApplicationDeployment(cmd *cobra.Command, args []string) error {
 
 	printDeployResult(result, cmd.OutOrStdout())
 
+	return nil
+}
+
+func checkForDuplicateSpecs(filteredDeploymentSpecs []deploymentspec.DeploymentSpec) error {
+	if len(filteredDeploymentSpecs) > 1 {
+		for i := 0; i < len(filteredDeploymentSpecs)-1; i++ {
+			for j := i + 1; j < len(filteredDeploymentSpecs); j++ {
+				if filteredDeploymentSpecs[i].Name() == filteredDeploymentSpecs[j].Name() &&
+					filteredDeploymentSpecs[i].Environment() == filteredDeploymentSpecs[j].Environment() &&
+					filteredDeploymentSpecs[i].Cluster() == filteredDeploymentSpecs[j].Cluster() {
+					return fmt.Errorf("Can not redeploy, since there are several aurora config specs for (cluster env app): %v %v %v",
+						filteredDeploymentSpecs[i].Cluster(),
+						filteredDeploymentSpecs[i].Environment(),
+						filteredDeploymentSpecs[i].Name())
+				}
+			}
+		}
+	}
 	return nil
 }
 
