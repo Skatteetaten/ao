@@ -79,20 +79,12 @@ func redeployApplicationDeployment(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	println("filteredDeploymentSpecs")
-	header, rows := GetDeploySpecTable(filteredDeploymentSpecs, "")
-	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
-
 	activeDeploymentSpecs, err := getDeployedDeploymentSpecs(getApplicationDeploymentClient, filteredDeploymentSpecs, auroraConfigName, pFlagToken)
 	if err != nil {
 		return err
 	} else if len(activeDeploymentSpecs) == 0 {
 		return errors.New("No applications to redeploy")
 	}
-
-	println("activeDeploymentSpecs")
-	header, rows = GetDeploySpecTable(activeDeploymentSpecs, "")
-	DefaultTablePrinter(header, rows, cmd.OutOrStdout())
 
 	partitions, err := createDeploySpecPartitions(auroraConfigName, pFlagToken, AO.Clusters, activeDeploymentSpecs)
 	if err != nil {
