@@ -2,19 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/skatteetaten/ao/pkg/deploymentspec"
 	"github.com/skatteetaten/ao/pkg/prompt"
-	"io"
-	//	"io"
-	//	"sort"
-	//	"strings"
-
-	"github.com/pkg/errors"
-	//	"github.com/skatteetaten/ao/pkg/client"
-	//	"github.com/skatteetaten/ao/pkg/config"
-	//	"github.com/skatteetaten/ao/pkg/prompt"
 	"github.com/skatteetaten/ao/pkg/service"
 	"github.com/spf13/cobra"
+	"io"
 )
 
 var applicationDeploymentRedeployCmd = &cobra.Command{
@@ -105,17 +98,17 @@ func redeployApplicationDeployment(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func checkForDuplicateSpecs(filteredDeploymentSpecs []deploymentspec.DeploymentSpec) error {
-	if len(filteredDeploymentSpecs) > 1 {
-		for i := 0; i < len(filteredDeploymentSpecs)-1; i++ {
-			for j := i + 1; j < len(filteredDeploymentSpecs); j++ {
-				if filteredDeploymentSpecs[i].Name() == filteredDeploymentSpecs[j].Name() &&
-					filteredDeploymentSpecs[i].Environment() == filteredDeploymentSpecs[j].Environment() &&
-					filteredDeploymentSpecs[i].Cluster() == filteredDeploymentSpecs[j].Cluster() {
+func checkForDuplicateSpecs(deploymentSpecs []deploymentspec.DeploymentSpec) error {
+	if len(deploymentSpecs) > 1 {
+		for i := 0; i < len(deploymentSpecs)-1; i++ {
+			for j := i + 1; j < len(deploymentSpecs); j++ {
+				if deploymentSpecs[i].Name() == deploymentSpecs[j].Name() &&
+					deploymentSpecs[i].Environment() == deploymentSpecs[j].Environment() &&
+					deploymentSpecs[i].Cluster() == deploymentSpecs[j].Cluster() {
 					return fmt.Errorf("Can not redeploy, since there are several aurora config specs for (cluster env app): %v %v %v",
-						filteredDeploymentSpecs[i].Cluster(),
-						filteredDeploymentSpecs[i].Environment(),
-						filteredDeploymentSpecs[i].Name())
+						deploymentSpecs[i].Cluster(),
+						deploymentSpecs[i].Environment(),
+						deploymentSpecs[i].Name())
 				}
 			}
 		}
