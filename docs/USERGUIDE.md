@@ -2,7 +2,7 @@
 
 # What is AO
 
-AO is a command line interface for the Boober API. It is used to
+AO is a command line interface for the Boober and Gobo APIs. It is used to
 
 - Deploy one or more ApplicationDeploymentRef (environment/application) to one or more clusters
 - Manage AuroraConfig remotely
@@ -11,7 +11,7 @@ AO is a command line interface for the Boober API. It is used to
 
 # General
 
-AO works by connecting to the Boober API. Authentication is handled by sending an OpenShift token in the HTTP header. The token is obtained by using the OpenShift API. It is also possible to use a token obtained by the oc command ("oc whoami -t") if you paste it into the ao config file or use the --token or -t flag available on all commands.
+AO works by connecting to the Boober and Gobo APIs. Authentication is handled by sending an OpenShift token in the HTTP header. The token is obtained by using the OpenShift API. It is also possible to use a token obtained by the oc command ("oc whoami -t") if you paste it into the ao config file or use the --token or -t flag available on all commands.
 
 ### Connect to Boober
 
