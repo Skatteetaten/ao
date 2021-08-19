@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-
+	log "github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
+	"os"
+	"os/exec"
 
 	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/spf13/cobra"
@@ -168,13 +169,38 @@ func SetRefName(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	AO.RefName = args[0]
+	refName := args[0]
+
+	if AO.Affiliation != "" {
+		exists:= refNameExistsInAuroraConfig(refName, AO.Affiliation)
+		if !exists {
+			return fmt.Errorf("refName was not set to %s, as it does not exist as a branch in %s", refName, AO.Affiliation)
+		}
+	}
+
+	AO.RefName = refName
 	if err := config.WriteConfig(*AO, ConfigLocation); err != nil {
 		return err
 	}
 
 	cmd.Printf("refName = %s\n", args[0])
 	return nil
+}
+
+func refNameExistsInAuroraConfig(refName, auroraConfig string) bool {
+	// Shellout to check if refName is a valid branch for the affiliation
+	clientConfig, err := DefaultAPIClient.GetClientConfig()
+	if err != nil {
+		log.Debugf("Error when getting clientconfig: %s\n", err)
+		return false
+	}
+	url := versioncontrol.GetGitURL(auroraConfig, flagCheckoutUser, clientConfig.GitURLPattern)
+	shellCmd := exec.Command("git", "ls-remote", "--exit-code", url, refName)
+	if err := shellCmd.Run(); err != nil {
+		log.Debugf("Error when checking for existing branch in auroraconfig: %s\n", err)
+		return false
+	}
+	return true
 }
 
 // UpdateClusters is the entry point for the `update-clusters` cli command
