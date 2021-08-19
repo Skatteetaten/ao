@@ -172,7 +172,7 @@ func SetRefName(cmd *cobra.Command, args []string) error {
 	refName := args[0]
 
 	if AO.Affiliation != "" {
-		exists:= refNameExistsInAuroraConfig(refName, AO.Affiliation)
+		exists := refNameExistsInAuroraConfig(refName, AO.Affiliation)
 		if !exists {
 			return fmt.Errorf("refName was not set to %s, as it does not exist as a branch in %s", refName, AO.Affiliation)
 		}
