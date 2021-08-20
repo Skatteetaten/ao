@@ -171,11 +171,8 @@ func SetRefName(cmd *cobra.Command, args []string) error {
 
 	refName := args[0]
 
-	if AO.Affiliation != "" {
-		exists := refNameExistsInAuroraConfig(refName, AO.Affiliation)
-		if !exists {
-			return fmt.Errorf("refName was not set to %s, as it does not exist as a branch in %s", refName, AO.Affiliation)
-		}
+	if AO.Affiliation != "" && !refNameExistsInAuroraConfig(refName, AO.Affiliation) {
+		return fmt.Errorf("refName was not set, since %s does not exist as a branch in %s", refName, AO.Affiliation)
 	}
 
 	AO.RefName = refName
@@ -188,7 +185,7 @@ func SetRefName(cmd *cobra.Command, args []string) error {
 }
 
 func refNameExistsInAuroraConfig(refName, auroraConfig string) bool {
-	// Shellout to check if refName is a valid branch for the affiliation
+	// Shellout to check if refName is a valid branch in the auroraConfig repo
 	clientConfig, err := DefaultAPIClient.GetClientConfig()
 	if err != nil {
 		log.Debugf("Error when getting clientconfig: %s\n", err)
