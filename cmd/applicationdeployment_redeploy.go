@@ -88,7 +88,7 @@ func redeployApplicationDeployment(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications to redeploy")
 	}
 
-	result, err := deployToReachableClusters(getApplicationDeploymentClient, partitions, nil)
+	result, err := deployToReachableClusters(getApplicationDeploymentClient, partitions, make(map[string]string))
 	if err != nil {
 		return err
 	}
