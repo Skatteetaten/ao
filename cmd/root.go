@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const rootLong = `A command line interface for the Boober and Gobo APIs.
+const rootLong = `A command line interface for the Aurora API.
   * Deploy one or more ApplicationDeploymentRef (environment/application) to one or more clusters
   * Manage AuroraConfig remotely
   * Support modifying AuroraConfig locally
