@@ -157,7 +157,7 @@ func (e *ErrorResponse) getAllErrors() []string {
 func (e *ErrorResponse) formatValidationError(res *responseErrorItem) {
 	illegalFieldFormat := `Application: %s/%s
 Filename:    %s
-Field:       %s
+Field:       %s (Illegal)
 Value:       %s
 Message:     %s`
 
@@ -167,7 +167,7 @@ Message:     %s`
 
 	invalidFieldFormat := `Application: %s/%s
 Filename:    %s
-Field:       %s
+Field:       %s (Invalid)
 Message:     %s`
 
 	genericFormat := `Application: %s/%s
