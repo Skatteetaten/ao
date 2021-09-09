@@ -154,15 +154,16 @@ func (ao *AOConfig) AddMultipleClusterConfig() {
 			Type: "ocp3",
 		},
 	}
-	ocp4Clusters := []string{"prod01", "test01", "utv04", "prod-relay01", "test-relay01", "utv-relay01"}
+	ocp4Clusters := []string{"utv04", "utv-relay01", "test01", "test-relay01", "prod01", "prod-relay01"}
 	for _, cluster := range ocp4Clusters {
 		ao.AvailableClusters = append(ao.AvailableClusters, cluster)
-		ao.PreferredAPIClusters = append([]string{cluster}, ao.PreferredAPIClusters...)
-		ao.AvailableUpdateClusters = append([]string{cluster}, ao.AvailableUpdateClusters...)
 		ao.ClusterConfig[cluster] = &ClusterConfig{
 			Type: "ocp4",
 		}
 	}
+	ao.PreferredAPIClusters = append([]string{"utv04", "test01"}, ao.PreferredAPIClusters...)
+	// TODO: Fikse når man har oppgraderingsservere for ocp4:
+	// ao.AvailableUpdateClusters = append([]string{upgradeclusters}, ao.AvailableUpdateClusters...)
 
 	ao.ServiceURLPatterns = map[string]*ServiceURLPatterns{
 		"ocp3": ocp3URLPatterns,
@@ -239,10 +240,12 @@ func (ao *AOConfig) Update(noPrompt bool) error {
 	if err != nil {
 		return err
 	}
+	logrus.Debugf("Update URL: %s", url)
 
 	serverVersion, err := GetCurrentVersionFromServer(url)
 	if err != nil {
-		return err
+		logrus.Warnf("Unable to get ao version from update server on: %s Aborting update detection: %s", url, err)
+		return nil
 	}
 
 	if !serverVersion.IsNewVersion() {
