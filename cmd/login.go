@@ -55,7 +55,6 @@ func init() {
 	loginCmd.Flags().BoolVarP(&flagLocalhost, "localhost", "", false, "set api to localhost")
 	loginCmd.Flags().MarkHidden("localhost")
 	loginCmd.Flags().StringVarP(&flagAPICluster, "apicluster", "", "", "select specified API cluster")
-	loginCmd.Flags().MarkHidden("apicluster")
 }
 
 // PreLogin performs pre command validation checks for the `login` cli command
