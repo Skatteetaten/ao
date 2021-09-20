@@ -13,6 +13,7 @@ import (
 var flagShowAll bool
 var flagAddCluster []string
 var flagBetaMultipleClusterTypes bool
+var flagOnlyOcp3Clusters bool
 
 var admCmd = &cobra.Command{
 	Use:   "adm",
@@ -54,6 +55,12 @@ var updateRefCmd = &cobra.Command{
 	Use:   "update-ref <refName>",
 	Short: `Update git ref for your auroraconfig checkout.`,
 	RunE:  SetRefName,
+}
+
+var defaultApiClusterCmd = &cobra.Command{
+	Use:   "default-apicluster <cluster>",
+	Short: `Set configured default API cluster for ao.`,
+	RunE:  SetApiCluster,
 }
 
 const (
@@ -114,9 +121,13 @@ func init() {
 	admCmd.AddCommand(updateClustersCmd)
 	admCmd.AddCommand(updateHookCmd)
 	admCmd.AddCommand(updateRefCmd)
+	admCmd.AddCommand(defaultApiClusterCmd)
 
 	getClusterCmd.Flags().BoolVarP(&flagShowAll, "all", "a", false, "Show all clusters, not just the reachable ones")
-	recreateConfigCmd.Flags().BoolVarP(&flagBetaMultipleClusterTypes, "beta-multiple-cluster-types", "", false, "Generate new config for multiple cluster types. Eks ocp3, ocp4")
+	recreateConfigCmd.Flags().BoolVarP(&flagBetaMultipleClusterTypes, "beta-multiple-cluster-types", "", false, "Generate new config for multiple cluster types. Eks ocp3, ocp4. (deprecated flag)")
+	recreateConfigCmd.Flags().MarkHidden("beta-multiple-cluster-types")
+	recreateConfigCmd.Flags().BoolVarP(&flagOnlyOcp3Clusters, "only-ocp3-clusters", "", false, "Generate new config for ocp3 only (deprecated function)")
+	recreateConfigCmd.Flags().MarkHidden("only-ocp3-clusters")
 	recreateConfigCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Recreate config with one cluster")
 	recreateConfigCmd.Flags().StringArrayVarP(&flagAddCluster, "add-cluster", "a", []string{}, "Add cluster to available clusters")
 	updateHookCmd.Flags().StringVarP(&flagGitHookType, "git-hook", "g", "pre-push", "Change git hook to validate AuroraConfig")
@@ -177,6 +188,24 @@ func SetRefName(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// SetApiCluster is the entry point for the `adm default-apicluster` cli command
+func SetApiCluster(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return cmd.Usage()
+	}
+
+	newApiCluster := args[0]
+	// TODO: Validate that newApiCluster is a valid cluster
+
+	AO.APICluster = newApiCluster
+	if err := config.WriteConfig(*AO, ConfigLocation); err != nil {
+		return err
+	}
+
+	cmd.Printf("apiCluster = %s\n", newApiCluster)
+	return nil
+}
+
 // UpdateClusters is the entry point for the `update-clusters` cli command
 func UpdateClusters(cmd *cobra.Command, args []string) error {
 	AO.InitClusters()
@@ -195,6 +224,12 @@ func RecreateConfig(cmd *cobra.Command, args []string) error {
 	}
 
 	if flagBetaMultipleClusterTypes {
+		fmt.Println("\nWarning: The flag --beta-multiple-cluster-types is redundant, since config for multiple cluster types is now default.")
+	}
+
+	if flagOnlyOcp3Clusters {
+		fmt.Println("\nWarning: The flag --only-ocp3-clusters deletes access to ocp4 from config. It should only be used for ao development.")
+	} else {
 		conf.AddMultipleClusterConfig()
 	}
 
