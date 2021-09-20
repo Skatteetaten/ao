@@ -195,7 +195,10 @@ func SetApiCluster(cmd *cobra.Command, args []string) error {
 	}
 
 	newApiCluster := args[0]
-	// TODO: Validate that newApiCluster is a valid cluster
+	// Validate that newApiCluster is a valid cluster
+	if _, ok := AO.Clusters[newApiCluster]; !ok {
+		return fmt.Errorf("Failed to set default apicluster, %s is not a valid cluster", newApiCluster)
+	}
 
 	AO.APICluster = newApiCluster
 	if err := config.WriteConfig(*AO, ConfigLocation); err != nil {
