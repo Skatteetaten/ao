@@ -156,7 +156,9 @@ func (ao *AOConfig) AddMultipleClusterConfig() {
 	}
 	ocp4Clusters := []string{"utv04", "utv-relay01", "test01", "test-relay01", "prod01", "prod-relay01"}
 	for _, cluster := range ocp4Clusters {
-		ao.AvailableClusters = append(ao.AvailableClusters, cluster)
+		if !contains(ao.AvailableClusters, cluster) {
+			ao.AvailableClusters = append(ao.AvailableClusters, cluster)
+		}
 		ao.ClusterConfig[cluster] = &ClusterConfig{
 			Type: "ocp4",
 		}
@@ -177,6 +179,16 @@ func formatNonLocalhostPattern(pattern string, a ...interface{}) string {
 	}
 
 	return fmt.Sprintf(pattern, a...)
+}
+
+// Checks if a string slice contains a string
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
 
 // LoadConfigFile loads an AOConfig file from file system

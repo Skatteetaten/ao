@@ -93,6 +93,7 @@ func initialize(cmd *cobra.Command, args []string) error {
 	if aoConfig == nil {
 		logrus.Info("Creating new config")
 		aoConfig = &config.DefaultAOConfig
+		aoConfig.AddMultipleClusterConfig()
 		aoConfig.InitClusters()
 		aoConfig.SelectAPICluster()
 		err = config.WriteConfig(*aoConfig, ConfigLocation)
