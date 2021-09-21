@@ -88,6 +88,8 @@ func initialize(cmd *cobra.Command, args []string) error {
 		logrus.Error(err)
 	}
 
+	cmdIsRecreateConfig := strings.Contains(cmd.Name(), recreateConfigCmd.Use)
+
 	if aoConfig == nil {
 		logrus.Info("Creating new config")
 		aoConfig = &config.DefaultAOConfig
@@ -97,7 +99,7 @@ func initialize(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-	} else if aoConfig.FileAOVersion != config.Version {
+	} else if !cmdIsRecreateConfig && aoConfig.FileAOVersion != config.Version {
 		logrus.Debugf("ao config file is saved with another versjon. AO-version: %s, saved version: %s", config.Version, aoConfig.FileAOVersion)
 
 		if update() {
