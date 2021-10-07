@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/skatteetaten/ao/pkg/session"
 	"os"
 
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
@@ -11,9 +12,9 @@ import (
 )
 
 var flagShowAll bool
-var flagAddCluster []string
-var flagBetaMultipleClusterTypes bool
-var flagOnlyOcp3Clusters bool
+var flagAddCluster []string           // deprecated
+var flagBetaMultipleClusterTypes bool // deprecated
+var flagOnlyOcp3Clusters bool         // deprecated
 
 var admCmd = &cobra.Command{
 	Use:   "adm",
@@ -35,14 +36,22 @@ var getAffiliationCmd = &cobra.Command{
 }
 var updateClustersCmd = &cobra.Command{
 	Use:   "update-clusters",
-	Short: "Will recreate clusters in config file",
+	Short: "Will rediscover clusters and update active API cluster accordingly",
 	RunE:  UpdateClusters,
 }
 
-var recreateConfigCmd = &cobra.Command{
-	Use:   "recreate-config",
-	Short: `The command will recreate the .ao.json file.`,
-	RunE:  RecreateConfig,
+var recreateConfigCmd = &cobra.Command{ // deprecated
+	Use:    "recreate-config",
+	Short:  `The command is deprecated.`,
+	Hidden: true,
+	RunE:   RecreateConfig,
+}
+
+var createConfigFileCmd = &cobra.Command{
+	Use:    "create-config-file",
+	Short:  `The command will create an .ao-config.json file (for expert users)`,
+	Hidden: true,
+	RunE:   CreateConfigFile,
 }
 
 var updateHookCmd = &cobra.Command{
@@ -122,6 +131,7 @@ func init() {
 	admCmd.AddCommand(updateHookCmd)
 	admCmd.AddCommand(updateRefCmd)
 	admCmd.AddCommand(defaultApiClusterCmd)
+	admCmd.AddCommand(createConfigFileCmd)
 
 	getClusterCmd.Flags().BoolVarP(&flagShowAll, "all", "a", false, "Show all clusters, not just the reachable ones")
 	recreateConfigCmd.Flags().BoolVarP(&flagBetaMultipleClusterTypes, "beta-multiple-cluster-types", "", false, "Generate new config for multiple cluster types. Eks ocp3, ocp4. (deprecated flag)")
@@ -136,8 +146,9 @@ func init() {
 // PrintClusters is the main method for the `adm clusters` cli command
 func PrintClusters(cmd *cobra.Command, printAll bool) {
 	var rows []string
-	for _, name := range AO.AvailableClusters {
-		cluster := AO.Clusters[name]
+	for _, name := range AOConfig.AvailableClusters {
+		cluster := AOConfig.Clusters[name]
+		token := AOSession.Tokens[name]
 
 		if !(cluster.Reachable || printAll) {
 			continue
@@ -148,16 +159,16 @@ func PrintClusters(cmd *cobra.Command, printAll bool) {
 		}
 
 		loggedIn := ""
-		if cluster.HasValidToken() {
+		if cluster.IsValidToken(token) {
 			loggedIn = "Yes"
 		}
 
 		apiURL := fmt.Sprintf("%s %s", cluster.BooberURL, cluster.GoboURL)
 
 		api := ""
-		if name == AO.APICluster {
+		if name == AOSession.APICluster {
 			api = "Yes"
-			if AO.Localhost {
+			if AOSession.Localhost {
 				apiURL = "http://localhost:8080"
 			}
 		}
@@ -179,8 +190,8 @@ func SetRefName(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	AO.RefName = args[0]
-	if err := config.WriteConfig(*AO, ConfigLocation); err != nil {
+	AOSession.RefName = args[0]
+	if err := session.WriteAOSession(*AOSession, SessionFileLocation); err != nil {
 		return err
 	}
 
@@ -196,12 +207,12 @@ func SetApiCluster(cmd *cobra.Command, args []string) error {
 
 	newApiCluster := args[0]
 	// Validate that newApiCluster is a valid cluster
-	if _, ok := AO.Clusters[newApiCluster]; !ok {
+	if _, ok := AOConfig.Clusters[newApiCluster]; !ok {
 		return fmt.Errorf("Failed to set default apicluster, %s is not a valid cluster", newApiCluster)
 	}
 
-	AO.APICluster = newApiCluster
-	if err := config.WriteConfig(*AO, ConfigLocation); err != nil {
+	AOSession.APICluster = newApiCluster
+	if err := session.WriteAOSession(*AOSession, SessionFileLocation); err != nil {
 		return err
 	}
 
@@ -211,34 +222,26 @@ func SetApiCluster(cmd *cobra.Command, args []string) error {
 
 // UpdateClusters is the entry point for the `update-clusters` cli command
 func UpdateClusters(cmd *cobra.Command, args []string) error {
-	AO.InitClusters()
-	AO.SelectAPICluster()
-	return config.WriteConfig(*AO, ConfigLocation)
+	AOConfig.InitClusters()
+	AOSession.APICluster = AOConfig.SelectAPICluster()
+	AOSession.Localhost = false
+	return session.WriteAOSession(*AOSession, SessionFileLocation)
 }
 
 // RecreateConfig is the entry point for the `adm recreate-config` cli command
 func RecreateConfig(cmd *cobra.Command, args []string) error {
-	conf := &config.DefaultAOConfig
-	if flagCluster != "" {
-		conf.AvailableClusters = []string{flagCluster}
-		conf.PreferredAPIClusters = []string{flagCluster}
-	} else if len(flagAddCluster) > 0 {
-		conf.AvailableClusters = append(conf.AvailableClusters, flagAddCluster...)
-	}
+	fmt.Println("\nInfo: No config file created nor needed. Configuration is internalized.")
+	return fmt.Errorf("Did not create any config file.\n")
+}
 
-	if flagBetaMultipleClusterTypes {
-		fmt.Println("\nWarning: The flag --beta-multiple-cluster-types is redundant, since config for multiple cluster types is now default.")
+// CreateConfigFile is the entry point for the `adm create-config-file` cli command
+func CreateConfigFile(cmd *cobra.Command, args []string) error {
+	customConfig := config.CreateDefaultConfig()
+	if err := config.WriteConfig(customConfig, CustomConfigLocation); err != nil {
+		return err
 	}
-
-	if flagOnlyOcp3Clusters {
-		fmt.Println("\nWarning: The flag --only-ocp3-clusters deletes access to ocp4 from config. It should only be used for ao development.")
-	} else {
-		conf.AddMultipleClusterConfig()
-	}
-
-	conf.InitClusters()
-	conf.SelectAPICluster()
-	return config.WriteConfig(*conf, ConfigLocation)
+	fmt.Println("Custom config file created at", CustomConfigLocation)
+	return nil
 }
 
 // Completion is the entry point for the `adm completion` cli command

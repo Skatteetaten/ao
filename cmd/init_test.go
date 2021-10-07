@@ -44,7 +44,6 @@ func GetDefaultAOConfig() *config.AOConfig {
 	}
 
 	return &config.AOConfig{
-		APICluster:        "utv",
 		AvailableClusters: []string{"utv", "relay", "test"},
 		Clusters:          clusters,
 	}

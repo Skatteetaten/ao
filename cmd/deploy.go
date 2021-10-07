@@ -89,7 +89,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	auroraConfigName := AO.Affiliation
+	auroraConfigName := AOSession.AuroraConfig
 	if flagAuroraConfig != "" {
 		auroraConfigName = flagAuroraConfig
 	}
@@ -120,7 +120,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	partitions, err := createDeploySpecPartitions(auroraConfigName, pFlagToken, AO.Clusters, filteredDeploymentSpecs)
+	partitions, err := createDeploySpecPartitions(auroraConfigName, pFlagToken, AOConfig.Clusters, filteredDeploymentSpecs)
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 func validateParams() error {
 
 	if flagCluster != "" {
-		if _, exists := AO.Clusters[flagCluster]; !exists {
+		if _, exists := AOConfig.Clusters[flagCluster]; !exists {
 			return errors.New(fmt.Sprintf("No such cluster %s", flagCluster))
 		}
 	}
@@ -181,7 +181,7 @@ func getDeployConfirmation(force bool, filteredDeploymentSpecs []deploymentspec.
 	shouldDeploy := true
 	if !force {
 		defaultAnswer := len(rows) == 1
-		message := fmt.Sprintf("Do you want to deploy %d application(s) in affiliation %s?", len(rows), AO.Affiliation)
+		message := fmt.Sprintf("Do you want to deploy %d application(s) in affiliation %s?", len(rows), AOSession.AuroraConfig)
 		shouldDeploy = prompt.Confirm(message, defaultAnswer)
 	}
 

@@ -10,23 +10,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const configTmpFile = "/tmp/ao_test.json"
+const configTmpFile = "/tmp/ao-config_test.json"
 
 func TestLoadConfigFile(t *testing.T) {
 	defer os.Remove(configTmpFile)
-	ao, _ := LoadConfigFile(configTmpFile)
-	assert.Empty(t, ao)
+	aoConfig, _ := LoadConfigFile(configTmpFile)
+	assert.Empty(t, aoConfig)
 
-	ao = &DefaultAOConfig
+	aoConfig = &BasicAOConfig
 
-	assert.Empty(t, ao.Affiliation)
-	ao.Affiliation = "paas"
-	WriteConfig(*ao, configTmpFile)
+	WriteConfig(*aoConfig, configTmpFile)
 
-	ao, _ = LoadConfigFile(configTmpFile)
-	assert.NotEmpty(t, ao)
-
-	assert.Equal(t, "paas", ao.Affiliation)
+	aoConfig, _ = LoadConfigFile(configTmpFile)
+	assert.NotEmpty(t, aoConfig)
 }
 
 func TestAOConfig_SelectApiCluster(t *testing.T) {
@@ -40,7 +36,7 @@ func TestAOConfig_SelectApiCluster(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		aoConfig := DefaultAOConfig
+		aoConfig := BasicAOConfig
 		aoConfig.Clusters = make(map[string]*Cluster)
 		for name, reachable := range test.Clusters {
 			aoConfig.Clusters[name] = &Cluster{
@@ -48,19 +44,10 @@ func TestAOConfig_SelectApiCluster(t *testing.T) {
 			}
 		}
 
-		aoConfig.SelectAPICluster()
-		assert.Equal(t, test.Expected, aoConfig.APICluster)
+		apiCluster := aoConfig.SelectAPICluster()
+		assert.Equal(t, test.Expected, apiCluster)
 		assert.Len(t, aoConfig.Clusters, len(test.Clusters))
 	}
-
-	aoConfig := DefaultAOConfig
-	aoConfig.APICluster = "test"
-	aoConfig.Clusters["utv"] = &Cluster{
-		Reachable: true,
-	}
-
-	aoConfig.SelectAPICluster()
-	assert.Equal(t, "test", aoConfig.APICluster, "Should not override APICluster when set")
 }
 
 func TestAOConfig_Update(t *testing.T) {

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"github.com/skatteetaten/ao/pkg/session"
 	"io/ioutil"
 	"testing"
 
@@ -17,7 +18,14 @@ func TestPrintClusters(t *testing.T) {
 		{true, "adm_clusters_all.txt"},
 	}
 
-	AO = GetDefaultAOConfig()
+	AOConfig = GetDefaultAOConfig()
+	AOSession = &session.AOSession{
+		RefName:      "",
+		APICluster:   "utv",
+		AuroraConfig: "",
+		Localhost:    false,
+		Tokens:       map[string]string{},
+	}
 
 	for _, tc := range cases {
 		buffer := &bytes.Buffer{}

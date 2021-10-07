@@ -34,7 +34,6 @@ func newTestCluster(name string, reachable bool) *config.Cluster {
 	return &config.Cluster{
 		Name:      name,
 		URL:       name + ".url",
-		Token:     name + ".token",
 		Reachable: reachable,
 		BooberURL: name + "boober.url",
 	}

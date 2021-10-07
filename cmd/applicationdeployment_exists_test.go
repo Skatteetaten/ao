@@ -76,7 +76,7 @@ func Test_checkExistence(t *testing.T) {
 func Test_getDeployedDeploymentSpecs(t *testing.T) {
 	auroraConfigName := "jupiter"
 	overrideToken := ""
-	AO = GetDefaultAOConfig()
+	AOConfig = GetDefaultAOConfig()
 	var testDeploySpecs = [...]deploymentspec.DeploymentSpec{
 		deploymentspec.NewDeploymentSpec("crm", "dev", "utv", "1"),
 		deploymentspec.NewDeploymentSpec("erp", "dev", "utv", "1"),

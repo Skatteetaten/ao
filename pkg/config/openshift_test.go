@@ -45,8 +45,7 @@ func TestCluster_HasValidToken(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		cluster.Token = tc.Token
-		assert.Equal(t, tc.Expected, cluster.HasValidToken())
+		assert.Equal(t, tc.Expected, cluster.IsValidToken(tc.Token))
 	}
 }
 
@@ -89,12 +88,12 @@ func TestGetToken(t *testing.T) {
 
 func TestAOConfig_InitClusters(t *testing.T) {
 
-	ao := DefaultAOConfig
-	ao.ClusterURLPattern = "%s"
-	ao.BooberURLPattern = "%s"
-	ao.GoboURLPattern = "%s"
-	ao.AvailableClusters = []string{}
-	ao.PreferredAPIClusters = []string{}
+	aoConfig := BasicAOConfig
+	aoConfig.ClusterURLPattern = "%s"
+	aoConfig.BooberURLPattern = "%s"
+	aoConfig.GoboURLPattern = "%s"
+	aoConfig.AvailableClusters = []string{}
+	aoConfig.PreferredAPIClusters = []string{}
 
 	type TestCase struct {
 		Name      string
@@ -121,20 +120,20 @@ func TestAOConfig_InitClusters(t *testing.T) {
 			}
 		}))
 		testServers = append(testServers, ts)
-		ao.AvailableClusters = append(ao.AvailableClusters, ts.URL)
+		aoConfig.AvailableClusters = append(aoConfig.AvailableClusters, ts.URL)
 		testMap[ts.URL] = test
 	}
 
 	noHost := "http://nohost:8080"
-	ao.AvailableClusters = append(ao.AvailableClusters, noHost)
+	aoConfig.AvailableClusters = append(aoConfig.AvailableClusters, noHost)
 	testMap[noHost] = TestCase{
 		Reachable: false,
 		Name:      "no host",
 	}
 
 	// Test
-	ao.InitClusters()
-	for _, c := range ao.Clusters {
+	aoConfig.InitClusters()
+	for _, c := range aoConfig.Clusters {
 		test := testMap[c.Name]
 		assert.Equal(t, test.Reachable, c.Reachable)
 

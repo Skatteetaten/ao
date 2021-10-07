@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/skatteetaten/ao/pkg/session"
 	"os"
 	"os/user"
 	"runtime"
@@ -63,15 +64,15 @@ func PreLogin(cmd *cobra.Command, args []string) error {
 		return errors.New("Please specify AuroraConfig to log in to")
 	}
 	if len(args) == 1 {
-		AO.Affiliation = args[0]
+		AOSession.AuroraConfig = args[0]
 	}
 
 	var password string
 	if flagPassword != "" {
 		password = flagPassword
 	}
-	for _, c := range AO.Clusters {
-		if !c.Reachable || c.HasValidToken() {
+	for _, c := range AOConfig.Clusters {
+		if !c.Reachable || c.IsValidToken(AOSession.Tokens[c.Name]) {
 			continue
 		}
 		if password == "" {
@@ -79,13 +80,12 @@ func PreLogin(cmd *cobra.Command, args []string) error {
 		}
 		token, err := config.GetToken(c.LoginURL, flagUserName, password)
 		if err != nil {
-			indicateAoAdmRecreateConfig(err)
 			logrus.WithFields(logrus.Fields{
 				"url":      c.URL,
 				"userName": flagUserName,
 			}).Fatal(err)
 		}
-		c.Token = token
+		AOSession.Tokens[c.Name] = token
 	}
 
 	return nil
@@ -93,24 +93,24 @@ func PreLogin(cmd *cobra.Command, args []string) error {
 
 // Login performs main part of the `login` cli command
 func Login(cmd *cobra.Command, args []string) error {
-	if AO.Localhost != flagLocalhost {
-		AO.Localhost = flagLocalhost
+	if AOSession.Localhost != flagLocalhost {
+		AOSession.Localhost = flagLocalhost
 	}
 
 	if flagAPICluster != "" {
-		if _, ok := AO.Clusters[flagAPICluster]; !ok {
-			return errors.Errorf("%s is not a valid cluster option. Choose between %v", flagAPICluster, AO.AvailableClusters)
+		if _, ok := AOConfig.Clusters[flagAPICluster]; !ok {
+			return errors.Errorf("%s is not a valid cluster option. Choose between %v", flagAPICluster, AOConfig.AvailableClusters)
 		}
-		AO.APICluster = flagAPICluster
+		AOSession.APICluster = flagAPICluster
 	}
 
-	cluster := AO.Clusters[AO.APICluster]
-	DefaultAPIClient.Token = cluster.Token
+	cluster := AOConfig.Clusters[AOSession.APICluster]
+	DefaultAPIClient.Token = AOSession.Tokens[cluster.Name]
 
 	host := cluster.BooberURL
 	gobohost := cluster.GoboURL
 
-	if AO.Localhost {
+	if AOSession.Localhost {
 		host = "http://localhost:8080"
 	}
 	DefaultAPIClient.Host = host
@@ -118,25 +118,23 @@ func Login(cmd *cobra.Command, args []string) error {
 
 	acn, err := DefaultAPIClient.GetAuroraConfigNames()
 	if err != nil {
-		indicateAoAdmRecreateConfig(err)
 		return fmt.Errorf("While loading aurora config names: %w", err)
 	}
 	var found bool
-	for _, affiliation := range *acn {
-		if affiliation == AO.Affiliation {
+	for _, auroraConfigName := range *acn {
+		if auroraConfigName == AOSession.AuroraConfig {
 			found = true
 			break
 		}
 	}
 	if !found {
-		err := errors.New("Illegal affiliation: " + AO.Affiliation)
+		err := errors.New("Illegal aurora config: " + AOSession.AuroraConfig)
 		return err
 	}
 
 	var apiVersion int
 	clientConfig, err := DefaultAPIClient.GetClientConfig()
 	if err != nil {
-		indicateAoAdmRecreateConfig(err)
 		return fmt.Errorf("While getting client config: %w", err)
 	}
 
@@ -152,22 +150,31 @@ func Login(cmd *cobra.Command, args []string) error {
 		return errors.New(message)
 	}
 
-	AO.Update(false)
-	return config.WriteConfig(*AO, ConfigLocation)
-}
-
-func indicateAoAdmRecreateConfig(err error) {
-	if strings.Contains(err.Error(), "unsupported") || strings.Contains(err.Error(), "protocol") {
-		fmt.Printf("\nPossible unsupported protocol.  Try running command \"ao adm recreate-config\".\n")
+	if err = session.WriteAOSession(*AOSession, SessionFileLocation); err != nil {
+		return err
 	}
+
+	aoUpdated, err := AOConfig.Update(false)
+	cmd.Annotations = make(map[string]string)
+	if aoUpdated {
+		cmd.Annotations["Updated"] = "true"
+	}
+	if err != nil {
+		logrus.Debug(err)
+	}
+
+	return nil
 }
 
 // PostLogin shows results at the end of performing the `login` cli command
 func PostLogin(cmd *cobra.Command, args []string) {
-
-	PrintClusters(cmd, true)
-	if AO.RefName != "" && AO.RefName != "master" {
-		fmt.Printf("\nrefName=%s in AO configurations file. Consider running command \"ao adm update-ref <refName>\" if this is incorrect\n", AO.RefName)
+	if cmd.Annotations["Updated"] == "true" {
+		fmt.Println("AO was updated.")
+	} else {
+		PrintClusters(cmd, true)
+		if AOSession.RefName != "" && AOSession.RefName != "master" {
+			fmt.Printf("\nrefName=%s in AO configurations file. Consider running command \"ao adm update-ref <refName>\" if this is incorrect\n", AOSession.RefName)
+		}
+		fmt.Printf("\nConsider running command \"ao adm update-clusters\" if cluster information above looks incorrect \n")
 	}
-	fmt.Printf("\nConsider running command \"ao adm update-clusters\" if cluster information above looks incorrect \n")
 }
