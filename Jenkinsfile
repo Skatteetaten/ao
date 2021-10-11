@@ -9,7 +9,6 @@ def overrides = [
     chatRoom: "#aos-notifications",
     iq: false,
     sonarQube: false,
-    openshiftBaseImageVersion: "1.7.0", 
     nodeVersion: "12",
     applicationType: "nodejs",
     versionStrategy: [
