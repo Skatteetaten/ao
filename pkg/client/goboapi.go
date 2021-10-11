@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/graphql"
+	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -70,8 +72,7 @@ func extractGraphqlErrorMsgs(errorsInput error) error {
 			}
 			return errors.New(strings.Join(errorMsgs, "; "))
 		} else {
-			logrus.Warnf("extractGraphqlErrorMsg got ordinary error (deprececated): %s", errorsInput)
-			return errorsInput
+			return handleNonGraphqlError(errorsInput)
 		}
 	}
 	return nil
@@ -175,4 +176,21 @@ func (detail detail) appendMessage(detailMsgs []string) []string {
 		detailMsgs = append(detailMsgs, detail.Message)
 	}
 	return detailMsgs
+}
+
+func handleNonGraphqlError(errorsInput error) error {
+	non200msg := "graphql server returned a non-200 status code: "
+	logrus.Warnf("extractGraphqlErrorMsg got ordinary non-graphql error: %s", errorsInput)
+	if strings.Contains(errorsInput.Error(), non200msg) {
+		statusCodeStr := errorsInput.Error()[len(non200msg):]
+		statusCode, err := strconv.Atoi(statusCodeStr)
+		if err != nil {
+			logrus.Debugln("Could not find statusCode")
+			return errorsInput
+		}
+		if statusCode == http.StatusUnauthorized {
+			return fmt.Errorf("%w\nUnauthorized. Please log in.", errorsInput)
+		}
+	}
+	return errorsInput
 }
