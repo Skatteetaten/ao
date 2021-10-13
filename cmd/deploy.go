@@ -126,7 +126,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 	}
 
 	if !getDeployConfirmation(flagNoPrompt, filteredDeploymentSpecs, flagVersion, cmd.OutOrStdout()) {
-		return errors.New("No applications to deploy")
+		return errors.New("Did not deploy any applications")
 	}
 
 	if flagVersion != "" {
