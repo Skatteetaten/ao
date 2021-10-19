@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/mitchellh/go-homedir"
 	"github.com/skatteetaten/ao/pkg/session"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/client"
@@ -80,48 +81,21 @@ func initialize(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
 	home, err := homedir.Dir()
 	if err != nil {
-		return err
+		return fmt.Errorf("Error while resolving home dir: %w", err)
 	}
 	CustomConfigLocation = filepath.Join(home, ".ao-config.json")
 	SessionFileLocation = filepath.Join(home, ".ao-session.json")
 
-	customAOConfig, err := config.LoadConfigFile(CustomConfigLocation)
+	aoConfig, err := config.LoadOrCreateAOConfig(CustomConfigLocation)
 	if err != nil {
-		// The normal state is that there is no custom AO config file
-		logrus.Debug(err)
+		return err
 	}
 
-	var aoConfig config.AOConfig
-	if customAOConfig == nil {
-		logrus.Info("Creating default config")
-		aoConfig = config.CreateDefaultConfig()
-	} else {
-		if customAOConfig.FileAOVersion != config.Version {
-			logrus.Warnf("A custom ao config file is saved with another version at %s.\n"+
-				"AO-version: %s, saved version: %s\n"+
-				"This may cause unforeseen errors.\n", CustomConfigLocation, config.Version, customAOConfig.FileAOVersion)
-		}
-		aoConfig = *customAOConfig
-	}
-
-	aoSession, err := session.LoadSessionFile(SessionFileLocation)
+	aoSession, err := session.LoadOrCreateAOSessionFile(SessionFileLocation, aoConfig)
 	if err != nil {
-		logrus.Debugln("Could not load session file.  Not logged in.")
-	}
-
-	if aoSession == nil {
-		logrus.Info("Creating session file")
-		aoSession = &session.AOSession{
-			RefName:      "master",
-			APICluster:   aoConfig.SelectAPICluster(),
-			AuroraConfig: "",
-			Localhost:    false,
-			Tokens:       map[string]string{},
-		}
-		session.WriteAOSession(*aoSession, SessionFileLocation)
+		return err
 	}
 
 	if flagAuroraConfig == "" && flagCheckoutAuroraconfig == "" {
@@ -155,7 +129,7 @@ func initialize(cmd *cobra.Command, args []string) error {
 		api.Token = pFlagToken
 	}
 
-	AOConfig, AOSession, DefaultAPIClient = &aoConfig, aoSession, api
+	AOConfig, AOSession, DefaultAPIClient = aoConfig, aoSession, api
 
 	return nil
 }

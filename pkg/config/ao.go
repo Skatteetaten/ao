@@ -75,8 +75,8 @@ type AOConfig struct {
 	FileAOVersion string `json:"aoVersion"` // For detecting possible changes to saved file
 }
 
-// BasicAOConfig is an AOConfig with default values
-var BasicAOConfig = AOConfig{
+// basicAOConfig is an AOConfig with default values
+var basicAOConfig = AOConfig{
 	Clusters:                make(map[string]*Cluster),
 	AvailableClusters:       []string{"utv", "utv-relay", "test", "test-relay", "prod", "prod-relay"},
 	PreferredAPIClusters:    []string{"utv", "test"},
@@ -186,11 +186,29 @@ func contains(s []string, e string) bool {
 	return false
 }
 
-func CreateDefaultConfig() AOConfig {
-	aoConfig := BasicAOConfig
+func LoadOrCreateAOConfig(customConfigLocation string) (*AOConfig, error) {
+	customAOConfig, err := LoadConfigFile(customConfigLocation)
+	if err != nil {
+		// The normal state is that there is no custom AO config file
+		logrus.Debug(err)
+	}
+	if customAOConfig == nil {
+		logrus.Info("Creating default config")
+		return CreateDefaultConfig(), nil
+	}
+	if customAOConfig.FileAOVersion != Version {
+		logrus.Warnf("A custom ao config file is saved with another version at %s.\n"+
+			"AO-version: %s, saved version: %s\n"+
+			"This may cause unforeseen errors.\n", customConfigLocation, Version, customAOConfig.FileAOVersion)
+	}
+	return customAOConfig, nil
+}
+
+func CreateDefaultConfig() *AOConfig {
+	aoConfig := basicAOConfig
 	aoConfig.AddMultipleClusterConfig()
 	aoConfig.InitClusters()
-	return aoConfig
+	return &aoConfig
 }
 
 // LoadConfigFile loads an AOConfig file from file system

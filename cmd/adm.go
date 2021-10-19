@@ -237,7 +237,7 @@ func RecreateConfig(cmd *cobra.Command, args []string) error {
 // CreateConfigFile is the entry point for the `adm create-config-file` cli command
 func CreateConfigFile(cmd *cobra.Command, args []string) error {
 	customConfig := config.CreateDefaultConfig()
-	if err := config.WriteConfig(customConfig, CustomConfigLocation); err != nil {
+	if err := config.WriteConfig(*customConfig, CustomConfigLocation); err != nil {
 		return err
 	}
 	fmt.Println("Custom config file created at", CustomConfigLocation)

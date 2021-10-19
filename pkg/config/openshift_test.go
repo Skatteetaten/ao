@@ -88,7 +88,7 @@ func TestGetToken(t *testing.T) {
 
 func TestAOConfig_InitClusters(t *testing.T) {
 
-	aoConfig := BasicAOConfig
+	aoConfig := basicAOConfig
 	aoConfig.ClusterURLPattern = "%s"
 	aoConfig.BooberURLPattern = "%s"
 	aoConfig.GoboURLPattern = "%s"

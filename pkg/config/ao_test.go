@@ -17,7 +17,7 @@ func TestLoadConfigFile(t *testing.T) {
 	aoConfig, _ := LoadConfigFile(configTmpFile)
 	assert.Empty(t, aoConfig)
 
-	aoConfig = &BasicAOConfig
+	aoConfig = &basicAOConfig
 
 	WriteConfig(*aoConfig, configTmpFile)
 
@@ -36,7 +36,7 @@ func TestAOConfig_SelectApiCluster(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		aoConfig := BasicAOConfig
+		aoConfig := basicAOConfig
 		aoConfig.Clusters = make(map[string]*Cluster)
 		for name, reachable := range test.Clusters {
 			aoConfig.Clusters[name] = &Cluster{
