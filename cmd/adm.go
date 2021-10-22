@@ -48,10 +48,10 @@ var recreateConfigCmd = &cobra.Command{ // deprecated
 }
 
 var createConfigFileCmd = &cobra.Command{
-	Use:    "create-config-file",
-	Short:  `The command will create an .ao-config.json file (for expert users)`,
-	Hidden: true,
-	RunE:   CreateConfigFile,
+	Use:   "create-config-file",
+	Short: `The command will create an .ao-config.json file (for expert users)`,
+	Long:  `This will generate an optional config file, containing all URLs used by ao to execute commands. When it exists, this will override the internal config.`,
+	RunE:  CreateConfigFile,
 }
 
 var updateHookCmd = &cobra.Command{
