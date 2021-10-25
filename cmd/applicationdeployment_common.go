@@ -109,11 +109,11 @@ func createDeploySpecPartitions(auroraConfig, overrideToken string, clusters map
 
 func getApplicationDeploymentClient(partition Partition) client.ApplicationDeploymentClient {
 	var cli *client.APIClient
-	if AO.Localhost {
+	if AOSession.Localhost {
 		cli = DefaultAPIClient
 		cli.Affiliation = partition.AuroraConfigName
 	} else {
-		token := partition.Cluster.Token
+		token := AOSession.Tokens[partition.Cluster.Name]
 		if partition.OverrideToken != "" {
 			token = partition.OverrideToken
 		}

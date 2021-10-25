@@ -21,13 +21,13 @@ func PrintAffiliationsGraphql(cmd *cobra.Command, args []string) error {
 	}
 
 	var mark string
-	for _, affiliation := range configNamesResponse.AuroraAPIMetadata.ConfigNames {
-		if affiliation == AO.Affiliation {
+	for _, auroraConfigName := range configNamesResponse.AuroraAPIMetadata.ConfigNames {
+		if auroraConfigName == AOSession.AuroraConfig {
 			mark = "*"
 		} else {
 			mark = " "
 		}
-		line := fmt.Sprintf("  %s %s", mark, affiliation)
+		line := fmt.Sprintf("  %s %s", mark, auroraConfigName)
 		cmd.Println(line)
 	}
 
