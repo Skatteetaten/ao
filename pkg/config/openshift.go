@@ -39,58 +39,7 @@ type Cluster struct {
 	Reachable bool   `json:"reachable"`
 	BooberURL string `json:"booberUrl"`
 	GoboURL   string `json:"goboUrl"`
-}
-
-// InitClusters initializes Cluster objects for AOConfig
-func (aoConfig *AOConfig) InitClusters() {
-	aoConfig.Clusters = make(map[string]*Cluster)
-	ch := make(chan *Cluster)
-	configuredClusters := 0
-
-	for _, cluster := range aoConfig.AvailableClusters {
-		name := cluster
-		urls, err := aoConfig.GetServiceURLs(name)
-		if err != nil {
-			fmt.Println(err)
-			fmt.Printf("Skipping config generation for cluster %s\n", name)
-			continue
-		}
-
-		configuredClusters++
-		go func() {
-			reachable := false
-			resp, err := client.Get(urls.BooberURL)
-			if err == nil && resp != nil && resp.StatusCode < 500 {
-				resp, err := client.Get(urls.GoboURL)
-				if err == nil && resp != nil && resp.StatusCode < 500 {
-					resp, err = client.Get(urls.ClusterLoginURL)
-					if err == nil && resp != nil && resp.StatusCode < 500 {
-						reachable = true
-					}
-				}
-			}
-
-			logrus.WithField("reachable", reachable).Info(urls.BooberURL)
-			ch <- &Cluster{
-				Name:      name,
-				URL:       urls.ClusterURL,
-				LoginURL:  urls.ClusterLoginURL,
-				Reachable: reachable,
-				BooberURL: urls.BooberURL,
-				GoboURL:   urls.GoboURL,
-			}
-		}()
-	}
-
-	for {
-		select {
-		case c := <-ch:
-			aoConfig.Clusters[c.Name] = c
-			if len(aoConfig.Clusters) == configuredClusters {
-				return
-			}
-		}
-	}
+	UpdateURL string `json:"updateUrl,omitempty"`
 }
 
 // HasValidToken performs a test call to verify validity of token
