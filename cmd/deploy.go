@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"io"
 	"sort"
@@ -141,9 +142,29 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	result = detectAndUpdateIfVersionError(result, flagVersion)
+
 	printDeployResult(result, cmd.OutOrStdout())
 
 	return nil
+}
+
+func detectAndUpdateIfVersionError(result []client.DeployResults, flagVersion string) []client.DeployResults {
+	if flagVersion != "" {
+		updatedResult := result
+		// When flagVersion is set, only one application with one result is expected
+		deployedVersion := result[0].Results[0].DeploymentSpec.Version()
+		logrus.Debugf("flagVersion: %s, deployed version: %s\n", flagVersion, deployedVersion)
+		versionError := flagVersion != deployedVersion
+
+		if len(result) == 1 && versionError {
+			warning := fmt.Sprintf("Error: Wrong version was deployed. Was %s, should have been %s.", deployedVersion, flagVersion)
+			updatedResult[0].Results[0].Warnings = append(updatedResult[0].Results[0].Warnings, warning)
+		}
+
+		return updatedResult
+	}
+	return result
 }
 
 func validateParams() error {
