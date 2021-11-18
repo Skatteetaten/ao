@@ -90,6 +90,7 @@ func performExists(deployClient client.ApplicationDeploymentClient, partition De
 }
 
 func getDeployedDeploymentSpecs(getClient func(partition Partition) client.ApplicationDeploymentClient, deploySpecs []deploymentspec.DeploymentSpec, auroraConfigName, overrideToken string) ([]deploymentspec.DeploymentSpec, error) {
+
 	deploySpecPartitions, err := createDeploySpecPartitions(auroraConfigName, overrideToken, AOConfig.Clusters, deploySpecs)
 	if err != nil {
 		return nil, err
