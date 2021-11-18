@@ -45,7 +45,6 @@ func redeployApplicationDeployment(cmd *cobra.Command, args []string) error {
 		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-
 	auroraConfigName := AOSession.AuroraConfig
 	if flagAuroraConfig != "" {
 		auroraConfigName = flagAuroraConfig
