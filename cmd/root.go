@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/skatteetaten/ao/pkg/prompt"
+	"github.com/mitchellh/go-homedir"
+	"github.com/skatteetaten/ao/pkg/session"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/client"
@@ -28,15 +28,19 @@ var (
 	pFlagToken                string
 	pFlagRefName              string
 	pFlagNoHeader             bool
-	pFlagAnswerRecreateConfig string
+	pFlagAnswerRecreateConfig string // deprecated
 
 	// DefaultAPIClient will use APICluster from ao config as default values
 	// if persistent token and/or server api url is specified these will override default values
 	DefaultAPIClient *client.APIClient
-	// AO holds the config og ao
-	AO *config.AOConfig
-	// ConfigLocation is the location of the config
-	ConfigLocation string
+	// AOConfig holds the ao config
+	AOConfig *config.AOConfig
+	// CustomConfigLocation is the location of an optional config file
+	CustomConfigLocation string
+	// AO holds the ao session
+	AOSession *session.AOSession
+	// SessionFileLocation is the location of the file holding session data for the login session
+	SessionFileLocation string
 )
 
 // RootCmd is the root of the entire `ao` cli command structure
@@ -54,7 +58,8 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&pFlagRefName, "ref", "", "Set git ref name, does not affect vaults")
 	RootCmd.PersistentFlags().BoolVar(&pFlagNoHeader, "no-headers", false, "Print tables without headers")
 	RootCmd.PersistentFlags().MarkHidden("no-headers")
-	RootCmd.PersistentFlags().StringVar(&pFlagAnswerRecreateConfig, "autoanswer-recreate-config", "", "Set automatic response for ao config question [y, n]")
+	RootCmd.PersistentFlags().StringVar(&pFlagAnswerRecreateConfig, "autoanswer-recreate-config", "", "deprecated")
+	RootCmd.PersistentFlags().MarkHidden("autoanswer-recreate-config")
 }
 
 func initialize(cmd *cobra.Command, args []string) error {
@@ -72,68 +77,46 @@ func initialize(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	err := setLogging(pFlagLogLevel, pFlagPrettyLog)
+	if err != nil {
+		return err
+	}
 	home, err := homedir.Dir()
 	if err != nil {
-		return err
+		return fmt.Errorf("Error while resolving home dir: %w", err)
 	}
-	ConfigLocation = filepath.Join(home, ".ao.json")
+	CustomConfigLocation = filepath.Join(home, ".ao-config.json")
+	SessionFileLocation = filepath.Join(home, ".ao-session.json")
 
-	err = setLogging(pFlagLogLevel, pFlagPrettyLog)
+	aoConfig, err := config.LoadOrCreateAOConfig(CustomConfigLocation)
 	if err != nil {
 		return err
 	}
 
-	aoConfig, err := config.LoadConfigFile(ConfigLocation)
+	aoSession, err := session.LoadOrCreateAOSessionFile(SessionFileLocation, aoConfig)
 	if err != nil {
-		logrus.Error(err)
+		return err
 	}
 
-	if aoConfig == nil {
-		logrus.Info("Creating new config")
-		aoConfig = &config.DefaultAOConfig
-		aoConfig.InitClusters()
-		aoConfig.SelectAPICluster()
-		err = config.WriteConfig(*aoConfig, ConfigLocation)
-		if err != nil {
-			return err
-		}
-	} else if aoConfig.FileAOVersion != config.Version {
-		logrus.Debugf("ao config file is saved with another versjon. AO-version: %s, saved version: %s", config.Version, aoConfig.FileAOVersion)
-
-		if update() {
-			RecreateConfig(cmd, args)
-			if aoConfig, err = config.LoadConfigFile(ConfigLocation); err != nil {
-				logrus.Error(fmt.Errorf("Could not load config after recreate: %w", err))
-			}
-			if pFlagAnswerRecreateConfig == "" {
-				fmt.Printf("\nThe ao configuration settings file was updated to match the current ao version.\n\n")
-			}
-		} else {
-			if pFlagAnswerRecreateConfig == "" {
-				fmt.Printf("\nNB: Using the ao configuration settings file created for another ao version may cause errors. \nIf you experience errors, try running command \"ao adm recreate-config\".\n\n")
-			}
-		}
-	}
-
-	if flagAuroraConfig == "" && flagCheckoutAffiliation == "" {
+	if flagAuroraConfig == "" && flagCheckoutAuroraconfig == "" {
 		commandsWithoutAffiliation := []string{"version", "login", "logout", "adm", "update"}
-		if containsNone(cmd.CommandPath(), commandsWithoutAffiliation) && aoConfig.Affiliation == "" {
-			return errors.New("no affiliations is set, please login")
+		if containsNone(cmd.CommandPath(), commandsWithoutAffiliation) && aoSession.AuroraConfig == "" {
+			return errors.New("No affiliations is set. Please log in.")
 		}
 	}
 
-	apiCluster := aoConfig.Clusters[aoConfig.APICluster]
+	apiCluster := aoConfig.Clusters[aoSession.APICluster]
 	if apiCluster == nil {
 		if !strings.Contains(cmd.CommandPath(), "adm") {
-			return errors.Errorf("api cluster %s is not available. Check config", aoConfig.APICluster)
+			return errors.Errorf("api cluster %s is not available. Try again later.", aoSession.APICluster)
 		}
 		apiCluster = &config.Cluster{}
 	}
+	apiToken := aoSession.Tokens[aoSession.APICluster]
 
-	api := client.NewAPIClient(apiCluster.BooberURL, apiCluster.GoboURL, apiCluster.Token, aoConfig.Affiliation, aoConfig.RefName, client.CreateUUID().String())
+	api := client.NewAPIClient(apiCluster.BooberURL, apiCluster.GoboURL, apiToken, aoSession.AuroraConfig, aoSession.RefName, client.CreateUUID().String())
 
-	if aoConfig.Localhost {
-		// TODO: Move to config?
+	if aoSession.Localhost {
 		api.Host = "http://localhost:8080"
 		api.GoboHost = "http://localhost:8080"
 	}
@@ -146,22 +129,9 @@ func initialize(cmd *cobra.Command, args []string) error {
 		api.Token = pFlagToken
 	}
 
-	AO, DefaultAPIClient = aoConfig, api
+	AOConfig, AOSession, DefaultAPIClient = aoConfig, aoSession, api
 
 	return nil
-}
-
-func update() bool {
-	// ask for update if none of the flags "token" or "autoanswer-recreate-config" are set
-	ask := pFlagToken == "" && pFlagAnswerRecreateConfig == ""
-
-	if ask {
-		fmt.Printf("\nIt looks like ao have been updated to another version.\n")
-		message := "Do you want to recreate the ao configuration settings file with default values (recommended)?"
-		return prompt.Confirm(message, true)
-	}
-
-	return strings.ToLower(pFlagAnswerRecreateConfig) != "n"
 }
 
 func containsNone(value string, list []string) bool {

@@ -12,7 +12,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
-	github.com/skatteetaten/graphql v0.2.3-0.20201009105426-b4ccc063e40d
+	github.com/skatteetaten/graphql v0.2.3-0.20211007072132-0e15a746c430
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/sys v0.0.0-20210816074244-15123e1e1f71

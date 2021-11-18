@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/auroraconfig"
 	"io"
 	"sort"
@@ -89,7 +90,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	auroraConfigName := AO.Affiliation
+	auroraConfigName := AOSession.AuroraConfig
 	if flagAuroraConfig != "" {
 		auroraConfigName = flagAuroraConfig
 	}
@@ -120,13 +121,13 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	partitions, err := createDeploySpecPartitions(auroraConfigName, pFlagToken, AO.Clusters, filteredDeploymentSpecs)
+	partitions, err := createDeploySpecPartitions(auroraConfigName, pFlagToken, AOConfig.Clusters, filteredDeploymentSpecs)
 	if err != nil {
 		return err
 	}
 
 	if !getDeployConfirmation(flagNoPrompt, filteredDeploymentSpecs, flagVersion, cmd.OutOrStdout()) {
-		return errors.New("No applications to deploy")
+		return errors.New("Did not deploy any applications")
 	}
 
 	if flagVersion != "" {
@@ -141,15 +142,35 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	result = detectAndUpdateIfVersionError(result, flagVersion)
+
 	printDeployResult(result, cmd.OutOrStdout())
 
 	return nil
 }
 
+func detectAndUpdateIfVersionError(result []client.DeployResults, flagVersion string) []client.DeployResults {
+	if flagVersion != "" {
+		updatedResult := result
+		// When flagVersion is set, only one application with one result is expected
+		deployedVersion := result[0].Results[0].DeploymentSpec.Version()
+		logrus.Debugf("flagVersion: %s, deployed version: %s\n", flagVersion, deployedVersion)
+		versionError := flagVersion != deployedVersion
+
+		if len(result) == 1 && versionError {
+			warning := fmt.Sprintf("Error: Wrong version was deployed. Was %s, should have been %s.", deployedVersion, flagVersion)
+			updatedResult[0].Results[0].Warnings = append(updatedResult[0].Results[0].Warnings, warning)
+		}
+
+		return updatedResult
+	}
+	return result
+}
+
 func validateParams() error {
 
 	if flagCluster != "" {
-		if _, exists := AO.Clusters[flagCluster]; !exists {
+		if _, exists := AOConfig.Clusters[flagCluster]; !exists {
 			return errors.New(fmt.Sprintf("No such cluster %s", flagCluster))
 		}
 	}
@@ -181,7 +202,7 @@ func getDeployConfirmation(force bool, filteredDeploymentSpecs []deploymentspec.
 	shouldDeploy := true
 	if !force {
 		defaultAnswer := len(rows) == 1
-		message := fmt.Sprintf("Do you want to deploy %d application(s) in affiliation %s?", len(rows), AO.Affiliation)
+		message := fmt.Sprintf("Do you want to deploy %d application(s) in affiliation %s?", len(rows), AOSession.AuroraConfig)
 		shouldDeploy = prompt.Confirm(message, defaultAnswer)
 	}
 

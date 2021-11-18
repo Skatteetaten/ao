@@ -67,7 +67,7 @@ func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
 		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	auroraConfigName := AO.Affiliation
+	auroraConfigName := AOSession.AuroraConfig
 	if flagAuroraConfig != "" {
 		auroraConfigName = flagAuroraConfig
 	}
@@ -96,7 +96,7 @@ func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications to delete")
 	}
 
-	partitions, err := createDeploymentPartitions(auroraConfigName, pFlagToken, AO.Clusters, deployInfos)
+	partitions, err := createDeploymentPartitions(auroraConfigName, pFlagToken, AOConfig.Clusters, deployInfos)
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
 
 func validateDeleteParams() error {
 	if flagCluster != "" {
-		if _, exists := AO.Clusters[flagCluster]; !exists {
+		if _, exists := AOConfig.Clusters[flagCluster]; !exists {
 			return errors.New(fmt.Sprintf("No such cluster %s", flagCluster))
 		}
 	}
@@ -245,7 +245,7 @@ func getDeleteConfirmation(force bool, deployInfos []DeploymentInfo, out io.Writ
 	shouldDeploy := true
 	if !force {
 		defaultAnswer := len(rows) == 1
-		message := fmt.Sprintf("Do you want to delete %d application(s) in affiliation %s?", len(rows), AO.Affiliation)
+		message := fmt.Sprintf("Do you want to delete %d application(s) in affiliation %s?", len(rows), AOSession.AuroraConfig)
 		shouldDeploy = prompt.Confirm(message, defaultAnswer)
 	}
 

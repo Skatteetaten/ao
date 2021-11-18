@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/skatteetaten/ao/pkg/config"
+	"github.com/skatteetaten/ao/pkg/session"
 	"github.com/spf13/cobra"
 )
 
@@ -17,12 +17,9 @@ func init() {
 
 // Logout performs the `logout` cli command
 func Logout(cmd *cobra.Command, args []string) error {
-	AO.Localhost = false
-	AO.Affiliation = ""
+	AOSession.Localhost = false
+	AOSession.AuroraConfig = ""
+	AOSession.Tokens = map[string]string{}
 
-	for _, c := range AO.Clusters {
-		c.Token = ""
-	}
-
-	return config.WriteConfig(*AO, ConfigLocation)
+	return session.WriteAOSession(*AOSession, SessionFileLocation)
 }

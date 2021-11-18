@@ -294,7 +294,7 @@ func DeleteSecret(cmd *cobra.Command, args []string) error {
 
 	vaultName, secret := split[0], split[1]
 
-	message := fmt.Sprintf("Do you want to delete secret %s in affiliation %s?", args[0], AO.Affiliation)
+	message := fmt.Sprintf("Do you want to delete secret %s in affiliation %s?", args[0], AOSession.AuroraConfig)
 	shouldDelete := prompt.Confirm(message, false)
 	if !shouldDelete {
 		return nil
@@ -316,7 +316,7 @@ func DeleteVault(cmd *cobra.Command, args []string) error {
 		return cmd.Usage()
 	}
 
-	message := fmt.Sprintf("Do you want to delete vault %s in affiliation %s?", args[0], AO.Affiliation)
+	message := fmt.Sprintf("Do you want to delete vault %s in affiliation %s?", args[0], AOSession.AuroraConfig)
 	shouldDelete := prompt.Confirm(message, false)
 	if !shouldDelete {
 		return nil

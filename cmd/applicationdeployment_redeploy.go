@@ -45,7 +45,7 @@ func redeployApplicationDeployment(cmd *cobra.Command, args []string) error {
 		search = fmt.Sprintf("%s/%s", args[0], args[1])
 	}
 
-	auroraConfigName := AO.Affiliation
+	auroraConfigName := AOSession.AuroraConfig
 	if flagAuroraConfig != "" {
 		auroraConfigName = flagAuroraConfig
 	}
@@ -79,7 +79,7 @@ func redeployApplicationDeployment(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications to redeploy")
 	}
 
-	partitions, err := createDeploySpecPartitions(auroraConfigName, pFlagToken, AO.Clusters, activeDeploymentSpecs)
+	partitions, err := createDeploySpecPartitions(auroraConfigName, pFlagToken, AOConfig.Clusters, activeDeploymentSpecs)
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func checkForDuplicateSpecs(deploymentSpecs []deploymentspec.DeploymentSpec) err
 
 func validateRedeployParams() error {
 	if flagCluster != "" {
-		if _, exists := AO.Clusters[flagCluster]; !exists {
+		if _, exists := AOConfig.Clusters[flagCluster]; !exists {
 			return errors.New(fmt.Sprintf("No such cluster %s", flagCluster))
 		}
 	}
@@ -133,7 +133,7 @@ func getRedeployConfirmation(force bool, filteredDeploymentSpecs []deploymentspe
 	shouldDeploy := true
 	if !force {
 		defaultAnswer := len(rows) == 1
-		message := fmt.Sprintf("Do you want to redeploy %d application(s) in affiliation %s?", len(rows), AO.Affiliation)
+		message := fmt.Sprintf("Do you want to redeploy %d application(s) in affiliation %s?", len(rows), AOSession.AuroraConfig)
 		shouldDeploy = prompt.Confirm(message, defaultAnswer)
 	}
 

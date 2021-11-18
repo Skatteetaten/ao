@@ -66,15 +66,15 @@ func getAPIClient(auroraConfig, overrideToken, overrideCluster string) (*client.
 	api := DefaultAPIClient
 	api.Affiliation = auroraConfig
 
-	if overrideCluster != "" && !AO.Localhost {
-		c := AO.Clusters[overrideCluster]
+	if overrideCluster != "" && !AOSession.Localhost {
+		c := AOConfig.Clusters[overrideCluster]
 		if !c.Reachable {
 			return nil, errors.Errorf("%s cluster is not reachable", overrideCluster)
 		}
 
 		api.Host = c.BooberURL
 		api.GoboHost = c.GoboURL
-		api.Token = c.Token
+		api.Token = AOSession.Tokens[c.Name]
 		if overrideToken != "" {
 			api.Token = overrideToken
 		}

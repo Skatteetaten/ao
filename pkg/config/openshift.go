@@ -36,21 +36,20 @@ type Cluster struct {
 	Name      string `json:"name"`
 	URL       string `json:"url"`
 	LoginURL  string `json:"loginUrl"`
-	Token     string `json:"token"`
 	Reachable bool   `json:"reachable"`
 	BooberURL string `json:"booberUrl"`
 	GoboURL   string `json:"goboUrl"`
 }
 
 // InitClusters initializes Cluster objects for AOConfig
-func (ao *AOConfig) InitClusters() {
-	ao.Clusters = make(map[string]*Cluster)
+func (aoConfig *AOConfig) InitClusters() {
+	aoConfig.Clusters = make(map[string]*Cluster)
 	ch := make(chan *Cluster)
 	configuredClusters := 0
 
-	for _, cluster := range ao.AvailableClusters {
+	for _, cluster := range aoConfig.AvailableClusters {
 		name := cluster
-		urls, err := ao.GetServiceURLs(name)
+		urls, err := aoConfig.GetServiceURLs(name)
 		if err != nil {
 			fmt.Println(err)
 			fmt.Printf("Skipping config generation for cluster %s\n", name)
@@ -86,8 +85,8 @@ func (ao *AOConfig) InitClusters() {
 	for {
 		select {
 		case c := <-ch:
-			ao.Clusters[c.Name] = c
-			if len(ao.Clusters) == configuredClusters {
+			aoConfig.Clusters[c.Name] = c
+			if len(aoConfig.Clusters) == configuredClusters {
 				return
 			}
 		}
@@ -95,8 +94,8 @@ func (ao *AOConfig) InitClusters() {
 }
 
 // HasValidToken performs a test call to verify validity of token
-func (c *Cluster) HasValidToken() bool {
-	if c.Token == "" {
+func (c *Cluster) IsValidToken(token string) bool {
+	if token == "" {
 		return false
 	}
 
@@ -106,8 +105,8 @@ func (c *Cluster) HasValidToken() bool {
 		return false
 	}
 
-	req.Header.Add("Authorization", "Bearer "+c.Token)
-	logrus.WithField("url", clusterURL).Debug("Check for valid token")
+	req.Header.Add("Authorization", "Bearer "+token)
+	logrus.WithField("url", clusterURL).Debug("Check if token is valid")
 	resp, err := client.Do(req)
 	if err != nil {
 		return false
