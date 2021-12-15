@@ -88,10 +88,7 @@ func initialize(cmd *cobra.Command, args []string) error {
 	CustomConfigLocation = filepath.Join(home, ".ao-config.json")
 	SessionFileLocation = filepath.Join(home, ".ao-session.json")
 
-	aoConfig, err := config.LoadOrCreateAOConfig(CustomConfigLocation)
-	if err != nil {
-		return err
-	}
+	aoConfig := config.LoadOrCreateAOConfig(CustomConfigLocation)
 
 	aoSession, err := session.LoadOrCreateAOSessionFile(SessionFileLocation, aoConfig)
 	if err != nil {
