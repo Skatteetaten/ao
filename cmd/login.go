@@ -173,8 +173,7 @@ func PostLogin(cmd *cobra.Command, args []string) {
 	} else {
 		PrintClusters(cmd, true)
 		if AOSession.RefName != "" && AOSession.RefName != "master" {
-			fmt.Printf("\nrefName=%s in AO configurations file. Consider running command \"ao adm update-ref <refName>\" if this is incorrect\n", AOSession.RefName)
+			fmt.Printf("\nrefName=%s in AO session file. Consider running command \"ao adm update-ref <refName>\" if this is incorrect\n", AOSession.RefName)
 		}
-		fmt.Printf("\nConsider running command \"ao adm update-clusters\" if cluster information above looks incorrect \n")
 	}
 }
