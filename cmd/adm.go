@@ -34,10 +34,12 @@ var getAffiliationCmd = &cobra.Command{
 	Aliases: []string{"affiliation"},
 	RunE:    PrintAffiliationsGraphql,
 }
-var updateClustersCmd = &cobra.Command{
-	Use:   "update-clusters",
-	Short: "Will rediscover clusters and update active API cluster accordingly",
-	RunE:  UpdateClusters,
+
+var updateApiClusterCmd = &cobra.Command{
+	Use:    "update-apicluster",
+	Short:  "Will update active API cluster based on default priorities",
+	Hidden: true,
+	RunE:   UpdateApiCluster,
 }
 
 var recreateConfigCmd = &cobra.Command{ // deprecated
@@ -127,7 +129,7 @@ func init() {
 	admCmd.AddCommand(getAffiliationCmd)
 	admCmd.AddCommand(completionCmd)
 	admCmd.AddCommand(recreateConfigCmd)
-	admCmd.AddCommand(updateClustersCmd)
+	admCmd.AddCommand(updateApiClusterCmd)
 	admCmd.AddCommand(updateHookCmd)
 	admCmd.AddCommand(updateRefCmd)
 	admCmd.AddCommand(defaultApiClusterCmd)
@@ -220,11 +222,11 @@ func SetApiCluster(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// UpdateClusters is the entry point for the `update-clusters` cli command
-func UpdateClusters(cmd *cobra.Command, args []string) error {
-	AOConfig.InitClusters()
+// UpdateApiClusters is the entry point for the `update-apicluster` cli command
+func UpdateApiCluster(cmd *cobra.Command, args []string) error {
 	AOSession.APICluster = AOConfig.SelectAPICluster()
 	AOSession.Localhost = false
+	cmd.Printf("apiCluster = %s\n", AOSession.APICluster)
 	return session.WriteAOSession(*AOSession, SessionFileLocation)
 }
 
@@ -236,7 +238,7 @@ func RecreateConfig(cmd *cobra.Command, args []string) error {
 
 // CreateConfigFile is the entry point for the `adm create-config-file` cli command
 func CreateConfigFile(cmd *cobra.Command, args []string) error {
-	customConfig := config.CreateDefaultConfig()
+	customConfig := config.CreateDefaultAoConfig()
 	if err := config.WriteConfig(*customConfig, CustomConfigLocation); err != nil {
 		return err
 	}
