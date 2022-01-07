@@ -9,7 +9,7 @@ def overrides = [
     chatRoom: "#aos-notifications",
     iq: false,
     sonarQube: false,
-    nodeVersion: "12",
+    nodeVersion: "16",
     applicationType: "nodejs",
     versionStrategy: [
       [ branch: 'master', versionHint: '4' ]
