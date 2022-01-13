@@ -16,17 +16,20 @@ type FilterMode uint
 const (
 	AppFilter FilterMode = iota
 	EnvFilter
+	Separator = "/"
 )
 
 // FindMatches finds filenames by fuzzy matching
 func FindMatches(search string, fileNames []string, withSuffix bool) []string {
+	trimmedSearch := strings.TrimSuffix(search, filepath.Ext(search))
 	files := FileNames(fileNames)
-	matches := fuzzy.RankFind(strings.TrimSuffix(search, filepath.Ext(search)), files.WithoutExtension())
-	sort.Sort(matches)
-
+	matches := fuzzy.RankFind(trimmedSearch, files.WithoutExtension())
+	matches = filterSplitMatches(trimmedSearch, matches)
 	if len(matches) == 0 {
 		return []string{}
 	}
+
+	sort.Sort(matches)
 
 	firstMatch := matches[0]
 	if firstMatch.Distance == 0 || len(matches) == 1 {
@@ -47,6 +50,27 @@ func FindMatches(search string, fileNames []string, withSuffix bool) []string {
 	}
 
 	return options
+}
+
+// When search string does not contain "/", it should only be a match with either path or file name,
+// not fuzzy matched with the complete string.
+func filterSplitMatches(search string, matches fuzzy.Ranks) fuzzy.Ranks {
+	if !(strings.Contains(search, Separator)) {
+		var filteredMatches fuzzy.Ranks
+		for _, match := range matches {
+			fileName := match.Target
+			if strings.Contains(fileName, Separator) {
+				s := strings.SplitN(fileName, Separator, 2)
+				matches := fuzzy.RankFind(search, s)
+				if len(matches) == 0 {
+					continue
+				}
+			}
+			filteredMatches = append(filteredMatches, match)
+		}
+		return filteredMatches
+	}
+	return matches
 }
 
 // SearchForFile finds filenames by fuzzy matching
