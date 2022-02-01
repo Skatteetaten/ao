@@ -2,7 +2,7 @@
 
 def overrides = [
     scriptVersion  : 'v7',
-    openShiftBuilderVersion: 'bugfix_SITJ_1979_nexus_filename-SNAPSHOT-207d2777',
+    openShiftBuilderVersion: 'bugfix_SITJ_1979_nexus_filename-SNAPSHOT',
     pipelineScript: 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
     credentialsId: "github",
     checkstyle : false,
