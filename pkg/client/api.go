@@ -189,8 +189,8 @@ func handleForbiddenError(body []byte, host string, korrelasjonsid string) error
 	}{}
 	err := json.Unmarshal(body, &forbiddenError)
 	if err != nil {
-		fmt.Printf(ErrfTokenMayHaveExpired, host)
-		return fmt.Errorf("%w\nKorrelasjonsid: %s", err, korrelasjonsid)
+		expiredTokenMsg := fmt.Sprintf(ErrfTokenMayHaveExpired, host)
+		return fmt.Errorf("%w\n%s\nKorrelasjonsid: %s", err, expiredTokenMsg, korrelasjonsid)
 	}
 
 	if forbiddenError.Message == ErrAccessDenied {
