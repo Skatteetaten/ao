@@ -135,8 +135,7 @@ func (api *APIClient) DoWithHeader(method string, endpoint string, header map[st
 	switch res.StatusCode {
 	case http.StatusNotFound:
 		return nil, errors.Errorf("Resource %s not found, korrelasjonsid: %s", BooberAPIVersion+endpoint, api.Korrelasjonsid)
-	case http.StatusUnauthorized:
-	case http.StatusForbidden:
+	case http.StatusForbidden, http.StatusUnauthorized:
 		return nil, handleForbiddenError(body, api.Host, api.Korrelasjonsid)
 	case http.StatusInternalServerError:
 		return nil, handleInternalServerError(body, url, api.Korrelasjonsid)
