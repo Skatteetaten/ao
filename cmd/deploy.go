@@ -126,7 +126,12 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !getDeployConfirmation(flagNoPrompt, filteredDeploymentSpecs, flagVersion, cmd.OutOrStdout()) {
+	var overrideswarning string
+	if len(overrideConfig) > 0 {
+		overrideswarning = "NB: The overrides are only used when deploying. They are not included in this table:"
+	}
+
+	if !getDeployConfirmation(flagNoPrompt, filteredDeploymentSpecs, flagVersion, cmd.OutOrStdout(), overrideswarning) {
 		return errors.New("Did not deploy any applications")
 	}
 
@@ -195,7 +200,10 @@ func parseOverride(overrides []string) (map[string]string, error) {
 	return returnMap, nil
 }
 
-func getDeployConfirmation(force bool, filteredDeploymentSpecs []deploymentspec.DeploymentSpec, newVersion string, out io.Writer) bool {
+func getDeployConfirmation(force bool, filteredDeploymentSpecs []deploymentspec.DeploymentSpec, newVersion string, out io.Writer, warninginfo string) bool {
+	if len(warninginfo) > 0 {
+		fmt.Printf("%s\n", warninginfo)
+	}
 	header, rows := GetDeploySpecTable(filteredDeploymentSpecs, newVersion)
 	DefaultTablePrinter(header, rows, out)
 
