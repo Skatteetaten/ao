@@ -15,9 +15,10 @@ import (
 
 // Constants for API access to boober/gobo
 const (
-	BooberAPIVersion    = "/v1"
-	ErrAccessDenied     = "Access Denied"
-	ErrfTokenHasExpired = "Token has expired for (%s). Please login: ao login <affiliation>"
+	BooberAPIVersion        = "/v1"
+	ErrAccessDenied         = "Access Denied"
+	ErrfTokenHasExpired     = "Token has expired for (%s). Please login: ao login <affiliation>"
+	ErrfTokenMayHaveExpired = "Token may have expired for (%s). Please login: ao login <affiliation>"
 )
 
 // Doer is an internal access API (facade) to external services
@@ -128,12 +129,13 @@ func (api *APIClient) DoWithHeader(method string, endpoint string, header map[st
 
 	if res.StatusCode > 399 {
 		logrus.WithFields(fields).Error("Request Error")
+		logrus.Debugln("StatusCode: ", res.StatusCode)
 	}
 
 	switch res.StatusCode {
 	case http.StatusNotFound:
 		return nil, errors.Errorf("Resource %s not found, korrelasjonsid: %s", BooberAPIVersion+endpoint, api.Korrelasjonsid)
-	case http.StatusForbidden:
+	case http.StatusForbidden, http.StatusUnauthorized:
 		return nil, handleForbiddenError(body, api.Host, api.Korrelasjonsid)
 	case http.StatusInternalServerError:
 		return nil, handleInternalServerError(body, url, api.Korrelasjonsid)
@@ -186,7 +188,8 @@ func handleForbiddenError(body []byte, host string, korrelasjonsid string) error
 	}{}
 	err := json.Unmarshal(body, &forbiddenError)
 	if err != nil {
-		return fmt.Errorf("%w\nKorrelasjonsid: %s", err, korrelasjonsid)
+		expiredTokenMsg := fmt.Sprintf(ErrfTokenMayHaveExpired, host)
+		return fmt.Errorf("%w\n%s\nKorrelasjonsid: %s", err, expiredTokenMsg, korrelasjonsid)
 	}
 
 	if forbiddenError.Message == ErrAccessDenied {
