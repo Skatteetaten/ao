@@ -85,7 +85,7 @@ timestamps {
 
       stage('Copy ao to assets') {
         if (env.OPENSHIFT_CLUSTER) {
-          sh 'ao adm default-apicluster ${env.OPENSHIFT_CLUSTER}'
+          sh "ao adm default-apicluster ${env.OPENSHIFT_CLUSTER}"
         } else {
           echo "Found no env.OPENSHIFT_CLUSTER"
         }
