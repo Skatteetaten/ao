@@ -84,6 +84,7 @@ timestamps {
       }
 
       stage('Copy ao to assets') {
+        sh 'pwd'
         sh 'mkdir -p ./website/public/assets/macos'
         sh 'mkdir -p ./website/public/assets/windows'
         sh './.go/bin/linux_amd64/ao version --json --autoanswer-recreate-config n > ./website/public/assets/version.json'
