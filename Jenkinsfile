@@ -84,6 +84,11 @@ timestamps {
       }
 
       stage('Copy ao to assets') {
+        if (env.OPENSHIFT_CLUSTER) {
+          sh 'ao adm default-apicluster ${env.OPENSHIFT_CLUSTER}'
+        } else {
+          echo "Found no env.OPENSHIFT_CLUSTER"
+        }
         sh 'mkdir -p ./website/public/assets/macos'
         sh 'mkdir -p ./website/public/assets/windows'
         sh './.go/bin/linux_amd64/ao version --json > ./website/public/assets/version.json'
