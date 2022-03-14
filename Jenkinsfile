@@ -87,6 +87,7 @@ timestamps {
         sh 'mkdir -p ./website/public/assets/macos'
         sh 'mkdir -p ./website/public/assets/windows'
         sh 'ls -lah ./.go/bin/linux_amd64/ao'
+        sh './.go/bin/linux_amd64/ao version --json --autoanswer-recreate-config n'
         sh './.go/bin/linux_amd64/ao version --log debug --json --autoanswer-recreate-config n > ./website/public/assets/version.json'
         sh 'cp ./.go/bin/linux_amd64/ao ./website/public/assets'
         sh 'cp ./.go/bin/darwin_amd64/ao ./website/public/assets/macos'
