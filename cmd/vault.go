@@ -27,7 +27,7 @@ var (
 	errNotValidSecretArgument = errors.New("not a valid argument, must be <vaultname/secret>")
 )
 
-const createVaultLong = `Create a vault for storing secrets. A vault requires permissions for one or more groups. 
+const createVaultLong = `Create a vault for storing secrets. A vault requires permissions for one or more serviceaccounts and/or groups. 
 These permissions are necessary to access the vault. 
 `
 
@@ -45,8 +45,8 @@ var (
 	}
 
 	vaultCreateCmd = &cobra.Command{
-		Use:   "create <vaultname> <folder/file> <group(s)>",
-		Short: "Create a new vault with secrets with permissions for one or more group(s)",
+		Use:   "create <vaultname> <folder/file> <serviceaccount(s)/group(s)>",
+		Short: "Create a new vault with secrets with permissions for one or more serviceaccount(s) and/or group(s)",
 		Long:  createVaultLong,
 		RunE:  CreateVault,
 	}
@@ -77,13 +77,13 @@ var (
 	}
 
 	vaultAddPermissionsCmd = &cobra.Command{
-		Use:   "add-permissions <vaultname> <groups>",
+		Use:   "add-permissions <vaultname> <serviceaccounts/groups>",
 		Short: "Add permissions on a vault",
 		RunE:  VaultAddPermissions,
 	}
 
 	vaultRemovePermissionsCmd = &cobra.Command{
-		Use:   "remove-permissions <vaultname> <groups>",
+		Use:   "remove-permissions <vaultname> <serviceaccounts/groups>",
 		Short: "Remove permissions on a vault",
 		RunE:  VaultRemovePermissions,
 	}
@@ -410,7 +410,7 @@ func aggregatePermissions(existingGroups, groups []string) ([]string, error) {
 	for _, group := range groups {
 		for _, eg := range modifiedGroups {
 			if eg == group {
-				return nil, errors.Errorf("Group %s already exists", group)
+				return nil, errors.Errorf("Group/serviceaccount %s already exists", group)
 			}
 		}
 		modifiedGroups = append(modifiedGroups, group)
