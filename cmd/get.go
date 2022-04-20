@@ -233,9 +233,8 @@ func PrintDeploySpec(cmd *cobra.Command, args []string) error {
 		return errors.Errorf("Search matched more than one file. Search must be more specific.\n%v", matches)
 	}
 
-	split := strings.Split(matches[0], "/")
-
 	if !flagJSON {
+		split := strings.Split(matches[0], "/")
 		spec, err := DefaultAPIClient.GetAuroraDeploySpecFormatted(split[0], split[1], !flagNoDefaults, flagIgnoreErrors)
 		if err != nil {
 			return err
