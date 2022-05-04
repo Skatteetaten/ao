@@ -28,6 +28,9 @@ OpenShift Action Commands:{{range .Commands}}{{if eq (index .Annotations "type")
   {{rpad .NameAndAliases .UsagePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if hasSubCommandsAnnotation . "remote"}}
 
 Remote AuroraConfig Commands:{{range .Commands}}{{if eq (index .Annotations "type") "remote"}}
+  {{rpad .NameAndAliases .UsagePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if hasSubCommandsAnnotation . "development"}}
+
+Local Development Commands:{{range .Commands}}{{if eq (index .Annotations "type") "development"}}
   {{rpad .NameAndAliases .UsagePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if hasSubCommandsAnnotation . "local"}}
 
 Local File Commands:{{range .Commands}}{{if eq (index .Annotations "type") "local"}}
