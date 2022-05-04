@@ -1,0 +1,536 @@
+{
+  "applicationDeploymentRef": {
+    "source": "static",
+    "value": "dev/flubber",
+    "sources": [
+      {
+        "name": "static",
+        "value": "dev/flubber"
+      }
+    ]
+  },
+  "configVersion": {
+    "source": "static",
+    "value": "master",
+    "sources": [
+      {
+        "name": "static",
+        "value": "master"
+      }
+    ]
+  },
+  "schemaVersion": {
+    "source": "about.json",
+    "value": "v1",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "v1"
+      }
+    ]
+  },
+  "type": {
+    "source": "flubber.json",
+    "value": "development",
+    "sources": [
+      {
+        "name": "flubber.json",
+        "value": "deploy"
+      }
+    ]
+  },
+  "applicationPlatform": {
+    "source": "default",
+    "value": "java",
+    "sources": [
+      {
+        "name": "default",
+        "value": "java"
+      }
+    ]
+  },
+  "affiliation": {
+    "source": "about.json",
+    "value": "sales",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "sales"
+      }
+    ]
+  },
+  "segment": {
+    "source": "about.json",
+    "value": "sales",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "sales"
+      }
+    ]
+  },
+  "cluster": {
+    "source": "dev/about.json",
+    "value": "east",
+    "sources": [
+      {
+        "name": "dev/about.json",
+        "value": "east"
+      }
+    ]
+  },
+  "permissions": {
+    "admin": {
+      "source": "about.json",
+      "value": "admins",
+      "sources": [
+        {
+          "name": "about.json",
+          "value": "admins"
+        }
+      ]
+    }
+  },
+  "envName": {
+    "source": "folderName",
+    "value": "dev",
+    "sources": [
+      {
+        "name": "folderName",
+        "value": "dev"
+      }
+    ]
+  },
+  "name": {
+    "source": "dev/flubber.yaml",
+    "value": "flubber",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "flubber"
+      },
+      {
+        "name": "flubber.json",
+        "value": "flubber"
+      },
+      {
+        "name": "dev/flubber.yaml",
+        "value": "flubber"
+      }
+    ]
+  },
+  "env": {
+    "ttl": {
+      "source": "about.json",
+      "value": "7d",
+      "sources": [
+        {
+          "name": "about.json",
+          "value": "7d"
+        }
+      ]
+    }
+  },
+  "baseFile": {
+    "source": "dev/flubber.yaml",
+    "value": "flubber.json",
+    "sources": [
+      {
+        "name": "dev/flubber.yaml",
+        "value": "flubber.json"
+      }
+    ]
+  },
+  "splunkIndex": {
+    "source": "about.json",
+    "value": "openshift-test",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "openshift-test"
+      }
+    ]
+  },
+  "certificate": {
+    "source": "about.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "about.json",
+        "value": true
+      }
+    ]
+  },
+  "database": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "prometheus": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ],
+    "path": {
+      "source": "default",
+      "value": "/prometheus",
+      "sources": [
+        {
+          "name": "default",
+          "value": "/prometheus"
+        }
+      ]
+    },
+    "port": {
+      "source": "default",
+      "value": 8081,
+      "sources": [
+        {
+          "name": "default",
+          "value": 8081
+        }
+      ]
+    }
+  },
+  "management": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ],
+    "path": {
+      "source": "default",
+      "value": "actuator",
+      "sources": [
+        {
+          "name": "default",
+          "value": "actuator"
+        }
+      ]
+    },
+    "port": {
+      "source": "default",
+      "value": "8081",
+      "sources": [
+        {
+          "name": "default",
+          "value": "8081"
+        }
+      ]
+    }
+  },
+  "deployStrategy": {
+    "type": {
+      "source": "flubber.json",
+      "value": "rolling",
+      "sources": [
+        {
+          "name": "default",
+          "value": "rolling"
+        },
+        {
+          "name": "flubber.json",
+          "value": "rolling"
+        }
+      ]
+    },
+    "timeout": {
+      "source": "default",
+      "value": 180,
+      "sources": [
+        {
+          "name": "default",
+          "value": 180
+        }
+      ]
+    }
+  },
+  "artifactId": {
+    "source": "flubber.json",
+    "value": "flubber",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "flubber"
+      },
+      {
+        "name": "flubber.json",
+        "value": "flubber"
+      }
+    ]
+  },
+  "groupId": {
+    "source": "flubber.json",
+    "value": "com.acme",
+    "sources": [
+      {
+        "name": "flubber.json",
+        "value": "com.acme"
+      }
+    ]
+  },
+  "version": {
+    "source": "flubber.json",
+    "value": "1",
+    "sources": [
+      {
+        "name": "flubber.json",
+        "value": "1"
+      }
+    ]
+  },
+  "resources": {
+    "cpu": {
+      "min": {
+        "source": "flubber.json",
+        "value": "100m",
+        "sources": [
+          {
+            "name": "default",
+            "value": "10m"
+          },
+          {
+            "name": "flubber.json",
+            "value": "100m"
+          }
+        ]
+      },
+      "max": {
+        "source": "flubber.json",
+        "value": "200m",
+        "sources": [
+          {
+            "name": "default",
+            "value": "2000m"
+          },
+          {
+            "name": "flubber.json",
+            "value": "200m"
+          }
+        ]
+      }
+    },
+    "memory": {
+      "min": {
+        "source": "flubber.json",
+        "value": "384Mi",
+        "sources": [
+          {
+            "name": "default",
+            "value": "128Mi"
+          },
+          {
+            "name": "flubber.json",
+            "value": "384Mi"
+          }
+        ]
+      },
+      "max": {
+        "source": "flubber.json",
+        "value": "768Mi",
+        "sources": [
+          {
+            "name": "default",
+            "value": "512Mi"
+          },
+          {
+            "name": "flubber.json",
+            "value": "768Mi"
+          }
+        ]
+      }
+    }
+  },
+  "replicas": {
+    "source": "flubber.json",
+    "value": "1",
+    "sources": [
+      {
+        "name": "default",
+        "value": 1
+      },
+      {
+        "name": "flubber.json",
+        "value": "1"
+      }
+    ]
+  },
+  "readiness": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ],
+    "port": {
+      "source": "default",
+      "value": 8080,
+      "sources": [
+        {
+          "name": "default",
+          "value": 8080
+        }
+      ]
+    },
+    "delay": {
+      "source": "default",
+      "value": 10,
+      "sources": [
+        {
+          "name": "default",
+          "value": 10
+        }
+      ]
+    },
+    "timeout": {
+      "source": "default",
+      "value": 1,
+      "sources": [
+        {
+          "name": "default",
+          "value": 1
+        }
+      ]
+    }
+  },
+  "liveness": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "debug": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "pause": {
+    "source": "dev/flubber.yaml",
+    "value": "false",
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "dev/flubber.yaml",
+        "value": "false"
+      }
+    ]
+  },
+  "alarm": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ]
+  },
+  "toxiproxy": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "databaseDefaults": {
+    "flavor": {
+      "source": "default",
+      "value": "ORACLE_MANAGED",
+      "sources": [
+        {
+          "name": "default",
+          "value": "ORACLE_MANAGED"
+        }
+      ]
+    },
+    "generate": {
+      "source": "default",
+      "value": true,
+      "sources": [
+        {
+          "name": "default",
+          "value": true
+        }
+      ]
+    },
+    "name": {
+      "source": "default",
+      "value": "@name@",
+      "sources": [
+        {
+          "name": "default",
+          "value": "@name@"
+        }
+      ]
+    }
+  },
+  "webseal": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "route": {
+    "source": "flubber.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "flubber.json",
+        "value": true
+      }
+    ]
+  },
+  "routeDefaults": {
+    "host": {
+      "source": "default",
+      "value": "@name@-@affiliation@-@env@",
+      "sources": [
+        {
+          "name": "default",
+          "value": "@name@-@affiliation@-@env@"
+        }
+      ]
+    }
+  }
+}
