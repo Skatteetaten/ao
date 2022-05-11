@@ -12,7 +12,7 @@ import (
 const OCP3 = "ocp3"
 const OCP4 = "ocp4"
 
-var ocp3Clusters = []string{"utv", "utv-relay", "test", "test-relay", "prod", "prod-relay"}
+var ocp3Clusters = []string{"utv", "test", "test-relay", "prod", "prod-relay"}
 var ocp4Clusters = []string{"utv04", "utv05", "utv-relay01", "test01", "test-relay01", "prod01", "prod-relay01", "log01"}
 var availableUpdateClusters = []string{"utv", "test", "utv04", "test01"}
 
