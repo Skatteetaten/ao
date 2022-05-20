@@ -14,7 +14,7 @@ const OCP4 = "ocp4"
 
 var ocp3Clusters = []string{"utv", "test", "test-relay", "prod", "prod-relay"}
 var ocp4Clusters = []string{"utv04", "utv05", "utv-relay01", "test01", "test-relay01", "prod01", "prod-relay01", "log01"}
-var availableUpdateClusters = []string{"utv", "test", "utv04", "test01"}
+var availableUpdateClusters = []string{"utv04", "test01"}
 
 // ServiceURLPatterns contains url patterns for all integrations made with AO.
 // %s will be replaced with cluster name. If ClusterURLPrefix in ClusterConfig is specified
