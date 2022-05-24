@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"github.com/skatteetaten/ao/pkg/config"
 	"github.com/skatteetaten/graphql"
 	"net/http"
 	"strconv"
@@ -36,7 +37,7 @@ func (api *APIClient) RunGraphQlMutation(graphQlRequest *graphql.Request, respon
 	graphQlRequest.Header.Set("Cache-Control", "no-cache")
 	graphQlRequest.Header.Add("Authorization", "Bearer "+api.Token)
 	graphQlRequest.Header.Add("Korrelasjonsid", api.Korrelasjonsid)
-	graphQlRequest.Header.Add("Klientid", "ao")
+	graphQlRequest.Header.Add("Klientid", "ao/"+config.Version)
 
 	if err := client.Run(ctx, graphQlRequest, response); err != nil {
 		extractederr := extractGraphqlErrorMsgs(err)
@@ -56,7 +57,7 @@ func (api *APIClient) newRequest(graphqlRequest string) *graphql.Request {
 	req := graphql.NewRequest(graphqlRequest)
 	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Add("Korrelasjonsid", api.Korrelasjonsid)
-	req.Header.Add("Klientid", "ao")
+	req.Header.Add("Klientid", "ao/"+config.Version)
 	req.Header.Add("Authorization", "Bearer "+api.Token)
 
 	return req

@@ -41,6 +41,10 @@ func LoadOrCreateAOSessionFile(sessionFileLocation string, aoConfig *config.AOCo
 			Tokens:       map[string]string{},
 		}
 		WriteAOSession(*aoSession, sessionFileLocation)
+	} else if len(aoSession.APICluster) == 0 {
+		aoSession.APICluster = aoConfig.SelectAPICluster()
+		WriteAOSession(*aoSession, sessionFileLocation)
+		logrus.Info("Auto-selected apicluster.")
 	}
 	return aoSession, nil
 }

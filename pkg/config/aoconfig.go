@@ -115,7 +115,7 @@ func createMultipleClusterConfig() *AOConfig {
 	aoConfig := AOConfig{
 		Clusters:                make(map[string]*Cluster),
 		AvailableClusters:       append(ocp3Clusters, ocp4Clusters...),
-		PreferredAPIClusters:    []string{"utv", "test", "utv04", "test01"},
+		PreferredAPIClusters:    []string{"utv04", "test01", "utv", "test"},
 		AvailableUpdateClusters: availableUpdateClusters,
 		FileAOVersion:           Version,
 	}
