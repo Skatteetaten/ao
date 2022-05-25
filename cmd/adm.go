@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/skatteetaten/ao/pkg/session"
 	"os"
+	"strings"
 
 	"github.com/skatteetaten/ao/pkg/versioncontrol"
 
@@ -213,7 +214,7 @@ func SetApiCluster(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Failed to set default apicluster, %s is not a valid cluster", newApiCluster)
 	}
 
-	AOSession.APICluster = newApiCluster
+	AOSession.APICluster = strings.TrimSpace(newApiCluster)
 	if err := session.WriteAOSession(*AOSession, SessionFileLocation); err != nil {
 		return err
 	}

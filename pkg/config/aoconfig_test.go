@@ -25,9 +25,11 @@ func TestAOConfig_SelectApiCluster(t *testing.T) {
 		Clusters map[string]bool
 		Expected string
 	}{
-		{map[string]bool{"prod": true, "utv": true, "test": true, "qa": true}, "utv"},
-		{map[string]bool{"utv": false, "test": true, "qa": true}, "test"},
-		{map[string]bool{"qa": true, "test": false, "utv": false}, "qa"},
+		{map[string]bool{"prod01": true, "utv04": true, "test01": true, "utv05": true}, "utv04"},
+		{map[string]bool{"utv04": false, "test01": true}, "test01"},
+		{map[string]bool{"test01": false, "utv05": false, "test": true}, "test"},
+		{map[string]bool{"test02": false, "utv01": true}, "utv01"},
+		{map[string]bool{"test02": false, "utv04": false, "utv01": false}, ""},
 	}
 
 	for _, test := range tests {

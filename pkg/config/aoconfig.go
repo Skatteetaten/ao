@@ -12,7 +12,7 @@ import (
 const OCP3 = "ocp3"
 const OCP4 = "ocp4"
 
-var ocp3Clusters = []string{"utv", "test", "test-relay", "prod", "prod-relay"}
+var ocp3Clusters = []string{"test", "test-relay", "prod", "prod-relay"}
 var ocp4Clusters = []string{"utv04", "utv05", "utv-relay01", "test01", "test-relay01", "prod01", "prod-relay01", "log01"}
 var availableUpdateClusters = []string{"utv04", "test01"}
 
@@ -115,7 +115,7 @@ func createMultipleClusterConfig() *AOConfig {
 	aoConfig := AOConfig{
 		Clusters:                make(map[string]*Cluster),
 		AvailableClusters:       append(ocp3Clusters, ocp4Clusters...),
-		PreferredAPIClusters:    []string{"utv", "test", "utv04", "test01"},
+		PreferredAPIClusters:    []string{"utv04", "utv05", "test01", "test"},
 		AvailableUpdateClusters: availableUpdateClusters,
 		FileAOVersion:           Version,
 	}
@@ -178,13 +178,13 @@ func (aoConfig *AOConfig) SelectAPICluster() string {
 		}
 
 		if cluster.Reachable {
-			return name
+			return strings.TrimSpace(name)
 		}
 	}
 
 	for clusterName, cluster := range aoConfig.Clusters {
 		if cluster.Reachable {
-			return clusterName
+			return strings.TrimSpace(clusterName)
 		}
 	}
 	return ""
