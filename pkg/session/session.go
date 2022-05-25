@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/skatteetaten/ao/pkg/config"
 	"io/ioutil"
+	"strings"
 )
 
 // SessionFileLocation is the location of the file holding session data for the login session
@@ -41,7 +42,7 @@ func LoadOrCreateAOSessionFile(sessionFileLocation string, aoConfig *config.AOCo
 			Tokens:       map[string]string{},
 		}
 		WriteAOSession(*aoSession, sessionFileLocation)
-	} else if len(aoSession.APICluster) == 0 {
+	} else if len(strings.TrimSpace(aoSession.APICluster)) == 0 {
 		aoSession.APICluster = aoConfig.SelectAPICluster()
 		WriteAOSession(*aoSession, sessionFileLocation)
 		logrus.Info("Auto-selected apicluster.")
@@ -60,6 +61,8 @@ func LoadSessionFile(sessionFileLocation string) (*AOSession, error) {
 	err = json.Unmarshal(raw, &aoSession)
 	if err != nil {
 		return nil, err
+	} else {
+		aoSession.APICluster = strings.TrimSpace(aoSession.APICluster)
 	}
 
 	return aoSession, nil

@@ -101,7 +101,7 @@ func Login(cmd *cobra.Command, args []string) error {
 		if _, ok := AOConfig.Clusters[flagAPICluster]; !ok {
 			return errors.Errorf("%s is not a valid cluster option. Choose between %v", flagAPICluster, AOConfig.AvailableClusters)
 		}
-		AOSession.APICluster = flagAPICluster
+		AOSession.APICluster = strings.TrimSpace(flagAPICluster)
 	}
 
 	cluster := AOConfig.Clusters[AOSession.APICluster]
