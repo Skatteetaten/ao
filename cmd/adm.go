@@ -114,13 +114,13 @@ After running this command, a script file will exist in your directory.
 To load completions:
 
 Bash:
-` + bashcompletionhelp +
+` + fmt.Sprintf(bashcompletionhelp, "ao.bash", "ao.bash") +
 		`
 Zsh:
-` + zshcompletionhelp +
+` + fmt.Sprintf(zshcompletionhelp, "ao.zsh") +
 		`
 Fish:
-` + fishcompletionhelp + `
+` + fmt.Sprintf(fishcompletionhelp, "ao.fish", "ao.fish") + `
 `,
 	RunE:      Completion,
 	ValidArgs: []string{"bash", "zsh", "fish"},
