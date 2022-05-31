@@ -139,7 +139,7 @@ func init() {
 	admCmd.AddCommand(createConfigFileCmd)
 
 	getClusterCmd.Flags().BoolVarP(&flagShowAll, "all", "a", false, "Show all clusters, not just the reachable ones")
-	completionCmd.Flags().BoolVarP(&flagQuiet, "quiet", "q", false, "Use is scripts to mute output to console")
+	completionCmd.Flags().BoolVarP(&flagQuiet, "quiet", "q", false, "Use in scripts to mute output to console")
 	completionCmd.Flags().StringVarP(&flagFilename, "file", "f", "", "Specifies output file, useful for scripts")
 	recreateConfigCmd.Flags().BoolVarP(&flagBetaMultipleClusterTypes, "beta-multiple-cluster-types", "", false, "Generate new config for multiple cluster types. Eks ocp3, ocp4. (deprecated flag)")
 	recreateConfigCmd.Flags().MarkHidden("beta-multiple-cluster-types")
@@ -288,8 +288,9 @@ func Completion(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	wd, _ := os.Getwd()
+
 	if !flagQuiet {
+		wd, _ := os.Getwd()
 		var createdFilename = wd + "/" + filename
 		if len(flagFilename) > 0 {
 			createdFilename = flagFilename
