@@ -13,6 +13,8 @@ import (
 )
 
 var flagShowAll bool
+var flagQuiet bool
+var flagFilename string
 var flagAddCluster []string           // deprecated
 var flagBetaMultipleClusterTypes bool // deprecated
 var flagOnlyOcp3Clusters bool         // deprecated
@@ -77,11 +79,11 @@ var defaultApiClusterCmd = &cobra.Command{
 
 const (
 	bashcompletionhelp = `
-$ source ao.bash
+$ source %s
 
 # To load completions for each session, execute once:
 
-$ sudo cp ao.bash /etc/bash_completion.d/ao
+$ sudo cp %s /etc/bash_completion.d/ao
 `
 	zshcompletionhelp = `
 # If shell completion is not already enabled in your environment you will need
@@ -91,15 +93,15 @@ $ echo "autoload -U compinit; compinit -u" >> ~/.zshrc
 
 # To load completions for each session, execute once:
 
-$ sudo cp ao.zsh "${fpath[1]}/_ao"
+$ sudo cp %s "${fpath[1]}/_ao"
 
 # You will need to start a new shell for this setup to take effect.
 `
 	fishcompletionhelp = `
-$ source ao.fish
+$ source %s
 
 # To load completions for each session, execute once:
-$ cp ao.fish ~/.config/fish/completions/ao.fish
+$ cp %s ~/.config/fish/completions/ao.fish
 `
 )
 
@@ -137,6 +139,8 @@ func init() {
 	admCmd.AddCommand(createConfigFileCmd)
 
 	getClusterCmd.Flags().BoolVarP(&flagShowAll, "all", "a", false, "Show all clusters, not just the reachable ones")
+	completionCmd.Flags().BoolVarP(&flagQuiet, "quiet", "q", false, "Use is scripts to mute output to console")
+	completionCmd.Flags().StringVarP(&flagFilename, "file", "f", "", "Specifies output file, useful for scripts")
 	recreateConfigCmd.Flags().BoolVarP(&flagBetaMultipleClusterTypes, "beta-multiple-cluster-types", "", false, "Generate new config for multiple cluster types. Eks ocp3, ocp4. (deprecated flag)")
 	recreateConfigCmd.Flags().MarkHidden("beta-multiple-cluster-types")
 	recreateConfigCmd.Flags().BoolVarP(&flagOnlyOcp3Clusters, "only-ocp3-clusters", "", false, "Generate new config for ocp3 only (deprecated function)")
@@ -256,21 +260,27 @@ func Completion(cmd *cobra.Command, args []string) error {
 		shell = args[0]
 	}
 	var err error
-	filename := ""
+	filename := flagFilename
 	helpfulInfo := ""
 	switch shell {
 	case "bash":
-		filename = "ao.bash"
+		if len(filename) == 0 {
+			filename = "ao.bash"
+		}
 		err = RootCmd.GenBashCompletionFile(filename)
-		helpfulInfo = bashcompletionhelp
+		helpfulInfo = fmt.Sprintf(bashcompletionhelp, filename, filename)
 	case "zsh":
-		filename = "ao.zsh"
+		if len(filename) == 0 {
+			filename = "ao.zsh"
+		}
 		err = RootCmd.GenZshCompletionFile(filename)
-		helpfulInfo = zshcompletionhelp
+		helpfulInfo = fmt.Sprintf(zshcompletionhelp, filename)
 	case "fish":
-		filename = "ao.fish"
+		if len(filename) == 0 {
+			filename = "ao.fish"
+		}
 		err = RootCmd.GenFishCompletionFile(filename, true)
-		helpfulInfo = fishcompletionhelp
+		helpfulInfo = fmt.Sprintf(fishcompletionhelp, filename, filename)
 	default:
 		return cmd.Usage()
 	}
@@ -279,8 +289,14 @@ func Completion(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	wd, _ := os.Getwd()
-	fmt.Println("Completion file created at", wd+"/"+filename)
-	fmt.Println("To load completions:\n", helpfulInfo)
+	if !flagQuiet {
+		var createdFilename = wd + "/" + filename
+		if len(flagFilename) > 0 {
+			createdFilename = flagFilename
+		}
+		fmt.Println("Completion file created at", createdFilename)
+		fmt.Println("To load completions:\n", helpfulInfo)
+	}
 	return nil
 }
 
