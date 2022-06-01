@@ -15,9 +15,6 @@ import (
 var flagShowAll bool
 var flagQuiet bool
 var flagFilename string
-var flagAddCluster []string           // deprecated
-var flagBetaMultipleClusterTypes bool // deprecated
-var flagOnlyOcp3Clusters bool         // deprecated
 
 var admCmd = &cobra.Command{
 	Use:   "adm",
@@ -45,13 +42,6 @@ var updateApiClusterCmd = &cobra.Command{
 	RunE:   UpdateApiCluster,
 }
 
-var recreateConfigCmd = &cobra.Command{ // deprecated
-	Use:    "recreate-config",
-	Short:  `The command is deprecated.`,
-	Hidden: true,
-	RunE:   RecreateConfig,
-}
-
 var createConfigFileCmd = &cobra.Command{
 	Use:   "create-config-file",
 	Short: `The command will create an .ao-config.json file (for expert users)`,
@@ -71,8 +61,14 @@ var updateRefCmd = &cobra.Command{
 	RunE:  SetRefName,
 }
 
-var defaultApiClusterCmd = &cobra.Command{
+var defaultApiClusterCmd = &cobra.Command{ //deprecated is being replaced with "apiClusterCmd"
 	Use:   "default-apicluster <cluster>",
+	Short: `Set configured default API cluster for ao.`,
+	RunE:  SetApiCluster,
+}
+
+var apiClusterCmd = &cobra.Command{
+	Use:   "apicluster <cluster>",
 	Short: `Set configured default API cluster for ao.`,
 	RunE:  SetApiCluster,
 }
@@ -131,22 +127,16 @@ func init() {
 	admCmd.AddCommand(getClusterCmd)
 	admCmd.AddCommand(getAffiliationCmd)
 	admCmd.AddCommand(completionCmd)
-	admCmd.AddCommand(recreateConfigCmd)
 	admCmd.AddCommand(updateApiClusterCmd)
 	admCmd.AddCommand(updateHookCmd)
 	admCmd.AddCommand(updateRefCmd)
 	admCmd.AddCommand(defaultApiClusterCmd)
+	admCmd.AddCommand(apiClusterCmd)
 	admCmd.AddCommand(createConfigFileCmd)
 
 	getClusterCmd.Flags().BoolVarP(&flagShowAll, "all", "a", false, "Show all clusters, not just the reachable ones")
 	completionCmd.Flags().BoolVarP(&flagQuiet, "quiet", "q", false, "Use in scripts to mute output to console")
 	completionCmd.Flags().StringVarP(&flagFilename, "file", "f", "", "Specifies output file, useful for scripts")
-	recreateConfigCmd.Flags().BoolVarP(&flagBetaMultipleClusterTypes, "beta-multiple-cluster-types", "", false, "Generate new config for multiple cluster types. Eks ocp3, ocp4. (deprecated flag)")
-	recreateConfigCmd.Flags().MarkHidden("beta-multiple-cluster-types")
-	recreateConfigCmd.Flags().BoolVarP(&flagOnlyOcp3Clusters, "only-ocp3-clusters", "", false, "Generate new config for ocp3 only (deprecated function)")
-	recreateConfigCmd.Flags().MarkHidden("only-ocp3-clusters")
-	recreateConfigCmd.Flags().StringVarP(&flagCluster, "cluster", "c", "", "Recreate config with one cluster")
-	recreateConfigCmd.Flags().StringArrayVarP(&flagAddCluster, "add-cluster", "a", []string{}, "Add cluster to available clusters")
 	updateHookCmd.Flags().StringVarP(&flagGitHookType, "git-hook", "g", "pre-push", "Change git hook to validate AuroraConfig")
 }
 
@@ -233,12 +223,6 @@ func UpdateApiCluster(cmd *cobra.Command, args []string) error {
 	AOSession.Localhost = false
 	cmd.Printf("apiCluster = %s\n", AOSession.APICluster)
 	return session.WriteAOSession(*AOSession, SessionFileLocation)
-}
-
-// RecreateConfig is the entry point for the `adm recreate-config` cli command
-func RecreateConfig(cmd *cobra.Command, args []string) error {
-	fmt.Println("\nInfo: No config file created nor needed. Configuration is internalized.")
-	return fmt.Errorf("Did not create any config file.\n")
 }
 
 // CreateConfigFile is the entry point for the `adm create-config-file` cli command

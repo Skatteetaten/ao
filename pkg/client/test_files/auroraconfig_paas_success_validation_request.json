@@ -7,7 +7,7 @@
         },
         {
             "name": "mokey/about.json",
-            "contents": "{\"cluster\":\"utv\",\"type\":\"development\"}"
+            "contents": "{\"cluster\":\"utv01\",\"type\":\"development\"}"
         },
         {
             "name": "mokey.json",

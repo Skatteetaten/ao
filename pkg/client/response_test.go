@@ -36,9 +36,9 @@ var failedResponseText = `{
 				  "path": "/asdlkjf"
 				},
 				"source": {
-				  "configName": "boober-utv/reference.json",
+				  "configName": "boober-utv01/reference.json",
 				  "contents": "",
-				  "name": "boober-utv/reference.json",
+				  "name": "boober-utv01/reference.json",
 				  "override": false
 				},
 				"value": null
@@ -50,9 +50,9 @@ var failedResponseText = `{
 				  "path": "/name"
 				},
 				"source": {
-				  "configName": "boober-utv/reference.json",
+				  "configName": "boober-utv01/reference.json",
 				  "contents": "",
-				  "name": "boober-utv/reference.json",
+				  "name": "boober-utv01/reference.json",
 				  "override": false
 				},
 				"value": null

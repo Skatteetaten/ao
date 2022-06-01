@@ -21,7 +21,7 @@ func TestPrintClusters(t *testing.T) {
 	AOConfig = GetDefaultAOConfig()
 	AOSession = &session.AOSession{
 		RefName:      "",
-		APICluster:   "utv",
+		APICluster:   "utv01",
 		AuroraConfig: "",
 		Localhost:    false,
 		Tokens:       map[string]string{},

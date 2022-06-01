@@ -12,7 +12,7 @@ def overrides = [
     nodeVersion: "16",
     applicationType: "nodejs",
     versionStrategy: [
-      [ branch: 'master', versionHint: '4' ]
+      [ branch: 'master', versionHint: '5' ]
     ]
 ]
 

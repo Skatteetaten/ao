@@ -9,10 +9,6 @@ import (
 	"strings"
 )
 
-const OCP3 = "ocp3"
-const OCP4 = "ocp4"
-
-var ocp3Clusters = []string{"test", "test-relay", "prod", "prod-relay"}
 var ocp4Clusters = []string{"utv04", "utv05", "utv-relay01", "test01", "test-relay01", "prod01", "prod-relay01", "log01"}
 var availableUpdateClusters = []string{"utv04", "test01"}
 
@@ -25,14 +21,6 @@ type ServiceURLPatterns struct {
 	BooberURLPattern       string `json:"booberUrlPattern"`
 	UpdateURLPattern       string `json:"updateUrlPattern"`
 	GoboURLPattern         string `json:"goboUrlPattern"`
-}
-
-var ocp3URLPatterns = &ServiceURLPatterns{
-	ClusterURLPattern:      "https://%s-master.paas.skead.no:8443",
-	ClusterLoginURLPattern: "https://%s-master.paas.skead.no:8443",
-	BooberURLPattern:       "http://boober-aurora.%s.paas.skead.no",
-	UpdateURLPattern:       "http://ao-aurora-tools.%s.paas.skead.no",
-	GoboURLPattern:         "http://gobo.aurora.%s.paas.skead.no",
 }
 
 var ocp4URLPatterns = &ServiceURLPatterns{
@@ -114,8 +102,8 @@ func WriteConfig(aoConfig AOConfig, configLocation string) error {
 func createMultipleClusterConfig() *AOConfig {
 	aoConfig := AOConfig{
 		Clusters:                make(map[string]*Cluster),
-		AvailableClusters:       append(ocp3Clusters, ocp4Clusters...),
-		PreferredAPIClusters:    []string{"utv04", "utv05", "test01", "test"},
+		AvailableClusters:       ocp4Clusters,
+		PreferredAPIClusters:    []string{"utv04", "utv05", "test01"},
 		AvailableUpdateClusters: availableUpdateClusters,
 		FileAOVersion:           Version,
 	}
@@ -129,12 +117,6 @@ func (aoConfig *AOConfig) InitClusters() {
 	ch := make(chan *Cluster)
 	configuredClusters := 0
 
-	// ocp3
-	for _, clusterName := range ocp3Clusters {
-		cluster := getAoConfigCluster(ocp3URLPatterns, clusterName)
-		configuredClusters++
-		go checkReachable(ch, &cluster)
-	}
 	// ocp4
 	for _, clusterName := range ocp4Clusters {
 		cluster := getAoConfigCluster(ocp4URLPatterns, clusterName)

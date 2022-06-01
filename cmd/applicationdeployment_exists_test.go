@@ -78,17 +78,17 @@ func Test_getDeployedDeploymentSpecs(t *testing.T) {
 	overrideToken := ""
 	AOConfig = GetDefaultAOConfig()
 	var testDeploySpecs = [...]deploymentspec.DeploymentSpec{
-		deploymentspec.NewDeploymentSpec("crm", "dev", "utv", "1"),
-		deploymentspec.NewDeploymentSpec("erp", "dev", "utv", "1"),
-		deploymentspec.NewDeploymentSpec("sap", "dev", "utv", "1"),
-		deploymentspec.NewDeploymentSpec("crm", "test-qa", "utv", "1"),
-		deploymentspec.NewDeploymentSpec("crmv2", "test-qa", "utv", "1"),
-		deploymentspec.NewDeploymentSpec("booking", "test-qa", "utv", "1"),
-		deploymentspec.NewDeploymentSpec("erp", "test-qa", "utv", "1"),
-		deploymentspec.NewDeploymentSpec("crm-1-GA", "test-st", "utv", "1"),
-		deploymentspec.NewDeploymentSpec("crm-2-GA", "test-st", "utv", "1"),
-		deploymentspec.NewDeploymentSpec("booking", "test-st", "utv", "1"),
-		deploymentspec.NewDeploymentSpec("erp", "test-st", "utv", "1"),
+		deploymentspec.NewDeploymentSpec("crm", "dev", "utv01", "1"),
+		deploymentspec.NewDeploymentSpec("erp", "dev", "utv01", "1"),
+		deploymentspec.NewDeploymentSpec("sap", "dev", "utv01", "1"),
+		deploymentspec.NewDeploymentSpec("crm", "test-qa", "utv01", "1"),
+		deploymentspec.NewDeploymentSpec("crmv2", "test-qa", "utv01", "1"),
+		deploymentspec.NewDeploymentSpec("booking", "test-qa", "utv01", "1"),
+		deploymentspec.NewDeploymentSpec("erp", "test-qa", "utv01", "1"),
+		deploymentspec.NewDeploymentSpec("crm-1-GA", "test-st", "utv01", "1"),
+		deploymentspec.NewDeploymentSpec("crm-2-GA", "test-st", "utv01", "1"),
+		deploymentspec.NewDeploymentSpec("booking", "test-st", "utv01", "1"),
+		deploymentspec.NewDeploymentSpec("erp", "test-st", "utv01", "1"),
 	}
 
 	applicationDeploymentClientMock := client.NewApplicationDeploymentClientMock()
