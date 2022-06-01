@@ -63,13 +63,13 @@ var updateRefCmd = &cobra.Command{
 
 var defaultApiClusterCmd = &cobra.Command{ //deprecated is being replaced with "apiClusterCmd"
 	Use:   "default-apicluster <cluster>",
-	Short: `Set configured default API cluster for ao.`,
+	Short: `Set configured API cluster for ao.`,
 	RunE:  SetApiCluster,
 }
 
 var apiClusterCmd = &cobra.Command{
 	Use:   "apicluster <cluster>",
-	Short: `Set configured default API cluster for ao.`,
+	Short: `Set configured API cluster for ao.`,
 	RunE:  SetApiCluster,
 }
 
