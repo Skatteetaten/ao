@@ -61,17 +61,11 @@ var updateRefCmd = &cobra.Command{
 	RunE:  SetRefName,
 }
 
-var defaultApiClusterCmd = &cobra.Command{ //deprecated is being replaced with "apiClusterCmd"
-	Use:   "default-apicluster <cluster>",
-	Short: `Set configured API cluster for ao.`,
-	RunE:  SetApiCluster,
-}
-
 var apiClusterCmd = &cobra.Command{
-	Use:   "apicluster <cluster>",
-	Short: `Set configured API cluster for ao.`,
+	Use:     "apicluster <cluster>",
+	Short:   `Set configured API cluster for ao.`,
 	Aliases: []string{"default-apicluster"}, // deprecated
-	RunE:  SetApiCluster,
+	RunE:    SetApiCluster,
 }
 
 const (
@@ -131,7 +125,6 @@ func init() {
 	admCmd.AddCommand(updateApiClusterCmd)
 	admCmd.AddCommand(updateHookCmd)
 	admCmd.AddCommand(updateRefCmd)
-	admCmd.AddCommand(defaultApiClusterCmd)
 	admCmd.AddCommand(apiClusterCmd)
 	admCmd.AddCommand(createConfigFileCmd)
 
