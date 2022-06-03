@@ -9,11 +9,11 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
-	github.com/skatteetaten/architect/v2 v2.7.1
+	github.com/skatteetaten/architect/v2 v2.7.2
 	github.com/skatteetaten/graphql v0.2.3-0.20211007072132-0e15a746c430
 	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.1
-	golang.org/x/sys v0.0.0-20210816074244-15123e1e1f71
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
 	golang.org/x/text v0.3.7
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/yaml.v2 v2.4.0

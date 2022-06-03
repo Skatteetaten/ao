@@ -20,31 +20,31 @@ func init() {
 
 func GetDefaultAOConfig() *config.AOConfig {
 	clusters := map[string]*config.Cluster{
-		"utv": {
-			Name:      "utv",
+		"utv01": {
+			Name:      "utv01",
 			Reachable: true,
-			URL:       "https://utv:8443",
-			BooberURL: "http://boober.utv",
-			GoboURL:   "http://gobo.utv",
+			URL:       "https://utv01:8443",
+			BooberURL: "http://boober.utv01",
+			GoboURL:   "http://gobo.utv01",
 		},
-		"relay": {
-			Name:      "relay",
+		"relay01": {
+			Name:      "relay01",
 			Reachable: true,
-			URL:       "https://relay:8443",
-			BooberURL: "http://boober.relay",
-			GoboURL:   "http://gobo.relay",
+			URL:       "https://relay01:8443",
+			BooberURL: "http://boober.relay01",
+			GoboURL:   "http://gobo.relay01",
 		},
-		"test": {
-			Name:      "test",
+		"test01": {
+			Name:      "test01",
 			Reachable: false,
-			URL:       "https://test:8443",
-			BooberURL: "http://boober.test",
-			GoboURL:   "http://gobo.test",
+			URL:       "https://test01:8443",
+			BooberURL: "http://boober.test01",
+			GoboURL:   "http://gobo.test01",
 		},
 	}
 
 	return &config.AOConfig{
-		AvailableClusters: []string{"utv", "relay", "test"},
+		AvailableClusters: []string{"utv01", "relay01", "test01"},
 		Clusters:          clusters,
 	}
 }

@@ -1,3 +1,3 @@
-CLUSTER NAME   REACHABLE   LOGGED IN   API   URL                  API_URLS
-utv            Yes                     Yes   https://utv:8443     http://boober.utv http://gobo.utv
-relay          Yes                           https://relay:8443   http://boober.relay http://gobo.relay
+CLUSTER NAME   REACHABLE   LOGGED IN   API   URL                    API_URLS
+utv01          Yes                     Yes   https://utv01:8443     http://boober.utv01 http://gobo.utv01
+relay01        Yes                           https://relay01:8443   http://boober.relay01 http://gobo.relay01

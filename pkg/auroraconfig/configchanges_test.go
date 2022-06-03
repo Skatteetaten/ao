@@ -29,7 +29,7 @@ func Test_SetValue_Do(t *testing.T) {
 	t.Run("Should set value in yaml AuroraConfigFile (happy test)", func(t *testing.T) {
 		content := `---
 baseFile: myapp.json
-cluster: utv
+cluster: utv01
 config:
   MYAPP_SOME_KEY: somevalue
   MYAPP_SOME_OTHER_KEY: someothervalue
@@ -38,7 +38,7 @@ version: 1.2.3
 `
 		expected := `---
 baseFile: myapp.json
-cluster: utv
+cluster: utv01
 config:
   MYAPP_NEW_KEY: newValue
   MYAPP_SOME_KEY: somevalue
@@ -69,7 +69,7 @@ func Test_RemoveEntry_Do(t *testing.T) {
 	t.Run("Should remove value from Json AuroraConfigFile", func(t *testing.T) {
 		content := `{
             "baseFile": "myapp.json",
-            "cluster": "utv",
+            "cluster": "utv01",
             "config": {
                 "MYAPP_SOME_KEY": "somevalue",
                 "MYAPP_SOME_OTHER_KEY": "someothervalue",
@@ -80,7 +80,7 @@ func Test_RemoveEntry_Do(t *testing.T) {
         }`
 		expected := `{
   "baseFile": "myapp.json",
-  "cluster": "utv",
+  "cluster": "utv01",
   "config": {
     "MYAPP_SOME_KEY": "somevalue",
     "MYAPP_SOME_OTHER_KEY": "someothervalue"
@@ -107,7 +107,7 @@ func Test_RemoveEntry_Do(t *testing.T) {
 	t.Run("Should remove value from Yaml AuroraConfigFile", func(t *testing.T) {
 		content := `---
 baseFile: myapp.json
-cluster: utv
+cluster: utv01
 config:
   MYAPP_SOME_KEY: somevalue
   MYAPP_SOME_OTHER_KEY: someothervalue
@@ -117,7 +117,7 @@ version: 1.2.3
 `
 		expected := `---
 baseFile: myapp.json
-cluster: utv
+cluster: utv01
 config:
   MYAPP_SOME_KEY: somevalue
   MYAPP_SOME_OTHER_KEY: someothervalue

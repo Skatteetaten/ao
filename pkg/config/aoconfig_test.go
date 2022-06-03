@@ -49,14 +49,14 @@ func TestAOConfig_SelectApiCluster(t *testing.T) {
 
 func basicTestConfig() *AOConfig {
 	aoConfig := createMultipleClusterConfig()
-	aoConfig.Clusters["test"] = &Cluster{
-		Name:      "test",
-		URL:       "https://test.url.paas.skead.no:8443",
-		LoginURL:  "https://test.login.paas.skead.no:8443",
+	aoConfig.Clusters["test01"] = &Cluster{
+		Name:      "test01",
+		URL:       "https://api.test01.paas.skead.no:6443",
+		LoginURL:  "https://oauth-openshift.apps.test01.paas.skead.no",
 		Reachable: true,
-		BooberURL: "https://boober.test.paas.skead.no",
-		GoboURL:   "https://gobo.test.paas.skead.no",
-		UpdateURL: "http://ao-update.test.paas.skead.no",
+		BooberURL: "https://boober-aup.apps.test01.paas.skead.no",
+		GoboURL:   "https://gobo-aup.apps.test01.paas.skead.no",
+		UpdateURL: "https://ao-aup.apps.test01.paas.skead.no",
 	}
 	return aoConfig
 }

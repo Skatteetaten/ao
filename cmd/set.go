@@ -7,7 +7,7 @@ import (
 
 const setExample = `  ao set foo.json /pause true
 
-  ao set test/about.json /cluster utv
+  ao set test/about.json /cluster utv04
 
   ao set test/foo.yaml /config/IMPORTANT_ENV 'Hello World'`
 

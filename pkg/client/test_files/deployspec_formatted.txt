@@ -6,7 +6,7 @@
   type:          "template"                    // redis.json
   envFile:       "about-template.json"         // aotest/redis.json
   affiliation:   "paas"                        // about.json
-  cluster:       "utv"                         // aotest/about-template.json
+  cluster:       "utv01"                       // aotest/about-template.json
   permissions: {
     admin:       "APP_PaaS_drift APP_PaaS_utv" // about.json
   }
