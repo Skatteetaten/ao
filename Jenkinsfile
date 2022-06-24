@@ -10,6 +10,7 @@ def overrides = [
     iq: false,
     sonarQube: false,
     nodeVersion: "16",
+    goVersion: "1.18",
     applicationType: "nodejs",
     versionStrategy: [
       [ branch: 'master', versionHint: '5' ]
@@ -38,7 +39,7 @@ fileLoader.withGit(overrides.pipelineScript, overrides.scriptVersion) {
 
 Map props = properties.getDefaultProps(overrides)
 timestamps {
-  node(props.slaveSelector) {
+  node(props.slaveSelector + " && go-" + overrides.goVersion) {
     try {
       stage('Clean Workspace') {
         deleteDir()
@@ -80,7 +81,7 @@ timestamps {
       }
 
       stage('Build, Test & coverage') {
-        go.buildGoWithJenkinsShUsingGlobalTools("go-1.18")
+        go.buildGoWithJenkinsSh(overrides.goVersion)
       }
 
       stage('Copy ao to assets') {
