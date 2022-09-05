@@ -50,3 +50,5 @@ require (
 	sigs.k8s.io/json v0.0.0-20220525155127-227cbc7cc124 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 )
+
+replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
