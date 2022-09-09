@@ -19,10 +19,9 @@ import (
 const supportedAPIVersion = 2
 
 var (
-	flagPassword   string
-	flagUserName   string
-	flagLocalhost  bool
-	flagAPICluster string
+	flagPassword  string
+	flagUserName  string
+	flagLocalhost bool
 )
 
 var loginCmd = &cobra.Command{
@@ -55,7 +54,6 @@ func init() {
 	loginCmd.Flags().StringVarP(&flagPassword, "password", "", "", "the password to log in with, if not set will prompt.  Should only be used in combination with a capturing function to avoid beeing shown in history files")
 	loginCmd.Flags().BoolVarP(&flagLocalhost, "localhost", "", false, "set api to localhost")
 	loginCmd.Flags().MarkHidden("localhost")
-	loginCmd.Flags().StringVarP(&flagAPICluster, "apicluster", "", "", "select specified API cluster")
 }
 
 // PreLogin performs pre command validation checks for the `login` cli command
@@ -96,6 +94,8 @@ func Login(cmd *cobra.Command, args []string) error {
 	if AOSession.Localhost != flagLocalhost {
 		AOSession.Localhost = flagLocalhost
 	}
+
+	flagAPICluster := strings.TrimSpace(pFlagAPICluster)
 
 	if flagAPICluster != "" {
 		if _, ok := AOConfig.Clusters[flagAPICluster]; !ok {
