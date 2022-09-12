@@ -118,7 +118,7 @@ func initialize(cmd *cobra.Command, args []string) error {
 		}
 		apiCluster = &config.Cluster{}
 	}
-	apiToken := aoSession.Tokens[aoSession.APICluster]
+	apiToken := aoSession.Tokens[apiClusterName]
 
 	api := client.NewAPIClient(apiCluster.BooberURL, apiCluster.GoboURL, apiToken, aoSession.AuroraConfig, aoSession.RefName, client.CreateUUID().String())
 
