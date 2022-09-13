@@ -58,7 +58,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&pFlagToken, "token", "t", "", "OpenShift authorization token to use for remote commands, overrides login")
 	RootCmd.PersistentFlags().StringVar(&pFlagRefName, "ref", "", "Set git ref name, does not affect vaults")
 	RootCmd.PersistentFlags().BoolVar(&pFlagNoHeader, "no-headers", false, "Print tables without headers")
-	RootCmd.PersistentFlags().StringVarP(&pFlagAPICluster, "apicluster", "", "", "specify API cluster for this command, persistent when used with login")
+	RootCmd.PersistentFlags().StringVarP(&pFlagAPICluster, "apicluster", "", "", "Specify API cluster for this command, persistent when used with login")
 	RootCmd.PersistentFlags().MarkHidden("no-headers")
 	RootCmd.PersistentFlags().StringVar(&pFlagAnswerRecreateConfig, "autoanswer-recreate-config", "", "deprecated")
 	RootCmd.PersistentFlags().MarkHidden("autoanswer-recreate-config")
