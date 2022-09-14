@@ -52,6 +52,10 @@ func init() {
 }
 
 func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
+	apiCluster := flagCluster
+	if len(strings.TrimSpace(pFlagAPICluster)) > 0 {
+		apiCluster = strings.TrimSpace(pFlagAPICluster)
+	}
 
 	if len(args) > 2 || len(args) < 1 {
 		return cmd.Usage()
@@ -72,7 +76,7 @@ func deleteApplicationDeployment(cmd *cobra.Command, args []string) error {
 		auroraConfigName = flagAuroraConfig
 	}
 
-	apiClient, err := getAPIClient(auroraConfigName, pFlagToken, flagCluster)
+	apiClient, err := getAPIClient(auroraConfigName, pFlagToken, apiCluster)
 	if err != nil {
 		return err
 	}
