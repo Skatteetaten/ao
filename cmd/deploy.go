@@ -107,6 +107,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.New("No applications to deploy")
 	}
 
+	flagVersion = strings.TrimSpace(flagVersion) // trimming nbsp
 	if flagVersion != "" && len(applications) > 1 {
 		return errors.New("Deploy with version does only support one application")
 	}

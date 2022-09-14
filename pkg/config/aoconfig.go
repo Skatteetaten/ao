@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
+	"net/http"
 	"strings"
 )
 
 var ocp4Clusters = []string{"utv04", "utv05", "utv-relay01", "test01", "test-relay01", "prod01", "prod-relay01", "log01"}
 var availableUpdateClusters = []string{"utv04", "test01"}
+var Klientid = "ao/" + Version
 
 // ServiceURLPatterns contains url patterns for all integrations made with AO.
 // %s will be replaced with cluster name. If ClusterURLPrefix in ClusterConfig is specified
@@ -190,11 +192,11 @@ func getAoConfigCluster(serviceUrlPatterns *ServiceURLPatterns, clusterName stri
 
 func checkReachable(ch chan *Cluster, cluster *Cluster) {
 	reachable := false
-	resp, err := client.Get(cluster.BooberURL)
+	resp, err := get(cluster.BooberURL)
 	if err == nil && resp != nil && resp.StatusCode < 500 {
-		resp, err := client.Get(cluster.GoboURL)
+		resp, err := get(cluster.GoboURL)
 		if err == nil && resp != nil && resp.StatusCode < 500 {
-			resp, err = client.Get(cluster.LoginURL)
+			resp, err = get(cluster.LoginURL)
 			if err == nil && resp != nil && resp.StatusCode < 500 {
 				reachable = true
 			}
@@ -204,6 +206,15 @@ func checkReachable(ch chan *Cluster, cluster *Cluster) {
 	logrus.WithField("reachable", reachable).Info(cluster.BooberURL)
 
 	ch <- cluster
+}
+
+func get(url string) (resp *http.Response, err error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Klientid", Klientid)
+	return client.Do(req)
 }
 
 func formatNonLocalhostPattern(pattern string, a ...interface{}) string {
