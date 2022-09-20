@@ -52,9 +52,9 @@ func Test_deployToUnreachableClusters(t *testing.T) {
 	}
 
 	results, err := deployToReachableClusters(getClient, partitions, map[string]string{})
-	if err != nil {
-		t.Fatal(err)
-	}
+
+	assert.NotNil(t, err, "Should get err")
+	assert.Equal(t, "Unsuccessful deploy(s) detected", err.Error())
 
 	assert.Len(t, results, 1)
 	assert.Len(t, results[0].Results, 3)
