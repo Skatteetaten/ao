@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var ocp4Clusters = []string{"utv04", "utv05", "utv-relay01", "test01", "test-relay01", "prod01", "prod-relay01", "log01"}
+var ocp4Clusters = []string{"utv04", "utv05", "utv-relay01", "intern-prod01", "test01", "test-relay01", "prod01", "prod-relay01", "log01"}
 var availableUpdateClusters = []string{"utv04", "test01"}
 var Klientid = "ao/" + Version
 
