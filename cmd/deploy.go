@@ -147,16 +147,13 @@ func deploy(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	result, err := deployToReachableClusters(getApplicationDeploymentClient, partitions, overrideConfig)
-	if err != nil {
-		return err
-	}
+	result, unsuccessfulErr := deployToReachableClusters(getApplicationDeploymentClient, partitions, overrideConfig)
 
 	result = detectAndUpdateIfVersionError(result, flagVersion)
 
 	printDeployResult(result, cmd.OutOrStdout())
 
-	return nil
+	return unsuccessfulErr
 }
 
 func detectAndUpdateIfVersionError(result []client.DeployResults, flagVersion string) []client.DeployResults {
@@ -230,8 +227,15 @@ func deployToReachableClusters(getClient func(partition Partition) client.Applic
 	}
 
 	var allResults []client.DeployResults
+	unsuccessfulDeploysFound := false
 	for i := 0; i < len(partitions); i++ {
-		allResults = append(allResults, <-deployResult)
+		result := <-deployResult
+		allResults = append(allResults, result)
+		unsuccessfulDeploysFound = unsuccessfulDeploysFound || !result.Success
+	}
+
+	if unsuccessfulDeploysFound {
+		return allResults, errors.New("Unsuccessful deploy(s) detected")
 	}
 
 	return allResults, nil
